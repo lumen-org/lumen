@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://$PROJECT_DIR$/js/test" libraries="{karma-jasmine}" />
+    <file url="file://$PROJECT_DIR$/karma.RequireJS.conf.js" libraries="{karma-jasmine}" />
+    <file url="PROJECT" libraries="{d3}" />
+  </component>
+</project>
