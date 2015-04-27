@@ -15,8 +15,7 @@ define(['app/app'], function(App) {
       expect(App.sumOf(0,0)).toBe(0);
       expect(App.sumOf(1,4)).toBe(5);
       expect(App.sumOf(-2,6)).toBe(4);
-      //expect(App.three().toBe(3));
-
+      expect(App.three()).toBe(3);
     });
 
     it("should be true", function() {

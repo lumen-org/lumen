@@ -1,0 +1,14 @@
+/**
+  @author Philipp Lucas
+  CSS for prototype.html
+*/
+body {
+    background-color: #334D5C;
+    color: #EFC94C;
+    font-family: "Verdana", serif;
+}
+
+h1 {
+    text-transform: capitalize;
+    font-variant: small-caps;
+}

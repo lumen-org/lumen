@@ -9,19 +9,19 @@
 require.config({
 
   // all module IDs are resolved relative to that path
-  baseUrl: 'js',
+  // and that path itself is relative to the html file calling it
+  baseUrl: '../js',
 
   // rules to resolve module IDs
   paths: {
     d3: 'lib/d3.min'
-    //d3: 'http://d3js.org/d3.v3.min' // or: d3: 'd3.min
   }
 });
 
 // dynamic load of required libraries. When done, call callback
-require(['app/app'], function  (app) {
-    'use strict';
+require(['app/component-source'], function  (proto) {
+  'use strict';
 
-    // start the app!
-    app.start();
+  // start the app!
+  proto.start();
 });

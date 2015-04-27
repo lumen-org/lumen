@@ -3,8 +3,10 @@
  */
 define( function () {
   "use strict";
+  // private method and variable definitions
 
   // setup code
+
 
   // module definition
   return {
