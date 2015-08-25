@@ -1,3 +1,8 @@
 node_modules/
 doc/
 
+# ignore Intellij stuff
+*.iml
+*.ipr
+*.iws
+.idea/

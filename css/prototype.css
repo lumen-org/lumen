@@ -1,14 +1,70 @@
 /**
   @author Philipp Lucas
   CSS for prototype.html
-*/
-body {
-    background-color: #334D5C;
-    color: #EFC94C;
-    font-family: "Verdana", serif;
+*
+* {
+    box-sizing: border-box;
+}*/
+
+.row.full-width {
+    width: 95%;
+    max-width: 95%;
 }
 
-h1 {
-    text-transform: capitalize;
-    font-variant: small-caps;
+.shelf-title {
+    text-align: center;
+    font-size: small;
+    font-weight: bold;
+}
+
+#header-bar, #footer-bar {
+    width: 100%;
+    max-width: 100%;
+}
+
+/*.drop-hover {
+    background-color: #4c55dd;
+}*/
+
+.drop-allow {
+    /*background-color: #8AC007;*/
+    border: solid 5px #8AC007;
+    border-radius: 5px
+}
+
+.drop-deny {
+    /*background-color: #ffa5a9;*/
+    border: solid 5px #ffa5a9;
+    border-radius: 5px
+}
+
+.shelf-list {
+    min-height: 1em;
+}
+
+.shelf, .shelf-list-item {
+    margin: 0.2em;
+    padding: 0.2em;
+    border: solid 5px transparent;
+}
+
+.overlap-center {
+    /*background-color: #4c55dd;*/
+    border-color: #4c55dd
+}
+
+.overlap-left {
+    border-left-color: #4c55dd
+}
+
+.overlap-right {
+    border-right-color: #4c55dd
+}
+
+.overlap-top {
+    border-top-color: #4c55dd
+}
+
+.overlap-bottom {
+    border-bottom-color: #4c55dd
 }

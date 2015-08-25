@@ -1,0 +1,92 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Foundation | Welcome</title>
+
+    <!-- Foundation stuff -->
+    <link rel="stylesheet" href="../css/foundation.css" />
+    <link rel="stylesheet" href="../css/playground_foundation_sortable.css">
+
+    <script src="../js/lib/foundation_vendor/modernizr.js"></script>
+
+    <!-- jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="row">
+    <div class="large-12 columns">
+        <h1>Welcome to Foundation with Sortables</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="large-12 columns">
+        <h3>Sorting and Replacing with Sortables </h3>
+
+        <div id="mysortables">
+
+            <div class="sortable-item"> Birne </div>
+            <div class="sortable-item"> Apfel </div>
+            <div class="sortable-item"> Citrone </div>
+            <div class="sortable-item"> Dinkel </div>
+
+        </div>
+
+    </div>
+</div>
+<div class="row">
+    <div class="large-12 columns">
+        <div class="panel">
+            <h3>Sortables rock!</h3>
+
+            <div id="items" class="row">
+
+                <div class="small-4 columns">
+                    <p><a href="http://foundation.zurb.com/docs">Foundation Documentation</a><br />Everything you need to know about using the framework.</p>
+                </div>
+                <div class="small-4 columns">
+                    <p><a href="http://github.com/zurb/foundation">Foundation on Github</a><br />Latest code, issue reports, feature requests and more.</p>
+                </div>
+                <div class="small-4 columns">
+                    <p><a href="http://twitter.com/foundationzurb">@foundationzurb</a><br />Ping us on Twitter if you have questions. If you build something with this we'd love to see it (and send you a totally boss sticker).</p>
+                </div>
+                <div class="small-4 columns">
+                    <p><a href="http://twitter.com/foundationzurb">@more</a><br />there nis even more to come.</p>
+                </div>
+                <div class="small-4 columns">
+                    <p><a href="http://twitter.com/foundationzurb">@test</a><br />lore.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <script src="//cdnjs.cloudflare.com/ajax/libs/Sortable/1.2.0/Sortable.min.js"></script> -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/Sortable/1.2.0/Sortable.js"></script>
+<script src="../js/lib/foundation.min.js"></script>
+<script>
+    $(document).foundation();
+
+    var el = document.getElementById('mysortables');
+    var sortable = Sortable.create(el, {
+            /*options*/
+            group: {
+                name: 'shared',
+                pull: 'clone'
+            },
+            handle: '.sortable-item',
+            onStart: function (evt) {
+                        console.log("started");
+            }
+        });
+
+</script>
+
+</body>
+</html>

@@ -1,22 +1,105 @@
 <!DOCTYPE HTML>
-<html>
+<html class="no-js" lang="en" xmlns="http://www.w3.org/1999/html">
 
 <head lang="en">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Prototype of Model Exploration Tool</title>
+
+    <!-- Foundation -->
+    <link rel="stylesheet" type="text/css" href="../css/foundation.css" />
+    <link rel="stylesheet" type="text/css" href="../css/foundation-icons/foundation-icons.css" />
+    <script src="../js/lib/foundation_vendor/modernizr.js"></script>
+
+    <!-- jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    <!-- jquery ui -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- interact.js
+    <script src="//cdn.jsdelivr.net/interact.js/1.2.4/interact.min.js"></script> -->
+
+    <!-- js-Logger-->
+    <script src="https://rawgit.com/jonnyreeves/js-logger/master/src/logger.min.js"></script>
+
+    <!-- custom styling -->
     <link rel="stylesheet" type="text/css" href="../css/prototype.css">
+
+    <!-- require.js -->
     <script data-main="../js/run-prototype" src="../js/lib/require.min.js"></script>
 </head>
 
 <body>
 
-<header> This is a header </header>
+<!-- top navigation bar -->
+<nav id="header-bar" class="top-bar" data-topbar role="navigation">
+    <ul class="title-area">
+        <li class="name"><h1><a href="#">Exploratory Model Visualization</a></h1></li>
+        <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+    </ul>
+    <section class="top-bar-section"> <!-- Right Nav Section -->
+        <ul class="right">
+            <li class="has-dropdown active">
+                <a href="#">Settings</a>
+                <ul class="dropdown">
+                    <li><a href="#">First link in dropdown</a></li>
+                    <li class="active"><a href="#">Active link in dropdown</a></li>
+                </ul>
+            </li>
+            <li class="has-dropdown active">
+                <a href="#">Links</a>
+                <ul class="dropdown">
+                    <li><a href="http://wiki.inf-i2.uni-jena.de/doku.php?id=emv">Our Wiki</a></li>
+                    <li><a href="http://foundation.zurb.com/docs/">Foundation Doc</a></li>
+                    <li><a href="http://foundation.zurb.com/docs/components/kitchen_sink.html">Foundation Sink</a></li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+</nav>
 
-<h1> Current Prototype for Model Exploration </h1>
+<!-- main content -->
+<main class="row full-width">
 
-<nav> This is a navigation bar </nav>
+    <!-- Sources: Dimensions and Measures -->
+    <div id='sourceColumn' class="small-5 columns">
+    </div>
 
-<footer> This is a footer </footer>
+    <div id='aesteticsColumn' class="small-5 columns">
+    </div>
+    <!--<div class="small-8 columns">-->
+        <!--<div id="vis-canvas" class="row panel">-->
+            <!--<div class="shelf-title">Visualization</div>-->
+
+            <!--<div class="small-centered small-6 column">-->
+                <!--<img src="http://placehold.it/400x400">-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</div>-->
+</main>
+
+  <!-- buttom icon bar -->
+<footer id="footer-bar" class="row full-width">
+    <div class="icon-bar five-up">
+        <a class="item"> <i class="fi-home"></i> </a>
+        <a class="item"> <i class="fi-bookmark"></i> </a>
+        <a class="item"> <i class="fi-info"></i> </a>
+        <a class="item"> <i class="fi-mail"></i> </a>
+        <a class="item"> <i class="fi-like"></i> </a>
+    </div>
+</footer>
+
+
+<script src="../js/lib/foundation.min.js"></script>
+<script>
+    // run foundation
+    $(document).foundation();
+
+    // namespace object
+    var emv = {};
+</script>
 
 </body>
 

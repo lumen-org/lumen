@@ -22,5 +22,10 @@
     "url": "."
   },
   "author": "Philipp Lucas",
-  "license": "non given yet"
+  "license": "non given yet",
+  "jshintConfig": {
+    "globals": {
+      "interact": false
+    }
+  }
 }
