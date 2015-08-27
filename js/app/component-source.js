@@ -18,7 +18,6 @@ define(['d3'], function (d3) {
      */
     start: function () {
 
-
       function dropOnShelf (event, ui, overlap) {
         if (overlap == util.OverlapEnum.none) {
           console.error("Dropping on shelf, but overlap = " + util.OverlapEnum.none);
@@ -33,97 +32,211 @@ define(['d3'], function (d3) {
         sourceItem.appendTo(targetList);
       }
 
-
-      function dropOnItem (event, ui, overlap) {
-        // todo: remove or copy from source?
-        var sourceItem = $(ui.draggable);
-        var OverlapEnum = util.OverlapEnum;
-        if (overlap == OverlapEnum.left || overlap == OverlapEnum.top) {
-          // move to before element
-          sourceItem.insertBefore($(event.target));
-        } else
-        if (overlap == OverlapEnum.right || overlap == OverlapEnum.bottom) {
-          // move to after target element
-          sourceItem.insertAfter($(event.target));
-        } else
-        if (overlap == OverlapEnum.center) {
-          // replace
-          $(event.target).replaceWith(sourceItem);
-        } else {
-          console.error("Dropping on item, but overlap = " + overlap);
-          return;
-        }
-      }
-
-
       /**
        * namespace build: Methods for building up the DOM with Shelfs and Shelf elements
        */
       var build = (function() {
 
         var build = {};
+        var logger = Logger.get('pl-build');
 
-        // private methods and variables
+        build.DirectionString = Object.freeze('direction');
+        build.DirectionType = Object.freeze({
+          vertical: 'vertical',
+          horizontal: 'horizontal'
+        });
+        build.DirectionElement = {};
+        build.DirectionElement[build.DirectionType.vertical] = Object.freeze('<div></div>');
+        build.DirectionElement[build.DirectionType.horizontal] = Object.freeze('<span></span>');
 
-
-        // public methods and variables
-
-
+        build.ShelfTypeString = Object.freeze('shelfType');
         build.ShelfType = Object.freeze({
           field: 'fieldShelf',
           layout: 'layoutShelf',
           filter: 'filterShelf',
-          aestetic: 'aesteticShelf',
+          color: 'colorShelf',
+          shape: 'shapeShelf',
+          size: 'sizeShelf',
+          aesthetic: 'aestheticShelf',
           remove: 'removeShelf'
         });
 
+        function makeItemDraggable ($item) {
+          $item.draggable({
+            helper: 'clone',
+            scope: 'vars',
+            zIndex: 1000,
 
-        //build.ItemType = Object.freeze({
-        //
-        //});
+            start: function (event, ui) {
+              ddr.linkDraggable(ui.draggable || ui.helper);
+            },
+
+            stop: function (event, ui) {
+              ddr.unlinkDraggable();
+            },
+
+            drag: function(event, ui) {
+              // todo: just check the position and underlying element every time in drag, not in over / out ... it just doesn't work well
+              // todo: http://stackoverflow.com/questions/15355553/jqueryui-droppable-over-and-out-callback-firing-out-of-sequence ??
+              if (ddr.linkDroppable()) {
+                var overlap = ddr.overlap()
+                //console.log(overlap);
+                ddr.highlight(overlap);
+              }
+            }
+          });
+        };
+
+        function makeItemDroppable ($item) {
+          $item.droppable({
+            scope: 'vars',
+            activeClass: 'drop-allow',
+            hoverClass: 'drop-hover',
+            greedy: false,
+            tolerance: "pointer",
+            drop: function (event, ui) {
+              // attach original target
+              event.originalEvent.targetItem = $(event.target);
+              event.originalEvent.targetItemType = "some";
+              Logger.debug('drop on shelf-list-item');
+            },
+
+            over: function (event, ui) {
+              ddr.linkDroppable($(this));
+            },
+
+            out: function (event, ui) {
+              ddr.unlinkDroppable();
+            }
+          });
+        };
+
+        function makeShelfDroppable ($shelf) {
+          $shelf.droppable({
+            scope: 'vars',
+            activeClass: 'drop-allow',
+            hoverClass: 'drop-hover',
+            greedy: false,
+            tolerance: 'pointer',
+
+            drop: function (event, ui) {
+
+              logger.debug('log on shelf');
+
+              if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
+                // todo: why is the event triggered again on the shelf, if it was actually dropped on an shelf-list-item?
+                return;
+              }
+              logger.debug("log on shelf cont'");
+
+              var target = {};
+              target.item = event.targetItem ||
+                (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable() : false) ||
+                false;
+              target.shelf = $(event.target);
+              target.shelfType = target.shelf.data(build.ShelfTypeString);
+
+              var source = {};
+              source.item = ui.draggable;
+              source.shelf = source.item.closest('.shelf');
+              source.shelfType = source.shelf.data(build.ShelfTypeString);
+              
+              var overlap = ddr.overlap();
+
+              onDrop[target.shelfType](target, source, overlap, event, ui);
+
+              ddr.unlinkDroppable();
+              event.stopPropagation();
+            },
+
+            over: function(event, ui) {
+              ddr.linkDroppable($(this));
+            },
+
+            out: function(event, ui) {
+              ddr.unlinkDroppable();
+            }
+          });
+        };
 
         /**
          * Adds a shelf as a <ul> to each element of the passed selection.
          * @param selection The selection
          * @param typeString The type of the shelf.
-         * @param idString String that will used as ID for the added shelf-<div> element
-         * @param headerString The label of the shelf.
+         * @param opt = {id, label, direction}
+         * Where:
+         *   - id is the string that will used as ID for the added shelf-<div> element.
+         *   - label is the label of the shelf
+         *   - direction = ['horizontal'|'vertical']
+         *
          * @returns the added shelf.
          */
-        build.addShelf = function (selection, typeString, idString, headerString) {
+        build.addShelf = function (selection, typeString, opt) {
 
+          if (!opt) opt = {};
+          if (!opt.direction) opt.direction = build.DirectionType.vertical;
+          if (!opt.label) opt.label = typeString;
+
+          // create shelf container
           var shelf = $('<div></div>')
-            .addClass('shelf row panel')
-            .attr('id',idString)
+            .addClass('shelf')
             .appendTo(selection);
 
-          $('<div></div>')
+          if (opt.id) {
+            shelf.attr('id', opt.id);
+          }
+
+          // create label
+          var htmlElem = build.DirectionElement[opt.direction];
+
+          $(htmlElem)
             .addClass('shelf-title')
-            .text(headerString)
+            .text(opt.label)
             .appendTo(shelf);
 
-          $('<ul></ul>').addClass('shelf-list')
+          // create element container
+          $(htmlElem).addClass('shelf-list')
             .appendTo(shelf);
 
-          // attach type to shelf
-         // shelf.data('shelfType', typeString);
+          // attach type and direction
+          shelf.data(build.ShelfTypeString, typeString);
+          shelf.data(build.DirectionString, opt.direction);
 
+          // add drag&drop
+          makeShelfDroppable(shelf);
           return shelf;
         };
 
+
         /**
-         * Adds an item as <li> to the shelf passed as selection
-         * @param selection
+         * @param labelString The label of the new item.
+         * @param shelf The shelf the item is for. It will not be added to the shelf.
+         * @returns {*|jQuery}
+         */
+        build.createShelfItem = function (labelString, shelf) {
+          var item = {};
+          if (shelf.data(build.DirectionString) == build.DirectionType.horizontal) {
+            item = $('<span></span>');
+          } else {
+            item = $('<div></div>');
+          }
+          item.addClass('shelf-list-item')
+            .text(labelString);
+          makeItemDraggable(item);
+          makeItemDroppable(item);
+          return item;
+        };
+
+        /**
+         * Adds an item to the shelf passed as selection.
+         * @param shelf
          * @param itemString
          * @returns the added item.
          */
-        build.addShelfItem = function (selection, itemString) {
-
-          var item = $('<li></li>')
-            .addClass('shelf-list-item')
-            .text(itemString)
-            .appendTo(selection);
-
+        build.addShelfItem = function (shelf, itemString) {
+          var item = build.createShelfItem(itemString, shelf);
+          var itemContainer = shelf.children('.shelf-list');
+          item.appendTo(itemContainer);
           return item;
         };
 
@@ -135,11 +248,8 @@ define(['d3'], function (d3) {
        */
       var util = (function() {
 
-        // private stuff
         var logger = Logger.get('pl-util');
         logger.setLevel(Logger.WARN);
-
-        // object to export
         var util = {};
 
         util.OverlapEnum = Object.freeze({
@@ -305,13 +415,20 @@ define(['d3'], function (d3) {
           },
 
           /**
-           * Returns the type of overlap of the current draggable in relative to the current droppable.
+           * Returns the type of overlap of the current draggable relative to the current droppable.
            * Possible types of overlap: no, left, right, bottom, top, center
            */
           overlap: function () {
             console.assert(draggable && droppable);
-            var margin = 0.3;
-            return util.overlap(draggable, droppable, {type: 'rel', top: margin, left: margin, bottom: margin, right: margin} );
+            var margin = {
+              h: 0.5,
+              v: 0.6
+            };
+            return util.overlap(
+              draggable,
+              droppable,
+              {type: 'rel', top: margin.v, left: margin.h, bottom: margin.v, right: margin.h}
+            );
           },
 
           /**
@@ -340,34 +457,111 @@ define(['d3'], function (d3) {
       })();
 
 
-
       /**
-       * Shelf-type based callback functions for dropping
+       * Callback functions for dropping
        */
       var onDrop = (function() {
+
+        var logger = Logger.get('pl-onDrop');
+        //logger.setLevel(Logger.WARN);
 
         var onDrop = {};
 
         // public methods and variables
 
-        onDrop[build.ShelfType.field] = function () {
-          // todo
+        /**
+         * The default behaviour for dropping is: remove source item from source shelf
+         */
+        onDrop.default = function (target, source, overlap, event, ui) {
+          source.item.remove();
         };
 
-        onDrop[build.ShelfType.layout] = function () {
-          // todo
+        onDrop[build.ShelfType.field] = function (target, source, overlap, event, ui) {
+          if (source.shelfType == build.ShelfType.field) {
+            // from field shelf to field shelf
+            // -> just append to target shelf
+            source.item.appendTo(target.shelf.children('.shelf-list'));
+          } else {
+            // default: remove from source shelf
+            onDrop.default(target, source, overlap, event, ui);
+          }
         };
 
-        onDrop[build.ShelfType.filter] = function () {
-          // todo
+        onDrop[build.ShelfType.layout] = function (target, source, overlap, event, ui) {
+
+          var item;
+          if (source.shelfType == build.ShelfType.field) {
+            item = build.createShelfItem(source.item.text(), target.shelf);
+          } else {
+            item = source.item;
+          }
+
+          if (target.item) {
+            var OverlapEnum = util.OverlapEnum;
+            switch (overlap) {
+              case OverlapEnum.left:
+              case OverlapEnum.top:
+                // move to before element
+                item.insertBefore(target.item);
+                break;
+              case OverlapEnum.right:
+              case OverlapEnum.bottom:
+                // move to after target element
+                item.insertAfter(target.item);
+                break;
+              case OverlapEnum.center:
+                // replace
+                target.item.replaceWith(item);
+                break;
+              default:
+                console.error("Dropping on item, but overlap = " + overlap);
+            }
+          } else {
+            item.appendTo(target.shelf.children('.shelf-list'));
+          }
         };
 
-        onDrop[build.ShelfType.aestetic] = function () {
-          // todo
+        onDrop[build.ShelfType.filter] = function (target, source, overlap, event, ui) {
+          if (source.shelfType == build.ShelfType.filter) {
+            // do nothing if just moving filters
+            // todo: allow reordering
+          } else {
+            // create new filter item
+            var newItem = build.createShelfItem('filter based on ' + source.item.text(), target.shelf)
+
+            if (target.item) {
+              // replace
+              target.item.replaceWith(newItem);
+            } else {
+              // append
+              newItem.appendTo(target.shelf.children('.shelf-list'));
+            }
+          }
         };
 
-        onDrop[build.ShelfType.remove] = function () {
-          // todo
+        onDrop[build.ShelfType.color] = function (target, source, overlap, event, ui) {
+          // remove any current color item
+          target.shelf.find('.shelf-list-item').remove();
+
+          var item = {};
+          if (source.shelfType == build.ShelfType.field) {
+            // create new item (-> copy)
+            item = build.createShelfItem(source.item.text(), target.shelf);
+          } else {
+            // get existing item (-> move)
+            item = source.item;
+          }
+          item.appendTo(target.shelf.children('.shelf-list'));
+        };
+
+        onDrop[build.ShelfType.shape] = onDrop[build.ShelfType.color];
+
+        onDrop[build.ShelfType.size] = onDrop[build.ShelfType.color];
+
+        onDrop[build.ShelfType.remove] = function (target, source, overlap, event, ui) {
+          if (source.shelfType != build.ShelfType.field) {
+            onDrop.default(target, source, overlap, event, ui);
+          }
         };
 
         return onDrop;
@@ -377,112 +571,83 @@ define(['d3'], function (d3) {
       /// build up initial DIMENSION and MEASURE shelves and add some elements
       var sourceColumn = $('#sourceColumn');
 
-      var dimShelf = build.addShelf(sourceColumn, build.ShelfType.field, 'dimension-shelf', 'Dimensions');
-      var dimList = $('#dimension-shelf .shelf-list');
-      build.addShelfItem(dimList, 'Name');
-      build.addShelfItem(dimList, 'Home City');
+      var dimShelf = build.addShelf(
+        sourceColumn,
+        build.ShelfType.field,
+        { id: 'dimension-shelf',
+          label: 'Dimensions'}
+      );
+      build.addShelfItem(dimShelf, 'Name');
+      build.addShelfItem(dimShelf, 'Home City');
 
-      var measureShelf = build.addShelf(sourceColumn, build.ShelfType.field, 'measure-shelf', 'Measures');
-      var measList = $('#measure-shelf .shelf-list');
-      build.addShelfItem(measList, 'Weight');
-      build.addShelfItem(measList, 'Height');
+      var measureShelf = build.addShelf(
+        sourceColumn,
+        build.ShelfType.field,
+        { id: 'measure-shelf',
+          label: 'Measures'}
+      );
+      build.addShelfItem(measureShelf, 'Weight');
+      build.addShelfItem(measureShelf, 'Height');
 
-      var removeShelf = build.addShelf(sourceColumn, build.ShelfType.remove, 'remove-shelf', 'Please drop here to remove');
+      var removeShelf = build.addShelf(
+        sourceColumn,
+        build.ShelfType.remove,
+        { id: 'remove-shelf',
+          label: 'Drop here to remove' }
+      );
 
       /// build up initial ASTHETICS shelves and add elements
-      var aesteticsColumn = $('#aesteticsColumn');
+      var aestheticsColumn = $('#aestheticsColumn');
 
-      var colorShelf = build.addShelf(aesteticsColumn, build.ShelfType.aestetic, 'color-shelf', 'Color');
-      var colorList = $('#color-shelf .shelf-list');
-      build.addShelfItem(colorList, 'Blue');
-      build.addShelfItem(colorList, 'Green');
+      var colorShelf = build.addShelf(
+        aestheticsColumn,
+        build.ShelfType.color,
+        { id: 'color-shelf',
+          label: 'Color'}
+      );
+      build.addShelfItem(colorShelf, 'CurrentColor');
 
-      var shapeShelf = build.addShelf(aesteticsColumn, build.ShelfType.aestetic, 'shape-shelf', 'Shape');
-      var shapeList = $('#shape-shelf .shelf-list');
-      build.addShelfItem(shapeList, 'Round');
-      build.addShelfItem(shapeList, 'Tohuwabohu');
+      var shapeShelf = build.addShelf(
+        aestheticsColumn,
+        build.ShelfType.shape,
+        { id: 'shape-shelf',
+          label: 'Shape'}
+      );
+      build.addShelfItem(shapeShelf, 'CurrentShape');
 
-      var filterShelf = build.addShelf(aesteticsColumn, build.ShelfType.filter, 'filter-shelf', 'Filter');
+      var filterShelf = build.addShelf(
+        aestheticsColumn,
+        build.ShelfType.filter,
+        { id: 'filter-shelf',
+          label: 'Filter'}
+      );
+      build.addShelfItem(filterShelf, 'some filter');
+      build.addShelfItem(filterShelf, 'another filter');
+      build.addShelfItem(filterShelf, 'a third filter');
 
-      var sizeShelf = build.addShelf(aesteticsColumn, 'size-shelf', 'Size');
+      var sizeShelf = build.addShelf(
+        aestheticsColumn,
+        build.ShelfType.size,
+        { id: 'size-shelf',
+          label: 'Size'}
+      );
 
-
-      /// DRAG & DROP using jQuery UI
-      // draggables
-      $('#dimension-shelf .shelf-list-item, ' +
-        '#measure-shelf .shelf-list-item').draggable({
-        helper: 'clone',
-        scope: 'vars',
-        zIndex: 1000,
-
-        start: function (event, ui) {
-          ddr.linkDraggable(ui.draggable || ui.helper);
-        },
-
-        stop: function (event, ui) {
-          ddr.unlinkDraggable();
-        },
-
-        drag: function(event, ui) {
-          // todo: just check the position and underlying element every time in drag, not in over / out ... it just doesn't work well
-          // todo: http://stackoverflow.com/questions/15355553/jqueryui-droppable-over-and-out-callback-firing-out-of-sequence ??
-          if (ddr.linkDroppable()) {
-            var overlap = ddr.overlap()
-            //console.log(overlap);
-            ddr.highlight(overlap);
-          }
-        }
-      });
-
-      // droppables (shelves)
-      $([dimShelf, measureShelf, removeShelf])
-        .add('#dimension-shelf .shelf-list-item, #measure-shelf .shelf-list-item')
-        .droppable({
-          scope: 'vars',
-          activeClass: 'drop-allow',
-          hoverClass: 'drop-hover',
-          greedy: true,
-          tolerance: "pointer",
-
-          drop: function (event, ui) {
-            if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
-              // todo: why is the event triggered again on the shelf, if it was actually dropped on an shelf-list-item?
-              return;
-            }
-
-            // two types of targets
-            var $target = $(event.target);
-            if ($target.hasClass('shelf')) {
-              console.log('drop on shelf!');
-              dropOnShelf(event, ui);
-            } else if ($target.hasClass('shelf-list-item')) {
-              console.log('drop on shelf-list-item!');
-              dropOnItem(event, ui, ddr.overlap());
-            }
-
-            ddr.unlinkDroppable();
-            event.stopPropagation();
-          },
-
-          over: function(event, ui) {
-            ddr.linkDroppable($(this));
-          },
-
-          out: function(event, ui) {
-            ddr.unlinkDroppable();
-          }
-        });
-
-      // droppables (items)
-/*      $([]).droppable({
-
-      })*/
-
-      // source: can be dragged, but not dropped on it
-
-      // drain: can receive drops, cannot be dragged
-
-
+      // build up initial LAYOUT shelf
+      var layoutRow = $('#layoutRow');
+      var rowShelf = build.addShelf(
+        layoutRow,
+        build.ShelfType.layout,
+        { id: 'row-shelf',
+          label: 'Rows',
+          direction: build.DirectionType.horizontal }
+        );
+      var colsShelf = build.addShelf(
+        layoutRow,
+        build.ShelfType.layout,
+        { id: 'cols-shelf',
+          label: 'Cols',
+          direction: build.DirectionType.horizontal }
+      );
     }
   };
 

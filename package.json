@@ -25,7 +25,8 @@
   "license": "non given yet",
   "jshintConfig": {
     "globals": {
-      "interact": false
+      "interact": false,
+      "Logger": false
     }
   }
 }
