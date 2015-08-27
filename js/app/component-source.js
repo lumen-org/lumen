@@ -18,19 +18,23 @@ define(['d3'], function (d3) {
      */
     start: function () {
 
-      function dropOnShelf (event, ui, overlap) {
-        if (overlap == util.OverlapEnum.none) {
-          console.error("Dropping on shelf, but overlap = " + util.OverlapEnum.none);
-          return;
-        }
 
-        // ignore overlap and add at the end of target shelf
-        var targetList = $(event.target).children('.shelf-list');
-        var sourceItem = $(ui.draggable);
-
-        // todo: remove or copy from source?
-        sourceItem.appendTo(targetList);
+      /**
+       * Class constructor for items
+       * @constructor
+       *
+      var Item = function() {
       }
+
+      var ItemClass = (function() {
+
+        // the closure is my class variables, methods, ... !
+
+        var ItemClass = {};
+
+
+      })();*/
+
 
       /**
        * namespace build: Methods for building up the DOM with Shelfs and Shelf elements
@@ -90,16 +94,16 @@ define(['d3'], function (d3) {
         function makeItemDroppable ($item) {
           $item.droppable({
             scope: 'vars',
-            activeClass: 'drop-allow',
-            hoverClass: 'drop-hover',
-            greedy: false,
+            //activeClass: 'drop-allow',
+           // hoverClass: 'drop-hover',
+            //greedy: false,
             tolerance: "pointer",
-            drop: function (event, ui) {
+            /*drop: function (event, ui) {
               // attach original target
               event.originalEvent.targetItem = $(event.target);
               event.originalEvent.targetItemType = "some";
               Logger.debug('drop on shelf-list-item');
-            },
+            },*/
 
             over: function (event, ui) {
               ddr.linkDroppable($(this));
@@ -114,9 +118,9 @@ define(['d3'], function (d3) {
         function makeShelfDroppable ($shelf) {
           $shelf.droppable({
             scope: 'vars',
-            activeClass: 'drop-allow',
-            hoverClass: 'drop-hover',
-            greedy: false,
+            //activeClass: 'drop-allow',
+            //hoverClass: 'drop-hover',
+           // greedy: false,
             tolerance: 'pointer',
 
             drop: function (event, ui) {
@@ -127,12 +131,11 @@ define(['d3'], function (d3) {
                 // todo: why is the event triggered again on the shelf, if it was actually dropped on an shelf-list-item?
                 return;
               }
-              logger.debug("log on shelf cont'");
+              logger.debug("log on shelf cont'd");
 
               var target = {};
               target.item = event.targetItem ||
-                (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable() : false) ||
-                false;
+                (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable() : false);
               target.shelf = $(event.target);
               target.shelfType = target.shelf.data(build.ShelfTypeString);
 
@@ -179,8 +182,7 @@ define(['d3'], function (d3) {
 
           // create shelf container
           var shelf = $('<div></div>')
-            .addClass('shelf')
-            .appendTo(selection);
+            .addClass('shelf');
 
           if (opt.id) {
             shelf.attr('id', opt.id);
@@ -188,7 +190,6 @@ define(['d3'], function (d3) {
 
           // create label
           var htmlElem = build.DirectionElement[opt.direction];
-
           $(htmlElem)
             .addClass('shelf-title')
             .text(opt.label)
@@ -204,6 +205,10 @@ define(['d3'], function (d3) {
 
           // add drag&drop
           makeShelfDroppable(shelf);
+
+          // append!
+          shelf.appendTo(selection);
+
           return shelf;
         };
 
