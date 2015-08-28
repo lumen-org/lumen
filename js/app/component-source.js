@@ -472,57 +472,79 @@ define(['d3'], function (d3) {
 
         var onDrop = {};
 
-        // public methods and variables
-
-        /**
-         * The default behaviour for dropping is: remove source item from source shelf
-         */
-        onDrop.default = function (target, source, overlap, event, ui) {
-          source.item.remove();
+        // this is going to be a class one day :-)
+        var Item = {}
+        Item.remove = function(item){
+            item.remove();
+        };
+        Item.append = function(source, targetItem, targetShelf){
+          var newItem = build.createShelfItem(source.text(), targetShelf);
+          targetItem.after(newItem);
+        };
+        Item.prepend = function(source, targetItem, targetShelf){
+          var newItem = build.createShelfItem(source.text(), targetShelf);
+          targetItem.before(newItem);
+        };
+        Item.replaceBy = function(source, targetItem, targetShelf){
+          var newItem = build.createShelfItem(source.text(), targetShelf);
+          targetItem.replaceWith(newItem);
         };
 
+        var Shelf = {
+          append : function (shelf, item){
+            var newItem = build.createShelfItem(item.text(), shelf);
+            shelf.children('.shelf-list').append(newItem);
+          },
+          prepend : function (shelf, item){
+            var newItem = build.createShelfItem(item.text(), shelf);
+            shelf.children('.shelf-list').prepend(newItem);
+          },
+          clear : function(shelf) {
+            shelf.find('.shelf-list-item').remove();
+            // todo: use Item.remove instead?
+          }
+        };
+
+        // public methods and variables
         onDrop[build.ShelfType.field] = function (target, source, overlap, event, ui) {
           if (source.shelfType == build.ShelfType.field) {
             // from field shelf to field shelf
-            // -> just append to target shelf
-            source.item.appendTo(target.shelf.children('.shelf-list'));
+            // -> move to target shelf
+            Shelf.append(target.shelf, source.item);
+            Item.remove(source.item);
+
           } else {
             // default: remove from source shelf
-            onDrop.default(target, source, overlap, event, ui);
+            Item.remove(source.item);
           }
         };
 
         onDrop[build.ShelfType.layout] = function (target, source, overlap, event, ui) {
-
-          var item;
-          if (source.shelfType == build.ShelfType.field) {
-            item = build.createShelfItem(source.item.text(), target.shelf);
-          } else {
-            item = source.item;
-          }
-
           if (target.item) {
             var OverlapEnum = util.OverlapEnum;
             switch (overlap) {
               case OverlapEnum.left:
               case OverlapEnum.top:
-                // move to before element
-                item.insertBefore(target.item);
+                // insert before element
+                Item.prepend(source.item, target.item, target.shelf);
                 break;
               case OverlapEnum.right:
               case OverlapEnum.bottom:
-                // move to after target element
-                item.insertAfter(target.item);
+                // insert after target element
+                Item.append(source.item, target.item, target.shelf);
                 break;
               case OverlapEnum.center:
                 // replace
-                target.item.replaceWith(item);
+                Item.replaceBy(source.item, target.item, target.shelf);
                 break;
               default:
                 console.error("Dropping on item, but overlap = " + overlap);
             }
           } else {
-            item.appendTo(target.shelf.children('.shelf-list'));
+            Shelf.append(target.shelf, source.item);
+          }
+          if (source.shelfType != build.ShelfType.field) {
+            Item.remove(source.item);
           }
         };
 
@@ -531,32 +553,22 @@ define(['d3'], function (d3) {
             // do nothing if just moving filters
             // todo: allow reordering
           } else {
-            // create new filter item
-            var newItem = build.createShelfItem('filter based on ' + source.item.text(), target.shelf)
-
             if (target.item) {
               // replace
-              target.item.replaceWith(newItem);
+              Item.replaceBy(source.item, target.item, target.shelf);
             } else {
               // append
-              newItem.appendTo(target.shelf.children('.shelf-list'));
+              Shelf.append(target.shelf, source.item);
             }
           }
         };
 
         onDrop[build.ShelfType.color] = function (target, source, overlap, event, ui) {
-          // remove any current color item
-          target.shelf.find('.shelf-list-item').remove();
-
-          var item = {};
-          if (source.shelfType == build.ShelfType.field) {
-            // create new item (-> copy)
-            item = build.createShelfItem(source.item.text(), target.shelf);
-          } else {
-            // get existing item (-> move)
-            item = source.item;
+          Shelf.clear(target.shelf);
+          Shelf.append(target.shelf, source.item);
+          if (source.shelfType != build.ShelfType.field) {
+            Item.remove(source.item);
           }
-          item.appendTo(target.shelf.children('.shelf-list'));
         };
 
         onDrop[build.ShelfType.shape] = onDrop[build.ShelfType.color];
@@ -565,7 +577,7 @@ define(['d3'], function (d3) {
 
         onDrop[build.ShelfType.remove] = function (target, source, overlap, event, ui) {
           if (source.shelfType != build.ShelfType.field) {
-            onDrop.default(target, source, overlap, event, ui);
+            Item.remove(source.item);
           }
         };
 
