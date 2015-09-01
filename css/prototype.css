@@ -22,6 +22,12 @@
     max-width: 100%;
 }
 
+#footer-bar {
+    height: 30px;
+    max-height: 30px;
+}
+
+
 /*.drop-hover {
     background-color: #4c55dd;
 }*/

@@ -36,8 +36,94 @@ define(['d3'], function (d3) {
       })();*/
 
 
+      var myscript = function () {
+
+        // define classes
+
+        var Item = function () {
+        }
+
+        /**
+         * Returns the shelf an item belongs to.
+         */
+        Item.prototype.shelf = function () {
+        };
+
+
+        var Field = function(name, params) {
+          this.name = name;
+          this.dataType = params.dataType;
+          this.role = params.role;
+          this.kind = params.kind;
+        }
+
+        Field.prototype = Object.create(Item.prototype);
+        Field.prototype.constructor = Field;
+
+
+        var FieldInstance = function(name, params) {
+          Field.call(this, name, params);
+          this.scale = params.scale;
+          this.aggr = params.aggr;
+        }
+
+        FieldInstance.prototype = Object.create(Field.prototype);
+        FieldInstance.prototype.constructor = FieldInstance;
+
+
+        /*
+         * Constructor of an abstract shelf.
+         * @constructor
+         *
+        var Shelf = function (id, itemPrototype) {
+          this._id = id;
+          this.itemPrototype = itemPrototype;
+        };
+
+        Shelf.prototype.sayHi = function() {
+          alert(this._id);
+        };
+
+        Shelf.prototype.append = function (item) {
+        };
+        Shelf.prototype.prepend = function (item) {
+        };
+        Shelf.prototype.contains = function (item) {
+        };
+        Shelf.prototype.attachToDOM = function (parent) {
+        };
+
+        var FieldShelf = function(id) {
+          Shelf.call(this, id);
+        };
+
+        FieldShelf.prototype = Object.create(Shelf.prototype);
+        FieldShelf.prototype.constructor = FieldShelf;
+
+        FieldShelf.prototype.append = function (item) {
+
+          console.assert(item instanceof Item);
+
+
+
+        };
+
+        // try it
+        var myShelf = new Shelf("hithere");
+        myShelf.sayHi();
+
+        var dimShelf = new FieldShelf();
+        FieldShelf.append( new FieldItem({"param1","param2"}) )
+
+        dimShelf.attachToDOM();*/
+
+        // keep in mind: you want a PQL statement in the end!
+        // maybe just create that structure right away and simply regard the HTML UI as the controller of that structure!
+
+      };
+
       /**
-       * namespace build: Methods for building up the DOM with Shelfs and Shelf elements
+       * namespace build: Methods for building up the DOM with Shelves and Shelf elements
        */
       var build = (function() {
 
@@ -48,10 +134,12 @@ define(['d3'], function (d3) {
         build.DirectionType = Object.freeze({
           vertical: 'vertical',
           horizontal: 'horizontal'
+//          box: 'box'
         });
         build.DirectionElement = {};
         build.DirectionElement[build.DirectionType.vertical] = Object.freeze('<div></div>');
         build.DirectionElement[build.DirectionType.horizontal] = Object.freeze('<span></span>');
+//        build.DirectionElement[build.DirectionType.box] = Object.freeze('<span></span>');
 
         build.ShelfTypeString = Object.freeze('shelfType');
         build.ShelfType = Object.freeze({
@@ -69,7 +157,7 @@ define(['d3'], function (d3) {
           $item.draggable({
             helper: 'clone',
             scope: 'vars',
-            zIndex: 1000,
+            zIndex: 9999,
 
             start: function (event, ui) {
               ddr.linkDraggable(ui.draggable || ui.helper);
@@ -83,13 +171,13 @@ define(['d3'], function (d3) {
               // todo: just check the position and underlying element every time in drag, not in over / out ... it just doesn't work well
               // todo: http://stackoverflow.com/questions/15355553/jqueryui-droppable-over-and-out-callback-firing-out-of-sequence ??
               if (ddr.linkDroppable()) {
-                var overlap = ddr.overlap()
+                var overlap = ddr.overlap();
                 //console.log(overlap);
                 ddr.highlight(overlap);
               }
             }
           });
-        };
+        }
 
         function makeItemDroppable ($item) {
           $item.droppable({
@@ -113,7 +201,7 @@ define(['d3'], function (d3) {
               ddr.unlinkDroppable();
             }
           });
-        };
+        }
 
         function makeShelfDroppable ($shelf) {
           $shelf.droppable({
@@ -160,7 +248,7 @@ define(['d3'], function (d3) {
               ddr.unlinkDroppable();
             }
           });
-        };
+        }
 
         /**
          * Adds a shelf as a <ul> to each element of the passed selection.
@@ -219,12 +307,7 @@ define(['d3'], function (d3) {
          * @returns {*|jQuery}
          */
         build.createShelfItem = function (labelString, shelf) {
-          var item = {};
-          if (shelf.data(build.DirectionString) == build.DirectionType.horizontal) {
-            item = $('<span></span>');
-          } else {
-            item = $('<div></div>');
-          }
+          var item = $(build.DirectionElement[shelf.data(build.DirectionString)]);
           item.addClass('shelf-list-item')
             .text(labelString);
           makeItemDraggable(item);
@@ -283,9 +366,9 @@ define(['d3'], function (d3) {
          * Returns the type of overlap of the first element of the selection $rel relative to first element of the selection $base.
          * Possible overlaps are: 'no', 'left', 'right', 'bottom', 'top', 'center'
          *
-         * @param rel DOM element
-         * @param base DOM element
-         * @param options {type='abs'|'rel', top, left, bottom, right}.
+         * @param $rel DOM element
+         * @param $base DOM element
+         * @param options Object: {type='abs'|'rel', top, left, bottom, right}.
          */
         util.overlap = function ($rel, $base, options) {
 
@@ -473,7 +556,7 @@ define(['d3'], function (d3) {
         var onDrop = {};
 
         // this is going to be a class one day :-)
-        var Item = {}
+        var Item = {};
         Item.remove = function(item){
             item.remove();
         };
@@ -665,6 +748,8 @@ define(['d3'], function (d3) {
           label: 'Cols',
           direction: build.DirectionType.horizontal }
       );
+
+      myscript();
     }
   };
 
