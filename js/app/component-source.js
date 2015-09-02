@@ -18,57 +18,310 @@ define(['d3'], function (d3) {
      */
     start: function () {
 
-
-      /**
-       * Class constructor for items
-       * @constructor
-       *
-      var Item = function() {
-      }
-
-      var ItemClass = (function() {
-
-        // the closure is my class variables, methods, ... !
-
-        var ItemClass = {};
-
-
-      })();*/
-
-
       var myscript = function () {
 
-        // define classes
+        // ColorMap class
+        var ColorMap = {
+          auto : function (item) {
+            return "auto colormap :-)";
+          }
+        };
 
-        var Item = function () {
-        }
+        /* var DataSource = function () {
+        // todo: implement a method to automatically determine a default config for data dimensions
+          auto: {
+            Role : function () {            },
+            Kind : function () {            },
+            DataType : function () {            }
+          }
+        };*/
 
-        /**
-         * Returns the shelf an item belongs to.
-         */
-        Item.prototype.shelf = function () {
+        var FieldT = {
+          Type : {string: 'string', num: 'numerical'},
+          Role : {measure: 'measure', dimension: 'dimension'},
+          Kind : {cont: 'continuous', discrete: 'discrete'}
+        };
+
+        var FUsageT = {
+          Aggregation: {sum: 'sum', agv: 'avg'},
+          Scale: {
+            linear: 'linear', log: 'log'
+          },
+          Order: {
+            ascending: 'asc', descending: 'desc'
+          }
         };
 
 
-        var Field = function(name, params) {
+        /**
+         * A Field object represents a certain dimension in a data source.
+         * @param name A unique identifier of a dimension in the data source.
+         * @param data Source The data source this is a field of.
+         * @param args Additional optional arguments.
+         * @constructor
+         */
+        var Field = function(name, dataSource, args) {
           this.name = name;
-          this.dataType = params.dataType;
-          this.role = params.role;
-          this.kind = params.kind;
-        }
+          this.dataSource = dataSource;   // data source
 
-        Field.prototype = Object.create(Item.prototype);
-        Field.prototype.constructor = Field;
+          if (typeof args === 'undefined') { args = {}; }
+          if (typeof args.dataType === 'undefined') { args.dataType = FieldT.Type.num; }
+          if (typeof args.role === 'undefined') { args.role = FieldT.Role.measure; }
+          if (typeof args.kind === 'undefined') { args.kind = FieldT.Kind.cont; }
+
+          this.dataType = args.dataType;  // data type of this field
+          this.role = args.role;  // measure or dimension
+          this.kind = args.kind;  // continuous or discrete
+        };
 
 
-        var FieldInstance = function(name, params) {
-          Field.call(this, name, params);
-          this.scale = params.scale;
-          this.aggr = params.aggr;
-        }
+        /**
+         * An FieldItem object is an item of a Shelf object. In contains either a Field object, but is in contrast bound to a certain shelf.
+         * @param shelf The Shelf this item belongs to.
+         * See Field for the other parameters.
+         * @constructor
+         */
+        var FieldItem = function(name, dataSource, shelf, args) {
+          console.assert( typeof shelf !== 'undefined');
+          Field.call(this, name, dataSource, args);
+          this.shelf = shelf;
+        };
+        FieldItem.prototype = Object.create(Field.prototype);
+        FieldItem.prototype.constructor = FieldItem;
 
-        FieldInstance.prototype = Object.create(Field.prototype);
-        FieldInstance.prototype.constructor = FieldInstance;
+
+        /**
+         * A FieldUsage object represents a usage of a field as part of a PQL expression.
+         * @param base The field or fieldUsage this field usage is based on.
+         * @param args Optional parameters for scale and aggregation function.
+         * @constructor
+         */
+        var FieldUsage = function(base, args) {
+
+          console.assert(base instanceof Field || base instanceof FieldUsage);
+
+          // todo: FieldUsage needs all the members that Field has: dataType, role, kind ... make it subclass?
+          Field.call(this, base.name, base.dataSource, base);
+
+          if (base instanceof Field) {
+            this.base = base;
+          } else {
+            this.base = base.base;
+          }
+
+          if (typeof args === 'undefined') { args = {}; }
+          if (typeof args.scale === 'undefined') { args.scale = FUsageT.Scale.linear; }
+
+          this.scale = args.scale;  //  a scale that maps value of the field usages to an (numeric) output range
+          if( this.role == FieldT.Role.measure) { // only for measures:
+            if (typeof args.aggr === 'undefined') { args.aggr = FUsageT.Aggregation.sum; }
+            this.aggr = args.aggr; // an aggregation function
+          }
+        };
+
+        FieldUsage.prototype = Object.create(Field.prototype);
+        FieldUsage.prototype.constructor = FieldUsage;
+
+
+        /**
+         * An FieldUsageItem object is an item of a Shelf object. In contains either a FieldUsage object, but is in contrast bound to a certain shelf.
+         * @param shelf The Shelf this item belongs to.
+         * See FieldUsage for the other parameters.
+         * @constructor
+         */
+        var FieldUsageItem = function(base, shelf, args) {
+          console.assert( typeof shelf !== 'undefined');
+          FieldUsage.call(this, base, args);
+          this.shelf = shelf;
+        };
+        FieldUsageItem.prototype = Object.create(FieldUsage.prototype);
+        FieldUsageItem.prototype.constructor = FieldUsageItem;
+
+
+        /**
+         * A ColorItem is based on a field usage. It additionally maps the field usage to colors in some way.*
+         * @param item An object of type Field or FieldUsage.
+         * @constructor Constructs a color item based on the given item.
+         */
+        var ColorItem = function (item) {
+
+          console.assert(item instanceof Field || item instanceof FieldUsage);
+
+          FieldUsage.call(this, item);
+
+          if (item instanceof ColorItem) {
+            this.colorMap = item.colorMap;
+          } else {
+            this.colorMap = ColorMap.auto(item);
+          }
+        };
+
+        ColorItem.prototype = Object.create(FieldUsage.prototype);
+        ColorItem.prototype.constructor = ColorItem;
+
+        /**
+         * A ColorShelf can hold zero or one ColorItems.
+         * @constructor
+         */
+        var ColorShelf = function () {
+          this.item = {}; // no bound item yet
+        };
+
+        ColorShelf.prototype.append = function (item) {
+          var newItem = new ColorItem(item);
+          this.item = newItem;
+        };
+
+        ColorShelf.prototype.prepend = ColorShelf.prototype.append;
+
+        ColorShelf.prototype.contains = function (item) {
+          return (this.item === item);
+        };
+
+        ColorShelf.prototype.remove = function (item) {
+          if (this.contains(item)) {
+            //item.remove();  // deconstruct
+            this.item = {};
+          }
+        };
+
+        /**
+         * A dimension shelf holds fields dimensions
+         * @constructor
+         */
+        var DimensionShelf = function () {
+          this.items = []; // no bound items yet
+        };
+
+        DimensionShelf.prototype.append = function (item) {
+          var newItem = new DimensionItem(item, this);
+          this.items.push(newItem);
+        };
+
+        DimensionShelf.prototype.prepend = function (item) {
+          var newItem = new DimensionItem(item);
+          this.items.unshift(newItem);
+        };
+
+        DimensionShelf.prototype.contains = function (item) {
+          return (-1 != this.items.indexOf(item));
+        };
+
+        DimensionShelf.prototype.remove = function (item) {
+          this.items.splice(this.items.indexOf(item), 1);
+        };
+
+
+        /**
+         * A dimension item is stored in a dimension shelf and is based on a field.
+         * @param item The item the new dimension item is based on.
+         * @constructor Creates a new dimension item based on item.
+         */
+        var DimensionItem = function (item) {
+
+          console.assert(item instanceof Field || item instanceof FieldUsage);
+
+          Field.call(this, item.name, item.dataSource, item);
+
+          // todo: what else?
+        };
+
+        DimensionItem.prototype = Object.create(Field.prototype);
+        DimensionItem.prototype.constructor = DimensionItem;
+
+        var colorShelf = new ColorShelf();
+        var myField = new Field('age', 'dataSource');
+        var myUsage = new FieldUsage(myField);
+
+        var myColorItem = new ColorItem(myField);
+        var dimensionItem = new DimensionItem(myField);
+        var dimensionItem2 = new DimensionItem(myColorItem);
+
+        colorShelf.prepend(myColorItem);
+
+        //var myColorItem2 = Item.makeItem(myField);
+
+        /* ignore for now:
+            * layers
+            * multiple data sources
+        */
+
+        /// Shelves
+
+        // create field shelves
+       /* var dimShelf = new DimensionShelf();
+        var measShelf = new MeasureShelf();
+
+        // create field usage shelves
+        var colorShelf = new ColorShelf();
+        var filterShelf = new FilterShelf();
+        var shapeShelf = new ShapeShelf();
+        var rowShelf = new LayoutShelf();
+        var colShelf = new LayoutShelf();
+
+
+        /// data source definition
+        // => maps to dimension and measure shelves
+        var dataSource = {
+          uri: 'foo.csv',
+          name: 'my source',
+          fields: {
+            age: {
+              role: "measure",
+              kind: "continuous",
+              dataType: "numerical"
+            },
+            weight: {
+              role: "measure",
+              kind: "continuous",
+              dataType: "numerical"
+            },
+            sex: {
+              role: "dimension",
+              kind: "discrete",
+              dataType: "numerical"
+            },
+            name: {
+              role: "dimension",
+              kind: "discrete",
+              dataType: "string"
+            }
+          }
+        };
+
+        /// view table definition
+        // => maps to layout sheles
+        var layout = {
+          fieldUsages: [], // need to generate the names
+          rows : rowShelf.expression, // just like that?
+          cols : colShelf.expression
+        };
+
+        /// layers definition
+        var layer = {
+          sourceName: false,
+          fieldUsages: {
+            // associative array to map name to unique field usage
+          },
+          aesthetics: {
+            mark: "auto",
+            color: false,
+            shape: false,
+            size: false
+          }
+        };
+
+        // populate field shelves
+        dataSource.link(dimShelf, measShelf, layer);
+
+        // modify expression by moving fields and field items around:
+        var ageItem = measShelf.item('age');
+        colorShelf.append(ageItem);
+        measShelf.remove(ageItem);
+
+        rowShelf.append( dimShelf.item('sex') );
+        rowShelf.item('sex').append( measShelf.item('weight'));*/
+
 
 
         /*
