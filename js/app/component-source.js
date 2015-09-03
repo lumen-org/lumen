@@ -53,35 +53,35 @@ define(['d3'], function (d3) {
         };
 
         /**
-         * A Shelf is a container that holds elements of type ItemConstructor.
+         * A Shelf is a container that holds records of type RecordConstructor.
          * A shelf can be given functions to manage its elements by the mixins {asSingletonShelf} and {asMultiShelf}.
-         * Note that items are never inserted as passed, but a new item is created on base on the passed item.
-         * @param ItemConstructor
+         * Note that records are never inserted as passed, but a new record is created on base on the passed record.
+         * @param RecordConstructor
          * @constructor
          */
-        var Shelf = function (ItemConstructor) {
-          this.ItemConstructor = ItemConstructor;
+        var Shelf = function (RecordConstructor) {
+          this.RecordConstructor = RecordConstructor;
         };
 
         /**
-         * A mixin that makes a {Shelf} a shelf that holds only a single item.
+         * A mixin that makes a {Shelf} a shelf that holds only a single record.
          */
         var asSingletonShelf = function () {
-          this.item = {};
+          this.record = {};
 
-          this.append = function (item) {
-            this.item = new this.ItemConstructor(item, this);
+          this.append = function (obj) {
+            this.record = new this.RecordConstructor(obj, this);
           };
 
           this.prepend = this.append;
 
-          this.contains = function (item) {
-            return (this.item === item);
+          this.contains = function (record) {
+            return (this.record === record);
           };
 
-          this.remove = function (item) {
-            if (this.contains(item)) {
-              this.item = {};
+          this.remove = function (record) {
+            if (this.contains(record)) {
+              this.record = {};
             }
           };
 
@@ -89,46 +89,51 @@ define(['d3'], function (d3) {
         };
 
         /**
-         * A mixin that makes a {Shelf} a shelf that can hold multiple items in a some linear order.
+         * A mixin that makes a {Shelf} a shelf that can hold multiple records in a some linear order.
          */
         var asMultiShelf = function () {
-          this.items = [];
+          this.records = [];
 
-          this.append = function (item) {
-            var newItem = new this.ItemConstructor(item, this);
-            this.items.push(newItem);
+          this.append = function (obj) {
+            var record = new this.RecordConstructor(obj, this);
+            this.records.push(record);
           };
 
-          this.prepend = function (item) {
-            var newItem = new this.ItemConstructor(item, this);
-            this.items.unshift(newItem);
+          this.prepend = function (obj) {
+            var record = new this.RecordConstructor(obj, this);
+            this.records.unshift(record);
           };
 
-          this.contains = function (item) {
-            return (-1 != this.items.indexOf(item));
+          this.contains = function (record) {
+            return (-1 != this.records.indexOf(record));
           };
 
-          this.remove = function (item) {
-            this.items.splice(this.items.indexOf(item), 1);
+          this.remove = function (record) {
+            var records = this.records;
+            records.splice(records.indexOf(record), 1);
           };
 
-          this.insert = function (item, idx) {
-            var items = this.items;
-            if(idx < 0 || idx > items.length) {
+          this.insert = function (obj, idx) {
+            var records = this.records;
+            if(idx < 0 || idx > records.length) {
               return;
             }
-            items.splice(idx, 0, new this.ItemConstructor(item, this));
+            records.splice(idx, 0, new this.RecordConstructor(obj, this));
           };
 
-          this.replace = function (oldItem, newItem) {
-            var items = this.items;
-            var idx = items.indexOf(oldItem);
-            items.splice(idx, 1, new this.ItemConstructor(newItem, this));
+          this.replace = function (oldRecord, newRecord) {
+            var records = this.records;
+            var idx = records.indexOf(oldRecord);
+            records.splice(idx, 1, new this.RecordConstructor(newRecord, this));
           };
         };
 
         /**
-         * A Field object represents a certain dimension in a data source.
+         * We call {Field} and {FieldUsage} both attributes.
+         */
+
+        /**
+         * A {Field} represents a certain dimension in a data source.
          * @param name A unique identifier of a dimension in the data source.
          * @param dataSource The data source this is a field of.
          * @param args Additional optional arguments.
@@ -148,9 +153,8 @@ define(['d3'], function (d3) {
           this.kind = args.kind;  // continuous or discrete
         };
 
-
         /**
-         * A FieldUsage object represents a usage of a field as part of a PQL expression.
+         * A {FieldUsage} represents a certain configuration of a {Field} for use in a PQL expression.
          * It details how the data of a certain dimension of a data set are mapped to some numerical output range.
          * @param base The field or fieldUsage this field usage is based on.
          * @param args Optional parameters for scale and aggregation function.
@@ -181,64 +185,71 @@ define(['d3'], function (d3) {
         FieldUsage.prototype.constructor = FieldUsage;
 
         /**
-         * An {Item} object has a {Field} or {FieldUsage} and is bound to a certain {Shelf}.
+         * An {Record} has an attribute (i.e. a {Field} or {FieldUsage}) and is bound to a certain {Shelf}.
          *
-         * {Item}s can be extended using the mixins {asSingletonItem} and {asMultiItem}. This provides functions to manage items of a shelf "from the items itself".
+         * {Record}s can be extended using the mixins {asSingletonRecord} and {asMultiRecord}. This provides functions to manage records of a shelf "from the records itself".
          *
-         * @param item Any object of type Field or FieldUsage.
-         * todo: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful. Also, we can do the conversion of Field to FieldUsage here instead of having to detect it in the subclasses
-         * @param shelf A shelf that this item belongs to.
+         * @param attr {Field|FieldUsage} Note that attr itself will be stored, not a copy of it.
+         * todo: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
+         * todo : Also, we can do the conversion of Field to FieldUsage here instead of having to detect it in the subclasses
+         * @param shelf A shelf that this record belongs to.
          * @constructor
          */
-        var Item = function (item, shelf) {
-          console.assert(typeof item !== 'undefined');
+        var Record = function (content, shelf) {
+          console.assert(typeof content !== 'undefined');
           console.assert(typeof shelf !== 'undefined');
           // development only:
-          console.assert(item instanceof Field || item instanceof FieldUsage);
-          this.item = item;
+          console.assert(content instanceof Field || content instanceof FieldUsage);
+          this.content = content;
           this.shelf = shelf;
         };
 
         /**
-         * An {UsageItem} object is a {Item} that may only contain a {FieldUsage} object.
-         * @param item {Item|Field|FieldUsage} The FieldUsage that the {UsageItem} will contain, or on {Field} or {Item} object that can be used to construct a {FieldUsage}.
-         * @param shelf The Shelf this item belongs to.
+         * An {FieldRecord} is a {Record} that may only contain a {Field}.
+         * @param obj Either a {Field}, or an {Record} that can be used to construct a {FieldUsage}.
+         * @param shelf The {Shelf} this record belongs to.
          * @constructor
          */
-        var UsageItem = function (item, shelf) {
-          if (item instanceof Item) {
-            item = item.item;
-          }
-          if (item instanceof Field) {
-            Item.call(this, new FieldUsage(item), shelf);
+        var FieldRecord = function (obj, shelf) {
+          var field;
+          if (obj instanceof Record) {
+            obj = obj.content;
+            field = new Field(obj.name, obj.dataSource, obj);
           } else {
-            Item.call(this, item, shelf);
+            field = obj;
           }
+          Record.call(this, field, shelf);
         };
-        UsageItem.prototype = Object.create(Item.prototype);
-        UsageItem.prototype.constructor = UsageItem;
+        FieldRecord.prototype = Object.create(Record.prototype);
+        FieldRecord.prototype.constructor = FieldRecord;
 
         /**
-         * An {FieldItem} object is a {Item} that may only contain a {Field} object.
-         * @param item Either a {Field} object, or an {Item} object that can be used to construct a {FieldUsage}.
-         * @param shelf The Shelf this item belongs to.
+         * An {FUsageRecord} is a {Record} that may only contain a {FieldUsage}.
+         * @param obj {Record|Field|FieldUsage} The FieldUsage that the {FUsageRecord} will contain, or a {Field} or {Record} that can be used to construct a {FieldUsage}.
+         * @param shelf The Shelf this record belongs to.
          * @constructor
          */
-        var FieldItem = function (item, shelf) {
-          if (item instanceof Item) {
-            item = item.item;
+        var FUsageRecord = function (obj, shelf) {
+          var field;
+          if (obj instanceof Record) {
+            obj = obj.content;
           }
-          Item.call(this, item, shelf);
+          if (obj instanceof Field) {
+            field = new FieldUsage(obj);
+          } else {
+            field = obj;
+          }
+          Record.call(this, field, shelf);
         };
-        FieldItem.prototype = Object.create(Item.prototype);
-        FieldItem.prototype.constructor = FieldItem;
+        FUsageRecord.prototype = Object.create(Record.prototype);
+        FUsageRecord.prototype.constructor = FUsageRecord;
 
         /**
-         * A mixin that extends a {Item} such that it can manage itself in context of its shelf.
+         * A mixin that extends a {Record} such that it can manage itself in context of its shelf.
          */
-        var asSingletonItem = function () {
-          this.replace = function (item) {
-            this.shelf.replace(item);
+        var asSingletonRecord = function () {
+          this.replace = function (record) {
+            this.shelf.replace(record);
           };
           this.append = this.replace;
           this.prepend = this.replace;
@@ -248,22 +259,22 @@ define(['d3'], function (d3) {
         };
 
         /**
-         * A mixin that extends a {Item} such that it can manage itself and its siblings in context of its shelf.
+         * A mixin that extends a {Record} such that it can manage itself and its siblings in context of its shelf.
          */
-        var asMultipleItem = function () {
-          this.append = function (item) {
+        var asMultipleRecord = function () {
+          this.append = function (record) {
             var shelf = this.shelf;
-            shelf.insert(item, shelf.indexOf(this)+1);
+            shelf.insert(record, shelf.indexOf(this)+1);
           };
-          this.prepend = function (item) {
+          this.prepend = function (record) {
             var shelf = this.shelf;
-            shelf.insert(item, shelf.indexOf(this));
+            shelf.insert(record, shelf.indexOf(this));
           };
-          this.remove = function (item) {
-            this.shelf.remove(item);
+          this.remove = function (record) {
+            this.shelf.remove(record);
           };
-          this.replace = function (item) {
-            this.shelf.replace(this, item);
+          this.replace = function (record) {
+            this.shelf.replace(this, record);
           };
         };
 
@@ -271,13 +282,13 @@ define(['d3'], function (d3) {
 
         /*
          * Generic constructor of shelf types.
-         * @param ItemConstructor
+         * @param RecordConstructor
          * @param multiplicity
          * @returns {Function}
          *
-        var makeShelfType = function (ItemConstructor, multiplicity) {
+        var makeShelfType = function (RecordConstructor, multiplicity) {
           var NewShelfType = function () {
-            Shelf.call(this, ItemConstructor);
+            Shelf.call(this, RecordConstructor);
           };
           NewShelfType.prototype = Object.create(Shelf.prototype);
           NewShelfType.prototype.constructor = NewShelfType;
@@ -289,99 +300,110 @@ define(['d3'], function (d3) {
           return NewShelfType;
         };*/
 
-        /**
-         * A {ColorItem} is based on {UsageItem}. It maps the field usage to a color space in some way.
-         * @param item An object of type Field or FieldUsage.
-         * @param shelf The {Shelf} it belongs to.
-         * @constructor Constructs a color item based on the given item.
-         */
-        var ColorItem = function (item, shelf) {
-          UsageItem.call(this, item, shelf);
-          if (item instanceof ColorItem) {
-            this.colorMap = item.colorMap;
-          } else {
-            this.colorMap = ColorMap.auto(item);
-          }
-        };
-        ColorItem.prototype = Object.create(UsageItem.prototype);
-        ColorItem.prototype.constructor = ColorItem;
-        asSingletonItem.call(ColorItem.prototype);
+        // TODO: constructors of of *Record should always construct new attributes to store and never use the existing ones.
+        // todo => maybe have to restrict the constructor of FieldRecord and FUsageRecord to Fields and FieldUsages, resp.
 
         /**
-         * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorItem}s.
+         * A {ColorRecord} is based on {FUsageRecord}. It maps the field usage to a color space in some way.
+         * @param obj An object of type Field or FieldUsage.
+         * @param shelf The {Shelf} it belongs to.
+         * @constructor Constructs a ColorRecrod based on the given obj.
+         */
+        var ColorRecord = function (obj, shelf) {
+          FUsageRecord.call(this, obj, shelf);
+          if (obj instanceof ColorRecord) {
+            this.colorMap = obj.colorMap;
+          } else {
+            this.colorMap = ColorMap.auto(obj);
+          }
+        };
+        ColorRecord.prototype = Object.create(FUsageRecord.prototype);
+        ColorRecord.prototype.constructor = ColorRecord;
+        asSingletonRecord.call(ColorRecord.prototype);
+
+        /**
+         * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
          * @constructor
          */
         var ColorShelf = function () {
-          Shelf.call(this, ColorItem);
+          Shelf.call(this, ColorRecord);
         };
         ColorShelf.prototype = Object.create(Shelf.prototype);
         ColorShelf.prototype.constructor = ColorShelf;
         asSingletonShelf.call(ColorShelf.prototype);
 
         /**
-         * A dimension item is stored in a dimension shelf and is based on a field.
-         * @param item The item the new dimension item is based on.
+         * A {DimensionRecord} is stored in a dimension shelf and is based on a field.
+         * @param obj The object the new dimension record is based on.
          * @param shelf
-         * @constructor Creates a new dimension item based on item.
+         * @constructor
          */
-        var DimensionItem = function (item, shelf) {
-          Item.call(this, item, shelf);
+        var DimensionRecord = function (obj, shelf) {
+          FieldRecord.call(this, obj, shelf);
+          if (this.content.role === FieldT.Role.measure) {
+            this.content.role = FieldT.Role.dimension;
+            // todo: convert more!?
+          }
         };
-        DimensionItem.prototype = Object.create(FieldItem.prototype);
-        DimensionItem.prototype.constructor = DimensionItem;
-        asMultipleItem.call(DimensionItem.prototype);
+        DimensionRecord.prototype = Object.create(FieldRecord.prototype);
+        DimensionRecord.prototype.constructor = DimensionRecord;
+        asMultipleRecord.call(DimensionRecord.prototype);
 
         /**
          * A dimension shelf holds fields dimensions
          * @constructor
          */
         var DimensionShelf = function () {
-          Shelf.call(this, DimensionItem);
+          Shelf.call(this, DimensionRecord);
         };
         DimensionShelf.prototype = Object.create(Shelf.prototype);
         DimensionShelf.prototype.constructor = DimensionShelf;
         asMultiShelf.call(DimensionShelf.prototype);
 
         /**
-         * A item that contains a measure.
-         * @param item
+         * A record that contains a measure.
+         * @param obj
          * @param shelf
          * @constructor
          */
-        var MeasureItem = function (item, shelf) {
-          Item.call(this, item, shelf);
+        var MeasureRecord = function (obj, shelf) {
+          FieldRecord.call(this, obj, shelf);
+          if (this.content.role === FieldT.Role.dimension) {
+            this.content.role = FieldT.Role.measure;
+            // todo: convert more!?
+          }
         };
-        MeasureItem.prototype = Object.create(FieldItem.prototype);
-        MeasureItem.prototype.constructor = MeasureItem;
-        asMultipleItem.call(MeasureItem.prototype);
+        MeasureRecord.prototype = Object.create(FieldRecord.prototype);
+        MeasureRecord.prototype.constructor = MeasureRecord;
+        asMultipleRecord.call(MeasureRecord.prototype);
 
         /**
          * @constructor
          */
         var MeasureShelf = function () {
-          Shelf.call(this, MeasureItem);
+          Shelf.call(this, MeasureRecord);
         };
         MeasureShelf.prototype = Object.create(Shelf.prototype);
         MeasureShelf.prototype.constructor = MeasureShelf;
         asMultiShelf.call(MeasureShelf.prototype);
 
         /**
-         * @param item
+         * @param obj
          * @param shelf
          * @constructor
          */
-        var LayoutItem = function (item, shelf) {
-          Item.call(this, item, shelf);
+        var LayoutRecord = function (obj, shelf) {
+          Record.call(this, obj, shelf);
         };
-        LayoutItem.prototype = Object.create(UsageItem.prototype);
-        LayoutItem.prototype.constructor = LayoutItem;
-        asMultipleItem.call(LayoutItem.prototype);
+        LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
+        LayoutRecord.prototype.constructor = LayoutRecord;
+        asMultipleRecord.call(LayoutRecord.prototype);
 
         /**
          * @constructor
          */
         var RowShelf = function () {
-          Shelf.call(this, LayoutItem);
+          Shelf.call(this, LayoutRecord);
         };
         RowShelf.prototype = Object.create(Shelf.prototype);
         RowShelf.prototype.constructor = RowShelf;
@@ -391,7 +413,7 @@ define(['d3'], function (d3) {
          * @constructor
          */
         var ColumnShelf = function () {
-          Shelf.call(this, LayoutItem);
+          Shelf.call(this, LayoutRecord);
         };
         ColumnShelf.prototype = Object.create(Shelf.prototype);
         ColumnShelf.prototype.constructor = ColumnShelf;
@@ -435,22 +457,22 @@ define(['d3'], function (d3) {
 ////////////////////////////////////////////////////////////////////////
         /*var colorShelf = new ColorShelf();
         var dimShelf = new DimensionShelf();
-        //var colorShelf = new Shelf(ColorItem);
+        //var colorShelf = new Shelf(ColorRecord);
 
 
         var myField = new Field('age', 'dataSource');
         var myUsage = new FieldUsage(myField);
 
-        //var myColorItem = new ColorItem(myField, colorShelf);
+        //var myColorRecord = new ColorRecord(myField, colorShelf);
         colorShelf.append(myUsage);
         dimShelf.append(myField);
         dimShelf.prepend(new Field('sex', 'another data source'));
 
         debugger;
 
-        colorShelf.item.remove();
+        colorShelf.record.remove();
         colorShelf.append(myUsage);
-        colorShelf.item.replace(myField);
+        colorShelf.record.replace(myField);
 
         debugger;
 
@@ -531,13 +553,13 @@ define(['d3'], function (d3) {
 
         debugger;
 
-        // modify expression by moving fields and field items around:
-        var ageItem = measShelf.item('age');
-        colorShelf.append(ageItem);
-        measShelf.remove(ageItem);
+        // modify expression by moving fields and field records around:
+        var ageRecord = measShelf.record('age');
+        colorShelf.append(ageRecord);
+        measShelf.remove(ageRecord);
 
-        rowShelf.append( dimShelf.item('sex') );
-        rowShelf.item('sex').append( measShelf.item('weight'));
+        rowShelf.append( dimShelf.record('sex') );
+        rowShelf.record('sex').append( measShelf.record('weight'));
 
 
         // keep in mind: you want a PQL statement in the end!
