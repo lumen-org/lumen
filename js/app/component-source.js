@@ -52,16 +52,25 @@ define(['d3'], function (d3) {
           }
         };
 
+        /**
+         * A Shelf is a container that holds elements of type ItemConstructor.
+         * A shelf can be given functions to manage its elements by the mixins {asSingletonShelf} and {asMultiShelf}.
+         * Note that items are never inserted as passed, but a new item is created on base on the passed item.
+         * @param ItemConstructor
+         * @constructor
+         */
         var Shelf = function (ItemConstructor) {
           this.ItemConstructor = ItemConstructor;
         };
 
+        /**
+         * A mixin that makes a {Shelf} a shelf that holds only a single item.
+         */
         var asSingletonShelf = function () {
           this.item = {};
 
           this.append = function (item) {
-            var newItem = new this.ItemConstructor(item, this);
-            this.item = newItem;
+            this.item = new this.ItemConstructor(item, this);
           };
 
           this.prepend = this.append;
@@ -79,7 +88,10 @@ define(['d3'], function (d3) {
           this.replace = this.append;
         };
 
-        var asMultipleShelf = function () {
+        /**
+         * A mixin that makes a {Shelf} a shelf that can hold multiple items in a some linear order.
+         */
+        var asMultiShelf = function () {
           this.items = [];
 
           this.append = function (item) {
@@ -115,11 +127,10 @@ define(['d3'], function (d3) {
           };
         };
 
-
         /**
          * A Field object represents a certain dimension in a data source.
          * @param name A unique identifier of a dimension in the data source.
-         * @param data Source The data source this is a field of.
+         * @param dataSource The data source this is a field of.
          * @param args Additional optional arguments.
          * @constructor
          */
@@ -138,32 +149,16 @@ define(['d3'], function (d3) {
         };
 
 
-        /*
-         * An FieldItem object is an item of a Shelf object. In contains either a Field object, but is in contrast bound to a certain shelf.
-         * @param shelf The Shelf this item belongs to.
-         * See Field for the other parameters.
-         * @constructor
-         *
-        var FieldItem = function(name, dataSource, shelf, args) {
-          console.assert( typeof shelf !== 'undefined');
-          Field.call(this, name, dataSource, args);
-          this.shelf = shelf;
-        };
-        FieldItem.prototype = Object.create(Field.prototype);
-        FieldItem.prototype.constructor = FieldItem;*/
-
-
         /**
          * A FieldUsage object represents a usage of a field as part of a PQL expression.
+         * It details how the data of a certain dimension of a data set are mapped to some numerical output range.
          * @param base The field or fieldUsage this field usage is based on.
          * @param args Optional parameters for scale and aggregation function.
          * @constructor
          */
         var FieldUsage = function(base, args) {
-
           console.assert(base instanceof Field || base instanceof FieldUsage);
 
-          // todo: FieldUsage needs all the members that Field has: dataType, role, kind ... make it subclass?
           Field.call(this, base.name, base.dataSource, base);
 
           if (base instanceof FieldUsage) {
@@ -185,30 +180,17 @@ define(['d3'], function (d3) {
         FieldUsage.prototype = Object.create(Field.prototype);
         FieldUsage.prototype.constructor = FieldUsage;
 
-
-        /*
-         * An FieldUsageItem object is an item of a Shelf object. In contains either a FieldUsage object, but is in contrast bound to a certain shelf.
-         * @param shelf The Shelf this item belongs to.
-         * See FieldUsage for the other parameters.
-         * @constructor
-         *
-        var FieldUsageItem = function(base, shelf, args) {
-          console.assert( typeof shelf !== 'undefined');
-          FieldUsage.call(this, base, args);
-          this.shelf = shelf;
-        };
-        FieldUsageItem.prototype = Object.create(FieldUsage.prototype);
-        FieldUsageItem.prototype.constructor = FieldUsageItem;*/
-
-
         /**
+         * An {Item} object has a {Field} or {FieldUsage} and is bound to a certain {Shelf}.
+         *
+         * {Item}s can be extended using the mixins {asSingletonItem} and {asMultiItem}. This provides functions to manage items of a shelf "from the items itself".
+         *
          * @param item Any object of type Field or FieldUsage.
-         * todo: this restriction is actually unnecessary, but for debugging it might be useful.
-         * todo: also, we can do the conversion of Field to FieldUsage here instead of having to detect it in the subclasses
-         * @param shelf A shelf that this mapping belongs to.
-         * @constructor Constructs a (abstract) map object that contains item and belongs to shelf
+         * todo: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful. Also, we can do the conversion of Field to FieldUsage here instead of having to detect it in the subclasses
+         * @param shelf A shelf that this item belongs to.
+         * @constructor
          */
-        var Mapping = function (item, shelf) {
+        var Item = function (item, shelf) {
           console.assert(typeof item !== 'undefined');
           console.assert(typeof shelf !== 'undefined');
           // development only:
@@ -217,30 +199,43 @@ define(['d3'], function (d3) {
           this.shelf = shelf;
         };
 
-        var UsageMapping = function (item, shelf) {
-          if (item instanceof Mapping) {
+        /**
+         * An {UsageItem} object is a {Item} that may only contain a {FieldUsage} object.
+         * @param item {Item|Field|FieldUsage} The FieldUsage that the {UsageItem} will contain, or on {Field} or {Item} object that can be used to construct a {FieldUsage}.
+         * @param shelf The Shelf this item belongs to.
+         * @constructor
+         */
+        var UsageItem = function (item, shelf) {
+          if (item instanceof Item) {
             item = item.item;
           }
           if (item instanceof Field) {
-            Mapping.call(this, new FieldUsage(item), shelf);
+            Item.call(this, new FieldUsage(item), shelf);
           } else {
-            Mapping.call(this, item, shelf);
+            Item.call(this, item, shelf);
           }
         };
-        UsageMapping.prototype = Object.create(Mapping.prototype);
-        UsageMapping.prototype.constructor = UsageMapping;
+        UsageItem.prototype = Object.create(Item.prototype);
+        UsageItem.prototype.constructor = UsageItem;
 
-        var FieldMapping = function (item, shelf) {
-          if (item instanceof Mapping) {
+        /**
+         * An {FieldItem} object is a {Item} that may only contain a {Field} object.
+         * @param item Either a {Field} object, or an {Item} object that can be used to construct a {FieldUsage}.
+         * @param shelf The Shelf this item belongs to.
+         * @constructor
+         */
+        var FieldItem = function (item, shelf) {
+          if (item instanceof Item) {
             item = item.item;
           }
-          Mapping.call(this, item, shelf);
+          Item.call(this, item, shelf);
         };
-        FieldMapping.prototype = Object.create(Mapping.prototype);
-        FieldMapping.prototype.constructor = FieldMapping;
+        FieldItem.prototype = Object.create(Item.prototype);
+        FieldItem.prototype.constructor = FieldItem;
 
-
-
+        /**
+         * A mixin that extends a {Item} such that it can manage itself in context of its shelf.
+         */
         var asSingletonItem = function () {
           this.replace = function (item) {
             this.shelf.replace(item);
@@ -252,6 +247,9 @@ define(['d3'], function (d3) {
           };
         };
 
+        /**
+         * A mixin that extends a {Item} such that it can manage itself and its siblings in context of its shelf.
+         */
         var asMultipleItem = function () {
           this.append = function (item) {
             var shelf = this.shelf;
@@ -269,36 +267,69 @@ define(['d3'], function (d3) {
           };
         };
 
-
         /// it follows specific types that are actually instanciated ///
 
+        /*
+         * Generic constructor of shelf types.
+         * @param ItemConstructor
+         * @param multiplicity
+         * @returns {Function}
+         *
+        var makeShelfType = function (ItemConstructor, multiplicity) {
+          var NewShelfType = function () {
+            Shelf.call(this, ItemConstructor);
+          };
+          NewShelfType.prototype = Object.create(Shelf.prototype);
+          NewShelfType.prototype.constructor = NewShelfType;
+          if (multiplicity == 'single') {
+            asSingletonShelf.call(NewShelfType.prototype);
+          } else if (multiplicity == 'multi') {
+            asMultiShelf.call(NewShelfType.prototype);
+          }
+          return NewShelfType;
+        };*/
+
         /**
-         * A ColorShelf can hold zero or one ColorItems.
+         * A {ColorItem} is based on {UsageItem}. It maps the field usage to a color space in some way.
+         * @param item An object of type Field or FieldUsage.
+         * @param shelf The {Shelf} it belongs to.
+         * @constructor Constructs a color item based on the given item.
+         */
+        var ColorItem = function (item, shelf) {
+          UsageItem.call(this, item, shelf);
+          if (item instanceof ColorItem) {
+            this.colorMap = item.colorMap;
+          } else {
+            this.colorMap = ColorMap.auto(item);
+          }
+        };
+        ColorItem.prototype = Object.create(UsageItem.prototype);
+        ColorItem.prototype.constructor = ColorItem;
+        asSingletonItem.call(ColorItem.prototype);
+
+        /**
+         * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorItem}s.
          * @constructor
          */
         var ColorShelf = function () {
-          Shelf.call(this, ColorMapping);
+          Shelf.call(this, ColorItem);
         };
         ColorShelf.prototype = Object.create(Shelf.prototype);
         ColorShelf.prototype.constructor = ColorShelf;
         asSingletonShelf.call(ColorShelf.prototype);
 
         /**
-         * A ColorItem is based on a field usage item. It additionally maps the field usage to color in some way.*
-         * @param item An object of type Field or FieldUsage.
-         * @constructor Constructs a color item based on the given item.
+         * A dimension item is stored in a dimension shelf and is based on a field.
+         * @param item The item the new dimension item is based on.
+         * @param shelf
+         * @constructor Creates a new dimension item based on item.
          */
-        var ColorMapping = function (item, shelf) {
-          UsageMapping.call(this, item, shelf);
-          if (item instanceof ColorMapping) {
-            this.colorMap = item.colorMap;
-          } else {
-            this.colorMap = ColorMap.auto(item);
-          }
+        var DimensionItem = function (item, shelf) {
+          Item.call(this, item, shelf);
         };
-        ColorMapping.prototype = Object.create(UsageMapping.prototype);
-        ColorMapping.prototype.constructor = ColorMapping;
-        asSingletonItem.call(ColorMapping.prototype);
+        DimensionItem.prototype = Object.create(FieldItem.prototype);
+        DimensionItem.prototype.constructor = DimensionItem;
+        asMultipleItem.call(DimensionItem.prototype);
 
         /**
          * A dimension shelf holds fields dimensions
@@ -309,35 +340,111 @@ define(['d3'], function (d3) {
         };
         DimensionShelf.prototype = Object.create(Shelf.prototype);
         DimensionShelf.prototype.constructor = DimensionShelf;
-        asMultipleShelf.call(DimensionShelf.prototype);
+        asMultiShelf.call(DimensionShelf.prototype);
 
         /**
-         * A dimension item is stored in a dimension shelf and is based on a field.
-         * @param item The item the new dimension item is based on.
-         * @constructor Creates a new dimension item based on item.
+         * A item that contains a measure.
+         * @param item
+         * @param shelf
+         * @constructor
          */
-        var DimensionItem = function (item, shelf) {
-          Mapping.call(this, item, shelf);
-          // todo: what else?
+        var MeasureItem = function (item, shelf) {
+          Item.call(this, item, shelf);
         };
-        DimensionItem.prototype = Object.create(FieldMapping.prototype);
-        DimensionItem.prototype.constructor = DimensionItem;
-        asMultipleItem.call(DimensionItem.prototype);
+        MeasureItem.prototype = Object.create(FieldItem.prototype);
+        MeasureItem.prototype.constructor = MeasureItem;
+        asMultipleItem.call(MeasureItem.prototype);
+
+        /**
+         * @constructor
+         */
+        var MeasureShelf = function () {
+          Shelf.call(this, MeasureItem);
+        };
+        MeasureShelf.prototype = Object.create(Shelf.prototype);
+        MeasureShelf.prototype.constructor = MeasureShelf;
+        asMultiShelf.call(MeasureShelf.prototype);
+
+        /**
+         * @param item
+         * @param shelf
+         * @constructor
+         */
+        var LayoutItem = function (item, shelf) {
+          Item.call(this, item, shelf);
+        };
+        LayoutItem.prototype = Object.create(UsageItem.prototype);
+        LayoutItem.prototype.constructor = LayoutItem;
+        asMultipleItem.call(LayoutItem.prototype);
+
+        /**
+         * @constructor
+         */
+        var RowShelf = function () {
+          Shelf.call(this, LayoutItem);
+        };
+        RowShelf.prototype = Object.create(Shelf.prototype);
+        RowShelf.prototype.constructor = RowShelf;
+        asMultiShelf.call(RowShelf.prototype);
+
+        /**
+         * @constructor
+         */
+        var ColumnShelf = function () {
+          Shelf.call(this, LayoutItem);
+        };
+        ColumnShelf.prototype = Object.create(Shelf.prototype);
+        ColumnShelf.prototype.constructor = ColumnShelf;
+        asMultiShelf.call(ColumnShelf.prototype);
 
 
+        /**
+         * A data source
+         * @param uri URI of the data source.
+         * @param name Some name for the data source.
+         * @constructor
+         */
+        var DataSource = function (uri, name) {
+          this.uri = uri;
+          this.name = name;
+          this.fields = {};
+        };
 
-        var colorShelf = new ColorShelf();
+        /**
+         * Populates dimShelf and measShelf with the fields of this data source.
+         * @param dimShelf
+         * @param measShelf
+         */
+        DataSource.prototype.populate = function (dimShelf, measShelf) {
+          var fields = this.fields;
+          for (var key in fields) {
+            var field = fields[key];
+            switch (field.role) {
+              case FieldT.Role.measure:
+                measShelf.append(field);
+                break;
+              case FieldT.Role.dimension:
+                dimShelf.append(field);
+                break;
+              default:
+                console.error('invalid value in field.role');
+            }
+          }
+        };
+
+////////////////////////////////////////////////////////////////////////
+        /*var colorShelf = new ColorShelf();
         var dimShelf = new DimensionShelf();
-        //var colorShelf = new Shelf(ColorMapping);
+        //var colorShelf = new Shelf(ColorItem);
 
 
         var myField = new Field('age', 'dataSource');
         var myUsage = new FieldUsage(myField);
 
-        //var myColorMapping = new ColorMapping(myField, colorShelf);
+        //var myColorItem = new ColorItem(myField, colorShelf);
         colorShelf.append(myUsage);
         dimShelf.append(myField);
-        dimShelf.prepend(new Field('sex', 'another datasource'));
+        dimShelf.prepend(new Field('sex', 'another data source'));
 
         debugger;
 
@@ -346,12 +453,6 @@ define(['d3'], function (d3) {
         colorShelf.item.replace(myField);
 
         debugger;
-        /*var dimensionItem = new DimensionItem(myField);
-        var dimensionItem2 = new DimensionItem(myColorItem);
-
-        colorShelf.prepend(myColorItem);*/
-
-        //var myColorItem2 = Item.makeItem(myField);
 
         /* ignore for now:
             * layers
@@ -361,56 +462,58 @@ define(['d3'], function (d3) {
         /// Shelves
 
         // create field shelves
-       /* var dimShelf = new DimensionShelf();
+        var dimShelf = new DimensionShelf();
         var measShelf = new MeasureShelf();
 
         // create field usage shelves
         var colorShelf = new ColorShelf();
-        var filterShelf = new FilterShelf();
-        var shapeShelf = new ShapeShelf();
-        var rowShelf = new LayoutShelf();
-        var colShelf = new LayoutShelf();
+        //var filterShelf = new FilterShelf();
+        //var shapeShelf = new ShapeShelf();
+        var rowShelf = new RowShelf();
+        var columnShelf = new ColumnShelf();
 
-
-        /// data source definition
-        // => maps to dimension and measure shelves
-        var dataSource = {
-          uri: 'foo.csv',
-          name: 'my source',
-          fields: {
-            age: {
-              role: "measure",
-              kind: "continuous",
-              dataType: "numerical"
-            },
-            weight: {
-              role: "measure",
-              kind: "continuous",
-              dataType: "numerical"
-            },
-            sex: {
-              role: "dimension",
-              kind: "discrete",
-              dataType: "numerical"
-            },
-            name: {
-              role: "dimension",
-              kind: "discrete",
-              dataType: "string"
-            }
-          }
+        var dataSource = new DataSource('foo.csv', 'my source');
+        var ageField = new Field(
+          'age', dataSource,
+          { dataType : FieldT.Type.num,
+            role : FieldT.Role.measure,
+            kind : FieldT.Kind.cont
+          });
+        var weightField = new Field(
+          'weight', dataSource,
+          { dataType : FieldT.Type.num,
+            role : FieldT.Role.measure,
+            kind : FieldT.Kind.cont
+          });
+        var sexField = new Field(
+          'sex', dataSource,
+          { dataType : FieldT.Type.num,
+            role : FieldT.Role.dimension,
+            kind : FieldT.Kind.discrete
+          });
+        var nameField = new Field(
+          'name', dataSource,
+          { dataType : FieldT.Type.string,
+            role : FieldT.Role.dimension,
+            kind : FieldT.Kind.discrete
+          });
+        dataSource.fields = {
+          age: ageField,
+          weight: weightField,
+          sex: sexField,
+          name: nameField
         };
 
         /// view table definition
-        // => maps to layout sheles
-        var layout = {
+        // => maps to layout shelves
+        /*var layout = {
           fieldUsages: [], // need to generate the names
           rows : rowShelf.expression, // just like that?
           cols : colShelf.expression
-        };
+        };*/
 
         /// layers definition
-        var layer = {
+        /*var layer = {
           sourceName: false,
           fieldUsages: {
             // associative array to map name to unique field usage
@@ -421,10 +524,12 @@ define(['d3'], function (d3) {
             shape: false,
             size: false
           }
-        };
+        };*/
 
         // populate field shelves
-        dataSource.link(dimShelf, measShelf, layer);
+        dataSource.populate(dimShelf, measShelf);
+
+        debugger;
 
         // modify expression by moving fields and field items around:
         var ageItem = measShelf.item('age');
@@ -432,55 +537,8 @@ define(['d3'], function (d3) {
         measShelf.remove(ageItem);
 
         rowShelf.append( dimShelf.item('sex') );
-        rowShelf.item('sex').append( measShelf.item('weight'));*/
+        rowShelf.item('sex').append( measShelf.item('weight'));
 
-
-
-        /*
-         * Constructor of an abstract shelf.
-         * @constructor
-         *
-        var Shelf = function (id, itemPrototype) {
-          this._id = id;
-          this.itemPrototype = itemPrototype;
-        };
-
-        Shelf.prototype.sayHi = function() {
-          alert(this._id);
-        };
-
-        Shelf.prototype.append = function (item) {
-        };
-        Shelf.prototype.prepend = function (item) {
-        };
-        Shelf.prototype.contains = function (item) {
-        };
-        Shelf.prototype.attachToDOM = function (parent) {
-        };
-
-        var FieldShelf = function(id) {
-          Shelf.call(this, id);
-        };
-
-        FieldShelf.prototype = Object.create(Shelf.prototype);
-        FieldShelf.prototype.constructor = FieldShelf;
-
-        FieldShelf.prototype.append = function (item) {
-
-          console.assert(item instanceof Item);
-
-
-
-        };
-
-        // try it
-        var myShelf = new Shelf("hithere");
-        myShelf.sayHi();
-
-        var dimShelf = new FieldShelf();
-        FieldShelf.append( new FieldItem({"param1","param2"}) )
-
-        dimShelf.attachToDOM();*/
 
         // keep in mind: you want a PQL statement in the end!
         // maybe just create that structure right away and simply regard the HTML UI as the controller of that structure!
@@ -1061,7 +1119,7 @@ define(['d3'], function (d3) {
           label: 'Drop here to remove' }
       );
 
-      /// build up initial ASTHETICS shelves and add elements
+      /// build up initial AESTHETICS shelves and add elements
       var aestheticsColumn = $('#aestheticsColumn');
 
       var colorShelf = build.addShelf(
