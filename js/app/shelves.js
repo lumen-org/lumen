@@ -1,18 +1,5 @@
-define([], function() {
+define(['app/utils'], function(utils) {
   'use strict';
-
-  /**
-   * Returns:
-   *   val1 if val1 is defined and not null, else:
-   *    val2 if (cond2 && val !== null) holds, else:
-   *    valDefault
-   */
-  var selectValue = function (val1, cond2, val2, valDefault) {
-    return (
-      (typeof val1 !== 'undefined' && val1 !== null ? val1 :
-        (cond2 && val2 !== null ? val2 : valDefault))
-    );
-  };
 
   /**
    * ColorMap class
@@ -192,10 +179,10 @@ define([], function() {
       args = {};
     }
     this.name = (isF ? nameOrField.name : nameOrField);
-    this.dataSource = selectValue(dataSource, isF, nameOrField.dataSource, {});
-    this.dataType = selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
-    this.role = selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure);
-    this.kind = selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
+    this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
+    this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
+    this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure);
+    this.kind = utils.selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
   };
 
   /**
@@ -213,8 +200,8 @@ define([], function() {
     }
     var isFU = base instanceof FieldUsage;
     this.base = (isFU ? base.base : base);
-    this.aggr = selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
-    this.scale = selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);
+    this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
+    this.scale = utils.selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);
   };
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;

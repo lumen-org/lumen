@@ -49,6 +49,7 @@ define(['d3'], function (d3) {
           remove: 'removeShelf'
         });
 
+
         function makeItemDraggable ($item) {
           $item.draggable({
             helper: 'clone',
@@ -645,7 +646,7 @@ define(['d3'], function (d3) {
           direction: build.DirectionType.horizontal }
       );
 
-      myscript();
+      //myscript();
     }
   };
 
