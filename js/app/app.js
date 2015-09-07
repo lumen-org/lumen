@@ -2,13 +2,13 @@
  * @author Philipp Lucas
  * @module
  * This is the Module definition of app.js.
- * d3 is included as a require dependency to this module, and will be available under the name d3 in this function.
+ * d3 is included as a required dependency to this module, and will be available under the name d3 in this function.
  */
 
 define(['d3', 'app/common'], function(d3, common) {
   'use strict';
 
-  // setup code here
+  // setup code / closure stuff here
   // ...
 
   // definitions of modules functions here
