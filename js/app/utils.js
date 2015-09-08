@@ -1,6 +1,8 @@
 define([], function() {
   'use strict';
 
+  var logger = Logger.get('pl-utils');
+
   /**
    * Returns:
    *   valPref if valPref is defined and not null, else:

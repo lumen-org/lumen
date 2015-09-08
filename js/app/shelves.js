@@ -1,6 +1,8 @@
 define(['app/utils'], function(utils) {
   'use strict';
 
+  var logger = Logger.get('pl-shelves');
+
   /**
    * ColorMap class
    * @type {{auto: Function}}
@@ -81,9 +83,22 @@ define(['app/utils'], function(utils) {
     this.RecordConstructor = RecordConstructor;
   };
 
-  var ShelfTypeT = Object.freeze({
+  var ShelfMultiplicityT = Object.freeze({
     singletonShelf : 'singleton',
     multiShelf : 'multi'
+  });
+
+  var ShelfTypeT = Object.freeze({
+    dimension: 'dimensionShelf',
+    measure: 'measureShelf',
+    row: 'rowShelf',
+    column: 'columnShelf',
+    filter: 'filterShelf',
+    color: 'colorShelf',
+    shape: 'shapeShelf',
+    size: 'sizeShelf',
+    aesthetic: 'aestheticShelf',
+    remove: 'removeShelf'
   });
 
   /**
@@ -91,11 +106,12 @@ define(['app/utils'], function(utils) {
    * That is, it requires that the target object has a property RecordConstructor which can be used to construct new records for this shelf.
    */
   var asSingletonShelf = function () {
-    this.type = ShelfTypeT.singletonShelf;
     this.record = null;
+    this.multiplicity = ShelfMultiplicityT.singletonShelf;
 
     this.append = function (obj) {
       this.record = new this.RecordConstructor(obj, this);
+      return this.record;
     };
 
     this.prepend = this.append;
@@ -122,16 +138,18 @@ define(['app/utils'], function(utils) {
    */
   var asMultiShelf = function () {
     this.records = [];
-    this.type = ShelfTypeT.multiShelf;
+    this.multiplicity = ShelfMultiplicityT.multiShelf;
 
     this.append = function (obj) {
       var record = new this.RecordConstructor(obj, this);
       this.records.push(record);
+      return record;
     };
 
     this.prepend = function (obj) {
       var record = new this.RecordConstructor(obj, this);
       this.records.unshift(record);
+      return record;
     };
 
     this.contains = function (record) {
@@ -148,13 +166,17 @@ define(['app/utils'], function(utils) {
       if (idx < 0 || idx > records.length) {
         return;
       }
-      records.splice(idx, 0, new this.RecordConstructor(obj, this));
+      var record = new this.RecordConstructor(obj, this);
+      records.splice(idx, 0, record);
+      return record;
     };
 
     this.replace = function (oldRecord, newRecord) {
       var records = this.records;
       var idx = records.indexOf(oldRecord);
-      records.splice(idx, 1, new this.RecordConstructor(newRecord, this));
+      var record = new this.RecordConstructor(newRecord, this);
+      records.splice(idx, 1, record);
+      return record;
     };
 
     this.length = function () {
@@ -164,7 +186,6 @@ define(['app/utils'], function(utils) {
     this.empty = function () {
       return(this.length() === 0);
     };
-
   };
 
   /**
@@ -318,26 +339,6 @@ define(['app/utils'], function(utils) {
 
 /// it follows specific types that are actually instanciated ///
 
-  /*
-   * Generic constructor of shelf types.
-   * @param RecordConstructor
-   * @param multiplicity
-   * @returns {Function}
-   *
-   var makeShelfType = function (RecordConstructor, multiplicity) {
-   var NewShelfType = function () {
-   Shelf.call(this, RecordConstructor);
-   };
-   NewShelfType.prototype = Object.create(Shelf.prototype);
-   NewShelfType.prototype.constructor = NewShelfType;
-   if (multiplicity == 'single') {
-   asSingletonShelf.call(NewShelfType.prototype);
-   } else if (multiplicity == 'multi') {
-   asMultiShelf.call(NewShelfType.prototype);
-   }
-   return NewShelfType;
-   };*/
-
 // TODO: constructors of of *Record should always construct new attributes to store and never use the existing ones.
 // todo => However, they can rely on FieldRecord and FUsageRecord to create new instances if not passing the correct object type
 // todo => maybe have to restrict the constructor of FieldRecord and FUsageRecord to Fields and FieldUsages, resp.?
@@ -365,6 +366,7 @@ define(['app/utils'], function(utils) {
    */
   var ColorShelf = function () {
     Shelf.call(this, ColorRecord);
+    this.type = ShelfTypeT.color;
   };
   ColorShelf.prototype = Object.create(Shelf.prototype);
   ColorShelf.prototype.constructor = ColorShelf;
@@ -396,6 +398,7 @@ define(['app/utils'], function(utils) {
    */
   var DimensionShelf = function () {
     Shelf.call(this, DimensionRecord);
+    this.type = ShelfTypeT.dimension;
   };
   DimensionShelf.prototype = Object.create(Shelf.prototype);
   DimensionShelf.prototype.constructor = DimensionShelf;
@@ -426,6 +429,7 @@ define(['app/utils'], function(utils) {
    */
   var MeasureShelf = function () {
     Shelf.call(this, MeasureRecord);
+    this.type = ShelfTypeT.measure;
   };
   MeasureShelf.prototype = Object.create(Shelf.prototype);
   MeasureShelf.prototype.constructor = MeasureShelf;
@@ -452,6 +456,7 @@ define(['app/utils'], function(utils) {
    */
   var RowShelf = function () {
     Shelf.call(this, LayoutRecord);
+    this.type = ShelfTypeT.row;
   };
   RowShelf.prototype = Object.create(Shelf.prototype);
   RowShelf.prototype.constructor = RowShelf;
@@ -462,6 +467,7 @@ define(['app/utils'], function(utils) {
    */
   var ColumnShelf = function () {
     Shelf.call(this, LayoutRecord);
+    this.type = ShelfTypeT.column;
   };
   ColumnShelf.prototype = Object.create(Shelf.prototype);
   ColumnShelf.prototype.constructor = ColumnShelf;
@@ -474,6 +480,7 @@ define(['app/utils'], function(utils) {
     FUsageT: FUsageT,
 
     Shelf: Shelf,
+    ShelfMultiplicityT: ShelfMultiplicityT,
     ShelfTypeT: ShelfTypeT,
     asSingletonShelf: asSingletonShelf,
     asMultiShelf: asMultiShelf,

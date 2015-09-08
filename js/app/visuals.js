@@ -1,11 +1,24 @@
 define(['app/shelves','app/utils'], function(s, util) {
   'use strict';
 
-  /*var LayoutT = Object.freeze({
-    vertical: 'vertical',     // title goes in its own row, so does each record this shelf holds
-    horizontal: 'horizontal', // all on one row
-    box: 'box'
-  });*/
+  var logger = Logger.get('pl-visuals');
+
+  var DirectionString = Object.freeze('direction');
+  var DirectionType = Object.freeze({
+    vertical: 'vertical',
+    horizontal: 'horizontal'
+//          box: 'box'
+  });
+  var DirectionElement = {};
+  DirectionElement[DirectionType.vertical] = Object.freeze('<div></div>');
+  DirectionElement[DirectionType.horizontal] = Object.freeze('<span></span>');
+//        build.DirectionElement[DirectionType.box] = Object.freeze('<span></span>');
+
+//  var ShelfTypeString = Object.freeze('shelfType');
+  var AttachStringT = {
+    record: Object.freeze('recordAttachment'),
+    shelf : Object.freeze('shelfAttachment')
+  };
 
   /**
    * A mixin function that creates a visual representation (as HTML elements)
@@ -13,19 +26,15 @@ define(['app/shelves','app/utils'], function(s, util) {
    * This will add attributes to shelf: $visual
    * @param {Shelf} shelf The shelf to become a visual.
    */
-  function asVisualShelf (shelf, typeString, opt) {
+  function asVisualShelf (shelf, opt) {
 
     opt = util.selectValue(opt, {});
-    //opt.direction = util.selectValue(opt.direction, build.DirectionType.vertical);
-    opt.label = util.selectValue(opt.label, typeString);
+    //opt.direction = util.selectValue(opt.direction, DirectionType.vertical);
+    opt.label = util.selectValue(opt.label, shelf.type);
 
     // create visual container
     var visual = $('<div></div>')
       .addClass('shelf');
-
-    if (opt.id) {
-      visual.attr('id', opt.id);
-    }
 
     // create label
     //var label = build.DirectionElement[opt.direction];
@@ -39,20 +48,25 @@ define(['app/shelves','app/utils'], function(s, util) {
     var container = $('<div></div>').addClass('shelf-list')
       .appendTo(visual);
 
-    // attach type and direction
-    //visual.data(build.ShelfTypeString, typeString);
+    // attach direction
     //visual.data(build.DirectionString, opt.direction);
 
-    // extend the shelf
+    // attach shelf to visual
+    visual.data(AttachStringT.shelf, shelf);
+
+    // add visual to shelf
     shelf.$visual = visual;
     shelf.$visual.container = container;
 
+    // add removal method for visual
+    shelf.removeVisual = _removeVisual;
+
     // make all records visual too
-    switch (shelf.type) {
-      case s.ShelfTypeT.singletonShelf:
+    switch (shelf.multiplicity) {
+      case s.ShelfMultiplicityT.singletonShelf:
         asVisualRecord(shelf.record);
         break;
-      case s.ShelfTypeT.multiShelf:
+      case s.ShelfMultiplicityT.multiShelf:
         shelf.records.forEach(asVisualRecord);
         break;
     }
@@ -60,7 +74,6 @@ define(['app/shelves','app/utils'], function(s, util) {
     // return root html element
     return visual;
   }
-
 
   /**
    * A mixin function that creates a simple visual representation (as HTML elements) of this record. The root of representation is returned. It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
@@ -72,23 +85,32 @@ define(['app/shelves','app/utils'], function(s, util) {
     var visual = $('<div></div>');
     visual.addClass('shelf-list-item')
       .text(record.content.name);
-    //makeItemDraggable(item);
-    //makeItemDroppable(item);
 
-    // add to shelf
-
+    // add to visual of shelf
     // todo: add to the correct relative position!
     visual.appendTo(record.shelf.$visual.container);
 
-    // add to record
+    // attach record to visual
+    visual.data(AttachStringT.record, record);
+
+    // add visual to record
     record.$visual = visual;
+
+    // add removal method for visual
+    record.removeVisual = _removeVisual;
 
     return visual;
   }
 
+  function _removeVisual () {
+    this.$visual.remove();
+  }
+
   // public part of the module
   return {
-    asVisualRecord:asVisualRecord,
-    asVisualShelf:asVisualShelf
+    AttachStringT: AttachStringT,
+    asVisualRecord: asVisualRecord,
+    asVisualShelf: asVisualShelf
+    //removeVisual: removeVisual
   };
 });
