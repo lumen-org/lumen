@@ -3,12 +3,59 @@
  *
  * JavaScript code for this the source component of the UI of the EMV tool.
  */
-
-define(['d3'], function (d3) {
+define(['d3', 'app/shelves', 'app/visuals', 'app/utils'], function (d3, sh, vis, util) {
   'use strict';
 
   // setup code here
   Logger.useDefaults();
+
+  var foobar = util.selectValue(1,0);
+
+  function myScript () {
+    var dimShelf =  new sh.DimensionShelf();
+    var measShelf = new sh.MeasureShelf();
+    var dataSource = new sh.DataSource('foo.csv', 'my source');
+    var ageField = new sh.Field(
+      'age', dataSource, {
+        dataType: sh.FieldT.Type.num,
+        role: sh.FieldT.Role.measure,
+        kind: sh.FieldT.Kind.cont
+      });
+    var weightField = new sh.Field(
+      'weight', dataSource, {
+        dataType: sh.FieldT.Type.num,
+        role: sh.FieldT.Role.measure,
+        kind: sh.FieldT.Kind.cont
+      });
+    var sexField = new sh.Field(
+      'sex', dataSource, {
+        dataType: sh.FieldT.Type.num,
+        role: sh.FieldT.Role.dimension,
+        kind: sh.FieldT.Kind.discrete
+      });
+    var nameField = new sh.Field(
+      'name', dataSource, {
+        dataType: sh.FieldT.Type.string,
+        role: sh.FieldT.Role.dimension,
+        kind: sh.FieldT.Kind.discrete
+      });
+    dataSource.fields = {
+      age: ageField,
+      weight: weightField,
+      sex: sexField,
+      name: nameField
+    };
+    dataSource.populate(dimShelf, measShelf);
+
+    var base = $('#testRow');
+    var measVis = vis.asVisualShelf(measShelf, 'Measures');
+    var dimVis = vis.asVisualShelf(dimShelf, 'Dimensions');
+    base.append(measVis);
+    base.append(dimVis);
+
+    debugger;
+
+  }
 
   // definitions of modules functions here
   return {
@@ -48,7 +95,6 @@ define(['d3'], function (d3) {
           aesthetic: 'aestheticShelf',
           remove: 'removeShelf'
         });
-
 
         function makeItemDraggable ($item) {
           $item.draggable({
@@ -646,7 +692,7 @@ define(['d3'], function (d3) {
           direction: build.DirectionType.horizontal }
       );
 
-      //myscript();
+      myScript();
     }
   };
 

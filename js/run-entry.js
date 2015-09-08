@@ -9,6 +9,7 @@
 require.config({
 
   // all module IDs are resolved relative to that path
+  // and that path itself is relative to the html file calling it
   baseUrl: 'js',
 
   // rules to resolve module IDs

@@ -5,7 +5,7 @@
  * @module
  */
 
-define(['app/shelves'], function (_) {
+define(['app/shelves'], function (Sh) {
   "use strict";
 
   describe('A simple Spec', function () {
@@ -48,40 +48,40 @@ define(['app/shelves'], function (_) {
        */
       /// Shelves
       // create field shelves
-      dimShelf = new _.DimensionShelf();
-      measShelf = new _.MeasureShelf();
+      dimShelf = new Sh.DimensionShelf();
+      measShelf = new Sh.MeasureShelf();
 
       // create field usage shelves
-      colorShelf = new _.ColorShelf();
+      colorShelf = new Sh.ColorShelf();
 //filterShelf = new _.FilterShelf();
 //shapeShelf = new _.ShapeShelf();
-      rowShelf = new _.RowShelf();
-      columnShelf = new _.ColumnShelf();
+      rowShelf = new Sh.RowShelf();
+      columnShelf = new Sh.ColumnShelf();
 
-      dataSource = new _.DataSource('foo.csv', 'my source');
-      var ageField = new _.Field(
+      dataSource = new Sh.DataSource('foo.csv', 'my source');
+      var ageField = new Sh.Field(
         'age', dataSource, {
-          dataType: _.FieldT.Type.num,
-          role: _.FieldT.Role.measure,
-          kind: _.FieldT.Kind.cont
+          dataType: Sh.FieldT.Type.num,
+          role: Sh.FieldT.Role.measure,
+          kind: Sh.FieldT.Kind.cont
         });
-      var weightField = new _.Field(
+      var weightField = new Sh.Field(
         'weight', dataSource, {
-          dataType: _.FieldT.Type.num,
-          role: _.FieldT.Role.measure,
-          kind: _.FieldT.Kind.cont
+          dataType: Sh.FieldT.Type.num,
+          role: Sh.FieldT.Role.measure,
+          kind: Sh.FieldT.Kind.cont
         });
-      var sexField = new _.Field(
+      var sexField = new Sh.Field(
         'sex', dataSource, {
-          dataType: _.FieldT.Type.num,
-          role: _.FieldT.Role.dimension,
-          kind: _.FieldT.Kind.discrete
+          dataType: Sh.FieldT.Type.num,
+          role: Sh.FieldT.Role.dimension,
+          kind: Sh.FieldT.Kind.discrete
         });
-      var nameField = new _.Field(
+      var nameField = new Sh.Field(
         'name', dataSource, {
-          dataType: _.FieldT.Type.string,
-          role: _.FieldT.Role.dimension,
-          kind: _.FieldT.Kind.discrete
+          dataType: Sh.FieldT.Type.string,
+          role: Sh.FieldT.Role.dimension,
+          kind: Sh.FieldT.Kind.discrete
         });
       dataSource.fields = {
         age: ageField,
@@ -126,10 +126,10 @@ define(['app/shelves'], function (_) {
       expect(measShelf.length()).toBe(2);
       expect(dimShelf.length()).toBe(2);
       dimShelf.records.forEach(function (record) {
-        expect(record.content.role == _.FieldT.Role.dimension);
+        expect(record.content.role == Sh.FieldT.Role.dimension);
       });
       measShelf.records.forEach(function (record) {
-        expect(record.content.role == _.FieldT.Role.measure);
+        expect(record.content.role == Sh.FieldT.Role.measure);
       });
 
       colorShelf.append(dimShelf.records[0]);

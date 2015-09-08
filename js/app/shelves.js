@@ -81,11 +81,17 @@ define(['app/utils'], function(utils) {
     this.RecordConstructor = RecordConstructor;
   };
 
+  var ShelfTypeT = Object.freeze({
+    singletonShelf : 'singleton',
+    multiShelf : 'multi'
+  });
+
   /**
    * A mixin that makes a {Shelf} a shelf that holds only a single record.
    * That is, it requires that the target object has a property RecordConstructor which can be used to construct new records for this shelf.
    */
   var asSingletonShelf = function () {
+    this.type = ShelfTypeT.singletonShelf;
     this.record = null;
 
     this.append = function (obj) {
@@ -116,6 +122,7 @@ define(['app/utils'], function(utils) {
    */
   var asMultiShelf = function () {
     this.records = [];
+    this.type = ShelfTypeT.multiShelf;
 
     this.append = function (obj) {
       var record = new this.RecordConstructor(obj, this);
@@ -467,6 +474,7 @@ define(['app/utils'], function(utils) {
     FUsageT: FUsageT,
 
     Shelf: Shelf,
+    ShelfTypeT: ShelfTypeT,
     asSingletonShelf: asSingletonShelf,
     asMultiShelf: asMultiShelf,
 

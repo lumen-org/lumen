@@ -1,5 +1,11 @@
-define(['app/shelves','app/utils'], function(s,u) {
+define(['app/shelves','app/utils'], function(s, util) {
   'use strict';
+
+  /*var LayoutT = Object.freeze({
+    vertical: 'vertical',     // title goes in its own row, so does each record this shelf holds
+    horizontal: 'horizontal', // all on one row
+    box: 'box'
+  });*/
 
   /**
    * A mixin function that creates a visual representation (as HTML elements)
@@ -9,9 +15,9 @@ define(['app/shelves','app/utils'], function(s,u) {
    */
   function asVisualShelf (shelf, typeString, opt) {
 
-    opt = u.selectValue(opt, {});
-    opt.direction = u.selectValue(opt.direction, build.DirectionType.vertical);
-    opt.label = u.selectValue(opt.label, typeString);
+    opt = util.selectValue(opt, {});
+    //opt.direction = util.selectValue(opt.direction, build.DirectionType.vertical);
+    opt.label = util.selectValue(opt.label, typeString);
 
     // create visual container
     var visual = $('<div></div>')
@@ -42,8 +48,14 @@ define(['app/shelves','app/utils'], function(s,u) {
     shelf.$visual.container = container;
 
     // make all records visual too
-    // todo: records is not necessarily defined
-    shelf.records.forEach(asVisualRecord);
+    switch (shelf.type) {
+      case s.ShelfTypeT.singletonShelf:
+        asVisualRecord(shelf.record);
+        break;
+      case s.ShelfTypeT.multiShelf:
+        shelf.records.forEach(asVisualRecord);
+        break;
+    }
 
     // return root html element
     return visual;
@@ -64,6 +76,7 @@ define(['app/shelves','app/utils'], function(s,u) {
     //makeItemDroppable(item);
 
     // add to shelf
+
     // todo: add to the correct relative position!
     visual.appendTo(record.shelf.$visual.container);
 
