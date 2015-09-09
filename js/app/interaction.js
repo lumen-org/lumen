@@ -19,6 +19,10 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
     none: 'none'
   });
 
+  /**
+   * Functions for calculating positions and overlaps of DOM elements.
+   * @type {{center: Function, within: Function, overlap: Function}}
+   */
   var geom = {
     /**
      * Returns the center as {x,y} of the first element of the $selection relative to the document
@@ -117,7 +121,7 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   };
 
   /**
-   * singelton ddr: Drag, Drop and Replace management
+   * Singleton ddr: Drag, Drop and Replace management
    */
   var ddr = (function () {
     var droppable = false;
@@ -199,7 +203,7 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   /**
    * @param $record The visual of a record.
    */
-  function makeRecordDraggable($record) {
+  function _makeRecordDraggable($record) {
     $record.draggable({
       helper: 'clone',
       scope: 'vars',
@@ -228,7 +232,7 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   /**
    * @param $record The visual of a record.
    */
-  function makeRecordDroppable($record) {
+  function _makeRecordDroppable($record) {
     $record.droppable({
       scope: 'vars',
       //activeClass: 'drop-allow',
@@ -255,7 +259,7 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   /**
    * @param $shelf The visual of a shelf.
    */
-  function makeShelfDroppable($shelf) {
+  function _makeShelfDroppable($shelf) {
     $shelf.droppable({
       scope: 'vars',
       //activeClass: 'drop-allow',
@@ -272,21 +276,12 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
         logger.debug("drop on shelf cont'd");
 
         // note: we pass the actual records and shelves, not the visuals
-
         var target = {
           item: (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable().data(vis.AttachStringT.record) : false),
           shelf: $(event.target).data(vis.AttachStringT.shelf)
         };
-        //target.type = target.shelf.data(build.ShelfTypeString);
-
         var source = $(ui.draggable).data(vis.AttachStringT.record);
-        //source.item = ui.draggable;
-        //source.shelf = source.item.closest('.shelf');
-        //source.type = source.shelf.data(build.ShelfTypeString);
-
-        var overlap = ddr.overlap();
-
-        onDrop[target.shelf.type](target, source, overlap);
+        onDrop[target.shelf.type](target, source, ddr.overlap());
 
         ddr.unlinkDroppable();
         event.stopPropagation();
@@ -302,77 +297,129 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
     });
   }
 
+  /**
+   * Mixin to make a Record interactable, i.e. it can be dragged and dropped on.
+   * @returns {sh.Record}
+   */
+  sh.Record.prototype.beInteractable = function () {
+    _makeRecordDroppable(this.$visual);
+    _makeRecordDraggable(this.$visual);
+    return this;
+  };
+
+  /**
+   * Mixin to make make a shelf interactable. i.e. its records can be dragged and be dropped on and the shelf itself can be dropped on.
+   * @returns {sh.Records}
+   */
+  sh.Shelf.prototype.beInteractable = function () {
+    _makeShelfDroppable(this.$visual);
+    switch (this.multiplicity) {
+      case sh.ShelfMultiplicityT.singletonShelf:
+        _makeRecordDraggable(this.record.$visual);
+        _makeRecordDroppable(this.record.$visual);
+        break;
+      case sh.ShelfMultiplicityT.multiShelf:
+        this.records.forEach(function (record) {
+          _makeRecordDraggable(record.$visual);
+          _makeRecordDroppable(record.$visual);
+        });
+        break;
+    }
+  };
+
   var onDrop = {};
 
   onDrop[sh.ShelfTypeT.dimension] = function (target, source, overlap) {
     if (source.shelf.type === sh.ShelfTypeT.dimension || source.shelf.type === sh.ShelfTypeT.measure) {
-      // from field shelf to field shelf
-      // -> move to target shelf
+      // from field shelf to field shelf-> move to target shelf
       var newRecord = target.shelf.append(source);
-      vis.asVisualRecord(newRecord);
-      makeRecordDraggable(newRecord.$visual);
-      makeRecordDroppable(newRecord.$visual);
+      newRecord.beVisual().beInteractable();
     }
-
-    // in any way:
-    source.removeVisual();
-    source.remove();
+    // in all cases do:
+    source.removeVisual().remove();
   };
 
   onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
 
   onDrop[sh.ShelfTypeT.row] = function (target, source, overlap) {
+    var newRecord = null;
     if (target.item) {
       switch (overlap) {
         case OverlapEnum.left:
         case OverlapEnum.top:
           // insert before element
-          Item.prepend(source.item, target.item, target.shelf);
+          newRecord = target.item.prepend(source);
+          //Item.prepend(source.item, target.item, target.shelf);
           break;
         case OverlapEnum.right:
         case OverlapEnum.bottom:
           // insert after target element
-          Item.append(source.item, target.item, target.shelf);
+          //Item.append(source.item, target.item, target.shelf);
+          newRecord = target.item.append(source);
           break;
         case OverlapEnum.center:
           // replace
-          Item.replaceBy(source.item, target.item, target.shelf);
+          // Item.replaceBy(source.item, target.item, target.shelf);
+          target.item.removeVisual();
+          newRecord = target.item.replace(source);
           break;
         default:
           console.error("Dropping on item, but overlap = " + overlap);
       }
     } else {
-      Shelf.append(target.shelf, source.item);
+      //Shelf.append(target.shelf, source.item);
+      newRecord = target.shelf.append(source);
     }
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      Item.remove(source.item);
+      //Item.remove(source.item);
+      source.removeVisual().remove();
     }
+    newRecord.beVisual().beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.column] = onDrop[sh.ShelfTypeT.row];
 
   onDrop[sh.ShelfTypeT.filter] = function (target, source, overlap) {
-    if (source.shelf.type == sh.ShelfTypeT.filter) {
+    var newRecord = null;
+    if (source.shelf.type === sh.ShelfTypeT.filter) {
       // do nothing if just moving filters
       // todo: allow reordering
     } else {
       if (target.item) {
         // replace
-        Item.replaceBy(source.item, target.item, target.shelf);
+        //Item.replaceBy(source.item, target.item, target.shelf);
+        target.item.removeVisual();
+        newRecord = target.item.replace(source);
       } else {
         // append
-        Shelf.append(target.shelf, source.item);
+        //Shelf.append(target.shelf, source.item);
+        target.shelf.append(source);
       }
     }
+
+    if (source.shelf.type !== sh.ShelfTypeT.dimension &&
+      source.shelf.type !== sh.ShelfTypeT.measure) {
+      //Item.remove(source.item);
+      source.removeVisual().remove();
+    }
+    newRecord.beVisual().beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
-    Shelf.clear(target.shelf);
-    Shelf.append(target.shelf, source.item);
+    var newRecord = null;
+
+    target.shelf.record.removeVisual().remove();
+    newRecord = target.shelf.append(source);
+    newRecord.beVisual().beInteractable();
+
+    //Shelf.clear(target.shelf);
+    //Shelf.append(target.shelf, source.item);
+
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      Item.remove(source.item);
+      //Item.remove(source.item);
+      source.removeVisual.remove();
     }
   };
 
@@ -383,32 +430,13 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   onDrop[sh.ShelfTypeT.remove] = function (target, source, overlap) {
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      Item.remove(source.item);
+      //Item.remove(source.item);
+      source.removeVisual().remove();
     }
   };
 
-  /**
-   * Makes the given Shelf an interactable, i.e. it can be do
-   * @param shelf
-   */
-  function asInteractable(shelf) {
-    makeShelfDroppable(shelf.$visual);
-    switch (shelf.multiplicity) {
-      case sh.ShelfMultiplicityT.singletonShelf:
-        makeRecordDraggable(shelf.record.$visual);
-        makeRecordDroppable(shelf.record.$visual);
-        break;
-      case sh.ShelfMultiplicityT.multiShelf:
-        shelf.records.forEach(function (record) {
-          makeRecordDraggable(record.$visual);
-          makeRecordDroppable(record.$visual);
-        });
-        break;
-    }
-  }
-
   return {
-    asInteractable: asInteractable
+    //asInteractable: asInteractable
     /*makeItemDraggable: makeItemDraggable,
      makeItemDroppable: makeItemDroppable,
      makeShelfDroppable: makeShelfDroppable,

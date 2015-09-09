@@ -482,8 +482,8 @@ define(['app/utils'], function(utils) {
     Shelf: Shelf,
     ShelfMultiplicityT: ShelfMultiplicityT,
     ShelfTypeT: ShelfTypeT,
-    asSingletonShelf: asSingletonShelf,
-    asMultiShelf: asMultiShelf,
+    //asSingletonShelf: asSingletonShelf,
+    //asMultiShelf: asMultiShelf,
 
     Field: Field,
     FieldUsage: FieldUsage,
@@ -491,8 +491,8 @@ define(['app/utils'], function(utils) {
     Record: Record,
     FieldRecord: FieldRecord,
     FUsageRecord: FUsageRecord,
-    asSingletonRecord: asSingletonRecord,
-    asMultipleRecord: asMultipleRecord,
+    //asSingletonRecord: asSingletonRecord,
+    //asMultipleRecord: asMultipleRecord,
 
     ColorRecord: ColorRecord,
     DimensionRecord: DimensionRecord,

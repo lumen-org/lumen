@@ -48,16 +48,12 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/utils'],
     };
     dataSource.populate(dimShelf, measShelf);
 
+    measShelf.beVisual({label: 'Measures'}).beInteractable();
+    dimShelf.beVisual({label: 'Dimensions'}).beInteractable();
+
     var base = $('#testRow');
-
-    var measVis = vis.asVisualShelf(measShelf, {label: 'Measures'});
-    base.append(measVis);
-    var dimVis = vis.asVisualShelf(dimShelf, {label: 'Dimensions'});
-    base.append(dimVis);
-
-    inter.asInteractable(measShelf);
-    inter.asInteractable(dimShelf);
-
+    base.append(measShelf.$visual);
+    base.append(dimShelf.$visual);
 //    debugger;
   }
 
