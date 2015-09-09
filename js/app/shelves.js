@@ -308,12 +308,12 @@ define(['app/utils'], function(utils) {
    */
   var asSingletonRecord = function () {
     this.replace = function (record) {
-      this.shelf.replace(record);
+      return this.shelf.replace(record);
     };
     this.append = this.replace;
     this.prepend = this.replace;
     this.remove = function () {
-      this.shelf.remove(this);  //todo: pass this or not? there is no ambiguity
+      return this.shelf.remove(this);  //todo: pass this or not? there is no ambiguity
     };
   };
 
@@ -323,17 +323,17 @@ define(['app/utils'], function(utils) {
   var asMultipleRecord = function () {
     this.append = function (record) {
       var shelf = this.shelf;
-      shelf.insert(record, shelf.indexOf(this) + 1);
+      return shelf.insert(record, shelf.records.indexOf(this) + 1);
     };
     this.prepend = function (record) {
       var shelf = this.shelf;
-      shelf.insert(record, shelf.indexOf(this));
+      return shelf.insert(record, shelf.records.indexOf(this));
     };
     this.remove = function (record) {
-      this.shelf.remove(record);
+      return this.shelf.remove(record);
     };
     this.replace = function (record) {
-      this.shelf.replace(this, record);
+      return this.shelf.replace(this, record);
     };
   };
 

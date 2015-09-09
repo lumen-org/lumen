@@ -1,10 +1,8 @@
 /**
  * @author Philipp Lucas
  * @module
- *
- *
  */
-define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
+define(['app/shelves', 'app/visuals'], function (sh, vis) {
   'use strict';
 
   var logger = Logger.get('pl-interaction');
@@ -46,16 +44,12 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
       // credits to: https://github.com/substack/point-in-polygon
       // ray-casting algorithm based on
       // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-
       var x = point[0], y = point[1];
-
       var inside = false;
       for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
         var xi = vs[i][0], yi = vs[i][1];
         var xj = vs[j][0], yj = vs[j][1];
-
-        var intersect = ((yi > y) != (yj > y)) &&
-          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
         if (intersect) inside = !inside;
       }
       return inside;
@@ -64,13 +58,11 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
     /**
      * Returns the type of overlap of the first element of the selection $rel relative to first element of the selection $base.
      * Possible overlaps are: 'no', 'left', 'right', 'bottom', 'top', 'center'
-     *
      * @param $rel DOM element
      * @param $base DOM element
      * @param options Object: {type='abs'|'rel', top, left, bottom, right}.
      */
     overlap: function ($rel, $base, options) {
-
       var o = $.extend({}, $base[0].getBoundingClientRect());
       o.width = o.right - o.left;
       o.height = o.bottom - o.top;
@@ -102,21 +94,19 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
       // check overlap
       var relCenter = geom.center($rel);
       var p = [relCenter.x, relCenter.y];
-
       if (geom.within(p, [[o.left, o.top], [i.left, i.top], [i.left, i.bottom], [o.left, o.bottom]])) {
-        return 'left';
+        return OverlapEnum.left;
       } else if (geom.within(p, [[o.left, o.top], [o.right, o.top], [i.right, i.top], [i.left, i.top]])) {
-        return 'top';
+        return OverlapEnum.top;
       } else if (geom.within(p, [[i.right, i.top], [o.right, o.top], [o.right, o.bottom], [i.right, i.bottom]])) {
-        return 'right';
+        return OverlapEnum.right;
       } else if (geom.within(p, [[i.left, i.bottom], [i.right, i.bottom], [o.right, o.bottom], [o.left, o.bottom]])) {
-        return 'bottom';
+        return OverlapEnum.bottom;
       } else if (geom.within(p, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
-        return 'center';
+        return OverlapEnum.center;
       } else {
-        return 'no';
+        return OverlapEnum.none;
       }
-
     }
   };
 
@@ -208,15 +198,12 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
       helper: 'clone',
       scope: 'vars',
       zIndex: 9999,
-
       start: function (event, ui) {
         ddr.linkDraggable(ui.draggable || ui.helper);
       },
-
       stop: function (event, ui) {
         ddr.unlinkDraggable();
       },
-
       drag: function (event, ui) {
         // todo: just check the position and underlying element every time in drag, not in over / out ... it just doesn't work well
         // todo: http://stackoverflow.com/questions/15355553/jqueryui-droppable-over-and-out-callback-firing-out-of-sequence ??
@@ -235,21 +222,13 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   function _makeRecordDroppable($record) {
     $record.droppable({
       scope: 'vars',
-      //activeClass: 'drop-allow',
+      // activeClass: 'drop-allow',
       // hoverClass: 'drop-hover',
-      //greedy: false,
+      // greedy: false,
       tolerance: "pointer",
-      /*drop: function (event, ui) {
-       // attach original target
-       event.originalEvent.targetItem = $(event.target);
-       event.originalEvent.targetItemType = "some";
-       Logger.debug('drop on shelf-list-item');
-       },*/
-
       over: function (event, ui) {
         ddr.linkDroppable($(this));
       },
-
       out: function (event, ui) {
         ddr.unlinkDroppable();
       }
@@ -262,11 +241,10 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   function _makeShelfDroppable($shelf) {
     $shelf.droppable({
       scope: 'vars',
-      //activeClass: 'drop-allow',
-      //hoverClass: 'drop-hover',
+      // activeClass: 'drop-allow',
+      // hoverClass: 'drop-hover',
       // greedy: false,
       tolerance: 'pointer',
-
       drop: function (event, ui) {
         logger.debug('drop on shelf');
         if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
@@ -274,7 +252,6 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
           return;
         }
         logger.debug("drop on shelf cont'd");
-
         // note: we pass the actual records and shelves, not the visuals
         var target = {
           item: (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable().data(vis.AttachStringT.record) : false),
@@ -282,15 +259,12 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
         };
         var source = $(ui.draggable).data(vis.AttachStringT.record);
         onDrop[target.shelf.type](target, source, ddr.overlap());
-
         ddr.unlinkDroppable();
         event.stopPropagation();
       },
-
       over: function (event, ui) {
         ddr.linkDroppable($(this));
       },
-
       out: function (event, ui) {
         ddr.unlinkDroppable();
       }
@@ -315,8 +289,10 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
     _makeShelfDroppable(this.$visual);
     switch (this.multiplicity) {
       case sh.ShelfMultiplicityT.singletonShelf:
-        _makeRecordDraggable(this.record.$visual);
-        _makeRecordDroppable(this.record.$visual);
+        if (!this.empty) {
+          _makeRecordDraggable(this.record.$visual);
+          _makeRecordDroppable(this.record.$visual);
+        }
         break;
       case sh.ShelfMultiplicityT.multiShelf:
         this.records.forEach(function (record) {
@@ -349,17 +325,14 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
         case OverlapEnum.top:
           // insert before element
           newRecord = target.item.prepend(source);
-          //Item.prepend(source.item, target.item, target.shelf);
           break;
         case OverlapEnum.right:
         case OverlapEnum.bottom:
           // insert after target element
-          //Item.append(source.item, target.item, target.shelf);
           newRecord = target.item.append(source);
           break;
         case OverlapEnum.center:
           // replace
-          // Item.replaceBy(source.item, target.item, target.shelf);
           target.item.removeVisual();
           newRecord = target.item.replace(source);
           break;
@@ -367,12 +340,10 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
           console.error("Dropping on item, but overlap = " + overlap);
       }
     } else {
-      //Shelf.append(target.shelf, source.item);
       newRecord = target.shelf.append(source);
     }
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      //Item.remove(source.item);
       source.removeVisual().remove();
     }
     newRecord.beVisual().beInteractable();
@@ -386,21 +357,15 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
       // do nothing if just moving filters
       // todo: allow reordering
     } else {
-      if (target.item) {
-        // replace
-        //Item.replaceBy(source.item, target.item, target.shelf);
+      if (target.item) { // replace
         target.item.removeVisual();
         newRecord = target.item.replace(source);
-      } else {
-        // append
-        //Shelf.append(target.shelf, source.item);
+      } else { // append
         target.shelf.append(source);
       }
     }
-
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      //Item.remove(source.item);
       source.removeVisual().remove();
     }
     newRecord.beVisual().beInteractable();
@@ -408,17 +373,11 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
 
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
     var newRecord = null;
-
-    target.shelf.record.removeVisual().remove();
+    if (!target.shelf.empty()) target.shelf.record.removeVisual().remove();
     newRecord = target.shelf.append(source);
     newRecord.beVisual().beInteractable();
-
-    //Shelf.clear(target.shelf);
-    //Shelf.append(target.shelf, source.item);
-
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      //Item.remove(source.item);
       source.removeVisual.remove();
     }
   };
@@ -430,16 +389,9 @@ define(['app/shelves', 'app/visuals', 'app/utils'], function (sh, vis, util) {
   onDrop[sh.ShelfTypeT.remove] = function (target, source, overlap) {
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      //Item.remove(source.item);
       source.removeVisual().remove();
     }
   };
 
-  return {
-    //asInteractable: asInteractable
-    /*makeItemDraggable: makeItemDraggable,
-     makeItemDroppable: makeItemDroppable,
-     makeShelfDroppable: makeShelfDroppable,
-     onDrop: onDrop*/
-  };
+  return {};
 });

@@ -21,31 +21,6 @@ define(['app/shelves'], function (Sh) {
 
     // setup
     beforeEach(function () {
-      /*var colorShelf = new ColorShelf();
-       var dimShelf = new DimensionShelf();
-       //var colorShelf = new Shelf(ColorRecord);
-
-
-       var myField = new Field('age', 'dataSource');
-       var myUsage = new FieldUsage(myField);
-
-       //var myColorRecord = new ColorRecord(myField, colorShelf);
-       colorShelf.append(myUsage);
-       dimShelf.append(myField);
-       dimShelf.prepend(new Field('sex', 'another data source'));
-
-       debugger;
-
-       colorShelf.record.remove();
-       colorShelf.append(myUsage);
-       colorShelf.record.replace(myField);
-
-       debugger;
-
-       /* ignore for now:
-       * layers
-       * multiple data sources
-       */
       /// Shelves
       // create field shelves
       dimShelf = new Sh.DimensionShelf();
@@ -165,7 +140,7 @@ define(['app/shelves'], function (Sh) {
 
       rowShelf.append(measShelf.records[0]);
       expect(rowShelf.records[1].content.name).toBe('age');
-      rowShelf.prepend(measShelf.records[1])
+      rowShelf.prepend(measShelf.records[1]);
       expect(rowShelf.records[2].content.name).toBe('age');
       expect(rowShelf.records[1].content.name).toBe('sex');
       expect(rowShelf.records[0].content.name).toBe('weight');

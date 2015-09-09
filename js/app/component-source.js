@@ -3,8 +3,8 @@
  *
  * JavaScript code for this the source component of the UI of the EMV tool.
  */
-define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/utils'],
-  function (d3, sh, vis, inter, util) {
+define(['d3', 'app/shelves', 'app/visuals'],
+  function (d3, sh, vis) {
   'use strict';
 
   // setup code here
@@ -15,6 +15,12 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/utils'],
   function myScript () {
     var dimShelf =  new sh.DimensionShelf();
     var measShelf = new sh.MeasureShelf();
+    var colorShelf = new sh.ColorShelf();
+//var filterShelf = new sh.FilterShelf();
+//var shapeShelf = new sh.ShapeShelf();
+    var rowShelf = new sh.RowShelf();
+    var columnShelf = new sh.ColumnShelf();
+
     var dataSource = new sh.DataSource('foo.csv', 'my source');
     var ageField = new sh.Field(
       'age', dataSource, {
@@ -50,10 +56,16 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/utils'],
 
     measShelf.beVisual({label: 'Measures'}).beInteractable();
     dimShelf.beVisual({label: 'Dimensions'}).beInteractable();
+    colorShelf.beVisual({label: 'Color'}).beInteractable();
+    rowShelf.beVisual({label: 'Row', direction: vis.DirectionTypeT.box}).beInteractable();
+    columnShelf.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
     var base = $('#testRow');
     base.append(measShelf.$visual);
     base.append(dimShelf.$visual);
+    base.append(colorShelf.$visual);
+    base.append(rowShelf.$visual);
+    base.append(columnShelf.$visual);
 //    debugger;
   }
 

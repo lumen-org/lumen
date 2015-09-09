@@ -27,6 +27,7 @@
     "globals": {
       "interact": false,
       "Logger": false
-    }
+    },
+    "unused": "vars"
   }
 }
