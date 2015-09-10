@@ -372,13 +372,12 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   };
 
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
-    var newRecord = null;
     if (!target.shelf.empty()) target.shelf.record.removeVisual().remove();
-    newRecord = target.shelf.append(source);
+    var newRecord = target.shelf.append(source);
     newRecord.beVisual().beInteractable();
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
       source.shelf.type !== sh.ShelfTypeT.measure) {
-      source.removeVisual.remove();
+      source.removeVisual().remove();
     }
   };
 

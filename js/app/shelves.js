@@ -161,6 +161,10 @@ define(['app/utils'], function(utils) {
       records.splice(records.indexOf(record), 1);
     };
 
+    this.indexOf = function (record) {
+      return this.records.indexOf(record);
+    };
+
     this.insert = function (obj, idx) {
       var records = this.records;
       if (idx < 0 || idx > records.length) {
@@ -194,7 +198,6 @@ define(['app/utils'], function(utils) {
 
   /**
    * A {Field} represents a certain dimension in a data source.
-   // todo: implement interface as described!!
    * @param nameOrField {string|Field} A unique identifier of a dimension in the data source, or the {Field} to copy.
    * @param dataSource {?DataSource} The data source this is a field of, or null (if a {Field} is provided for name).
    * @param args Additional optional arguments. They will override those of a given {Field}.
@@ -202,7 +205,7 @@ define(['app/utils'], function(utils) {
    */
   var Field = function (nameOrField, dataSource, args) {
     var isF = nameOrField instanceof Field;
-    console.assert(isF || typeof dataSource !== 'undefined');
+    console.assert(isF || dataSource);
     if (typeof args === 'undefined') {
       args = {};
     }
@@ -239,9 +242,8 @@ define(['app/utils'], function(utils) {
    *
    * {Record}s can be extended using the mixins {asSingletonRecord} and {asMultiRecord}. This provides functions to manage records of a shelf "from the records itself".
    *
-   * @param content {Field|FieldUsage} Note that attr itself will be stored, not a copy of it.
-   * todo: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
-   * todo : Also, we can do the conversion of Field to FieldUsage here instead of having to detect it in the subclasses
+   * @param content {Field|FieldUsage} Note that content itself will be stored, not a copy of it.
+   * Note: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
    * @param shelf A shelf that this record belongs to.
    * @constructor
    */
@@ -313,7 +315,7 @@ define(['app/utils'], function(utils) {
     this.append = this.replace;
     this.prepend = this.replace;
     this.remove = function () {
-      return this.shelf.remove(this);  //todo: pass this or not? there is no ambiguity
+      return this.shelf.remove(this);
     };
   };
 
@@ -335,13 +337,15 @@ define(['app/utils'], function(utils) {
     this.replace = function (record) {
       return this.shelf.replace(this, record);
     };
+    this.index = function () {
+      return this.shelf.indexOf(this);
+    };
   };
 
-/// it follows specific types that are actually instanciated ///
-
-// TODO: constructors of of *Record should always construct new attributes to store and never use the existing ones.
-// todo => However, they can rely on FieldRecord and FUsageRecord to create new instances if not passing the correct object type
-// todo => maybe have to restrict the constructor of FieldRecord and FUsageRecord to Fields and FieldUsages, resp.?
+  /**
+   * Constructors of XXXRecord should always construct new content to store and never use the object that is passed in to the constructor.
+   * They can, however, rely on the constructor of FieldRecord and FUsageRecord to create new instances if not passing a {Field} or {FieldUsage} to the constructor.
+   */
 
   /**
    * A {ColorRecord} is based on {FUsageRecord}. It maps the field usage to a color space in some way.
@@ -385,7 +389,6 @@ define(['app/utils'], function(utils) {
     FieldRecord.call(this, new Field(obj), shelf);
     if (this.content.role === FieldT.Role.measure) {
       this.content.role = FieldT.Role.dimension;
-      // todo: convert more!?
     }
   };
   DimensionRecord.prototype = Object.create(FieldRecord.prototype);
@@ -417,7 +420,6 @@ define(['app/utils'], function(utils) {
     FieldRecord.call(this, new Field(obj), shelf);
     if (this.content.role === FieldT.Role.dimension) {
       this.content.role = FieldT.Role.measure;
-      // todo: convert more!?
     }
   };
   MeasureRecord.prototype = Object.create(FieldRecord.prototype);

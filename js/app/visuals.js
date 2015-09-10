@@ -80,7 +80,7 @@ define(['app/shelves','app/utils'], function(s, util) {
 
   /**
    * A mixin function that creates a simple visual representation (as HTML elements) of this record. The root of representation is returned. It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
-   * Note: You may not make a record visible before makking its shelf visible.
+   * Note: You may not make a record visible before making its shelf visible.
    * @param record
    * @return The record iself for chaining.
    */
@@ -99,8 +99,22 @@ define(['app/shelves','app/utils'], function(s, util) {
       .text(this.content.name);
 
     // add to visual of shelf
-    // todo: add to the correct relative position!
-    visual.appendTo(this.shelf.$visual.container);
+    switch (this.shelf.multiplicity) {
+      // todo: unify singeltonShelf and multishelf - allow restriction of number of elements instead
+      case s.ShelfMultiplicityT.singletonShelf:
+        visual.appendTo(this.shelf.$visual.container);
+        break;
+      case s.ShelfMultiplicityT.multiShelf:
+        // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
+        var records = this.shelf.records;
+        for (var idx = this.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
+        if (idx === 0) {
+          visual.prependTo(this.shelf.$visual.container);
+        } else {
+          visual.insertAfter(records[idx-1].$visual); // todo check this?!?!?
+        }
+        break;
+    }
 
     // attach record to visual
     visual.data(AttachStringT.record, this);

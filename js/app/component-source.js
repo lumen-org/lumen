@@ -3,8 +3,7 @@
  *
  * JavaScript code for this the source component of the UI of the EMV tool.
  */
-define(['d3', 'app/shelves', 'app/visuals'],
-  function (d3, sh, vis) {
+define(['d3', 'app/shelves', 'app/visuals', 'app/interaction'], function (d3, sh, vis, inter) {
   'use strict';
 
   // setup code here
@@ -205,7 +204,6 @@ define(['d3', 'app/shelves', 'app/visuals'],
           },
           clear : function(shelf) {
             shelf.find('.shelf-list-item').remove();
-            // todo: use Item.remove instead?
           }
         };
 
