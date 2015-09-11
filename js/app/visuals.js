@@ -1,6 +1,8 @@
 define(['app/shelves','app/utils'], function(s, util) {
   'use strict';
-  //var logger = Logger.get('pl-visuals');
+  var logger = Logger.get('pl-visuals');
+  logger.setLevel(Logger.DEBUG);
+
   var DirectionTypeT = Object.freeze({
     vertical: 'vertical',
     horizontal: 'horizontal',
@@ -62,14 +64,7 @@ define(['app/shelves','app/utils'], function(s, util) {
     this.$visual.direction = opt.direction;
 
     // make all records visuals too
-    switch (this.multiplicity) {
-      case s.ShelfMultiplicityT.singletonShelf:
-        if (!this.empty()) this.record.beVisual();
-        break;
-      case s.ShelfMultiplicityT.multiShelf:
-        this.records.forEach(function(record) {record.beVisual();});
-        break;
-    }
+    this.records.forEach(function(record) {record.beVisual();});
     return this;
   };
 
@@ -99,21 +94,14 @@ define(['app/shelves','app/utils'], function(s, util) {
       .text(this.content.name);
 
     // add to visual of shelf
-    switch (this.shelf.multiplicity) {
-      // todo: unify singeltonShelf and multishelf - allow restriction of number of elements instead
-      case s.ShelfMultiplicityT.singletonShelf:
-        visual.appendTo(this.shelf.$visual.container);
-        break;
-      case s.ShelfMultiplicityT.multiShelf:
-        // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
-        var records = this.shelf.records;
-        for (var idx = this.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
-        if (idx === 0) {
-          visual.prependTo(this.shelf.$visual.container);
-        } else {
-          visual.insertAfter(records[idx-1].$visual); // todo check this?!?!?
-        }
-        break;
+    // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
+    var records = this.shelf.records;
+    for (var idx = this.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
+
+    if (idx === 0) {
+      visual.prependTo(this.shelf.$visual.container);
+    } else {
+      visual.insertAfter(records[idx-1].$visual); // todo check this?!?!?
     }
 
     // attach record to visual

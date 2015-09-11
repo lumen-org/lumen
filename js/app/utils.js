@@ -1,7 +1,7 @@
 define([], function() {
   'use strict';
 
-  var logger = Logger.get('pl-utils');
+  //var logger = Logger.get('pl-utils');
 
   /**
    * Returns:

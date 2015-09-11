@@ -1,7 +1,7 @@
 define(['app/utils'], function(utils) {
   'use strict';
 
-  var logger = Logger.get('pl-shelves');
+  //var logger = Logger.get('pl-shelves');
 
   /**
    * ColorMap class
@@ -76,17 +76,88 @@ define(['app/utils'], function(utils) {
    * A Shelf is a container that holds records of type RecordConstructor.
    * A shelf can be given functions to manage its elements by the mixins {asSingletonShelf} and {asMultiShelf}.
    * Note that records are never inserted as passed, but a new record is created on base on the passed record.
-   * @param RecordConstructor
+   * @param RecordConstructor A constructor for elements that the record stores.
+   * @param opt Other optional options, e.g. limit: a maximum number of elements allowed in the shelf.
    * @constructor
    */
-  var Shelf = function (RecordConstructor) {
+  var Shelf = function (RecordConstructor, opt) {
     this.RecordConstructor = RecordConstructor;
+    this.records = [];
+
+    if (!opt) opt = {};
+    this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
   };
 
-  var ShelfMultiplicityT = Object.freeze({
-    singletonShelf : 'singleton',
-    multiShelf : 'multi'
-  });
+  Shelf.prototype.append = function (obj) {
+    if (this.length >= this.limit) return false;
+    var record = new this.RecordConstructor(obj, this);
+    this.records.push(record);
+    return record;
+  };
+
+  Shelf.prototype.prepend = function (obj) {
+    if (this.length >= this.limit) return false;
+    var record = new this.RecordConstructor(obj, this);
+    this.records.unshift(record);
+    return record;
+  };
+
+  Shelf.prototype.contains = function (record) {
+    return (-1 != this.records.indexOf(record));
+  };
+
+  Shelf.prototype.clear = function () {
+    this.records = [];
+  };
+
+  Shelf.prototype.at = function (idx) {
+    return this.records[idx];
+  };
+
+  Shelf.prototype.remove = function (recordOrIdx) {
+    if (this.limit === 1) recordOrIdx = 0;
+    var records = this.records;
+    var idx = (typeof recordOrIdx === 'number'? recordOrIdx : records.indexOf(recordOrIdx));
+    records.splice(idx, 1);
+  };
+
+  Shelf.prototype.indexOf = function (record) {
+    return this.records.indexOf(record);
+  };
+
+  Shelf.prototype.insert = function (obj, idx) {
+    if (this.length >= this.limit) return false;
+    var records = this.records;
+    if (idx < 0 || idx > records.length) {
+      return false;
+    }
+    var record = new this.RecordConstructor(obj, this);
+    records.splice(idx, 0, record);
+    return record;
+  };
+
+  Shelf.prototype.replace = function (oldRecordOrIdx, newRecord) {
+    var records = this.records;
+    var idx;
+    if (this.limit === 1 && !newRecord) {
+      newRecord = oldRecordOrIdx;
+      idx = 0;
+    } else {
+      console.assert(this.limit === 1 || this.contains(oldRecordOrIdx));
+      idx = (typeof oldRecordOrIdx === 'number'? oldRecordOrIdx : records.indexOf(oldRecordOrIdx));
+    }
+    var record = new this.RecordConstructor(newRecord, this);
+    records.splice(idx, 1, record);
+    return record;
+  };
+
+  Shelf.prototype.length = function () {
+    return this.records.length;
+  };
+
+  Shelf.prototype.empty = function () {
+    return(this.length() === 0);
+  };
 
   var ShelfTypeT = Object.freeze({
     dimension: 'dimensionShelf',
@@ -100,97 +171,6 @@ define(['app/utils'], function(utils) {
     aesthetic: 'aestheticShelf',
     remove: 'removeShelf'
   });
-
-  /**
-   * A mixin that makes a {Shelf} a shelf that holds only a single record.
-   * That is, it requires that the target object has a property RecordConstructor which can be used to construct new records for this shelf.
-   */
-  var asSingletonShelf = function () {
-    this.record = null;
-    this.multiplicity = ShelfMultiplicityT.singletonShelf;
-
-    this.append = function (obj) {
-      this.record = new this.RecordConstructor(obj, this);
-      return this.record;
-    };
-
-    this.prepend = this.append;
-
-    this.contains = function (record) {
-      return (this.record === record);
-    };
-
-    this.remove = function (record) {
-      //if (this.contains(record)) {
-        this.record = null;
-      //}
-    };
-
-    this.empty = function () {
-      return (this.record === null);
-    };
-
-    this.replace = this.append;
-  };
-
-  /**
-   * A mixin that makes a {Shelf} a shelf that can hold multiple records in a some linear order.
-   */
-  var asMultiShelf = function () {
-    this.records = [];
-    this.multiplicity = ShelfMultiplicityT.multiShelf;
-
-    this.append = function (obj) {
-      var record = new this.RecordConstructor(obj, this);
-      this.records.push(record);
-      return record;
-    };
-
-    this.prepend = function (obj) {
-      var record = new this.RecordConstructor(obj, this);
-      this.records.unshift(record);
-      return record;
-    };
-
-    this.contains = function (record) {
-      return (-1 != this.records.indexOf(record));
-    };
-
-    this.remove = function (record) {
-      var records = this.records;
-      records.splice(records.indexOf(record), 1);
-    };
-
-    this.indexOf = function (record) {
-      return this.records.indexOf(record);
-    };
-
-    this.insert = function (obj, idx) {
-      var records = this.records;
-      if (idx < 0 || idx > records.length) {
-        return;
-      }
-      var record = new this.RecordConstructor(obj, this);
-      records.splice(idx, 0, record);
-      return record;
-    };
-
-    this.replace = function (oldRecord, newRecord) {
-      var records = this.records;
-      var idx = records.indexOf(oldRecord);
-      var record = new this.RecordConstructor(newRecord, this);
-      records.splice(idx, 1, record);
-      return record;
-    };
-
-    this.length = function () {
-      return this.records.length;
-    };
-
-    this.empty = function () {
-      return(this.length() === 0);
-    };
-  };
 
   /**
    * We call {Field} and {FieldUsage} both attributes.
@@ -226,9 +206,8 @@ define(['app/utils'], function(utils) {
   var FieldUsage = function (base, args) {
     console.assert(base instanceof Field || base instanceof FieldUsage);
     Field.call(this, base.name, base.dataSource, base);
-    if (typeof args === 'undefined') {
-      args = {};
-    }
+    if (!args) args = {};
+    
     var isFU = base instanceof FieldUsage;
     this.base = (isFU ? base.base : base);
     this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
@@ -253,6 +232,28 @@ define(['app/utils'], function(utils) {
     console.assert(content instanceof Field || content instanceof FieldUsage);
     this.content = content;
     this.shelf = shelf;
+  };
+
+  Record.prototype.append = function (record) {
+    var shelf = this.shelf;
+    return shelf.insert(record, shelf.records.indexOf(this) + 1);
+  };
+
+  Record.prototype.prepend = function (record) {
+    var shelf = this.shelf;
+    return shelf.insert(record, shelf.records.indexOf(this));
+  };
+
+  Record.prototype.remove = function () {
+    return this.shelf.remove(this);
+  };
+
+  Record.prototype.replaceBy = function (record) {
+    return this.shelf.replace(this, record);
+  };
+
+  Record.prototype.index = function () {
+    return this.shelf.indexOf(this);
   };
 
   /**
@@ -306,43 +307,6 @@ define(['app/utils'], function(utils) {
   FUsageRecord.prototype.constructor = FUsageRecord;
 
   /**
-   * A mixin that extends a {Record} such that it can manage itself in context of its shelf.
-   */
-  var asSingletonRecord = function () {
-    this.replace = function (record) {
-      return this.shelf.replace(record);
-    };
-    this.append = this.replace;
-    this.prepend = this.replace;
-    this.remove = function () {
-      return this.shelf.remove(this);
-    };
-  };
-
-  /**
-   * A mixin that extends a {Record} such that it can manage itself and its siblings in context of its shelf.
-   */
-  var asMultipleRecord = function () {
-    this.append = function (record) {
-      var shelf = this.shelf;
-      return shelf.insert(record, shelf.records.indexOf(this) + 1);
-    };
-    this.prepend = function (record) {
-      var shelf = this.shelf;
-      return shelf.insert(record, shelf.records.indexOf(this));
-    };
-    this.remove = function (record) {
-      return this.shelf.remove(record);
-    };
-    this.replace = function (record) {
-      return this.shelf.replace(this, record);
-    };
-    this.index = function () {
-      return this.shelf.indexOf(this);
-    };
-  };
-
-  /**
    * Constructors of XXXRecord should always construct new content to store and never use the object that is passed in to the constructor.
    * They can, however, rely on the constructor of FieldRecord and FUsageRecord to create new instances if not passing a {Field} or {FieldUsage} to the constructor.
    */
@@ -362,19 +326,17 @@ define(['app/utils'], function(utils) {
   };
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
   ColorRecord.prototype.constructor = ColorRecord;
-  asSingletonRecord.call(ColorRecord.prototype);
 
   /**
    * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
    * @constructor
    */
   var ColorShelf = function () {
-    Shelf.call(this, ColorRecord);
+    Shelf.call(this, ColorRecord, {limit:1});
     this.type = ShelfTypeT.color;
   };
   ColorShelf.prototype = Object.create(Shelf.prototype);
   ColorShelf.prototype.constructor = ColorShelf;
-  asSingletonShelf.call(ColorShelf.prototype);
 
   /**
    * A {DimensionRecord} is stored in a dimension shelf and is based on a field.
@@ -393,7 +355,6 @@ define(['app/utils'], function(utils) {
   };
   DimensionRecord.prototype = Object.create(FieldRecord.prototype);
   DimensionRecord.prototype.constructor = DimensionRecord;
-  asMultipleRecord.call(DimensionRecord.prototype);
 
   /**
    * A dimension shelf holds fields dimensions
@@ -405,7 +366,6 @@ define(['app/utils'], function(utils) {
   };
   DimensionShelf.prototype = Object.create(Shelf.prototype);
   DimensionShelf.prototype.constructor = DimensionShelf;
-  asMultiShelf.call(DimensionShelf.prototype);
 
   /**
    * A record that contains a measure.
@@ -424,7 +384,6 @@ define(['app/utils'], function(utils) {
   };
   MeasureRecord.prototype = Object.create(FieldRecord.prototype);
   MeasureRecord.prototype.constructor = MeasureRecord;
-  asMultipleRecord.call(MeasureRecord.prototype);
 
   /**
    * @constructor
@@ -435,7 +394,6 @@ define(['app/utils'], function(utils) {
   };
   MeasureShelf.prototype = Object.create(Shelf.prototype);
   MeasureShelf.prototype.constructor = MeasureShelf;
-  asMultiShelf.call(MeasureShelf.prototype);
 
   /**
    * @param obj
@@ -451,7 +409,6 @@ define(['app/utils'], function(utils) {
   };
   LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
   LayoutRecord.prototype.constructor = LayoutRecord;
-  asMultipleRecord.call(LayoutRecord.prototype);
 
   /**
    * @constructor
@@ -462,7 +419,6 @@ define(['app/utils'], function(utils) {
   };
   RowShelf.prototype = Object.create(Shelf.prototype);
   RowShelf.prototype.constructor = RowShelf;
-  asMultiShelf.call(RowShelf.prototype);
 
   /**
    * @constructor
@@ -473,7 +429,6 @@ define(['app/utils'], function(utils) {
   };
   ColumnShelf.prototype = Object.create(Shelf.prototype);
   ColumnShelf.prototype.constructor = ColumnShelf;
-  asMultiShelf.call(ColumnShelf.prototype);
 
   // public part of the module
   return {
@@ -482,10 +437,7 @@ define(['app/utils'], function(utils) {
     FUsageT: FUsageT,
 
     Shelf: Shelf,
-    ShelfMultiplicityT: ShelfMultiplicityT,
     ShelfTypeT: ShelfTypeT,
-    //asSingletonShelf: asSingletonShelf,
-    //asMultiShelf: asMultiShelf,
 
     Field: Field,
     FieldUsage: FieldUsage,
@@ -493,8 +445,6 @@ define(['app/utils'], function(utils) {
     Record: Record,
     FieldRecord: FieldRecord,
     FUsageRecord: FUsageRecord,
-    //asSingletonRecord: asSingletonRecord,
-    //asMultipleRecord: asMultipleRecord,
 
     ColorRecord: ColorRecord,
     DimensionRecord: DimensionRecord,

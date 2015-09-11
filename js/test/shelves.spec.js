@@ -106,56 +106,53 @@ define(['app/shelves'], function (Sh) {
       measShelf.records.forEach(function (record) {
         expect(record.content.role == Sh.FieldT.Role.measure);
       });
-
-      colorShelf.append(dimShelf.records[0]);
-      expect(colorShelf.record.content.name).toBe('sex');
     });
 
-   it('tests asSingeltonShelf', function () {
+   it('tests Shelf functions', function () {
       expect(colorShelf.empty()).toBe(true);
 
-      colorShelf.append(dimShelf.records[0]);
+      colorShelf.append(dimShelf.at(0));
       expect(colorShelf.empty()).not.toBe(true);
-      expect(colorShelf.record.content.name).toBe('sex');
+      expect(colorShelf.at(0).content.name).toBe('sex');
 
-      colorShelf.remove();
+      colorShelf.remove(0);
       expect(colorShelf.empty()).toBe(true);
 
-      colorShelf.prepend(measShelf.records[1]);
+      colorShelf.prepend(measShelf.at(1));
       expect(colorShelf.empty()).not.toBe(true);
-      expect(colorShelf.record.content.name).toBe('weight');
+      expect(colorShelf.at(0).content.name).toBe('weight');
+      expect(colorShelf.contains(colorShelf.at(0))).toBe(true);
 
-      expect(colorShelf.contains(colorShelf.record)).toBe(true);
-
-      colorShelf.replace(dimShelf.records[1]);
-      expect(colorShelf.record.content.name).toBe('name');
+      expect(colorShelf.limit).toBe(1);
+      colorShelf.replace(dimShelf.at(1));
+      expect(colorShelf.at(0).content.name).toBe('name');
     });
 
-    it('tests asMultiShelf', function () {
+    it('testshelf functions (more)', function () {
       expect(rowShelf.empty()).toBe(true);
 
-      rowShelf.append(dimShelf.records[0]);
+      rowShelf.append(dimShelf.at(0));
       expect(rowShelf.empty()).not.toBe(true);
-      expect(rowShelf.records[0].content.name).toBe('sex');
+      expect(rowShelf.at(0).content.name).toBe('sex');
 
-      rowShelf.append(measShelf.records[0]);
-      expect(rowShelf.records[1].content.name).toBe('age');
-      rowShelf.prepend(measShelf.records[1]);
-      expect(rowShelf.records[2].content.name).toBe('age');
-      expect(rowShelf.records[1].content.name).toBe('sex');
-      expect(rowShelf.records[0].content.name).toBe('weight');
-      expect(rowShelf.contains(rowShelf.records[0])).toBe(true);
-      expect(rowShelf.contains(rowShelf.records[1])).toBe(true);
-      expect(rowShelf.contains(rowShelf.records[2])).toBe(true);
+      rowShelf.append(measShelf.at(0));
+      expect(rowShelf.at(1).content.name).toBe('age');
+      rowShelf.prepend(measShelf.at(1));
+      expect(rowShelf.at(2).content.name).toBe('age');
+      expect(rowShelf.at(1).content.name).toBe('sex');
+      expect(rowShelf.at(0).content.name).toBe('weight');
+      expect(rowShelf.contains(rowShelf.at(0))).toBe(true);
+      expect(rowShelf.contains(rowShelf.at(1))).toBe(true);
+      expect(rowShelf.contains(rowShelf.at(2))).toBe(true);
       expect(rowShelf.contains(null)).toBe(false);
       expect(rowShelf.contains({})).toBe(false);
 
-      rowShelf.replace(rowShelf.records[1], dimShelf.records[1]);
-      expect(rowShelf.records[1].content.name).toBe('name');
+      rowShelf.replace(rowShelf.at(1), dimShelf.at(1));
+      expect(rowShelf.at(1).content.name).toBe('name');
 
-      rowShelf.remove(rowShelf.records[1]);
-      expect(rowShelf.records[1].content.name).toBe('age');
-      expect(rowShelf.records[0].content.name).toBe('weight');
+      rowShelf.remove(rowShelf.at(1));
+      expect(rowShelf.at(1).content.name).toBe('age');
+      expect(rowShelf.at(0).content.name).toBe('weight');
       expect(rowShelf.length()).toBe(2);
     });
   });

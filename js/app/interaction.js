@@ -287,20 +287,10 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
    */
   sh.Shelf.prototype.beInteractable = function () {
     _makeShelfDroppable(this.$visual);
-    switch (this.multiplicity) {
-      case sh.ShelfMultiplicityT.singletonShelf:
-        if (!this.empty) {
-          _makeRecordDraggable(this.record.$visual);
-          _makeRecordDroppable(this.record.$visual);
-        }
-        break;
-      case sh.ShelfMultiplicityT.multiShelf:
-        this.records.forEach(function (record) {
-          _makeRecordDraggable(record.$visual);
-          _makeRecordDroppable(record.$visual);
-        });
-        break;
-    }
+    this.records.forEach(function (record) {
+      _makeRecordDraggable(record.$visual);
+      _makeRecordDroppable(record.$visual);
+    });
   };
 
   var onDrop = {};
@@ -333,8 +323,8 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
           break;
         case OverlapEnum.center:
           // replace
-          target.item.removeVisual();
-          newRecord = target.item.replace(source);
+          target.item.removeVisual().remove();
+          newRecord = target.item.replaceBy(source);
           break;
         default:
           console.error("Dropping on item, but overlap = " + overlap);
@@ -359,7 +349,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     } else {
       if (target.item) { // replace
         target.item.removeVisual();
-        newRecord = target.item.replace(source);
+        newRecord = target.item.replaceBy(source);
       } else { // append
         target.shelf.append(source);
       }
@@ -372,7 +362,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   };
 
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
-    if (!target.shelf.empty()) target.shelf.record.removeVisual().remove();
+    if (!target.shelf.empty()) target.shelf.at(0).removeVisual().remove();
     var newRecord = target.shelf.append(source);
     newRecord.beVisual().beInteractable();
     if (source.shelf.type !== sh.ShelfTypeT.dimension &&
