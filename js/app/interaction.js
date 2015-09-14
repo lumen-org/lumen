@@ -17,6 +17,11 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     none: 'none'
   });
 
+  function _isDimensionOrMeasureThingy (shelfOrRecord) {
+    if (shelfOrRecord instanceof sh.Record) shelfOrRecord = shelfOrRecord.shelf;
+    return (shelfOrRecord.type === sh.ShelfTypeT.dimension || shelfOrRecord.type === sh.ShelfTypeT.measure);
+  }
+
   /**
    * Functions for calculating positions and overlaps of DOM elements.
    * @type {{center: Function, within: Function, overlap: Function}}
@@ -253,12 +258,16 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
         }
         logger.debug("drop on shelf cont'd");
         // note: we pass the actual records and shelves, not the visuals
-        var target = {
-          item: (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable().data(vis.AttachStringT.record) : false),
-          shelf: $(event.target).data(vis.AttachStringT.shelf)
-        };
+        //var target = {
+        //  item: (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable().data(vis.AttachStringT.record) : false),
+        //  shelf: $(event.target).data(vis.AttachStringT.shelf)
+        //};
+        var targetShelf = $(event.target).data(vis.AttachStringT.shelf);
+        var target = ( ddr.linkDroppable().hasClass('shelf-list-item') ?
+          ddr.linkDroppable().data(vis.AttachStringT.record) :
+          targetShelf );
         var source = $(ui.draggable).data(vis.AttachStringT.record);
-        onDrop[target.shelf.type](target, source, ddr.overlap());
+        onDrop[targetShelf.type](target, source, ddr.overlap());
         ddr.unlinkDroppable();
         event.stopPropagation();
       },
@@ -298,7 +307,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   onDrop[sh.ShelfTypeT.dimension] = function (target, source, overlap) {
     if (source.shelf.type === sh.ShelfTypeT.dimension || source.shelf.type === sh.ShelfTypeT.measure) {
       // from field shelf to field shelf-> move to target shelf
-      var newRecord = target.shelf.append(source);
+      var newRecord = target.append(source);
       newRecord.beVisual().beInteractable();
     }
     // in all cases do:
@@ -308,35 +317,40 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
 
   onDrop[sh.ShelfTypeT.row] = function (target, source, overlap) {
+    // general rule: measures always come after dimensions
     var newRecord = null;
-    if (target.item) {
+    if (target instanceof sh.Record) {
       switch (overlap) {
         case OverlapEnum.left:
         case OverlapEnum.top:
           // insert before element
-          newRecord = target.item.prepend(source);
+          newRecord = target.prepend(source);
           break;
         case OverlapEnum.right:
         case OverlapEnum.bottom:
           // insert after target element
-          newRecord = target.item.append(source);
+          newRecord = target.append(source);
           break;
         case OverlapEnum.center:
           // replace
-          target.item.removeVisual().remove();
-          newRecord = target.item.replaceBy(source);
+          target.removeVisual().remove();
+          newRecord = target.replaceBy(source);
           break;
         default:
           console.error("Dropping on item, but overlap = " + overlap);
       }
     } else {
-      newRecord = target.shelf.append(source);
+      newRecord = target.append(source);
     }
-    if (source.shelf.type !== sh.ShelfTypeT.dimension &&
-      source.shelf.type !== sh.ShelfTypeT.measure) {
-      source.removeVisual().remove();
-    }
+    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
     newRecord.beVisual().beInteractable();
+  };
+
+  onDrop[sh.ShelfTypeT.detail] = function (target, source, overlap) {
+    var newRecord = target.append(source);
+    newRecord.beVisual().beInteractable();
+
+    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
 
   onDrop[sh.ShelfTypeT.column] = onDrop[sh.ShelfTypeT.row];
@@ -346,29 +360,26 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     if (source.shelf.type === sh.ShelfTypeT.filter) {
       // do nothing if just moving filters
       // todo: allow reordering
-    } else {
-      if (target.item) { // replace
-        target.item.removeVisual();
-        newRecord = target.item.replaceBy(source);
-      } else { // append
-        target.shelf.append(source);
-      }
+      return;
     }
-    if (source.shelf.type !== sh.ShelfTypeT.dimension &&
-      source.shelf.type !== sh.ShelfTypeT.measure) {
-      source.removeVisual().remove();
+
+    if (target instanceof sh.Record) { // replace
+      target.item.removeVisual();
+      newRecord = target.replaceBy(source);
+    } else { // append
+      newRecord = target.append(source);
     }
+
+    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
     newRecord.beVisual().beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
-    if (!target.shelf.empty()) target.shelf.at(0).removeVisual().remove();
-    var newRecord = target.shelf.append(source);
+    target = (target instanceof sh.Record ? target.shelf : target);
+    if (!target.empty()) target.at(0).removeVisual().remove();
+    var newRecord = target.append(source);
     newRecord.beVisual().beInteractable();
-    if (source.shelf.type !== sh.ShelfTypeT.dimension &&
-      source.shelf.type !== sh.ShelfTypeT.measure) {
-      source.removeVisual().remove();
-    }
+    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
 
   onDrop[sh.ShelfTypeT.shape] = onDrop[sh.ShelfTypeT.color];
@@ -376,11 +387,10 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   onDrop[sh.ShelfTypeT.size] = onDrop[sh.ShelfTypeT.color];
 
   onDrop[sh.ShelfTypeT.remove] = function (target, source, overlap) {
-    if (source.shelf.type !== sh.ShelfTypeT.dimension &&
-      source.shelf.type !== sh.ShelfTypeT.measure) {
-      source.removeVisual().remove();
-    }
+    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
 
-  return {};
+  return {
+    onDrop : onDrop
+  };
 });

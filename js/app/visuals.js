@@ -13,6 +13,52 @@ define(['app/shelves','app/utils'], function(s, util) {
     shelf : Object.freeze('shelfAttachment')
   };
 
+
+  /**
+   * @param record
+   * @returns {*}
+   * @private
+   */
+  function _before4Record (record) {
+    var visual;
+    switch (record.shelf.$visual.direction) {
+      case DirectionTypeT.vertical:
+        visual = $('<div></div>');
+        break;
+      case DirectionTypeT.horizontal:
+      case DirectionTypeT.box:
+        visual = $('<span></span>');
+        break;
+    }
+    visual.addClass('shelf-list-item');
+    record.$visual = visual;
+    return visual;
+  }
+
+  /**
+   *
+   * @param record
+   * @private
+   */
+  function _after4Record (record) {
+    var visual = record.$visual;
+
+    // add to visual of shelf
+    // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
+    var records = record.shelf.records;
+    for (var idx = record.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
+    if (idx === 0) {
+      visual.prependTo(record.shelf.$visual.container);
+    } else {
+      visual.insertAfter(records[idx-1].$visual);
+    }
+
+    // attach record to visual
+    visual.data(AttachStringT.record, record);
+
+    return record;
+  }
+
   /**
    * A mixin function that creates a visual representation (as HTML elements) of the shelf and its records. That representation is stored in an attribute $visual of the shelf.
    * @param {Shelf} shelf The shelf to become a visual.
@@ -77,45 +123,33 @@ define(['app/shelves','app/utils'], function(s, util) {
    * A mixin function that creates a simple visual representation (as HTML elements) of this record. The root of representation is returned. It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
    * Note: You may not make a record visible before making its shelf visible.
    * @param record
-   * @return The record iself for chaining.
+   * @return The record itself for chaining.
    */
   s.Record.prototype.beVisual = function () {
-    var visual;
-    switch (this.shelf.$visual.direction) {
-      case DirectionTypeT.vertical:
-        visual = $('<div></div>');
-        break;
-      case DirectionTypeT.horizontal:
-      case DirectionTypeT.box:
-        visual = $('<span></span>');
-        break;
-    }
+    var visual = _before4Record(this);
+
     visual.addClass('shelf-list-item')
-      .text(this.content.name);
+      .text(this.toPQLString());
 
-    // add to visual of shelf
-    // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
-    var records = this.shelf.records;
-    for (var idx = this.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
-
-    if (idx === 0) {
-      visual.prependTo(this.shelf.$visual.container);
-    } else {
-      visual.insertAfter(records[idx-1].$visual); // todo check this?!?!?
-    }
-
-    // attach record to visual
-    visual.data(AttachStringT.record, this);
-
-    // add visual to record
-    this.$visual = visual;
-    return this;
+    return _after4Record(this);
   };
 
   s.Record.prototype.removeVisual = function () {
     this.$visual.remove();
     return this;
   };
+
+  s.ColorRecord.prototype.beVisual = function () {
+    var visual = _before4Record(this);
+
+    visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="30px" width="30px">');
+    var attr = this.content;
+    var text = (attr instanceof s.FieldUsage ? attr.aggr + '(' + attr.name + ')': attr.name );
+    visual.append($('<span>'+ text +'</span>'));
+
+    return _after4Record(this);
+  };
+
 
   // public part of the module
   return {

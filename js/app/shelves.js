@@ -1,7 +1,16 @@
 define(['app/utils'], function(utils) {
   'use strict';
 
-  //var logger = Logger.get('pl-shelves');
+//  var logger = Logger.get('pl-shelves');
+//  logger.setLevel(Logger.DEBUG);
+
+  function _concatAsPQLString (records, delim) {
+    var pqlString = "";
+    records.forEach( function (r) {
+      pqlString += r.toPQLString() + delim;
+    });
+    return pqlString;
+  }
 
   /**
    * ColorMap class
@@ -29,7 +38,7 @@ define(['app/utils'], function(utils) {
   };
 
   var FUsageT = {
-    Aggregation: {sum: 'sum', agv: 'avg'},
+    Aggregation: {sum: 'sum', avg: 'avg'},
     Scale: {
       linear: 'linear', log: 'log'
     },
@@ -74,7 +83,6 @@ define(['app/utils'], function(utils) {
 
   /**
    * A Shelf is a container that holds records of type RecordConstructor.
-   * A shelf can be given functions to manage its elements by the mixins {asSingletonShelf} and {asMultiShelf}.
    * Note that records are never inserted as passed, but a new record is created on base on the passed record.
    * @param RecordConstructor A constructor for elements that the record stores.
    * @param opt Other optional options, e.g. limit: a maximum number of elements allowed in the shelf.
@@ -207,7 +215,6 @@ define(['app/utils'], function(utils) {
     console.assert(base instanceof Field || base instanceof FieldUsage);
     Field.call(this, base.name, base.dataSource, base);
     if (!args) args = {};
-    
     var isFU = base instanceof FieldUsage;
     this.base = (isFU ? base.base : base);
     this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
@@ -218,8 +225,6 @@ define(['app/utils'], function(utils) {
 
   /**
    * An {Record} has an attribute (i.e. a {Field} or {FieldUsage}) and is bound to a certain {Shelf}.
-   *
-   * {Record}s can be extended using the mixins {asSingletonRecord} and {asMultiRecord}. This provides functions to manage records of a shelf "from the records itself".
    *
    * @param content {Field|FieldUsage} Note that content itself will be stored, not a copy of it.
    * Note: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
@@ -277,6 +282,9 @@ define(['app/utils'], function(utils) {
   };
   FieldRecord.prototype = Object.create(Record.prototype);
   FieldRecord.prototype.constructor = FieldRecord;
+  FieldRecord.prototype.toPQLString = function () {
+    return this.content.name;
+  };
 
   /**
    * An {FUsageRecord} is a {Record} that may only contain a {FieldUsage}.
@@ -305,6 +313,12 @@ define(['app/utils'], function(utils) {
   };
   FUsageRecord.prototype = Object.create(Record.prototype);
   FUsageRecord.prototype.constructor = FUsageRecord;
+  FUsageRecord.prototype.toPQLString = function () {
+    var fusage = this.content;
+    return (fusage.role === FieldT.Role.measure ?
+      fusage.aggr + '(' + fusage.name + ')' :
+      fusage.name);
+  };
 
   /**
    * Constructors of XXXRecord should always construct new content to store and never use the object that is passed in to the constructor.
@@ -327,16 +341,6 @@ define(['app/utils'], function(utils) {
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
   ColorRecord.prototype.constructor = ColorRecord;
 
-  /**
-   * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
-   * @constructor
-   */
-  var ColorShelf = function () {
-    Shelf.call(this, ColorRecord, {limit:1});
-    this.type = ShelfTypeT.color;
-  };
-  ColorShelf.prototype = Object.create(Shelf.prototype);
-  ColorShelf.prototype.constructor = ColorShelf;
 
   /**
    * A {DimensionRecord} is stored in a dimension shelf and is based on a field.
@@ -357,17 +361,6 @@ define(['app/utils'], function(utils) {
   DimensionRecord.prototype.constructor = DimensionRecord;
 
   /**
-   * A dimension shelf holds fields dimensions
-   * @constructor
-   */
-  var DimensionShelf = function () {
-    Shelf.call(this, DimensionRecord);
-    this.type = ShelfTypeT.dimension;
-  };
-  DimensionShelf.prototype = Object.create(Shelf.prototype);
-  DimensionShelf.prototype.constructor = DimensionShelf;
-
-  /**
    * A record that contains a measure.
    * @param obj
    * @param shelf
@@ -386,6 +379,94 @@ define(['app/utils'], function(utils) {
   MeasureRecord.prototype.constructor = MeasureRecord;
 
   /**
+   * @param obj
+   * @param shelf
+   * @constructor
+   */
+  var LayoutRecord = function (obj, shelf) {
+    if (obj instanceof Record) {
+      obj = obj.content;
+    }
+    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+  };
+  LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
+  LayoutRecord.prototype.constructor = LayoutRecord;
+
+  /**
+   *
+   * @param obj
+   * @param shelf
+   * @constructor
+   */
+  var ShapeRecord = function (obj, shelf) {
+    if (obj instanceof Record) {
+      obj = obj.content;
+    }
+    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+  };
+  ShapeRecord.prototype = Object.create(FUsageRecord.prototype);
+  ShapeRecord.prototype.constructor = ShapeRecord;
+
+  /**
+   *
+   * @param obj
+   * @param shelf
+   * @constructor
+   */
+  var SizeRecord = function (obj, shelf) {
+    if (obj instanceof Record) {
+      obj = obj.content;
+    }
+    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+  };
+  SizeRecord.prototype = Object.create(FUsageRecord.prototype);
+  SizeRecord.prototype.constructor = SizeRecord;
+
+  /**
+   *
+   * @param obj
+   * @param shelf
+   * @constructor
+   */
+  var FilterRecord = function (obj, shelf) {
+    if (obj instanceof Record) {
+      obj = obj.content;
+    }
+    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+  };
+  FilterRecord.prototype = Object.create(FUsageRecord.prototype);
+  FilterRecord.prototype.constructor = FilterRecord;
+  FilterRecord.prototype.toPQLString = function () {
+    return this.content.name + " IN ( ... )";
+  };
+
+  /**
+   *
+   * @param obj
+   * @param shelf
+   * @constructor
+   */
+  var DetailRecord = function (obj, shelf) {
+    if (obj instanceof Record) {
+      obj = obj.content;
+    }
+    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+  };
+  DetailRecord.prototype = Object.create(FUsageRecord.prototype);
+  DetailRecord.prototype.constructor = DetailRecord;
+
+  /**
+   * A dimension shelf holds fields dimensions
+   * @constructor
+   */
+  var DimensionShelf = function () {
+    Shelf.call(this, DimensionRecord);
+    this.type = ShelfTypeT.dimension;
+  };
+  DimensionShelf.prototype = Object.create(Shelf.prototype);
+  DimensionShelf.prototype.constructor = DimensionShelf;
+
+  /**
    * @constructor
    */
   var MeasureShelf = function () {
@@ -396,19 +477,21 @@ define(['app/utils'], function(utils) {
   MeasureShelf.prototype.constructor = MeasureShelf;
 
   /**
-   * @param obj
-   * @param shelf
-   * @constructor
+   * Small helper function - see usages
+   * @returns {boolean}
+   * @private
    */
-  var LayoutRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
+  function _concatAsPQLString4RowCol (shelf) {
+    if(shelf.empty()) return false;
+    var pqlString = shelf.at(0).toPQLString();
+    for( var idx = 1; idx < shelf.length(); ++idx ) {
+      var op = '/';
+      if (shelf.at(idx).content.role === FieldT.Role.measure &&
+        shelf.at(idx - 1).content.role === FieldT.Role.measure) op = '+';
+      pqlString += op + shelf.at(idx).toPQLString();
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
-    Record.call(this, obj, shelf);
-  };
-  LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
-  LayoutRecord.prototype.constructor = LayoutRecord;
+    return pqlString;
+  }
 
   /**
    * @constructor
@@ -419,6 +502,10 @@ define(['app/utils'], function(utils) {
   };
   RowShelf.prototype = Object.create(Shelf.prototype);
   RowShelf.prototype.constructor = RowShelf;
+  RowShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString4RowCol(this);
+    return (pqlString ? pqlString + ' ON ROWS\n' : false);
+  };
 
   /**
    * @constructor
@@ -429,6 +516,94 @@ define(['app/utils'], function(utils) {
   };
   ColumnShelf.prototype = Object.create(Shelf.prototype);
   ColumnShelf.prototype.constructor = ColumnShelf;
+  ColumnShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString4RowCol(this);
+    return (pqlString ? pqlString + ' ON COLUMNS\n' : false);
+  };
+
+  /**
+   * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
+   * @constructor
+   */
+  var ColorShelf = function () {
+    Shelf.call(this, ColorRecord, {limit:1});
+    this.type = ShelfTypeT.color;
+  };
+  ColorShelf.prototype = Object.create(Shelf.prototype);
+  ColorShelf.prototype.constructor = ColorShelf;
+  ColorShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString(this.records, ' ');
+    return (pqlString ? pqlString + ' ON COLOR\n' : false);
+  };
+
+  /**
+   * @constructor
+   */
+  var ShapeShelf = function () {
+    Shelf.call(this, ShapeRecord);
+    this.type = ShelfTypeT.shape;
+  };
+  ShapeShelf.prototype = Object.create(Shelf.prototype);
+  ShapeShelf.prototype.constructor = ShapeShelf;
+  ShapeShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString(this.records, ' ');
+    return (pqlString ? pqlString + ' ON SHAPE\n' : false);
+  };
+
+  /**
+   * @constructor
+   */
+  var SizeShelf = function () {
+    Shelf.call(this, SizeRecord);
+    this.type = ShelfTypeT.size;
+  };
+  SizeShelf.prototype = Object.create(Shelf.prototype);
+  SizeShelf.prototype.constructor = SizeShelf;
+  SizeShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString(this.records, ' ');
+    return (pqlString ? pqlString + ' ON SIZE\n' : false);
+  };
+
+  /**
+   * @constructor
+   */
+  var FilterShelf = function () {
+    Shelf.call(this, FilterRecord);
+    this.type = ShelfTypeT.filter;
+  };
+  FilterShelf.prototype = Object.create(Shelf.prototype);
+  FilterShelf.prototype.constructor = FilterShelf;
+  FilterShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString(this.records, '\n');
+    return (pqlString ? 'WHERE\n' + pqlString: false);
+  };
+
+  /**
+   * @constructor
+   */
+  var DetailShelf = function () {
+    Shelf.call(this, DetailRecord);
+    this.type = ShelfTypeT.detail;
+  };
+  DetailShelf.prototype = Object.create(Shelf.prototype);
+  DetailShelf.prototype.constructor = DetailShelf;
+  DetailShelf.prototype.toPQLString = function () {
+    var pqlString = _concatAsPQLString(this.records, ' ');
+    return (pqlString ? pqlString + ' ON DETAILS\n' : false);
+  };
+
+  /**
+   * @constructor
+   */
+  var RemoveShelf = function () {
+    Shelf.call(this, Record);
+    this.type = ShelfTypeT.remove;
+  };
+  RemoveShelf.prototype = Object.create(Shelf.prototype);
+  RemoveShelf.prototype.constructor = RemoveShelf;
+  RemoveShelf.prototype.toPQLString = function () {
+    return '';
+  };
 
   // public part of the module
   return {
@@ -446,16 +621,25 @@ define(['app/utils'], function(utils) {
     FieldRecord: FieldRecord,
     FUsageRecord: FUsageRecord,
 
+    DetailRecord: DetailRecord,
     ColorRecord: ColorRecord,
+    ShapeRecord: ShapeRecord,
+    SizeRecord: SizeRecord,
+    FilterRecord: FilterRecord,
     DimensionRecord: DimensionRecord,
     MeasureRecord: MeasureRecord,
     LayoutRecord: LayoutRecord,
 
+    DetailShelf: DetailShelf,
     ColorShelf: ColorShelf,
+    ShapeShelf: ShapeShelf,
+    SizeShelf: SizeShelf,
+    FilterShelf: FilterShelf,
     DimensionShelf: DimensionShelf,
     MeasureShelf: MeasureShelf,
     RowShelf: RowShelf,
     ColumnShelf: ColumnShelf,
+    RemoveShelf: RemoveShelf,
 
     DataSource: DataSource
   };
