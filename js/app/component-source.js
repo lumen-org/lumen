@@ -110,6 +110,23 @@ function (d3, sh, vis, inter, e) {
   inter.onDrop[sh.ShelfTypeT.column](columnShelf, dimShelf.at(1));
   inter.onDrop[sh.ShelfTypeT.column](columnShelf, measShelf.at(1));
 
+  inter.asRemoveElem($(document.body).find('main'));
+
+  function pqlString () {
+    return 'SELECT AS auto \n' +
+      (colorShelf.toPQLString() ? '\t' + colorShelf.toPQLString() : '') +
+      (detailShelf.toPQLString()? '\t' + detailShelf.toPQLString() : '') +
+      (shapeShelf.toPQLString() ? '\t' + shapeShelf.toPQLString() : '') +
+      (shapeShelf.toPQLString() ? '\t' + shapeShelf.toPQLString() : '') +
+      (columnShelf.toPQLString()? '\t' + columnShelf.toPQLString() : '') +
+      'FROM\n\tmyDataSource\n' +
+      filterShelf.toPQLString();
+  }
+
+  function printPQLString () {
+    $('#pqlTextBox').text(pqlString());
+  }
+
   measShelf.on(sh.Shelf.ChangedEvent, printPQLString);
   dimShelf.on(sh.Shelf.ChangedEvent, printPQLString);
   detailShelf.on(sh.Shelf.ChangedEvent, printPQLString);
@@ -120,21 +137,6 @@ function (d3, sh, vis, inter, e) {
   removeShelf.on(sh.Shelf.ChangedEvent, printPQLString);
   rowShelf.on(sh.Shelf.ChangedEvent, printPQLString);
   printPQLString();
-
-  function pqlString () {
-    return 'SELECT AS auto \n' +
-      '\t' + colorShelf.toPQLString() +
-      '\t' + detailShelf.toPQLString() +
-      '\t' + shapeShelf.toPQLString() +
-      '\t' + rowShelf.toPQLString() +
-      '\t' + columnShelf.toPQLString() +
-      'FROM\n\tmyDataSource\n' +
-      filterShelf.toPQLString();
-  }
-
-  function printPQLString () {
-    $('#pqlTextBox').text(pqlString());
-  }
 
   function myScript () {
     //debugger;

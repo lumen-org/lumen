@@ -251,12 +251,12 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
       // greedy: false,
       tolerance: 'pointer',
       drop: function (event, ui) {
-        logger.debug('drop on shelf');
+        //logger.debug('drop on shelf');
         if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
           // todo: why is the event triggered again on the shelf, if it was actually dropped on an shelf-list-item?
           return;
         }
-        logger.debug("drop on shelf cont'd");
+        //logger.debug("drop on shelf cont'd");
         // note: we pass the actual records and shelves, not the visuals
         //var target = {
         //  item: (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable().data(vis.AttachStringT.record) : false),
@@ -390,7 +390,33 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
 
+  /**
+   * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
+   * @param elem
+   */
+  function asRemoveElem (elem) {
+    $(elem).droppable({
+      scope: 'vars',
+      tolerance: 'pointer',
+      drop: function (event, ui) {
+        if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
+          return;
+        }
+        onDrop[sh.ShelfTypeT.remove] ({}, $(ui.draggable).data(vis.AttachStringT.record), {});
+        ddr.unlinkDroppable();
+        event.stopPropagation();
+      },
+      over: function (event, ui) {
+        ddr.linkDroppable($(this));
+      },
+      out: function (event, ui) {
+        ddr.unlinkDroppable();
+      }
+    });
+  }
+
   return {
-    onDrop : onDrop
+    onDrop : onDrop,
+    asRemoveElem : asRemoveElem
   };
 });
