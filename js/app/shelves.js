@@ -1,9 +1,14 @@
-define(['app/utils'], function(utils) {
+define(['app/utils','lib/emitter'], function(utils, E) {
   'use strict';
 
 //  var logger = Logger.get('pl-shelves');
 //  logger.setLevel(Logger.DEBUG);
 
+  /**
+   * Small helper function - see usages
+   * @returns {String}
+   * @private
+   */
   function _concatAsPQLString (records, delim) {
     var pqlString = "";
     records.forEach( function (r) {
@@ -11,6 +16,25 @@ define(['app/utils'], function(utils) {
     });
     return pqlString;
   }
+
+  /**
+   * Small helper function - see usages
+   * @returns {String}
+   * @private
+   */
+  function _concatAsPQLString4RowCol (shelf) {
+    if(shelf.empty()) return false;
+    var pqlString = shelf.at(0).toPQLString();
+    for( var idx = 1; idx < shelf.length(); ++idx ) {
+      var op = '/';
+      if (shelf.at(idx).content.role === FieldT.Role.measure &&
+        shelf.at(idx - 1).content.role === FieldT.Role.measure) op = '+';
+      pqlString += op + shelf.at(idx).toPQLString();
+    }
+    return pqlString;
+  }
+
+
 
   /**
    * ColorMap class
@@ -81,9 +105,23 @@ define(['app/utils'], function(utils) {
     }
   };
 
+  var ShelfTypeT = Object.freeze({
+    dimension: 'dimensionShelf',
+    measure: 'measureShelf',
+    row: 'rowShelf',
+    column: 'columnShelf',
+    filter: 'filterShelf',
+    color: 'colorShelf',
+    shape: 'shapeShelf',
+    size: 'sizeShelf',
+    aesthetic: 'aestheticShelf',
+    remove: 'removeShelf'
+  });
+
   /**
    * A Shelf is a container that holds records of type RecordConstructor.
    * Note that records are never inserted as passed, but a new record is created on base on the passed record.
+   * Shelves also trigger an event Shelf.ChangedEvent, whenever its content changed. If you change the content of any records, you are responsible for triggering that event yourself.
    * @param RecordConstructor A constructor for elements that the record stores.
    * @param opt Other optional options, e.g. limit: a maximum number of elements allowed in the shelf.
    * @constructor
@@ -95,11 +133,14 @@ define(['app/utils'], function(utils) {
     if (!opt) opt = {};
     this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
   };
+  Shelf.ChangedEvent = 'shelf.changed';
+  E.Emitter(Shelf.prototype);
 
   Shelf.prototype.append = function (obj) {
     if (this.length >= this.limit) return false;
     var record = new this.RecordConstructor(obj, this);
     this.records.push(record);
+    this.emit(Shelf.ChangedEvent);
     return record;
   };
 
@@ -107,6 +148,7 @@ define(['app/utils'], function(utils) {
     if (this.length >= this.limit) return false;
     var record = new this.RecordConstructor(obj, this);
     this.records.unshift(record);
+    this.emit(Shelf.ChangedEvent);
     return record;
   };
 
@@ -116,6 +158,7 @@ define(['app/utils'], function(utils) {
 
   Shelf.prototype.clear = function () {
     this.records = [];
+    this.emit(Shelf.ChangedEvent);
   };
 
   Shelf.prototype.at = function (idx) {
@@ -127,6 +170,7 @@ define(['app/utils'], function(utils) {
     var records = this.records;
     var idx = (typeof recordOrIdx === 'number'? recordOrIdx : records.indexOf(recordOrIdx));
     records.splice(idx, 1);
+    this.emit(Shelf.ChangedEvent);
   };
 
   Shelf.prototype.indexOf = function (record) {
@@ -140,7 +184,8 @@ define(['app/utils'], function(utils) {
       return false;
     }
     var record = new this.RecordConstructor(obj, this);
-    records.splice(idx, 0, record);
+    records.splice(idx, 0, record)
+    this.emit(Shelf.ChangedEvent);
     return record;
   };
 
@@ -156,6 +201,7 @@ define(['app/utils'], function(utils) {
     }
     var record = new this.RecordConstructor(newRecord, this);
     records.splice(idx, 1, record);
+    this.emit(Shelf.ChangedEvent);
     return record;
   };
 
@@ -166,19 +212,6 @@ define(['app/utils'], function(utils) {
   Shelf.prototype.empty = function () {
     return(this.length() === 0);
   };
-
-  var ShelfTypeT = Object.freeze({
-    dimension: 'dimensionShelf',
-    measure: 'measureShelf',
-    row: 'rowShelf',
-    column: 'columnShelf',
-    filter: 'filterShelf',
-    color: 'colorShelf',
-    shape: 'shapeShelf',
-    size: 'sizeShelf',
-    aesthetic: 'aestheticShelf',
-    remove: 'removeShelf'
-  });
 
   /**
    * We call {Field} and {FieldUsage} both attributes.
@@ -228,6 +261,7 @@ define(['app/utils'], function(utils) {
    *
    * @param content {Field|FieldUsage} Note that content itself will be stored, not a copy of it.
    * Note: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
+   * Records do NOT emit any events.
    * @param shelf A shelf that this record belongs to.
    * @constructor
    */
@@ -340,7 +374,6 @@ define(['app/utils'], function(utils) {
   };
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
   ColorRecord.prototype.constructor = ColorRecord;
-
 
   /**
    * A {DimensionRecord} is stored in a dimension shelf and is based on a field.
@@ -477,23 +510,6 @@ define(['app/utils'], function(utils) {
   MeasureShelf.prototype.constructor = MeasureShelf;
 
   /**
-   * Small helper function - see usages
-   * @returns {boolean}
-   * @private
-   */
-  function _concatAsPQLString4RowCol (shelf) {
-    if(shelf.empty()) return false;
-    var pqlString = shelf.at(0).toPQLString();
-    for( var idx = 1; idx < shelf.length(); ++idx ) {
-      var op = '/';
-      if (shelf.at(idx).content.role === FieldT.Role.measure &&
-        shelf.at(idx - 1).content.role === FieldT.Role.measure) op = '+';
-      pqlString += op + shelf.at(idx).toPQLString();
-    }
-    return pqlString;
-  }
-
-  /**
    * @constructor
    */
   var RowShelf = function () {
@@ -504,7 +520,7 @@ define(['app/utils'], function(utils) {
   RowShelf.prototype.constructor = RowShelf;
   RowShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString4RowCol(this);
-    return (pqlString ? pqlString + ' ON ROWS\n' : false);
+    return (pqlString ? pqlString + ' ON ROWS\n' : '');
   };
 
   /**
@@ -518,7 +534,7 @@ define(['app/utils'], function(utils) {
   ColumnShelf.prototype.constructor = ColumnShelf;
   ColumnShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString4RowCol(this);
-    return (pqlString ? pqlString + ' ON COLUMNS\n' : false);
+    return (pqlString ? pqlString + ' ON COLUMNS\n' : '');
   };
 
   /**
@@ -533,7 +549,7 @@ define(['app/utils'], function(utils) {
   ColorShelf.prototype.constructor = ColorShelf;
   ColorShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON COLOR\n' : false);
+    return (pqlString ? pqlString + ' ON COLOR\n' : '');
   };
 
   /**
@@ -547,7 +563,7 @@ define(['app/utils'], function(utils) {
   ShapeShelf.prototype.constructor = ShapeShelf;
   ShapeShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON SHAPE\n' : false);
+    return (pqlString ? pqlString + ' ON SHAPE\n' : '');
   };
 
   /**
@@ -561,7 +577,7 @@ define(['app/utils'], function(utils) {
   SizeShelf.prototype.constructor = SizeShelf;
   SizeShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON SIZE\n' : false);
+    return (pqlString ? pqlString + ' ON SIZE\n' : '');
   };
 
   /**
@@ -575,7 +591,7 @@ define(['app/utils'], function(utils) {
   FilterShelf.prototype.constructor = FilterShelf;
   FilterShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString(this.records, '\n');
-    return (pqlString ? 'WHERE\n' + pqlString: false);
+    return (pqlString ? 'WHERE\n' + pqlString: '');
   };
 
   /**
@@ -589,7 +605,7 @@ define(['app/utils'], function(utils) {
   DetailShelf.prototype.constructor = DetailShelf;
   DetailShelf.prototype.toPQLString = function () {
     var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON DETAILS\n' : false);
+    return (pqlString ? pqlString + ' ON DETAILS\n' : '');
   };
 
   /**

@@ -1,6 +1,5 @@
 define([], function() {
   'use strict';
-
   //var logger = Logger.get('pl-utils');
 
   /**
@@ -28,7 +27,6 @@ define([], function() {
 
     return arguments[nr-1];
   };
-
 
   // public part of the module
   return {

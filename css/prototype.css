@@ -65,6 +65,10 @@
     background-color: #fbfbfb;
 }
 
+#pqlTextBox {
+    white-space: pre-wrap
+}
+
 .overlap-center {
     /*background-color: #4c55dd;*/
     border-color: #4c55dd

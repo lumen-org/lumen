@@ -13,7 +13,6 @@ define(['app/shelves','app/utils'], function(s, util) {
     shelf : Object.freeze('shelfAttachment')
   };
 
-
   /**
    * @param record
    * @returns {*}
@@ -61,7 +60,6 @@ define(['app/shelves','app/utils'], function(s, util) {
 
   /**
    * A mixin function that creates a visual representation (as HTML elements) of the shelf and its records. That representation is stored in an attribute $visual of the shelf.
-   * @param {Shelf} shelf The shelf to become a visual.
    * @return this
    */
   s.Shelf.prototype.beVisual = function (opt) {
@@ -122,7 +120,6 @@ define(['app/shelves','app/utils'], function(s, util) {
   /**
    * A mixin function that creates a simple visual representation (as HTML elements) of this record. The root of representation is returned. It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
    * Note: You may not make a record visible before making its shelf visible.
-   * @param record
    * @return The record itself for chaining.
    */
   s.Record.prototype.beVisual = function () {
@@ -142,14 +139,13 @@ define(['app/shelves','app/utils'], function(s, util) {
   s.ColorRecord.prototype.beVisual = function () {
     var visual = _before4Record(this);
 
-    visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="30px" width="30px">');
+    visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
     var attr = this.content;
     var text = (attr instanceof s.FieldUsage ? attr.aggr + '(' + attr.name + ')': attr.name );
     visual.append($('<span>'+ text +'</span>'));
 
     return _after4Record(this);
   };
-
 
   // public part of the module
   return {
