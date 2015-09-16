@@ -45,7 +45,8 @@
 }
 
 .shelf, .shelf-list-item {
-    margin: 0.2em;
+    /*margin: 0.2em;*/
+    margin: 0.5em;
     padding: 0.1em;
     /*border: solid 5px transparent;*/
     border: solid 2px #d4d4d4;

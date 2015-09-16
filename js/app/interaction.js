@@ -17,6 +17,11 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     none: 'none'
   });
 
+  var _OverlapMargins = Object.freeze({
+    type: 'rel',
+    top: 0.3, left: 0.3,
+    bottom: 0.3, right: 0.3});
+
   function _isDimensionOrMeasureThingy (shelfOrRecord) {
     if (shelfOrRecord instanceof sh.Record) shelfOrRecord = shelfOrRecord.shelf;
     return (shelfOrRecord.type === sh.ShelfTypeT.dimension || shelfOrRecord.type === sh.ShelfTypeT.measure);
@@ -29,10 +34,10 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   var geom = {
     /**
      * Returns the center as {x,y} of the first element of the $selection relative to the document
-     * @param $selection
+     * @param elem DOM element.
      */
-    center: function ($selection) {
-      var _pos = $selection[0].getBoundingClientRect();
+    center: function (elem) {
+      var _pos = elem.getBoundingClientRect();
       return {
         x: _pos.left + _pos.width / 2,
         y: _pos.top + _pos.height / 2
@@ -61,17 +66,17 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     },
 
     /**
-     * Returns the type of overlap of the first element of the selection $rel relative to first element of the selection $base.
+     * Returns the type of overlap of relPos relative to elem.
      * Possible overlaps are: 'no', 'left', 'right', 'bottom', 'top', 'center'
-     * @param $rel DOM element
-     * @param $base DOM element
+     * @param relPos center of DOM element that is possibly overlapping elem.
+     * @param elem DOM element
      * @param options Object: {type='abs'|'rel', top, left, bottom, right}.
      */
-    overlap: function ($rel, $base, options) {
-      var o = $.extend({}, $base[0].getBoundingClientRect());
+    overlap: function (relPos, elem, options) {
+      var o = $.extend({}, elem.getBoundingClientRect());
       o.width = o.right - o.left;
       o.height = o.bottom - o.top;
-      o.center = geom.center($base);
+      o.center = geom.center(elem);
 
       // calculate dimensions of inner rectangle
       var i;
@@ -93,21 +98,19 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
           };
         }
       } else {
-        i = $base[0].getBoundingClientRect();
+        i = elem[0].getBoundingClientRect();
       }
 
       // check overlap
-      var relCenter = geom.center($rel);
-      var p = [relCenter.x, relCenter.y];
-      if (geom.within(p, [[o.left, o.top], [i.left, i.top], [i.left, i.bottom], [o.left, o.bottom]])) {
+      if (geom.within(relPos, [[o.left, o.top], [i.left, i.top], [i.left, i.bottom], [o.left, o.bottom]])) {
         return OverlapEnum.left;
-      } else if (geom.within(p, [[o.left, o.top], [o.right, o.top], [i.right, i.top], [i.left, i.top]])) {
+      } else if (geom.within(relPos, [[o.left, o.top], [o.right, o.top], [i.right, i.top], [i.left, i.top]])) {
         return OverlapEnum.top;
-      } else if (geom.within(p, [[i.right, i.top], [o.right, o.top], [o.right, o.bottom], [i.right, i.bottom]])) {
+      } else if (geom.within(relPos, [[i.right, i.top], [o.right, o.top], [o.right, o.bottom], [i.right, i.bottom]])) {
         return OverlapEnum.right;
-      } else if (geom.within(p, [[i.left, i.bottom], [i.right, i.bottom], [o.right, o.bottom], [o.left, o.bottom]])) {
+      } else if (geom.within(relPos, [[i.left, i.bottom], [i.right, i.bottom], [o.right, o.bottom], [o.left, o.bottom]])) {
         return OverlapEnum.bottom;
-      } else if (geom.within(p, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
+      } else if (geom.within(relPos, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
         return OverlapEnum.center;
       } else {
         return OverlapEnum.none;
@@ -116,167 +119,137 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   };
 
   /**
-   * Singleton ddr: Drag, Drop and Replace management
+   * The currently dragged DOM element.
+   * @private
    */
-  var ddr = (function () {
-    var droppable = false;
-    var draggable = false;
-    var logger = Logger.get('ddr');
-    logger.setLevel(Logger.WARN);
+  var _draggedElem = null;
 
-    var ddr = {
-      linkDroppable: function (obj) {
-        ddr.clearHighlight();
-        if (obj) {
-          droppable = obj;
-          logger.debug('linked to droppable', obj);
-        }
-        return droppable;
-      },
-
-      unlinkDroppable: function () {
-        ddr.clearHighlight();
-        logger.debug('unlinked from droppable', droppable);
-        droppable = false;
-      },
-
-      linkDraggable: function (obj) {
-        if (obj) {
-          draggable = obj;
-          logger.debug('linked to draggable', obj);
-        }
-        return draggable;
-      },
-
-      unlinkDraggable: function () {
-        logger.debug('unlinked from draggable', draggable);
-        draggable = false;
-      },
-
-      /**
-       * Returns the type of overlap of the current draggable relative to the current droppable.
-       * Possible types of overlap: no, left, right, bottom, top, center
-       */
-      overlap: function () {
-        console.assert(draggable && droppable);
-        var margin = {
-          h: 0.5,
-          v: 0.6
-        };
-        return geom.overlap(
-          draggable,
-          droppable,
-          {type: 'rel', top: margin.v, left: margin.h, bottom: margin.v, right: margin.h}
-        );
-      },
-
-      /**
-       * updates the highlighting of the current droppable according to given overlap
-       * @param overlap
-       */
-      highlight: function (overlap) {
-        if (droppable) {
-          ddr.clearHighlight();
-          droppable.addClass('overlap-' + overlap);
-          logger.debug('overlap-' + overlap);
-        }
-      },
-
-      /**
-       * Clears the highlighting of the current droppable
-       */
-      clearHighlight: function () {
-        if (droppable) {
-          droppable.removeClass("overlap-top overlap-bottom overlap-left overlap-right overlap-center");
-        }
+  var highlight = {
+    /**
+     * Clears the highlighting of the current droppable
+     */
+    clear : function (elem) {
+      if (elem) {
+        $(elem).removeClass("overlap-top overlap-bottom overlap-left overlap-right overlap-center");
       }
-    };
+    },
+    /**
+     * updates the highlighting of the current droppable according to given overlap
+     * @param overlap
+     */
+    set : function  (elem, overlap) {
+      if (elem) {
+        highlight.clear(elem);
+        $(elem).addClass('overlap-' + overlap);
+      }
+    }
+  };
 
-    return ddr;
-  })();
+  /**
+   * Called when a drag started on the element that was dragged.
+   * @param event
+   */
+  function onDragStartHandler (event) {
+    logger.debug('starting'); logger.debug(event.currentTarget);
+    _draggedElem = event.currentTarget;
+  }
+
+  /**
+   * Called on the element that a drag just left.
+   * @param event
+   */
+  function onDragEnterHandler (event) {
+    logger.debug('entering');
+    logger.debug(event.currentTarget);
+  }
+
+  /**
+   * Called for the element that the drag is currently dragging over.
+   * @param event
+   */
+  function onDragOverHandler (event) {
+    var mousePos = [event.pageX, event.pageY];
+    var dropElem = event.currentTarget;
+    var overlap = geom.overlap(mousePos, dropElem, _OverlapMargins);
+    highlight.set(dropElem, overlap);
+    event.preventDefault();
+  }
+
+  /**
+   * Called on the element that a drag just left.
+   * @param event
+   */
+  function onDragLeaveHandler (event) {
+    logger.debug('leaving');
+    logger.debug(event.currentTarget);
+    highlight.clear(event.currentTarget);
+  }
+
+  /**
+   * Called for the element a drop occurred on.
+   * @param event
+   */
+  function onDropHandler (event) {
+    var $curTarget = $(event.currentTarget); // is shelf-visual
+    var $target = $(event.target); // is shelf-visual or record-visual
+    // a drop may also occur on the record-visuals - however, we 'delegate' it to the shelf
+    if ($curTarget.hasClass('shelf')) {
+      logger.debug('dropping on'); logger.debug($curTarget); logger.debug($target);
+      var targetShelf = $curTarget.data(vis.AttachStringT.shelf);
+      var target = ( $target.hasClass('shelf-list-item') ? $target.data(vis.AttachStringT.record) : targetShelf );
+      var source= $(_draggedElem).data(vis.AttachStringT.record);
+      var overlap = geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
+      onDrop[targetShelf.type](target, source, overlap);
+      _draggedElem = null;
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    highlight.clear(event.currentTarget);
+  }
 
   /**
    * @param $record The visual of a record.
    */
   function _makeRecordDraggable($record) {
-    $record.draggable({
-      helper: 'clone',
-      scope: 'vars',
-      zIndex: 9999,
-      start: function (event, ui) {
-        ddr.linkDraggable(ui.draggable || ui.helper);
-      },
-      stop: function (event, ui) {
-        ddr.unlinkDraggable();
-      },
-      drag: function (event, ui) {
-        // todo: just check the position and underlying element every time in drag, not in over / out ... it just doesn't work well
-        // todo: http://stackoverflow.com/questions/15355553/jqueryui-droppable-over-and-out-callback-firing-out-of-sequence ??
-        if (ddr.linkDroppable()) {
-          var overlap = ddr.overlap();
-          //console.log(overlap);
-          ddr.highlight(overlap);
-        }
-      }
-    });
+    $record.attr('draggable', true);
+    var domRecord = $record.get(0);
+    domRecord.addEventListener('dragstart', onDragStartHandler);
   }
 
   /**
    * @param $record The visual of a record.
    */
   function _makeRecordDroppable($record) {
-    $record.droppable({
-      scope: 'vars',
-      // activeClass: 'drop-allow',
-      // hoverClass: 'drop-hover',
-      // greedy: false,
-      tolerance: "pointer",
-      over: function (event, ui) {
-        ddr.linkDroppable($(this));
-      },
-      out: function (event, ui) {
-        ddr.unlinkDroppable();
-      }
-    });
+    var domRecord = $record.get(0);
+    domRecord.addEventListener('dragenter',  onDragEnterHandler);
+    domRecord.addEventListener('dragover',  onDragOverHandler);
+    domRecord.addEventListener('dragleave', onDragLeaveHandler);
+    domRecord.addEventListener('drop', onDropHandler);
   }
 
   /**
    * @param $shelf The visual of a shelf.
    */
   function _makeShelfDroppable($shelf) {
-    $shelf.droppable({
-      scope: 'vars',
-      // activeClass: 'drop-allow',
-      // hoverClass: 'drop-hover',
-      // greedy: false,
-      tolerance: 'pointer',
-      drop: function (event, ui) {
-        //logger.debug('drop on shelf');
-        if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
-          // todo: why is the event triggered again on the shelf, if it was actually dropped on an shelf-list-item?
-          return;
-        }
-        //logger.debug("drop on shelf cont'd");
-        // note: we pass the actual records and shelves, not the visuals
-        //var target = {
-        //  item: (ddr.linkDroppable().hasClass('shelf-list-item') ? ddr.linkDroppable().data(vis.AttachStringT.record) : false),
-        //  shelf: $(event.target).data(vis.AttachStringT.shelf)
-        //};
-        var targetShelf = $(event.target).data(vis.AttachStringT.shelf);
-        var target = ( ddr.linkDroppable().hasClass('shelf-list-item') ?
-          ddr.linkDroppable().data(vis.AttachStringT.record) :
-          targetShelf );
-        var source = $(ui.draggable).data(vis.AttachStringT.record);
-        onDrop[targetShelf.type](target, source, ddr.overlap());
-        ddr.unlinkDroppable();
-        event.stopPropagation();
-      },
-      over: function (event, ui) {
-        ddr.linkDroppable($(this));
-      },
-      out: function (event, ui) {
-        ddr.unlinkDroppable();
-      }
+    var domShelf = $shelf.get(0);
+    domShelf.addEventListener('dragenter', onDragEnterHandler);
+    domShelf.addEventListener('dragover',  onDragOverHandler);
+    domShelf.addEventListener('dragleave', onDragLeaveHandler);
+    domShelf.addEventListener('drop',      onDropHandler);
+  }
+
+  /**
+   * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
+   * @param {jQuery Selection} $elem
+   */
+  function asRemoveElem ($elem) {
+    $elem.get(0).addEventListener('dragover', function (event) {
+      event.preventDefault();
+    });
+    $elem.get(0).addEventListener('drop', function (event) {
+      onDrop[sh.ShelfTypeT.remove] ({}, $(_draggedElem).data(vis.AttachStringT.record), {});
+      _draggedElem = null;
+      event.stopPropagation();
     });
   }
 
@@ -364,7 +337,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     }
 
     if (target instanceof sh.Record) { // replace
-      target.item.removeVisual();
+      target.removeVisual();
       newRecord = target.replaceBy(source);
     } else { // append
       newRecord = target.append(source);
@@ -389,31 +362,6 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   onDrop[sh.ShelfTypeT.remove] = function (target, source, overlap) {
     if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
-
-  /**
-   * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
-   * @param elem
-   */
-  function asRemoveElem (elem) {
-    $(elem).droppable({
-      scope: 'vars',
-      tolerance: 'pointer',
-      drop: function (event, ui) {
-        if (!(ddr.linkDraggable() && ddr.linkDroppable())) {
-          return;
-        }
-        onDrop[sh.ShelfTypeT.remove] ({}, $(ui.draggable).data(vis.AttachStringT.record), {});
-        ddr.unlinkDroppable();
-        event.stopPropagation();
-      },
-      over: function (event, ui) {
-        ddr.linkDroppable($(this));
-      },
-      out: function (event, ui) {
-        ddr.unlinkDroppable();
-      }
-    });
-  }
 
   return {
     onDrop : onDrop,
