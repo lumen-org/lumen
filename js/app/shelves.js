@@ -93,7 +93,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @alias module:shelves.DataSource
    * @constructor
    */
-  var DataSource = function (uri, name) {
+  var DataSource; DataSource = function (uri, name) {
     this.uri = uri;
     this.name = name;
     this.fields = {};
@@ -149,7 +149,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.Shelf
    */
-  var Shelf = function (RecordConstructor, opt) {
+  var Shelf; Shelf = function (RecordConstructor, opt) {
     this.RecordConstructor = RecordConstructor;
     this.records = [];
 
@@ -248,7 +248,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.Field
    */
-  var Field = function (nameOrField, dataSource, args) {
+  var Field; Field = function (nameOrField, dataSource, args) {
     var isF = nameOrField instanceof Field;
     console.assert(isF || dataSource);
     if (typeof args === 'undefined') {
@@ -269,7 +269,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.FieldUsage
    */
-  var FieldUsage = function (base, args) {
+  var FieldUsage; FieldUsage = function (base, args) {
     console.assert(base instanceof Field || base instanceof FieldUsage);
     Field.call(this, base.name, base.dataSource, base);
     if (!args) args = {};
@@ -291,7 +291,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.Record
    */
-  var Record = function (content, shelf) {
+  var Record; Record = function (content, shelf) {
     console.assert(typeof content !== 'undefined');
     console.assert(typeof shelf !== 'undefined');
     console.assert(content instanceof Field || content instanceof FieldUsage);
@@ -328,7 +328,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.FieldRecord
    */
-  var FieldRecord = function (obj, shelf) {
+  var FieldRecord; FieldRecord = function (obj, shelf) {
     console.assert(obj instanceof Record || obj instanceof Field);
     var field;
     if (obj instanceof Record) {
@@ -354,7 +354,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.FUsageRecord
    */
-  var FUsageRecord = function (obj, shelf) {
+  var FUsageRecord; FUsageRecord = function (obj, shelf) {
     console.assert(obj instanceof Record || obj instanceof Field || obj instanceof FieldUsage);
     var field;
     if (obj instanceof FieldUsage) {
@@ -394,7 +394,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.ColorRecord
    */
-  var ColorRecord = function (obj, shelf) {
+  var ColorRecord; ColorRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -411,7 +411,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.DimensionRecord
    */
-  var DimensionRecord = function (obj, shelf) {
+  var DimensionRecord; DimensionRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -429,7 +429,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.MeasureRecord
    */
-  var MeasureRecord = function (obj, shelf) {
+  var MeasureRecord; MeasureRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -447,7 +447,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.LayoutRecord
    */
-  var LayoutRecord = function (obj, shelf) {
+  var LayoutRecord; LayoutRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -463,7 +463,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.ShapeRecord
    */
-  var ShapeRecord = function (obj, shelf) {
+  var ShapeRecord; ShapeRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -479,7 +479,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.SizeRecord
    */
-  var SizeRecord = function (obj, shelf) {
+  var SizeRecord; SizeRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -494,7 +494,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.FilterRecord
    */
-  var FilterRecord = function (obj, shelf) {
+  var FilterRecord; FilterRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -512,7 +512,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.DetailRecord
    */
-  var DetailRecord = function (obj, shelf) {
+  var DetailRecord; DetailRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
@@ -526,7 +526,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.DimensionShelf
    */
-  var DimensionShelf = function () {
+  var DimensionShelf; DimensionShelf = function () {
     Shelf.call(this, DimensionRecord);
     this.type = ShelfTypeT.dimension;
   };
@@ -537,7 +537,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.MeasureShelf
    */
-  var MeasureShelf = function () {
+  var MeasureShelf; MeasureShelf = function () {
     Shelf.call(this, MeasureRecord);
     this.type = ShelfTypeT.measure;
   };
@@ -548,7 +548,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.RowShelf
    */
-  var RowShelf = function () {
+  var RowShelf; RowShelf = function () {
     Shelf.call(this, LayoutRecord);
     this.type = ShelfTypeT.row;
   };
@@ -563,7 +563,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.ColumnShelf
    */
-  var ColumnShelf = function () {
+  var ColumnShelf; ColumnShelf = function () {
     Shelf.call(this, LayoutRecord);
     this.type = ShelfTypeT.column;
   };
@@ -579,7 +579,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.ColorShelf
    */
-  var ColorShelf = function () {
+  var ColorShelf; ColorShelf = function () {
     Shelf.call(this, ColorRecord, {limit:1});
     this.type = ShelfTypeT.color;
   };
@@ -594,7 +594,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.ShapeShelf
    */
-  var ShapeShelf = function () {
+  var ShapeShelf; ShapeShelf = function () {
     Shelf.call(this, ShapeRecord);
     this.type = ShelfTypeT.shape;
   };
@@ -609,7 +609,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.SizeShelf
    */
-  var SizeShelf = function () {
+  var SizeShelf; SizeShelf = function () {
     Shelf.call(this, SizeRecord);
     this.type = ShelfTypeT.size;
   };
@@ -624,7 +624,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.FilterShelf
    */
-  var FilterShelf = function () {
+  var FilterShelf; FilterShelf = function () {
     Shelf.call(this, FilterRecord);
     this.type = ShelfTypeT.filter;
   };
@@ -639,7 +639,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.DetailShelf
    */
-  var DetailShelf = function () {
+  var DetailShelf; DetailShelf = function () {
     Shelf.call(this, DetailRecord);
     this.type = ShelfTypeT.detail;
   };
@@ -654,7 +654,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @constructor
    * @alias module:shelves.RemoveShelf
    */
-  var RemoveShelf = function () {
+  var RemoveShelf; RemoveShelf = function () {
     Shelf.call(this, Record);
     this.type = ShelfTypeT.remove;
   };
