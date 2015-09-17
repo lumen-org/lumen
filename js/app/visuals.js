@@ -1,21 +1,40 @@
+/**
+ * Visuals module. This adds a visual layer on top of shelves and records by mixin appropriate functions into the prototype of {@link module:app/Shelves#Shelf}
+ * @module visuals
+ * @author Philipp Lucas
+ */
 define(['app/shelves','app/utils'], function(s, util) {
   'use strict';
   var logger = Logger.get('pl-visuals');
   logger.setLevel(Logger.DEBUG);
 
+  /**
+   * Enum for possible layout types of shelves.
+   * @type {{vertical: String, horizontal: String, box: String}}
+   * @enum
+   * @alias module:visuals.DirectionTypeT
+   */
   var DirectionTypeT = Object.freeze({
     vertical: 'vertical',
     horizontal: 'horizontal',
     box: 'box'
   });
+
+  /**
+   * Enum of strings that are used to attach data to jQuery selections.
+   * @type {{record: String, shelf: String}}
+   * @enum
+   * @alias module:visuals.AttachStringT
+   */
   var AttachStringT = {
     record: Object.freeze('recordAttachment'),
     shelf : Object.freeze('shelfAttachment')
   };
 
   /**
-   * @param record
-   * @returns {*}
+   * Common things to start with when making a record visual.
+   * @param {module:shelves.Record} record
+   * @returns {module:shelves.Record} the modified record.
    * @private
    */
   function _before4Record (record) {
@@ -35,8 +54,9 @@ define(['app/shelves','app/utils'], function(s, util) {
   }
 
   /**
-   *
-   * @param record
+   * Common things to end with when making a record visual.
+   * @param {module:shelves.Record} record
+   * @returns {module:shelves.Record} the modified record.
    * @private
    */
   function _after4Record (record) {
@@ -59,8 +79,11 @@ define(['app/shelves','app/utils'], function(s, util) {
   }
 
   /**
-   * A mixin function that creates a visual representation (as HTML elements) of the shelf and its records. That representation is stored in an attribute $visual of the shelf.
-   * @return this
+   * A mixin function that creates a visual representation (as HTML elements) of this shelf and its records.
+   * That representation is stored in an attribute $visual of the shelf.
+   * @return {module:shelves.Shelf} The instance it was called on.
+   * @alias module:shelves.Shelf.beVisual
+   * @augments module:shelves.Shelf
    */
   s.Shelf.prototype.beVisual = function (opt) {
     opt = util.selectValue(opt, {});
@@ -112,15 +135,24 @@ define(['app/shelves','app/utils'], function(s, util) {
     return this;
   };
 
+  /**
+   * Remove the visual representation of this shelf.
+   * @returns {module:shelves.Shelf} The instance it was called on.
+   * @alias module:shelves.Shelf.removeVisual
+   * @augments module:shelves.Shelf
+   */
   s.Shelf.prototype.removeVisual = function () {
     this.$visual.remove();
     return this;
   };
 
   /**
-   * A mixin function that creates a simple visual representation (as HTML elements) of this record. The root of representation is returned. It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
+   * Creates a simple visual representation (as HTML elements) of this record. The root of representation is returned.
+   * It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
    * Note: You may not make a record visible before making its shelf visible.
-   * @return The record itself for chaining.
+   * @return {module:shelves.Record} The instance it was called on.
+   * @alias module:shelves.Record.beVisual
+   * @augments module:shelves.Record
    */
   s.Record.prototype.beVisual = function () {
     var visual = _before4Record(this);
@@ -131,11 +163,23 @@ define(['app/shelves','app/utils'], function(s, util) {
     return _after4Record(this);
   };
 
+  /**
+   * Removes the visual representation of this record.
+   * @returns {module:shelves.Record} The instance it was called on.
+   * @alias module:shelves.Record.removeVisual
+   * @augments module:shelves.Record
+   */
   s.Record.prototype.removeVisual = function () {
     this.$visual.remove();
     return this;
   };
 
+  /**
+   * Creates a visual representation of this record, i.e. specialized for {@link s.ColorRecord}.
+   * @returns {module:shelves.Record}
+   * @alias module:shelves.ColorRecord.beVisual
+   * @augments module:shelves.ColorRecord
+   */
   s.ColorRecord.prototype.beVisual = function () {
     var visual = _before4Record(this);
 
@@ -147,7 +191,6 @@ define(['app/shelves','app/utils'], function(s, util) {
     return _after4Record(this);
   };
 
-  // public part of the module
   return {
     AttachStringT: AttachStringT,
     DirectionTypeT: DirectionTypeT

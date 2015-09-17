@@ -1,3 +1,9 @@
+/**
+ * Shelves module.
+ *
+ * @module shelves
+ * @author Philipp Lucas
+ */
 define(['app/utils','lib/emitter'], function(utils, E) {
   'use strict';
 
@@ -6,7 +12,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * Small helper function - see usages
-   * @returns {String}
+   * @returns {string}
    * @private
    */
   function _concatAsPQLString (records, delim) {
@@ -19,7 +25,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * Small helper function - see usages
-   * @returns {String}
+   * @returns {string}
    * @private
    */
   function _concatAsPQLString4RowCol (shelf) {
@@ -34,11 +40,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     return pqlString;
   }
 
-
-
   /**
    * ColorMap class
    * @type {{auto: Function}}
+   * @alias module:shelves.ColorMap
    */
   var ColorMap = {
     auto: function (item) {
@@ -55,12 +60,22 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    }
    };*/
 
+  /**
+   * Type definition of a Field.
+   * @type {{Type: {string: string, num: string}, Role: {measure: string, dimension: string}, Kind: {cont: string, discrete: string}}}
+   * @alias module:shelves.FieldT
+   */
   var FieldT = {
     Type: {string: 'string', num: 'numerical'},
     Role: {measure: 'measure', dimension: 'dimension'},
     Kind: {cont: 'continuous', discrete: 'discrete'}
   };
 
+  /**
+   * Type definition of a FieldUsage.
+   * @type {{Aggregation: {sum: string, avg: string}, Scale: {linear: string, log: string}, Order: {ascending: string, descending: string}}}
+   * @alias module:shelves.FUsageT
+   */
   var FUsageT = {
     Aggregation: {sum: 'sum', avg: 'avg'},
     Scale: {
@@ -73,8 +88,9 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * A data source
-   * @param uri URI of the data source.
-   * @param name Some name for the data source.
+   * @param {uri} uri URI of the data source.
+   * @param {string} name Some name for the data source.
+   * @alias module:shelves.DataSource
    * @constructor
    */
   var DataSource = function (uri, name) {
@@ -85,8 +101,8 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * Populates dimShelf and measShelf with the fields of this data source.
-   * @param dimShelf
-   * @param measShelf
+   * @param {DimensionShelf} dimShelf
+   * @param {MeasureShelf} measShelf
    */
   DataSource.prototype.populate = function (dimShelf, measShelf) {
     var fields = this.fields;
@@ -105,6 +121,11 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     }
   };
 
+  /**
+   * Enumeration on the possible shelf types.
+   * @enum
+   * @alias module:shelves.ShelfTypeT
+   */
   var ShelfTypeT = Object.freeze({
     dimension: 'dimensionShelf',
     measure: 'measureShelf',
@@ -123,8 +144,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * Note that records are never inserted as passed, but a new record is created on base on the passed record.
    * Shelves also trigger an event Shelf.ChangedEvent, whenever its content changed. If you change the content of any records, you are responsible for triggering that event yourself.
    * @param RecordConstructor A constructor for elements that the record stores.
-   * @param opt Other optional options, e.g. limit: a maximum number of elements allowed in the shelf.
+   * @param [opt] Other optional options.
+   * @param [opt.limit] The maximum number of elements allowed in the shelf.
    * @constructor
+   * @alias module:shelves.Shelf
    */
   var Shelf = function (RecordConstructor, opt) {
     this.RecordConstructor = RecordConstructor;
@@ -184,7 +207,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
       return false;
     }
     var record = new this.RecordConstructor(obj, this);
-    records.splice(idx, 0, record)
+    records.splice(idx, 0, record);
     this.emit(Shelf.ChangedEvent);
     return record;
   };
@@ -214,15 +237,16 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   };
 
   /**
-   * We call {Field} and {FieldUsage} both attributes.
+   * We call {@link Field} and {@link FieldUsage} both attributes.
    */
 
   /**
    * A {Field} represents a certain dimension in a data source.
-   * @param nameOrField {string|Field} A unique identifier of a dimension in the data source, or the {Field} to copy.
-   * @param dataSource {?DataSource} The data source this is a field of, or null (if a {Field} is provided for name).
-   * @param args Additional optional arguments. They will override those of a given {Field}.
+   * @param {string|Field} nameOrField - A unique identifier of a dimension in the data source, or the {@link Field} to copy.
+   * @param {DataSource|null} dataSource - The data source this is a field of, or null (if a {@link Field} is provided for name).
+   * @param [args] Additional optional arguments. They will override those of a given {@link Field}.
    * @constructor
+   * @alias module:shelves.Field
    */
   var Field = function (nameOrField, dataSource, args) {
     var isF = nameOrField instanceof Field;
@@ -240,9 +264,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   /**
    * A {FieldUsage} represents a certain configuration of a {Field} for use in a PQL expression.
    * It details how the data of a certain dimension of a data set are mapped to some numerical output range.
-   * @param base {Field|FieldUsage} The field or fieldUsage this field usage is based on. If  a {FieldUsage} is provided a copy of it will be created.
-   * @param args Optional parameters for scale and aggregation function of the new {FieldUsage}. If set, it overrides the settings of base, in case base is a {FieldUsage}.
+   * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If  a {@link FieldUsage} is provided a copy of it will be created.
+   * @param [args] Optional parameters for scale and aggregation function of the new {@link FieldUsage}. If set, it overrides the settings of base, in case base is a {@link FieldUsage}.
    * @constructor
+   * @alias module:shelves.FieldUsage
    */
   var FieldUsage = function (base, args) {
     console.assert(base instanceof Field || base instanceof FieldUsage);
@@ -257,13 +282,14 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   FieldUsage.prototype.constructor = FieldUsage;
 
   /**
-   * An {Record} has an attribute (i.e. a {Field} or {FieldUsage}) and is bound to a certain {Shelf}.
+   * An {@link Record} has an attribute (i.e. a {@link Field} or {@link FieldUsage}) and is bound to a certain {@link Shelf}.
    *
-   * @param content {Field|FieldUsage} Note that content itself will be stored, not a copy of it.
+   * @param {Field|FieldUsage} content - Note that content itself will be stored, not a copy of it.
    * Note: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
    * Records do NOT emit any events.
-   * @param shelf A shelf that this record belongs to.
+   * @param {Shelf} shelf - A shelf that this record belongs to.
    * @constructor
+   * @alias module:shelves.Record
    */
   var Record = function (content, shelf) {
     console.assert(typeof content !== 'undefined');
@@ -300,6 +326,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @param obj {Field|Record} Either a {Field} (will be stored as is), or an {Record} (used to construct a new {Field}).
    * @param shelf The {Shelf} this record belongs to.
    * @constructor
+   * @alias module:shelves.FieldRecord
    */
   var FieldRecord = function (obj, shelf) {
     console.assert(obj instanceof Record || obj instanceof Field);
@@ -325,6 +352,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @param obj {FieldUsage|Field|Record} Either a {FieldUsage} (will be stored as is) or a {Field} or a {Record} (used to construct a new {FieldUsage}).
    * @param shelf The Shelf this record belongs to.
    * @constructor
+   * @alias module:shelves.FUsageRecord
    */
   var FUsageRecord = function (obj, shelf) {
     console.assert(obj instanceof Record || obj instanceof Field || obj instanceof FieldUsage);
@@ -360,10 +388,11 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    */
 
   /**
-   * A {ColorRecord} is based on {FUsageRecord}. It maps the field usage to a color space in some way.
+   * A {ColorRecord} is based on {FUsageRecord}. Constructs a {ColorRecord} based on the given obj and shelf. It maps the field usage to a color space in some way.
    * @param obj {Field|FieldUsage|Record} The object to base the new record on. It will always create a new instance of FieldUsage to store witht his Record.
    * @param shelf The {Shelf} it belongs to.
-   * @constructor Constructs a {ColorRecord} based on the given obj.
+   * @constructor
+   * @alias module:shelves.ColorRecord
    */
   var ColorRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -380,6 +409,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @param obj The object the new dimension record is based on.
    * @param shelf
    * @constructor
+   * @alias module:shelves.DimensionRecord
    */
   var DimensionRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -394,10 +424,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   DimensionRecord.prototype.constructor = DimensionRecord;
 
   /**
-   * A record that contains a measure.
    * @param obj
    * @param shelf
    * @constructor
+   * @alias module:shelves.MeasureRecord
    */
   var MeasureRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -415,6 +445,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @param obj
    * @param shelf
    * @constructor
+   * @alias module:shelves.LayoutRecord
    */
   var LayoutRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -430,6 +461,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @param obj
    * @param shelf
    * @constructor
+   * @alias module:shelves.ShapeRecord
    */
   var ShapeRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -445,6 +477,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @param obj
    * @param shelf
    * @constructor
+   * @alias module:shelves.SizeRecord
    */
   var SizeRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -456,10 +489,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   SizeRecord.prototype.constructor = SizeRecord;
 
   /**
-   *
    * @param obj
    * @param shelf
    * @constructor
+   * @alias module:shelves.FilterRecord
    */
   var FilterRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -474,10 +507,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   };
 
   /**
-   *
    * @param obj
    * @param shelf
    * @constructor
+   * @alias module:shelves.DetailRecord
    */
   var DetailRecord = function (obj, shelf) {
     if (obj instanceof Record) {
@@ -491,6 +524,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   /**
    * A dimension shelf holds fields dimensions
    * @constructor
+   * @alias module:shelves.DimensionShelf
    */
   var DimensionShelf = function () {
     Shelf.call(this, DimensionRecord);
@@ -501,6 +535,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.MeasureShelf
    */
   var MeasureShelf = function () {
     Shelf.call(this, MeasureRecord);
@@ -511,6 +546,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.RowShelf
    */
   var RowShelf = function () {
     Shelf.call(this, LayoutRecord);
@@ -525,6 +561,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.ColumnShelf
    */
   var ColumnShelf = function () {
     Shelf.call(this, LayoutRecord);
@@ -540,6 +577,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   /**
    * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
    * @constructor
+   * @alias module:shelves.ColorShelf
    */
   var ColorShelf = function () {
     Shelf.call(this, ColorRecord, {limit:1});
@@ -554,6 +592,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.ShapeShelf
    */
   var ShapeShelf = function () {
     Shelf.call(this, ShapeRecord);
@@ -568,6 +607,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.SizeShelf
    */
   var SizeShelf = function () {
     Shelf.call(this, SizeRecord);
@@ -582,6 +622,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.FilterShelf
    */
   var FilterShelf = function () {
     Shelf.call(this, FilterRecord);
@@ -596,6 +637,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.DetailShelf
    */
   var DetailShelf = function () {
     Shelf.call(this, DetailRecord);
@@ -610,6 +652,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * @constructor
+   * @alias module:shelves.RemoveShelf
    */
   var RemoveShelf = function () {
     Shelf.call(this, Record);
@@ -621,7 +664,6 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     return '';
   };
 
-  // public part of the module
   return {
     ColorMap: ColorMap,
     FieldT: FieldT,

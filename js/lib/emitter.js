@@ -1,6 +1,8 @@
 /**
- * credits to: https://github.com/component/emitter
+ * Emitter/Listener on normal javascript objects.
+ * Credits to: https://github.com/component/emitter
  * copied on 15 sept 2015
+ * @module emitter
  */
 define([], function () {
 // module.exports = Emitter;
@@ -9,6 +11,7 @@ define([], function () {
    * Initialize a new `Emitter`.
    *
    * @api public
+   * @alias module:emitter:Emitter
    */
 
   function Emitter(obj) {

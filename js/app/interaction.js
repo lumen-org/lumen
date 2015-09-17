@@ -1,6 +1,7 @@
 /**
+ * Adds interactivity to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
+ * @module interaction
  * @author Philipp Lucas
- * @module
  */
 define(['app/shelves', 'app/visuals'], function (sh, vis) {
   'use strict';
@@ -70,7 +71,8 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
      * Possible overlaps are: 'no', 'left', 'right', 'bottom', 'top', 'center'
      * @param relPos center of DOM element that is possibly overlapping elem.
      * @param elem DOM element
-     * @param options Object: {type='abs'|'rel', top, left, bottom, right}.
+     * @param {Object} options
+     * @param {string} options.type How to interpret the remaining parameters: absolut pixel distances, or relative to dimensions of elem.
      */
     overlap: function (relPos, elem, options) {
       var o = $.extend({}, elem.getBoundingClientRect());
@@ -240,7 +242,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
 
   /**
    * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
-   * @param {jQuery Selection} $elem
+   * @param {jQuery} $elem
    */
   function asRemoveElem ($elem) {
     $elem.get(0).addEventListener('dragover', function (event) {
@@ -275,6 +277,12 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
     });
   };
 
+  /**
+   * Primary interaction handler. There is one handler for each value in {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
+   *
+   * @type {{}}
+   * @alias module:interaction.onDrop
+   */
   var onDrop = {};
 
   onDrop[sh.ShelfTypeT.dimension] = function (target, source, overlap) {

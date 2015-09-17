@@ -1,13 +1,18 @@
+/**
+ * Utility functions.
+ * @module utils
+ * @author Philipp Lucas
+ */
 define([], function() {
   'use strict';
   //var logger = Logger.get('pl-utils');
 
   /**
-   * Returns:
-   *   valPref if valPref is defined and not null, else:
+   * @returns valPref if valPref is defined and not null, else:
    *    val_i if cond_i holds and val_i is defined and not null, else:
    *    etc..., else:
    *    valDefault
+   *  @alias module:utils.selectValue
    */
   var selectValue = function (valPref, /*cond_i, val_1, ...*/ valDefault) {
     var nr = arguments.length;
@@ -28,7 +33,6 @@ define([], function() {
     return arguments[nr-1];
   };
 
-  // public part of the module
   return {
     selectValue: selectValue
   };

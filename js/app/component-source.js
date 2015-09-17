@@ -1,25 +1,25 @@
 /**
-* @author Philipp Lucas
-*
-* JavaScript code for this the source component of the UI of the EMV tool.
-*/
+ * Main component that assembles and manages the actual GUI of the EMV tool.
+ * @module main
+ * @author Philipp Lucas
+ */
 define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
-function (d3, sh, vis, inter, e) {
-  'use strict';
+  function (d3, sh, vis, inter, e) {
+    'use strict';
+    Logger.useDefaults();
 
-  // setup code here
-  Logger.useDefaults();
-
-  var dimShelf =  new sh.DimensionShelf();
-  var measShelf = new sh.MeasureShelf();
-  var detailShelf = new sh.DetailShelf();
-  var colorShelf = new sh.ColorShelf();
-  var filterShelf = new sh.FilterShelf();
-  var shapeShelf = new sh.ShapeShelf();
-  var sizeShelf = new sh.SizeShelf();
-  var rowShelf = new sh.RowShelf();
-  var columnShelf = new sh.ColumnShelf();
-  var removeShelf = new sh.RemoveShelf();
+  var shelf = {
+    dim :  new sh.DimensionShelf(),
+    meas : new sh.MeasureShelf(),
+    detail : new sh.DetailShelf(),
+    color : new sh.ColorShelf(),
+    filter : new sh.FilterShelf(),
+    shape : new sh.ShapeShelf(),
+    size : new sh.SizeShelf(),
+    row : new sh.RowShelf(),
+    column : new sh.ColumnShelf(),
+    remove : new sh.RemoveShelf()
+  };  
 
   var dataSource = new sh.DataSource('foo.csv', 'my source');
   var ageField = new sh.Field(
@@ -73,69 +73,64 @@ function (d3, sh, vis, inter, e) {
     name: nameField,
     city: cityField
   };
-  dataSource.populate(dimShelf, measShelf);
+  dataSource.populate(shelf.dim, shelf.meas);
 
-  measShelf.beVisual({label: 'Measures'}).beInteractable();
-  dimShelf.beVisual({label: 'Dimensions'}).beInteractable();
-  detailShelf.beVisual({label: 'Details'}).beInteractable();
-  colorShelf.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-  filterShelf.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
-  shapeShelf.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-  sizeShelf.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-  removeShelf.beVisual({label: 'Drag here to remove'}).beInteractable();
-  rowShelf.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-  columnShelf.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+  shelf.meas.beVisual({label: 'Measures'}).beInteractable();
+  shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
+  shelf.detail.beVisual({label: 'Details'}).beInteractable();
+  shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+  shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
+  shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+  shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+  shelf.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
+  shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+  shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
   var base = $('#shelves');
-  base.append(measShelf.$visual);
-  base.append(dimShelf.$visual);
-  base.append(filterShelf.$visual);
-  base.append(detailShelf.$visual);
-  base.append(colorShelf.$visual);
-  base.append(shapeShelf.$visual);
-  base.append(sizeShelf.$visual);
-  base.append(removeShelf.$visual);
+  base.append(shelf.meas.$visual);
+  base.append(shelf.dim.$visual);
+  base.append(shelf.filter.$visual);
+  base.append(shelf.detail.$visual);
+  base.append(shelf.color.$visual);
+  base.append(shelf.shape.$visual);
+  base.append(shelf.size.$visual);
+  base.append(shelf.remove.$visual);
   var layout = $('#layout');
-  layout.append(rowShelf.$visual);
-  layout.append(columnShelf.$visual);
+  layout.append(shelf.row.$visual);
+  layout.append(shelf.column.$visual);
 
-  inter.onDrop[sh.ShelfTypeT.color](colorShelf, measShelf.at(3));
-  inter.onDrop[sh.ShelfTypeT.filter](filterShelf, dimShelf.at(2));
-  inter.onDrop[sh.ShelfTypeT.detail](detailShelf, dimShelf.at(1));
-  inter.onDrop[sh.ShelfTypeT.shape](shapeShelf, dimShelf.at(0));
-  inter.onDrop[sh.ShelfTypeT.size](sizeShelf, measShelf.at(2));
+  inter.onDrop[sh.ShelfTypeT.color](shelf.color, shelf.meas.at(3));
+  inter.onDrop[sh.ShelfTypeT.filter](shelf.filter, shelf.dim.at(2));
+  inter.onDrop[sh.ShelfTypeT.detail](shelf.detail, shelf.dim.at(1));
+  inter.onDrop[sh.ShelfTypeT.shape](shelf.shape, shelf.dim.at(0));
+  inter.onDrop[sh.ShelfTypeT.size](shelf.size, shelf.meas.at(2));
 
-  inter.onDrop[sh.ShelfTypeT.row](rowShelf, dimShelf.at(0));
-  inter.onDrop[sh.ShelfTypeT.row](rowShelf, measShelf.at(0));
-  inter.onDrop[sh.ShelfTypeT.column](columnShelf, dimShelf.at(1));
-  inter.onDrop[sh.ShelfTypeT.column](columnShelf, measShelf.at(1));
+  inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.dim.at(0));
+  inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(0));
+  inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.dim.at(1));
+  inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.meas.at(1));
 
   inter.asRemoveElem($(document.body).find('main'));
 
   function pqlString () {
     return 'SELECT AS auto \n' +
-      (colorShelf.toPQLString() ? '\t' + colorShelf.toPQLString() : '') +
-      (detailShelf.toPQLString()? '\t' + detailShelf.toPQLString() : '') +
-      (shapeShelf.toPQLString() ? '\t' + shapeShelf.toPQLString() : '') +
-      (shapeShelf.toPQLString() ? '\t' + shapeShelf.toPQLString() : '') +
-      (columnShelf.toPQLString()? '\t' + columnShelf.toPQLString() : '') +
+      (shelf.color.toPQLString() ? '\t' + shelf.color.toPQLString() : '') +
+      (shelf.detail.toPQLString()? '\t' + shelf.detail.toPQLString() : '') +
+      (shelf.shape.toPQLString() ? '\t' + shelf.shape.toPQLString() : '') +
+      (shelf.size.toPQLString() ? '\t' + shelf.size.toPQLString() : '') +
+      (shelf.column.toPQLString()? '\t' + shelf.column.toPQLString() : '') +
+      (shelf.row.toPQLString()? '\t' + shelf.row.toPQLString() : '') +
       'FROM\n\tmyDataSource\n' +
-      filterShelf.toPQLString();
+      shelf.filter.toPQLString();
   }
 
   function printPQLString () {
     $('#pqlTextBox').text(pqlString());
   }
 
-  measShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  dimShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  detailShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  colorShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  filterShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  shapeShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  sizeShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  removeShelf.on(sh.Shelf.ChangedEvent, printPQLString);
-  rowShelf.on(sh.Shelf.ChangedEvent, printPQLString);
+  for (var key in shelf) { if (!shelf.hasOwnProperty(key)) continue;
+    shelf[key].on(sh.Shelf.ChangedEvent, printPQLString);
+  }
   printPQLString();
 
   function myScript () {

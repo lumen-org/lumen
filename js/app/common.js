@@ -1,5 +1,5 @@
 /**
- * Created by philipp on 27/01/15.
+ * @author Philipp Lucas
  */
 define( function () {
   "use strict";
