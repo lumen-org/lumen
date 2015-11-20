@@ -3,11 +3,12 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
-  function (d3, sh, vis, inter, e) {
+define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'lib/emitter'],
+  function (d3, sh, vis, inter, VisMEL, e) {
     'use strict';
     Logger.useDefaults();
 
+  // define shelves
   var shelf = {
     dim :  new sh.DimensionShelf(),
     meas : new sh.MeasureShelf(),
@@ -21,6 +22,7 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
     remove : new sh.RemoveShelf()
   };  
 
+  // define 'dummy' datasource
   var dataSource = new sh.DataSource('foo.csv', 'my source');
   var ageField = new sh.Field(
     'age', dataSource, {
@@ -73,8 +75,11 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
     name: nameField,
     city: cityField
   };
+
+  // populate shelves with data source
   dataSource.populate(shelf.dim, shelf.meas);
 
+  // make all shelves visual and interactable
   shelf.meas.beVisual({label: 'Measures'}).beInteractable();
   shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
   shelf.detail.beVisual({label: 'Details'}).beInteractable();
@@ -86,6 +91,7 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
   shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
   shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
+  // add all shelves to the DOM
   var base = $('#shelves');
   base.append(shelf.meas.$visual);
   base.append(shelf.dim.$visual);
@@ -99,6 +105,7 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
   layout.append(shelf.row.$visual);
   layout.append(shelf.column.$visual);
 
+  // do some dummy drag and drops
   inter.onDrop[sh.ShelfTypeT.color](shelf.color, shelf.meas.at(3));
   inter.onDrop[sh.ShelfTypeT.filter](shelf.filter, shelf.dim.at(2));
   inter.onDrop[sh.ShelfTypeT.detail](shelf.detail, shelf.dim.at(1));
@@ -111,6 +118,8 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
   inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.meas.at(1));
 
   inter.asRemoveElem($(document.body).find('main'));
+
+
 
   function pqlString () {
     return 'SELECT AS auto \n' +
@@ -128,12 +137,41 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction','lib/emitter'],
     $('#pqlTextBox').text(pqlString());
   }
 
+  // listen for GUI changes and trigger extraction of VisMEL queries
   for (var key in shelf) { if (!shelf.hasOwnProperty(key)) continue;
+    // todo: fix it: it triggers multiple times for most/all drag&drop operations
     shelf[key].on(sh.Shelf.ChangedEvent, printPQLString);
   }
+
+  // trigger intial PQL writeout
   printPQLString();
+  var myQuery = new VisMEL(shelf, dataSource);
 
   function myScript () {
+
+    var dataX = [1,2,3,4,5,6,7,2];
+    var dataY = [4,5,1,6,7,1,2,3];
+
+    var d3box = d3.select('#d3box');
+
+    var xScale = d3.scale.linear()
+      .domain([0, d3.max(dataX)])
+      //.range([0, parseInt(d3box.style("width"),10)]);
+      .range([0, 100]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, d3.max(dataY)])
+      .range([0, 100]);
+
+    //debugger;
+
+    d3box.selectAll('g')
+      .data(dataX)
+      .enter().append('div')
+      .classed("d3bar", true)
+      .style("height", "20px")
+      .style("width", function(d) {return xScale(d)+"%";})
+      .text( function(d){return d;});
     //debugger;
   }
 

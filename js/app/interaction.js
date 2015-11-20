@@ -7,6 +7,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   'use strict';
 
   var logger = Logger.get('pl-interaction');
+  logger.setLevel(Logger.WARN);
 
   var OverlapEnum = Object.freeze({
     // todo: change code to use enum

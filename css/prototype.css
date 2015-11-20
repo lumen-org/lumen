@@ -90,3 +90,11 @@
 .overlap-bottom {
     border-bottom-color: #4c55dd
 }
+
+#d3box {
+    width: 100%;
+}
+
+.d3bar {
+    background-color: orangered;
+}

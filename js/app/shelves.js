@@ -67,7 +67,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    */
   var FieldT = {
     Type: {string: 'string', num: 'numerical'},
-    Role: {measure: 'measure', dimension: 'dimension'},
+    Role: {measure: 'measure', dimension: 'dimension'}, //todo: ????
     Kind: {cont: 'continuous', discrete: 'discrete'}
   };
 
@@ -187,6 +187,11 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   Shelf.prototype.at = function (idx) {
     return this.records[idx];
   };
+  
+  Shelf.prototype.contentAt = function (idx) {
+	var record = this.records[idx];
+	return (record ? record.content : {});
+  };
 
   Shelf.prototype.remove = function (recordOrIdx) {
     if (this.limit === 1) recordOrIdx = 0;
@@ -263,7 +268,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * A {FieldUsage} represents a certain configuration of a {Field} for use in a PQL expression.
-   * It details how the data of a certain dimension of a data set are mapped to some numerical output range.
+   * It details how the data of a certain dimension of a data source is mapped to some numerical output range.
    * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If  a {@link FieldUsage} is provided a copy of it will be created.
    * @param [args] Optional parameters for scale and aggregation function of the new {@link FieldUsage}. If set, it overrides the settings of base, in case base is a {@link FieldUsage}.
    * @constructor
@@ -558,6 +563,20 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     var pqlString = _concatAsPQLString4RowCol(this);
     return (pqlString ? pqlString + ' ON ROWS\n' : '');
   };
+  /**
+   * @returns Returns the table algebra expression of shelf. Note however, that there is no brackets applied yet. It's simply an array of the records
+   * @untested
+   */
+  RowShelf.prototype.tableAlgebraExpr = function () {
+    var expr = [];
+    for( var idx = 0; idx < this.length(); ++idx ) {
+      if (idx !== 0) {
+        expr.push( (this.contentAt(idx).role === FieldT.Role.measure && this.contentAt(idx - 1).role === FieldT.Role.measure)? '+' : '/' );
+      }
+      expr.push( this.contentAt(idx) );
+    }
+    return expr;
+  };
 
   /**
    * @constructor
@@ -573,6 +592,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     var pqlString = _concatAsPQLString4RowCol(this);
     return (pqlString ? pqlString + ' ON COLUMNS\n' : '');
   };
+  ColumnShelf.prototype.tableAlgebraExpr = RowShelf.prototype.tableAlgebraExpr;
 
   /**
    * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
