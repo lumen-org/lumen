@@ -61,7 +61,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    };*/
 
   /**
-   * Type definition of a Field.
+   * Type definitions of a Field.
    * @type {{Type: {string: string, num: string}, Role: {measure: string, dimension: string}, Kind: {cont: string, discrete: string}}}
    * @alias module:shelves.FieldT
    */
@@ -72,7 +72,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   };
 
   /**
-   * Type definition of a FieldUsage.
+   * Type definitions of a FieldUsage.
    * @type {{Aggregation: {sum: string, avg: string}, Scale: {linear: string, log: string}, Order: {ascending: string, descending: string}}}
    * @alias module:shelves.FUsageT
    */
@@ -88,8 +88,8 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   /**
    * A data source
-   * @param {uri} uri URI of the data source.
-   * @param {string} name Some name for the data source.
+   * @param {uri} uri URI of this data source.
+   * @param {string} name The name of this data source.
    * @alias module:shelves.DataSource
    * @constructor
    */
@@ -254,16 +254,24 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @alias module:shelves.Field
    */
   var Field; Field = function (nameOrField, dataSource, args) {
+    if (!args) args = {};
     var isF = nameOrField instanceof Field;
-    console.assert(isF || dataSource);
-    if (typeof args === 'undefined') {
-      args = {};
-    }
+    var isD = args.kind === FieldT.Kind.discrete;
+//    console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
+    console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
+
     this.name = (isF ? nameOrField.name : nameOrField);
     this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
     this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
     this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure);
     this.kind = utils.selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
+    this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);  //todo: this means: default domains to empty domain. is that clean?
+  };
+
+  Field.Discrete = function (nameOrField, dataSource, domain, args) {
+    var myField = new Field(nameOrField, dataSource, args);
+    myField.domain = domain;
+    return myField;
   };
 
   /**

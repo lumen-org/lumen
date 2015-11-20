@@ -128,7 +128,7 @@ define(['app/shelves'], function (Sh) {
       expect(colorShelf.at(0).content.name).toBe('name');
     });
 
-    it('testshelf functions (more)', function () {
+    it('tests shelf functions (more)', function () {
       expect(rowShelf.empty()).toBe(true);
 
       rowShelf.append(dimShelf.at(0));

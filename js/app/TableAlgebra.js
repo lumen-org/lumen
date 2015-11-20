@@ -18,7 +18,6 @@ define(['app/shelves'], function (sh) {
     var ret = [];
     a.forEach( function(ea) {
       b.forEach( function(eb) {
-        // todo: need to remember variable for each symbol/value
         ret.push([ea,eb]);
       });
     });
@@ -75,32 +74,29 @@ define(['app/shelves'], function (sh) {
   TableAlgebraExpr.prototype.normalize = function () {
 
     // 1. turn FieldUsages into their domain representation
-    // the domain representation is an array containing:
-    // (i) the name of the field, if the field is quantitative
+    // the domain representation of a FieldUsage is an array of symbols:
+    // (i) a single symbol, i.e. the name of the field, if the field is quantitative
     // (ii) all possible values of the field , if the field is ordinal
+    // Note that the symbols are stored under 'val', while a reference to the original FieldUsage is stored under 'fieldUsage'
+    // e.g. sex -> [{value:"female", fieldUsage: sex}, {value:"male", fieldUsage: sex}]
     var domainExpr = [];
 
-    this.forEach( function(elem, idx) {
-      if (elem instanceof sh.FieldUsage) {
-        // elem is some field usage
-        var operand;
-
-        if (elem.kind === sh.FieldT.Kind.discrete)
-          //operand = elem.domain().order(); // todo: not implemented yet!
-          operand = [1,2,3,4,5,6];
+    this.forEach( function(fu) {
+      if (fu instanceof sh.FieldUsage) {
+        // store field usage with each symbol
+        var operand = [];
+        if (fu.kind === sh.FieldT.Kind.discrete)
+          fu.domain.forEach(function (val, idx) { operand[idx] = {value : val, fieldUsage : fu};} );
         else
-          operand = [elem.name];
-        // store field usage with it
-        operand.fieldUsage = elem;
+          operand = [{value: fu.name, fieldUsage : fu}];
         domainExpr.push(operand);
       } else {
         // elem is an operator
-        domainExpr.push(elem);
+        domainExpr.push(fu);
       }
     });
 
     // 2. evaluate expression. that results in a single ordered set of arrays
-
     //   2a) evaluate all "*"
     domainExpr.forEach( function(elem, idx) {
       if (elem === "*") {

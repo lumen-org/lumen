@@ -9,11 +9,12 @@ define(['app/shelves'], function(sh) {
 
   /**
    * Creates a {@link ModelTable} from given VisMEL query.
+   * @constructor
    */
   var ModelTable = function (query) {
 
     // shortcuts
-    // todo: this is a simplification. only 1 layer and 1 source is supported for now.
+    // todo: extend: only 1 layer and 1 source is supported for now
     var model = query.sources[0];
     var layout = query.layout;
 
@@ -27,32 +28,30 @@ define(['app/shelves'], function(sh) {
     this.cols = this.colNSF.length;
     this.size = [this.rows, this.cols];
 
-    // 2. compile set unique Fields (not field Usages) that are used in a VisMEL query.
+    // 2. compile set of unique Fields (not field Usages) that are used in a VisMEL query.
     // -> Fields not part of that set can be marginalized out
     var usedVariables = query.allUsedVariables();
 
-    // 3. filters on independent variables +
+    // 3. filters on independent variables, and
     // 4. derive base model
     this.baseModel = model.marginalize(
       _.diff(model.variables(), usedVariables) ); // todo: implement filtering
 
     // 5. derive submodels for each cell
     // todo: speedup: dynamically decide whether it's faster to do get a row- or colums-wise base-model
-
     // iterate on rows
     this.at = new Array(this.rows);
     at.forEach( function(row, rIdx) {
       var rowModel = this.baseModel;
       this.rowNSF[rIdx].forEach(
-        function (val) { rowModel = rowModel.condition(val.variable, val); } // todo: implement that variable is stored together with value in NSF
+        function (symbol) { rowModel = rowModel.condition(symbol.fieldUsage, symbol.value); }
       );
-
       //iterate on cols
       row = new Array(this.cols);
       row.forEach( function(cell, cIdx) {
         cell = rowModel;
         this.colNSF[cIdx].forEach(
-          function (val) { cell = cell.condition(val.variable, val); }
+          function (symbol) { cell = cell.condition(symbol.fieldUsage, symbol.value); }
         );
       });
     });

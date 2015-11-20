@@ -46,25 +46,30 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'li
     'children', dataSource, {
       dataType: sh.FieldT.Type.num,
       role: sh.FieldT.Role.measure,
-      kind: sh.FieldT.Kind.discrete
+      kind: sh.FieldT.Kind.discrete,
+      // todo: future feature: domain: {min: 0, max: 6}
+      domain: [0, 1, 2, 3, 4, 5, 6]
     });
   var sexField = new sh.Field(
     'sex', dataSource, {
       dataType: sh.FieldT.Type.num,
       role: sh.FieldT.Role.dimension,
-      kind: sh.FieldT.Kind.discrete
+      kind: sh.FieldT.Kind.discrete,
+      domain: [0, 1]
     });
   var nameField = new sh.Field(
     'name', dataSource, {
       dataType: sh.FieldT.Type.string,
       role: sh.FieldT.Role.dimension,
-      kind: sh.FieldT.Kind.discrete
+      kind: sh.FieldT.Kind.discrete,
+      domain: ['John', 'Philipp', 'Maggie']
     });
   var cityField = new sh.Field(
     'city', dataSource, {
       dataType: sh.FieldT.Type.string,
       role: sh.FieldT.Role.dimension,
-      kind: sh.FieldT.Kind.discrete
+      kind: sh.FieldT.Kind.discrete,
+      domain: ['Jena', 'Weimar', 'Berlin']
     });
   dataSource.fields = {
     age: ageField,
@@ -149,7 +154,7 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'li
 
   function myScript () {
 
-    var dataX = [1,2,3,4,5,6,7,2];
+   /* var dataX = [1,2,3,4,5,6,7,2];
     var dataY = [4,5,1,6,7,1,2,3];
 
     var d3box = d3.select('#d3box');
@@ -173,6 +178,7 @@ define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'li
       .style("width", function(d) {return xScale(d)+"%";})
       .text( function(d){return d;});
     //debugger;
+    */
   }
 
   return {
