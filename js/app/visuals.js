@@ -3,7 +3,7 @@
  * @module visuals
  * @author Philipp Lucas
  */
-define(['app/shelves','app/utils'], function(s, util) {
+define(['./Field', './shelves','app/utils'], function(F, s, util) {
   'use strict';
   var logger = Logger.get('pl-visuals');
   logger.setLevel(Logger.DEBUG);
@@ -185,7 +185,7 @@ define(['app/shelves','app/utils'], function(s, util) {
 
     visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
     var attr = this.content;
-    var text = (attr instanceof s.FieldUsage ? attr.aggr + '(' + attr.name + ')': attr.name );
+    var text = (attr instanceof F.FieldUsage ? attr.aggr + '(' + attr.name + ')': attr.name );
     visual.append($('<span>'+ text +'</span>'));
 
     return _after4Record(this);

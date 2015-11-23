@@ -38,7 +38,7 @@ define(['app/shelves'], function(sh) {
       _.diff(model.variables(), usedVariables) ); // todo: implement filtering
 
     // 5. derive submodels for each cell
-    // todo: speedup: dynamically decide whether it's faster to do get a row- or colums-wise base-model
+    // todo: speedup: dynamically decide whether it's faster to do get a row- or column-wise base-model
     // iterate on rows
     this.at = new Array(this.rows);
     at.forEach( function(row, rIdx) {

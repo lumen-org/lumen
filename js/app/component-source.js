@@ -3,10 +3,12 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['d3', 'app/DummyModel', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'lib/emitter'],
-  function (d3, dmodel, sh, vis, inter, VisMEL, e) {
-    'use strict';
-    Logger.useDefaults();
+define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/interaction', 'app/VisMEL', 'lib/emitter'],
+  function (d3, dmodel, sh, F, vis, inter, VisMEL, e) {
+  'use strict';
+  Logger.useDefaults();
+
+  //_.extend(F, this);
 
   // define shelves
   var shelf = {
@@ -20,69 +22,13 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/visuals', 'app/interaction',
     row : new sh.RowShelf(),
     column : new sh.ColumnShelf(),
     remove : new sh.RemoveShelf()
-  };  
-
-  // define 'dummy' datasource
-  var dataSource = new sh.DataSource('foo.csv', 'my source');
-  var ageField = new sh.Field(
-    'age', dataSource, {
-      dataType: sh.FieldT.Type.num,
-      role: sh.FieldT.Role.measure,
-      kind: sh.FieldT.Kind.cont
-    });
-  var weightField = new sh.Field(
-    'weight', dataSource, {
-      dataType: sh.FieldT.Type.num,
-      role: sh.FieldT.Role.measure,
-      kind: sh.FieldT.Kind.cont
-    });
-  var incomeField = new sh.Field(
-    'income', dataSource, {
-      dataType: sh.FieldT.Type.num,
-      role: sh.FieldT.Role.measure,
-      kind: sh.FieldT.Kind.cont
-    });
-  var childrenField = new sh.Field(
-    'children', dataSource, {
-      dataType: sh.FieldT.Type.num,
-      role: sh.FieldT.Role.measure,
-      kind: sh.FieldT.Kind.discrete,
-      // todo: future feature: domain: {min: 0, max: 6}
-      domain: [0, 1, 2, 3, 4, 5, 6]
-    });
-  var sexField = new sh.Field(
-    'sex', dataSource, {
-      dataType: sh.FieldT.Type.num,
-      role: sh.FieldT.Role.dimension,
-      kind: sh.FieldT.Kind.discrete,
-      domain: [0, 1]
-    });
-  var nameField = new sh.Field(
-    'name', dataSource, {
-      dataType: sh.FieldT.Type.string,
-      role: sh.FieldT.Role.dimension,
-      kind: sh.FieldT.Kind.discrete,
-      domain: ['John', 'Philipp', 'Maggie']
-    });
-  var cityField = new sh.Field(
-    'city', dataSource, {
-      dataType: sh.FieldT.Type.string,
-      role: sh.FieldT.Role.dimension,
-      kind: sh.FieldT.Kind.discrete,
-      domain: ['Jena', 'Weimar', 'Berlin']
-    });
-  dataSource.fields = {
-    age: ageField,
-    weight: weightField,
-    income: incomeField,
-    children: childrenField,
-    sex: sexField,
-    name: nameField,
-    city: cityField
   };
 
-  // populate shelves with data source
-  dataSource.populate(shelf.dim, shelf.meas);
+  // get 'dummy' model
+  var model = dmodel.generator.census();
+
+  // populate shelves
+  sh.populate(model, shelf.dim, shelf.meas);
 
   // make all shelves visual and interactable
   shelf.meas.beVisual({label: 'Measures'}).beInteractable();
@@ -150,7 +96,7 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/visuals', 'app/interaction',
 
   // trigger intial PQL writeout
   printPQLString();
-  var myQuery = new VisMEL(shelf, dataSource);
+  var myQuery = new VisMEL(shelf, model);
 
   function myScript () {
 

@@ -7,7 +7,7 @@
  *
  * This module allows to construct table algebra expressions from row and column shelves, as well as normalizing them to their normalized set form (NSF).
  */
-define(['app/shelves'], function (sh) {
+define(['./Field', 'app/shelves'], function (F, sh) {
   "use strict";
 
   /**
@@ -46,7 +46,7 @@ define(['app/shelves'], function (sh) {
     console.assert(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf);
     for( var idx = 0; idx < shelf.length(); ++idx ) {
       if (idx !== 0) {
-        this.push( (shelf.contentAt(idx).role === sh.FieldT.Role.measure && shelf.contentAt(idx - 1).role === sh.FieldT.Role.measure)? '+' : '*' );
+        this.push( (shelf.contentAt(idx).role === F.FieldT.Role.measure && shelf.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '*' );
       }
       this.push( shelf.contentAt(idx) );
     }
@@ -61,7 +61,7 @@ define(['app/shelves'], function (sh) {
    */
   TableAlgebraExpr.prototype.uniqueFields = function () {
     return _.chain(this)
-      .filter(function(e){return (e instanceof sh.FieldUsage);})
+      .filter(function(e){return (e instanceof F.FieldUsage);})
       .map(function(e){return e.base;})
       .uniq()
       .value();
@@ -82,10 +82,10 @@ define(['app/shelves'], function (sh) {
     var domainExpr = [];
 
     this.forEach( function(fu) {
-      if (fu instanceof sh.FieldUsage) {
+      if (fu instanceof F.FieldUsage) {
         // store field usage with each symbol
         var operand = [];
-        if (fu.kind === sh.FieldT.Kind.discrete)
+        if (fu.kind === F.FieldT.Kind.discrete)
           fu.domain.forEach(function (val, idx) { operand[idx] = {value : val, fieldUsage : fu};} );
         else
           operand = [{value: fu.name, fieldUsage : fu}];

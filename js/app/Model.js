@@ -74,7 +74,7 @@ define([], function () {
    */
   Model.prototype.isField = function (field) {
     return (field instanceof Field && (-1 !== this.fields.indexOf(field)) );
-  }
+  };
 
   /**
    * Returns the index that belongs to the given id in this model.
@@ -88,7 +88,7 @@ define([], function () {
       return _.findIndex(this.fields, function(f){return f.name === id;});
     if (this.isField(id))
       return this.fields.indexOf(id);
-    throw new Error("argument is neither an valid field index nor a valid field name for this model.");
+    throw new Error("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");
   };
 
   /**
@@ -98,7 +98,7 @@ define([], function () {
    */
   Model.prototype._asField = function (id) {
     return this.fields[this._asIndex(id)];
-  }
+  };
 
   /*Model.prototype.isRange =function (range) {
 

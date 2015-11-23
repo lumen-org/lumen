@@ -5,27 +5,104 @@
  * @module
  */
 
-define(['./Model'], function (Model) {
+define(['./Model', './Field'], function (Model, F) {
   "use strict";
 
   var logger = Logger.get('pl-DummyModel');
   logger.setLevel(Logger.DEBUG);
 
   /**
-   * Createas and returns a dummy model with given name and size
+   * Creates and returns an empty dummy model with given name
    * @param name Name for the model.
-   * @param size Number of variables in the model.
-   * @param variables An array of length size. Each element is a string that is the name of a variable of the dummy model.
    * @returns Model
    * @constructor
    */
-  var DummyModel = function (name, size, variables) {
-    console.assert(_.isNumber(size) && _.isArray(variables) && _.isString(name));
-    console.assert(variables.length === size);
-
+  var DummyModel = function (name) {
+    console.assert(_.isString(name));
     this.name = name;
-    this.fields = variables;
   };
+
+  /**
+   * Collection of generators of dummy models.
+   */
+  DummyModel.generator = {
+    /**
+     * generates a dummy model about census data
+     */
+    census : function () {
+      var myModel = new DummyModel('census');
+
+      var ageField = new F.Field(
+        'age', myModel, {
+          dataType: F.FieldT.Type.num,
+          role: F.FieldT.Role.measure,
+          kind: F.FieldT.Kind.cont
+        });
+      var weightField = new F.Field(
+        'weight', myModel, {
+          dataType: F.FieldT.Type.num,
+          role: F.FieldT.Role.measure,
+          kind: F.FieldT.Kind.cont
+        });
+      var incomeField = new F.Field(
+        'income', myModel, {
+          dataType: F.FieldT.Type.num,
+          role: F.FieldT.Role.measure,
+          kind: F.FieldT.Kind.cont
+        });
+      var childrenField = new F.Field(
+        'children', myModel, {
+          dataType: F.FieldT.Type.num,
+          role: F.FieldT.Role.measure,
+          kind: F.FieldT.Kind.discrete,
+          // todo: future feature: domain: {min: 0, max: 6}
+          domain: [0, 1, 2, 3, 4, 5, 6]
+        });
+      var sexField = new F.Field(
+        'sex', myModel, {
+          dataType: F.FieldT.Type.num,
+          role: F.FieldT.Role.dimension,
+          kind: F.FieldT.Kind.discrete,
+          domain: [0, 1]
+        });
+      var nameField = new F.Field(
+        'name', myModel, {
+          dataType: F.FieldT.Type.string,
+          role: F.FieldT.Role.dimension,
+          kind: F.FieldT.Kind.discrete,
+          domain: ['John', 'Philipp', 'Maggie']
+        });
+      var cityField = new F.Field(
+        'city', myModel, {
+          dataType: F.FieldT.Type.string,
+          role: F.FieldT.Role.dimension,
+          kind: F.FieldT.Kind.discrete,
+          domain: ['Jena', 'Weimar', 'Berlin']
+        });
+
+      myModel.fields = [
+        ageField,
+        weightField,
+        incomeField,
+        childrenField,
+        sexField,
+        nameField,
+        cityField
+      ];
+      /*myModel.fields = {
+        age: ageField,
+        weight: weightField,
+        income: incomeField,
+        children: childrenField,
+        sex: sexField,
+        name: nameField,
+        city: cityField
+      };*/
+
+      return myModel;
+    }
+  };
+
 
   /**
    * Returns the number of free fields in the model.

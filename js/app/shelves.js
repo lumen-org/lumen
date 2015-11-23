@@ -4,8 +4,12 @@
  * @module shelves
  * @author Philipp Lucas
  */
-define(['app/utils','lib/emitter'], function(utils, E) {
+define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   'use strict';
+
+  // easier usage
+  // todo: is that good practice?
+  //_.extend(F, this);
 
 //  var logger = Logger.get('pl-shelves');
 //  logger.setLevel(Logger.DEBUG);
@@ -33,8 +37,8 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     var pqlString = shelf.at(0).toPQLString();
     for( var idx = 1; idx < shelf.length(); ++idx ) {
       var op = '/';
-      if (shelf.at(idx).content.role === FieldT.Role.measure &&
-        shelf.at(idx - 1).content.role === FieldT.Role.measure) op = '+';
+      if (shelf.at(idx).content.role === F.FieldT.Role.measure &&
+        shelf.at(idx - 1).content.role === F.FieldT.Role.measure) op = '+';
       pqlString += op + shelf.at(idx).toPQLString();
     }
     return pqlString;
@@ -51,6 +55,31 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     }
   };
 
+
+  /**
+   * Populates the given dimension and measure shelf with the field from the given model
+   * @param model
+   * @param {DimensionShelf} dimShelf
+   * @param {MeasureShelf} measShelf
+   */
+  function populate (model, dimShelf, measShelf) {
+    model.fields.forEach(
+      function(field) {
+        switch (field.role) {
+          case F.FieldT.Role.measure:
+            measShelf.append(field);
+            break;
+          case F.FieldT.Role.dimension:
+            dimShelf.append(field);
+            break;
+          default:
+            throw new Error('invalid value in field.role');
+        }
+      }
+    );
+  }
+
+
   /* var DataSource = function () {
    // todo: implement a method to automatically determine a default config for data dimensions
    auto: {
@@ -60,66 +89,19 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    }
    };*/
 
-  /**
-   * Type definitions of a Field.
-   * @type {{Type: {string: string, num: string}, Role: {measure: string, dimension: string}, Kind: {cont: string, discrete: string}}}
-   * @alias module:shelves.FieldT
-   */
-  var FieldT = {
-    Type: {string: 'string', num: 'numerical'},
-    Role: {measure: 'measure', dimension: 'dimension'}, //todo: ????
-    Kind: {cont: 'continuous', discrete: 'discrete'}
-  };
 
-  /**
-   * Type definitions of a FieldUsage.
-   * @type {{Aggregation: {sum: string, avg: string}, Scale: {linear: string, log: string}, Order: {ascending: string, descending: string}}}
-   * @alias module:shelves.FUsageT
-   */
-  var FUsageT = {
-    Aggregation: {sum: 'sum', avg: 'avg'},
-    Scale: {
-      linear: 'linear', log: 'log'
-    },
-    Order: {
-      ascending: 'asc', descending: 'desc'
-    }
-  };
-
-  /**
+  /*
    * A data source
    * @param {uri} uri URI of this data source.
    * @param {string} name The name of this data source.
    * @alias module:shelves.DataSource
    * @constructor
-   */
+   *
   var DataSource; DataSource = function (uri, name) {
     this.uri = uri;
     this.name = name;
     this.fields = {};
-  };
-
-  /**
-   * Populates dimShelf and measShelf with the fields of this data source.
-   * @param {DimensionShelf} dimShelf
-   * @param {MeasureShelf} measShelf
-   */
-  DataSource.prototype.populate = function (dimShelf, measShelf) {
-    var fields = this.fields;
-    for (var key in fields) {
-      var field = fields[key];
-      switch (field.role) {
-        case FieldT.Role.measure:
-          measShelf.append(field);
-          break;
-        case FieldT.Role.dimension:
-          dimShelf.append(field);
-          break;
-        default:
-          console.error('invalid value in field.role');
-      }
-    }
-  };
+  };*/
 
   /**
    * Enumeration on the possible shelf types.
@@ -241,58 +223,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     return(this.length() === 0);
   };
 
-  /**
-   * We call {@link Field} and {@link FieldUsage} both attributes.
-   */
 
-  /**
-   * A {Field} represents a certain dimension in a data source.
-   * @param {string|Field} nameOrField - A unique identifier of a dimension in the data source, or the {@link Field} to copy.
-   * @param {DataSource|null} dataSource - The data source this is a field of, or null (if a {@link Field} is provided for name).
-   * @param [args] Additional optional arguments. They will override those of a given {@link Field}.
-   * @constructor
-   * @alias module:shelves.Field
-   */
-  var Field; Field = function (nameOrField, dataSource, args) {
-    if (!args) args = {};
-    var isF = nameOrField instanceof Field;
-    var isD = args.kind === FieldT.Kind.discrete;
-//    console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
-    console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
-
-    this.name = (isF ? nameOrField.name : nameOrField);
-    this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
-    this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
-    this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure);
-    this.kind = utils.selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
-    this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);  //todo: this means: default domains to empty domain. is that clean?
-  };
-
-  Field.Discrete = function (nameOrField, dataSource, domain, args) {
-    var myField = new Field(nameOrField, dataSource, args);
-    myField.domain = domain;
-    return myField;
-  };
-
-  /**
-   * A {FieldUsage} represents a certain configuration of a {Field} for use in a PQL expression.
-   * It details how the data of a certain dimension of a data source is mapped to some numerical output range.
-   * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If  a {@link FieldUsage} is provided a copy of it will be created.
-   * @param [args] Optional parameters for scale and aggregation function of the new {@link FieldUsage}. If set, it overrides the settings of base, in case base is a {@link FieldUsage}.
-   * @constructor
-   * @alias module:shelves.FieldUsage
-   */
-  var FieldUsage; FieldUsage = function (base, args) {
-    console.assert(base instanceof Field || base instanceof FieldUsage);
-    Field.call(this, base.name, base.dataSource, base);
-    if (!args) args = {};
-    var isFU = base instanceof FieldUsage;
-    this.base = (isFU ? base.base : base);
-    this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
-    this.scale = utils.selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);
-  };
-  FieldUsage.prototype = Object.create(Field.prototype);
-  FieldUsage.prototype.constructor = FieldUsage;
 
   /**
    * An {@link Record} has an attribute (i.e. a {@link Field} or {@link FieldUsage}) and is bound to a certain {@link Shelf}.
@@ -307,7 +238,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   var Record; Record = function (content, shelf) {
     console.assert(typeof content !== 'undefined');
     console.assert(typeof shelf !== 'undefined');
-    console.assert(content instanceof Field || content instanceof FieldUsage);
+    console.assert(content instanceof F.Field || content instanceof F.FieldUsage);
     this.content = content;
     this.shelf = shelf;
   };
@@ -342,12 +273,12 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @alias module:shelves.FieldRecord
    */
   var FieldRecord; FieldRecord = function (obj, shelf) {
-    console.assert(obj instanceof Record || obj instanceof Field);
+    console.assert(obj instanceof Record || obj instanceof F.Field);
     var field;
     if (obj instanceof Record) {
       // create new instance of Field if not a Field is given
       obj = obj.content;
-      field = new Field(obj.name, obj.dataSource, obj);
+      field = new F.Field(obj.name, obj.dataSource, obj);
     } else {
       // otherwise use the given Field
       field = obj;
@@ -368,9 +299,9 @@ define(['app/utils','lib/emitter'], function(utils, E) {
    * @alias module:shelves.FUsageRecord
    */
   var FUsageRecord; FUsageRecord = function (obj, shelf) {
-    console.assert(obj instanceof Record || obj instanceof Field || obj instanceof FieldUsage);
+    console.assert(obj instanceof Record || obj instanceof F.Field || obj instanceof F.FieldUsage);
     var field;
-    if (obj instanceof FieldUsage) {
+    if (obj instanceof F.FieldUsage) {
       // if a FieldUsage is given, use that
       field = obj;
     } else {
@@ -379,10 +310,10 @@ define(['app/utils','lib/emitter'], function(utils, E) {
         obj = obj.content;
       }
       // no effect:
-      //else if (obj instanceof Field) {
+      //else if (obj instanceof F.Field) {
       //  obj = obj;
       //}
-      field = new FieldUsage(obj);
+      field = new F.FieldUsage(obj);
     }
     Record.call(this, field, shelf);
   };
@@ -390,7 +321,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   FUsageRecord.prototype.constructor = FUsageRecord;
   FUsageRecord.prototype.toPQLString = function () {
     var fusage = this.content;
-    return (fusage.role === FieldT.Role.measure ?
+    return (fusage.role === F.FieldT.Role.measure ?
       fusage.aggr + '(' + fusage.name + ')' :
       fusage.name);
   };
@@ -411,7 +342,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
     this.colorMap = (obj instanceof ColorRecord ? obj.colorMap : ColorMap.auto(obj));
   };
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
@@ -428,9 +359,9 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FieldRecord.call(this, new Field(obj), shelf);
-    if (this.content.role === FieldT.Role.measure) {
-      this.content.role = FieldT.Role.dimension;
+    FieldRecord.call(this, new F.Field(obj), shelf);
+    if (this.content.role === F.FieldT.Role.measure) {
+      this.content.role = F.FieldT.Role.dimension;
     }
   };
   DimensionRecord.prototype = Object.create(FieldRecord.prototype);
@@ -446,9 +377,9 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FieldRecord.call(this, new Field(obj), shelf);
-    if (this.content.role === FieldT.Role.dimension) {
-      this.content.role = FieldT.Role.measure;
+    FieldRecord.call(this, new F.Field(obj), shelf);
+    if (this.content.role === F.FieldT.Role.dimension) {
+      this.content.role = F.FieldT.Role.measure;
     }
   };
   MeasureRecord.prototype = Object.create(FieldRecord.prototype);
@@ -464,7 +395,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
   };
   LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
   LayoutRecord.prototype.constructor = LayoutRecord;
@@ -480,7 +411,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
   };
   ShapeRecord.prototype = Object.create(FUsageRecord.prototype);
   ShapeRecord.prototype.constructor = ShapeRecord;
@@ -496,7 +427,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
   };
   SizeRecord.prototype = Object.create(FUsageRecord.prototype);
   SizeRecord.prototype.constructor = SizeRecord;
@@ -511,7 +442,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
   };
   FilterRecord.prototype = Object.create(FUsageRecord.prototype);
   FilterRecord.prototype.constructor = FilterRecord;
@@ -529,7 +460,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
   };
   DetailRecord.prototype = Object.create(FUsageRecord.prototype);
   DetailRecord.prototype.constructor = DetailRecord;
@@ -545,6 +476,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
   };
   DimensionShelf.prototype = Object.create(Shelf.prototype);
   DimensionShelf.prototype.constructor = DimensionShelf;
+
 
   /**
    * @constructor
@@ -579,7 +511,7 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     var expr = [];
     for( var idx = 0; idx < this.length(); ++idx ) {
       if (idx !== 0) {
-        expr.push( (this.contentAt(idx).role === FieldT.Role.measure && this.contentAt(idx - 1).role === FieldT.Role.measure)? '+' : '/' );
+        expr.push( (this.contentAt(idx).role === F.FieldT.Role.measure && this.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '/' );
       }
       expr.push( this.contentAt(idx) );
     }
@@ -694,14 +626,9 @@ define(['app/utils','lib/emitter'], function(utils, E) {
 
   return {
     ColorMap: ColorMap,
-    FieldT: FieldT,
-    FUsageT: FUsageT,
 
     Shelf: Shelf,
     ShelfTypeT: ShelfTypeT,
-
-    Field: Field,
-    FieldUsage: FieldUsage,
 
     Record: Record,
     FieldRecord: FieldRecord,
@@ -727,6 +654,6 @@ define(['app/utils','lib/emitter'], function(utils, E) {
     ColumnShelf: ColumnShelf,
     RemoveShelf: RemoveShelf,
 
-    DataSource: DataSource
+    populate: populate
   };
 });
