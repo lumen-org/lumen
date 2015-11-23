@@ -5,6 +5,8 @@
  *
  * todo: a lot!
  *
+ * So far this module only describes the API for querying a model, which must be implemented by all actual model classes.
+ *
  * @module
  * @author Philipp Lucas
  */
@@ -17,7 +19,7 @@ define([], function () {
   var Model; Model = function (name) {
     this.name = name;
     this.size = 0;
-    this.fields = [];
+    this.fields = []; // array of Fields
   };
 
   /**
@@ -51,21 +53,57 @@ define([], function () {
 
 
   /**
-   * Createas and returns a dummy model with given name and size
-   * @param name Name for the model.
-   * @param size Number of variables in the model.
-   * @param variables An array of length size. Each element is a string that is the name of a variable of the dummy model.
-   * @returns Model
-   * @constructor
+   * Returns true iff idx is a valid index of a field of this model.
+   * @param idx
    */
-  Model.dummyModel = function (name, size, variables) {
-    console.assert(_.isNumber(size) && _.isArray(variables) && _.isString(name));
-    console.assert(variables.length === size);
-    var myModel = new Model(name);
-    myModel.size = size;
-    myModel.fields = variables;
-    return myModel;
+  Model.prototype.isIndex = function(idx) {
+    return (_.isNumber(idx) && (this.size < idx) );
   };
+
+  /**
+   * Returns true iff name is a valid name of a field of this model.
+   * @param name
+   */
+  Model.prototype.isName = function(name) {
+    return (_.isString(name) && this.fields.some( function(f){return f.name === name;}) );
+  };
+
+  /**
+   * Returns true iff field is a field of this model.
+   * @param field
+   */
+  Model.prototype.isField = function (field) {
+    return (field instanceof Field && (-1 !== this.fields.indexOf(field)) );
+  }
+
+  /**
+   * Returns the index that belongs to the given id in this model.
+   * @param id - Either a index, a name, or a field of this model.
+   * @private
+   */
+  Model.prototype._asIndex = function(id) {
+    if (this.isIndex(id))
+      return id;
+    if (this.isName(id))
+      return _.findIndex(this.fields, function(f){return f.name === id;});
+    if (this.isField(id))
+      return this.fields.indexOf(id);
+    throw new Error("argument is neither an valid field index nor a valid field name for this model.");
+  };
+
+  /**
+   * Returns the field of this model that belongs to the given id
+   * @param id - Either a index, a name, or a field of this model.
+   * @private
+   */
+  Model.prototype._asField = function (id) {
+    return this.fields[this._asIndex(id)];
+  }
+
+  /*Model.prototype.isRange =function (range) {
+
+  }*/
+
 
   return Model;
 });

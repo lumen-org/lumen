@@ -3,8 +3,8 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['d3', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'lib/emitter'],
-  function (d3, sh, vis, inter, VisMEL, e) {
+define(['d3', 'app/DummyModel', 'app/shelves', 'app/visuals', 'app/interaction', 'app/VisMEL', 'lib/emitter'],
+  function (d3, dmodel, sh, vis, inter, VisMEL, e) {
     'use strict';
     Logger.useDefaults();
 
