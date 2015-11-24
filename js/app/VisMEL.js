@@ -4,7 +4,7 @@
  This module allows to construct VisMEL queries from shelves and sources, and defines utility functions on VisMEL queries.
  */
 
-define(['app/shelves', 'app/TableAlgebra'], function(sh, TableAlgebra) {
+define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   'use strict';
 
   /**
@@ -96,7 +96,6 @@ define(['app/shelves', 'app/TableAlgebra'], function(sh, TableAlgebra) {
    */
   VisMEL.prototype.allUsedVariables = function () {
     var layer = this.layers[0];
-
     var usedVars = _.union(
       this.layout.rows.uniqueFields(),
       this.layout.cols.uniqueFields(),
@@ -106,7 +105,7 @@ define(['app/shelves', 'app/TableAlgebra'], function(sh, TableAlgebra) {
       //.map(layer.aestetics, function(e){return e.base;}), ???
       [layer.aestetics.color.base, layer.aestetics.shape.base, layer.aestetics.size.base]
     );
-    return _.filter(usedVars, function(e){return (e instanceof sh.Field);} );
+    return usedVars.filter( function(e){return e instanceof F.Field;} );
   };
 
   /**

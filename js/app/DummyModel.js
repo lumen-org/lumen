@@ -19,8 +19,11 @@ define(['./Model', './Field'], function (Model, F) {
    */
   var DummyModel = function (name) {
     console.assert(_.isString(name));
-    this.name = name;
+    Model.call(this, name);
   };
+  DummyModel.prototype = Object.create(Model.prototype);
+  DummyModel.prototype.constructor = DummyModel;
+
 
   /**
    * Collection of generators of dummy models.
@@ -105,15 +108,6 @@ define(['./Model', './Field'], function (Model, F) {
 
 
   /**
-   * Returns the number of free fields in the model.
-   * @returns {*}
-   */
-  DummyModel.prototype.size = function () {
-    return this.fields.length;
-  };
-
-
-  /**
    * Conditions variable v of this model on the given range and returns the modified model.
    * @param v - A variable of the model, given by its index (a number) or its name (a string).
    * @param value - The value to condition v on.
@@ -130,9 +124,12 @@ define(['./Model', './Field'], function (Model, F) {
    * @param v A single variable or an array of variables of this model, each specified either by their name or their index.
    */
   DummyModel.prototype.marginalize = function (v) {
-    var idx = this._asIndex(v);
-    // dummy model: don't do anything with value, but remove the marginalized field
-    this.fields = _.without(this.fields, this.fields[idx]);
+    if (!Array.isArray(v))
+      v = [v];
+    v.forEach( function(e) {
+      // dummy model: don't do anything with value, but remove the marginalized field
+      this.fields = _.without(this.fields, this.fields[ this._asIndex(e)] );
+    });
   };
 
 
@@ -141,7 +138,7 @@ define(['./Model', './Field'], function (Model, F) {
    * @param {Array} values - The values to evaluate the model for.
    */
   DummyModel.prototype.density = function (values) {
-    console.assert(_.isArray(values) && this.size() === values.length);
+    console.assert(Array.isArray(values) && this.size() === values.length);
     // todo: implement something smarter?
     return Math.random();
   };

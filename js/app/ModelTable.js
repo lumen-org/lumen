@@ -4,7 +4,7 @@
  *
  * A model table is table of submodels according to a layout of VisMEL query. It contains one submodel for each cell of the table, and each submodel will be used to generate samples/aggregations for that cell.
  */
-define(['app/shelves'], function(sh) {
+define(['./shelves'], function(sh) {
   'use strict';
 
   /**
@@ -34,8 +34,7 @@ define(['app/shelves'], function(sh) {
 
     // 3. filters on independent variables, and
     // 4. derive base model
-    this.baseModel = model.marginalize(
-      _.diff(model.variables(), usedVariables) ); // todo: implement filtering
+    this.baseModel = model.marginalize( _.difference(model.fields, usedVariables) ); // todo: implement filtering
 
     // 5. derive submodels for each cell
     // todo: speedup: dynamically decide whether it's faster to do get a row- or column-wise base-model

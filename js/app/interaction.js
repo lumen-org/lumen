@@ -73,7 +73,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
      * @param relPos center of DOM element that is possibly overlapping elem.
      * @param elem DOM element
      * @param {Object} options
-     * @param {string} options.type How to interpret the remaining parameters: absolut pixel distances, or relative to dimensions of elem.
+     * @param {string} options.type - How to interpret the remaining parameters: absolute pixel distances, or relative to dimensions of elem.
      */
     overlap: function (relPos, elem, options) {
       var o = $.extend({}, elem.getBoundingClientRect());
@@ -129,7 +129,8 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
 
   var highlight = {
     /**
-     * Clears the highlighting of the current droppable
+     * Clears the highlighting of the given droppable
+     * @param elem
      */
     clear : function (elem) {
       if (elem) {
@@ -137,7 +138,8 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
       }
     },
     /**
-     * updates the highlighting of the current droppable according to given overlap
+     * updates the highlighting of the given droppable according to given overlap
+     * @param elem
      * @param overlap
      */
     set : function  (elem, overlap) {
@@ -258,7 +260,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
 
   /**
    * Mixin to make a Record interactable, i.e. it can be dragged and dropped on.
-   * @returns {sh.Record}
+   * @returns {Record}
    */
   sh.Record.prototype.beInteractable = function () {
     _makeRecordDroppable(this.$visual);

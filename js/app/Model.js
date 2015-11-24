@@ -10,7 +10,7 @@
  * @module
  * @author Philipp Lucas
  */
-define([], function () {
+define(['./Field'], function (F) {
   "use strict";
 
   /**
@@ -18,27 +18,27 @@ define([], function () {
    */
   var Model; Model = function (name) {
     this.name = name;
-    this.size = 0;
     this.fields = []; // array of Fields
   };
 
   /**
    * Conditions variable v of this model on the given range and returns the resulting model.
    * Does not change this model.
-   * @param v A variable of the model, given by its index (a number) or its name (a string).
-   * @param range A
+   * @param v A variable of the model, specified by their index, name, or the field of the model itself.
+   * @param value
    */
-  Model.prototype.condition = function (v, range) {
-    // todo: implement
+  Model.prototype.condition = function (v, value) {
+    throw new Error("You have to implement this function in your subclass");
   };
 
 
   /**
    * Marginalizes v out of this model and returns the resulting model.
-   * @param v A single variable or an array of variables of this model, each specified either by their name or their index.
+   * @param v A single variable or an array of variables of this model, specified by their index, name, or the field of the model itself.
    */
   Model.prototype.marginalize = function (v) {
-    // todo: implement
+    throw new Error("You have to implement this function in your subclass");
+    // implement
   };
 
 
@@ -47,10 +47,17 @@ define([], function () {
    * @param values
    */
   Model.prototype.density = function (values) {
-    // todo: implement
-    return Math.random();
+    throw new Error("You have to implement this function in your subclass");
   };
 
+
+  /**
+   * Returns the number of free fields in the model.
+   * @returns {*}
+   */
+  Model.prototype.size = function () {
+    return this.fields.length;
+  };
 
   /**
    * Returns true iff idx is a valid index of a field of this model.
@@ -73,7 +80,7 @@ define([], function () {
    * @param field
    */
   Model.prototype.isField = function (field) {
-    return (field instanceof Field && (-1 !== this.fields.indexOf(field)) );
+    return (field instanceof F.Field && (-1 !== this.fields.indexOf(field)) );
   };
 
   /**
@@ -99,11 +106,6 @@ define([], function () {
   Model.prototype._asField = function (id) {
     return this.fields[this._asIndex(id)];
   };
-
-  /*Model.prototype.isRange =function (range) {
-
-  }*/
-
 
   return Model;
 });

@@ -7,10 +7,6 @@
 define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   'use strict';
 
-  // easier usage
-  // todo: is that good practice?
-  //_.extend(F, this);
-
 //  var logger = Logger.get('pl-shelves');
 //  logger.setLevel(Logger.DEBUG);
 
@@ -67,10 +63,10 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
       function(field) {
         switch (field.role) {
           case F.FieldT.Role.measure:
-            measShelf.append(field);
+            measShelf.append(field).beVisual().beInteractable();
             break;
           case F.FieldT.Role.dimension:
-            dimShelf.append(field);
+            dimShelf.append(field).beVisual().beInteractable();
             break;
           default:
             throw new Error('invalid value in field.role');
@@ -79,29 +75,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     );
   }
 
-
-  /* var DataSource = function () {
-   // todo: implement a method to automatically determine a default config for data dimensions
-   auto: {
-   Role : function () {            },
-   Kind : function () {            },
-   DataType : function () {            }
-   }
-   };*/
-
-
-  /*
-   * A data source
-   * @param {uri} uri URI of this data source.
-   * @param {string} name The name of this data source.
-   * @alias module:shelves.DataSource
-   * @constructor
-   *
-  var DataSource; DataSource = function (uri, name) {
-    this.uri = uri;
-    this.name = name;
-    this.fields = {};
-  };*/
 
   /**
    * Enumeration on the possible shelf types.
@@ -120,6 +93,7 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     aesthetic: 'aestheticShelf',
     remove: 'removeShelf'
   });
+
 
   /**
    * A Shelf is a container that holds records of type RecordConstructor.

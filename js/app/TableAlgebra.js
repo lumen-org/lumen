@@ -7,7 +7,7 @@
  *
  * This module allows to construct table algebra expressions from row and column shelves, as well as normalizing them to their normalized set form (NSF).
  */
-define(['./Field', 'app/shelves'], function (F, sh) {
+define(['./Field', './shelves'], function (F, sh) {
   "use strict";
 
   /**
@@ -117,7 +117,7 @@ define(['./Field', 'app/shelves'], function (F, sh) {
     // note: however, all sub arrays must also store their original fieldUsage
     // todo : test
 
-    return domainExpr;
+    return domainExpr[0];
   };
 
   return TableAlgebraExpr;
