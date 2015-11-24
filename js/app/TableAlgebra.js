@@ -40,14 +40,12 @@ define(['./Field', './shelves'], function (F, sh) {
    * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsages}.
    */
   var TableAlgebraExpr = function (shelf) {
-    // create empty array
     Array.call(this);
-
     console.assert(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf);
     for( var idx = 0; idx < shelf.length(); ++idx ) {
-      if (idx !== 0) {
-        this.push( (shelf.contentAt(idx).role === F.FieldT.Role.measure && shelf.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '*' );
-      }
+      if (idx !== 0)
+        this.push( (shelf.contentAt(idx).role === F.FieldT.Role.measure &&
+        shelf.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '*' );
       this.push( shelf.contentAt(idx) );
     }
   };

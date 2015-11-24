@@ -14,11 +14,10 @@ define(['./Model', './Field'], function (Model, F) {
   /**
    * Creates and returns an empty dummy model with given name
    * @param name Name for the model.
-   * @returns Model
+   * @returns {DummyModel}
    * @constructor
    */
   var DummyModel = function (name) {
-    console.assert(_.isString(name));
     Model.call(this, name);
   };
   DummyModel.prototype = Object.create(Model.prototype);
@@ -31,6 +30,7 @@ define(['./Model', './Field'], function (Model, F) {
   DummyModel.generator = {
     /**
      * generates a dummy model about census data
+     * @returns {DummyModel}
      */
     census : function () {
       var myModel = new DummyModel('census');
@@ -111,17 +111,20 @@ define(['./Model', './Field'], function (Model, F) {
    * Conditions variable v of this model on the given range and returns the modified model.
    * @param v - A variable of the model, given by its index (a number) or its name (a string).
    * @param value - The value to condition v on.
+   * @returns {DummyModel}
    */
   DummyModel.prototype.condition = function (v, value) {
     var idx = this._asIndex(v);
     // dummy model: don't do anything with value, but remove the conditioned field
     this.fields = _.without(this.fields, this.fields[idx]);
+    return this;
   };
 
 
   /**
    * Marginalizes v out of this model and returns the modified model.
    * @param v A single variable or an array of variables of this model, each specified either by their name or their index.
+   * @returns {DummyModel}
    */
   DummyModel.prototype.marginalize = function (v) {
     if (!Array.isArray(v))
@@ -130,18 +133,34 @@ define(['./Model', './Field'], function (Model, F) {
       // dummy model: don't do anything with value, but remove the marginalized field
       this.fields = _.without(this.fields, this.fields[ this._asIndex(e)] );
     });
+    return this;
   };
 
 
   /**
    * Returns the density of this model for the given values.
    * @param {Array} values - The values to evaluate the model for.
+   * @returns {Number}
    */
   DummyModel.prototype.density = function (values) {
     console.assert(Array.isArray(values) && this.size() === values.length);
     // todo: implement something smarter?
     return Math.random();
   };
+
+
+  /**
+   * @returns Returns a copy of this model.
+   * @param {string} [name] - the new name of the model.
+   * @constructor
+   */
+  DummyModel.prototype.copy = function (name) {
+    if (!name)
+      name = this.name;
+    var myCopy = new DummyModel(name);
+    myCopy.fields = this.fields.slice();
+    return myCopy;
+  }
 
   return DummyModel;
 

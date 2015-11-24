@@ -108,6 +108,48 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     return usedVars.filter( function(e){return e instanceof F.Field;} );
   };
 
+
+  /**
+   * @returns {String} Returns a string representation of the VisMEL query.
+   */
+  VisMEL.prototype.toString = function () {
+
+    // todo: try to utilize JSON.stringify !??
+
+    // sources
+    var source =  this.sources[0];
+    var sourceStr = "Source :\n" +
+        "name: " + source.name + "\n";
+    source.fields.forEach( function(field) {
+      sourceStr += field.name + "\n";
+    });
+
+    // layout
+    var layout = this.layout;
+    var layoutStr = "Layout :\n" + "rows: ";
+    layout.rows.forEach(function(e){
+      _.isString()
+    });
+
+    layoutlayout.rows.toString()
+
+    // layer
+
+    var layer = this.layers[0],
+      layout = this.layout;
+
+    var str =  'SELECT AS auto \n' +
+      (layer.aestetics.color.toPQLString() ? '\t' + layer.aestetics.color.toPQLString()  : '') +
+      (layer.aestetics.toPQLString()? '\t' + layer.aestetics.toPQLString() : '') +
+      (layer.aestetics.shape.toPQLString() ? '\t' + layer.aestetics.shape.toPQLString() : '') +
+      (layer.aestetics.size.toPQLString() ? '\t' + layer.aestetics.size.toPQLString() : '') +
+      (layout.cols.toPQLString()? '\t' + (layout.cols.toPQLString() : '') +
+      (layout.rows.toPQLString()? '\t' + layout.rows.toPQLString() : '') +
+      'FROM\n\tmyDataSource\n' +
+      shelf.filter.toPQLString();
+    return str;
+  };
+
   /**
     public interface
    */

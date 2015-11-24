@@ -69,7 +69,6 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/
     // todo: debug - it doesn't work I think
     inter.asRemoveElem($(document.body).find('main'));
 
-
     function pqlString () {
       return 'SELECT AS auto \n' +
         (shelf.color.toPQLString() ? '\t' + shelf.color.toPQLString() : '') +
@@ -94,9 +93,14 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/
 
     // trigger intial PQL writeout
     printPQLString();
-    var myQuery = new VisMEL(shelf, model);
-    var myModelTable = new ModelTable(myQuery);
 
+    $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
+    $('#update-button').click( function() {
+      var myQuery = new VisMEL(shelf, model);
+      var myModelTable = new ModelTable(myQuery);
+      console.log(myModelTable.baseModel.toString());
+      console.log(myModelTable.at[0][0].toString());
+    });
 
     function myScript () {
 

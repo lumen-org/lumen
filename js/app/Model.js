@@ -17,6 +17,7 @@ define(['./Field'], function (F) {
    * @constructor
    */
   var Model; Model = function (name) {
+    console.assert(_.isString(name));
     this.name = name;
     this.fields = []; // array of Fields
   };
@@ -31,7 +32,6 @@ define(['./Field'], function (F) {
     throw new Error("You have to implement this function in your subclass");
   };
 
-
   /**
    * Marginalizes v out of this model and returns the resulting model.
    * @param v A single variable or an array of variables of this model, specified by their index, name, or the field of the model itself.
@@ -41,7 +41,6 @@ define(['./Field'], function (F) {
     // implement
   };
 
-
   /**
    * Returns the density of this model for the given values, or 'undefined' if values does not specify all required variable values.
    * @param values
@@ -50,6 +49,14 @@ define(['./Field'], function (F) {
     throw new Error("You have to implement this function in your subclass");
   };
 
+  /**
+   * @returns Returns a copy of this model.
+   * @param {string} [name] - the new name of the model.
+   * @constructor
+   */
+  Model.prototype.copy = function (name) {
+    throw new Error("You have to implement this function in your subclass");
+  };
 
   /**
    * Returns the number of free fields in the model.
@@ -80,7 +87,10 @@ define(['./Field'], function (F) {
    * @param field
    */
   Model.prototype.isField = function (field) {
-    return (field instanceof F.Field && (-1 !== this.fields.indexOf(field)) );
+    return field instanceof F.Field && (-1 !== this.fields.indexOf(field));
+    /* version including FieldUsages
+    return ( (field instanceof F.Field && (-1 !== this.fields.indexOf(field))) ||
+             (field instanceof F.FieldUsage && (-1 !== this.fields.indexOf(field.base))) );*/
   };
 
   /**
@@ -105,6 +115,25 @@ define(['./Field'], function (F) {
    */
   Model.prototype._asField = function (id) {
     return this.fields[this._asIndex(id)];
+  };
+
+  /**
+   * Returns a textual description of the model.
+   * @returns {String}
+   */
+  Model.prototype.toString = function (mode) {
+    var desc = "";
+    if (mode === "VisMEL") {
+      desc += "name: " + this.name + "\n"
+
+    } else {
+      desc = "-- Model '" + this.name + "' --\n" +
+        "consists of " + this.size() + " fields, as follows\n";
+      this.fields.forEach( function(field) {
+        desc += field.toString() + "\n";
+      });
+    }
+    return desc;
   };
 
   return Model;

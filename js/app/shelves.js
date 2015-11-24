@@ -29,7 +29,7 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
    * @private
    */
   function _concatAsPQLString4RowCol (shelf) {
-    if(shelf.empty()) return false;
+    if(shelf.empty()) return [];
     var pqlString = shelf.at(0).toPQLString();
     for( var idx = 1; idx < shelf.length(); ++idx ) {
       var op = '/';
@@ -108,7 +108,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   var Shelf; Shelf = function (RecordConstructor, opt) {
     this.RecordConstructor = RecordConstructor;
     this.records = [];
-
     if (!opt) opt = {};
     this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
   };
@@ -198,7 +197,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
 
 
-
   /**
    * An {@link Record} has an attribute (i.e. a {@link Field} or {@link FieldUsage}) and is bound to a certain {@link Shelf}.
    *
@@ -241,7 +239,7 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
 
   /**
    * An {FieldRecord} is a {Record} that may only contain a {Field}.
-   * @param obj {Field|Record} Either a {Field} (will be stored as is), or an {Record} (used to construct a new {Field}).
+   * @param obj {Field|Record} Either a {Field} (will be stored as is), or a {Record} (used to construct a new {Field}).
    * @param shelf The {Shelf} this record belongs to.
    * @constructor
    * @alias module:shelves.FieldRecord
@@ -250,9 +248,13 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     console.assert(obj instanceof Record || obj instanceof F.Field);
     var field;
     if (obj instanceof Record) {
+      field = obj.content;
+      // <<old
+      // todo: why do we create a new instance? why not use the existing one?
       // create new instance of Field if not a Field is given
-      obj = obj.content;
-      field = new F.Field(obj.name, obj.dataSource, obj);
+      // obj = obj.content;
+      //field = new F.Field(obj.name, obj.dataSource, obj);
+      // old>>
     } else {
       // otherwise use the given Field
       field = obj;
@@ -333,7 +335,8 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FieldRecord.call(this, new F.Field(obj), shelf);
+    //FieldRecord.call(this, new F.Field(obj), shelf);
+    FieldRecord.call(this, obj, shelf);
     if (this.content.role === F.FieldT.Role.measure) {
       this.content.role = F.FieldT.Role.dimension;
     }
@@ -351,7 +354,8 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FieldRecord.call(this, new F.Field(obj), shelf);
+    //FieldRecord.call(this, new F.Field(obj), shelf);
+    FieldRecord.call(this, obj, shelf);
     if (this.content.role === F.FieldT.Role.dimension) {
       this.content.role = F.FieldT.Role.measure;
     }

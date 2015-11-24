@@ -61,10 +61,15 @@ define(['./utils'], function (utils) {
     this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);  //todo: this means: default domains to empty domain. is that clean?
   };
 
-  Field.Discrete = function (nameOrField, dataSource, domain, args) {
-    var myField = new Field(nameOrField, dataSource, args);
-    myField.domain = domain;
-    return myField;
+  /**
+   * Returns a textual description of this field.
+   * @returns {String}
+   */
+  Field.prototype.toString = function () {
+    var desc = "'" + this.name + "': " + this.dataType + ", " + this.kind + " " + this.role;
+    if (this.kind === FieldT.Kind.discrete)
+      desc += ". domain = [" + this.domain + "]";
+    return desc;
   };
 
   /**

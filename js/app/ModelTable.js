@@ -4,7 +4,7 @@
  *
  * A model table is table of submodels according to a layout of VisMEL query. It contains one submodel for each cell of the table, and each submodel will be used to generate samples/aggregations for that cell.
  */
-define(['./shelves'], function(sh) {
+define(['./Field'], function(F) {
   'use strict';
 
   /**
@@ -39,22 +39,35 @@ define(['./shelves'], function(sh) {
     // 5. derive submodels for each cell
     // todo: speedup: dynamically decide whether it's faster to do get a row- or column-wise base-model
     // iterate on rows
-    this.at = new Array(this.rows);
-    at.forEach( function(row, rIdx) {
-      var rowModel = this.baseModel;
-      this.rowNSF[rIdx].forEach(
-        function (symbol) { rowModel = rowModel.condition(symbol.fieldUsage, symbol.value); }
-      );
-      //iterate on cols
-      row = new Array(this.cols);
-      row.forEach( function(cell, cIdx) {
-        cell = rowModel;
-        this.colNSF[cIdx].forEach(
-          function (symbol) { cell = cell.condition(symbol.fieldUsage, symbol.value); }
-        );
-      });
-    });
 
+    /*var _conditioningCallback = function(model, symbol) {
+      if (symbol.role === F.FieldT.Kind.discrete)
+        model.condition(symbol.fieldUsage.base, symbol.value);
+    }*/
+
+    this.at = new Array(this.rows);
+    for (var rIdx=0; rIdx<this.rows; rIdx++) {
+      // get basis of all models of this row
+      var rowModel = this.baseModel.copy();
+      this.rowNSF[rIdx].forEach(
+        function (symbol) {
+          if (symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
+            rowModel.condition(symbol.fieldUsage.base, symbol.value);
+        }
+      );
+      //iterate on cols for this row
+      this.at[rIdx] = new Array(this.cols);
+      for (var cIdx=0; cIdx<this.cols; cIdx++) {
+        var cell = rowModel.copy( rowModel.name + "(" + rIdx + "," + cIdx + ")");
+        this.colNSF[cIdx].forEach(
+          function (symbol) {
+            if (symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
+              cell.condition(symbol.fieldUsage.base, symbol.value);
+          }
+        );
+        this.at[rIdx][cIdx] = cell;
+      }
+    }
     // done :-)
   };
 
