@@ -124,8 +124,7 @@ define(['./Field'], function (F) {
   Model.prototype.toString = function (mode) {
     var desc = "";
     if (mode === "VisMEL") {
-      desc += "name: " + this.name + "\n"
-
+      desc += "name: " + this.name + "\n";
     } else {
       desc = "-- Model '" + this.name + "' --\n" +
         "consists of " + this.size() + " fields, as follows\n";

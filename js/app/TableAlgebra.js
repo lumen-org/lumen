@@ -118,6 +118,20 @@ define(['./Field', './shelves'], function (F, sh) {
     return domainExpr[0];
   };
 
+  /**
+   * @returns {string} Returns a concise string representation.
+   */
+  TableAlgebraExpr.prototype.toString = function () {
+    var str = "";
+    this.forEach( function(elem) {
+      if (elem instanceof F.Field)
+        str += elem.name;
+      else
+        str += " " + elem + " ";
+    })
+    return str;
+  };
+
   return TableAlgebraExpr;
 });
 

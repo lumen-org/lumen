@@ -100,6 +100,7 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/
       var myModelTable = new ModelTable(myQuery);
       console.log(myModelTable.baseModel.toString());
       console.log(myModelTable.at[0][0].toString());
+      console.log(myQuery.toString());
     });
 
     function myScript () {

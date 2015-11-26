@@ -109,44 +109,50 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   };
 
 
+  var _delim = '\t';
+  var replacer = {};
+
+  replacer.query = function (key, value) {
+    //console.log("this = ", this, "\nkey = ", key, "\nvalue = ", value);
+    if (key === "sources")
+      return JSON.stringify(value[0], replacer.source, _delim);
+    if (key === "layers")
+      return JSON.stringify(value[0], replacer.layer, _delim);
+    if (key === "layout")
+      return JSON.stringify(value, replacer.layout, _delim);
+    return value;
+  };
+
+  replacer.source = function (key, value) {
+    if (this instanceof F.Field && key === "dataSource")
+      return undefined;
+    return value;
+  };
+
+  replacer.layout = function (key, value) {
+    if (value instanceof TableAlgebra)
+      return value.toString();
+    return value;
+  };
+
+  replacer.layer = function (key, value) {
+    if (value instanceof F.Field)
+      return value.name;
+    return value;
+  };
+
   /**
    * @returns {String} Returns a string representation of the VisMEL query.
    */
   VisMEL.prototype.toString = function () {
-
-    // todo: try to utilize JSON.stringify !??
-
-    // sources
-    var source =  this.sources[0];
-    var sourceStr = "Source :\n" +
-        "name: " + source.name + "\n";
-    source.fields.forEach( function(field) {
-      sourceStr += field.name + "\n";
-    });
-
-    // layout
-    var layout = this.layout;
-    var layoutStr = "Layout :\n" + "rows: ";
-    layout.rows.forEach(function(e){
-      _.isString()
-    });
-
-    layoutlayout.rows.toString()
-
-    // layer
-
-    var layer = this.layers[0],
-      layout = this.layout;
-
-    var str =  'SELECT AS auto \n' +
-      (layer.aestetics.color.toPQLString() ? '\t' + layer.aestetics.color.toPQLString()  : '') +
-      (layer.aestetics.toPQLString()? '\t' + layer.aestetics.toPQLString() : '') +
-      (layer.aestetics.shape.toPQLString() ? '\t' + layer.aestetics.shape.toPQLString() : '') +
-      (layer.aestetics.size.toPQLString() ? '\t' + layer.aestetics.size.toPQLString() : '') +
-      (layout.cols.toPQLString()? '\t' + (layout.cols.toPQLString() : '') +
-      (layout.rows.toPQLString()? '\t' + layout.rows.toPQLString() : '') +
-      'FROM\n\tmyDataSource\n' +
-      shelf.filter.toPQLString();
+    var source =  this.sources[0],
+      layer = this.layers[0],
+      layout = this.layout,
+      str = "";
+    str += JSON.stringify(this, replacer.query, _delim);
+    //str += JSON.stringify(source, replacer.source, _delim);
+    //str += JSON.stringify(layout, replacer.layout, _delim);
+    //str += JSON.stringify(layer, replacer.layer, _delim);
     return str;
   };
 
