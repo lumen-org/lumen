@@ -135,6 +135,17 @@ define(['./Field'], function (F) {
     return desc;
   };
 
+ /* Model.prototype.toJSON = function (mode) {
+    return JSON.stringify(
+      this,
+      function (key, value) {
+        if (this instanceof F.Field && key === "dataSource")
+          return undefined;
+        return value;
+      },
+      "\t");
+  };*/
+
   return Model;
 });
 

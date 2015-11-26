@@ -70,7 +70,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
         details: _.map(shelf.detail.records, function (r){return r.content;} )
         //label:   { FIELD_USAGE_NAME* },//future feature
         //hover:   { FIELD_USAGE_NAME* } //future feature
-      }
+      },
 
       //specializations: [] // future feature
     };
@@ -109,37 +109,43 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   };
 
 
+  // delimiter for JSON conversion
   var _delim = '\t';
-  var replacer = {};
+  var replacer = {
+    query : function (key, value) {
+      //console.log("this = ", this, "\nkey = ", key, "\nvalue = ", value);
 
-  replacer.query = function (key, value) {
-    //console.log("this = ", this, "\nkey = ", key, "\nvalue = ", value);
-    if (key === "sources")
-      return JSON.stringify(value[0], replacer.source, _delim);
-    if (key === "layers")
-      return JSON.stringify(value[0], replacer.layer, _delim);
-    if (key === "layout")
-      return JSON.stringify(value, replacer.layout, _delim);
-    return value;
-  };
+      var str = "";
+      if (key === "sources")
+        str = JSON.stringify(value[0], replacer.source, _delim);
+      if (key === "layers")
+        str = JSON.stringify(value[0], replacer.layer, _delim);
+      if (key === "layout")
+        str = JSON.stringify(value, replacer.layout, _delim);
+      if (str === "")
+        return value;
+      else
+        //return str.substr(1,str.length-2);
+      return str;
+    },
 
-  replacer.source = function (key, value) {
-    if (this instanceof F.Field && key === "dataSource")
-      return undefined;
-    return value;
-  };
+    source : function (key, value) {
+      if (this instanceof F.Field && key === "dataSource")
+        return undefined;
+      return value;
+    },
 
-  replacer.layout = function (key, value) {
-    if (value instanceof TableAlgebra)
-      return value.toString();
-    return value;
-  };
+    layout : function (key, value) {
+      if (value instanceof TableAlgebra)
+        return value.toString();
+      return value;
+    },
 
-  replacer.layer = function (key, value) {
-    if (value instanceof F.Field)
-      return value.name;
-    return value;
-  };
+    layer : function (key, value) {
+      if (value instanceof F.Field)
+        return value.name;
+      return value;
+    }};
 
   /**
    * @returns {String} Returns a string representation of the VisMEL query.
@@ -153,7 +159,12 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     //str += JSON.stringify(source, replacer.source, _delim);
     //str += JSON.stringify(layout, replacer.layout, _delim);
     //str += JSON.stringify(layer, replacer.layer, _delim);
-    return str;
+    //todo: hacky...!
+    return str.replace(/\\n/gi,'\n')
+      .replace(/\\t/gi,'\t')
+      .replace(/\\"/gi,'"')
+      .replace(/}"/gi,'}')
+      .replace(/"{/gi,'{');
   };
 
   /**

@@ -119,7 +119,8 @@ define(['./Field', './shelves'], function (F, sh) {
   };
 
   /**
-   * @returns {string} Returns a concise string representation.
+   * @returns {string} Returns a concise string representation...
+   * todo: maybe too concise. cannot really reconstruct the actual query from it...
    */
   TableAlgebraExpr.prototype.toString = function () {
     var str = "";
@@ -128,9 +129,11 @@ define(['./Field', './shelves'], function (F, sh) {
         str += elem.name;
       else
         str += " " + elem + " ";
-    })
+    });
     return str;
   };
+
+  //TableAlgebraExpr.prototype.toJSON = TableAlgebraExpr.prototype.toString;
 
   return TableAlgebraExpr;
 });
