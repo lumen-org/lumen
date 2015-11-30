@@ -88,7 +88,7 @@ define(['./Field'], function (F) {
    */
   Model.prototype.isField = function (field) {
     return field instanceof F.Field && (-1 !== this.fields.indexOf(field));
-    /* version including FieldUsages
+    /* version including FieldUsages:
     return ( (field instanceof F.Field && (-1 !== this.fields.indexOf(field))) ||
              (field instanceof F.FieldUsage && (-1 !== this.fields.indexOf(field.base))) );*/
   };
@@ -121,30 +121,14 @@ define(['./Field'], function (F) {
    * Returns a textual description of the model.
    * @returns {String}
    */
-  Model.prototype.toString = function (mode) {
-    var desc = "";
-    if (mode === "VisMEL") {
-      desc += "name: " + this.name + "\n";
-    } else {
-      desc = "-- Model '" + this.name + "' --\n" +
+  Model.prototype.describe = function (mode) {
+    var desc = "-- Model '" + this.name + "' --\n" +
         "consists of " + this.size() + " fields, as follows\n";
       this.fields.forEach( function(field) {
         desc += field.toString() + "\n";
       });
-    }
     return desc;
   };
-
- /* Model.prototype.toJSON = function (mode) {
-    return JSON.stringify(
-      this,
-      function (key, value) {
-        if (this instanceof F.Field && key === "dataSource")
-          return undefined;
-        return value;
-      },
-      "\t");
-  };*/
 
   return Model;
 });

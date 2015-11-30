@@ -13,7 +13,12 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    * @returns {Array} Array that contains all sources of this VisMEL query
    */
   function _getSources(source) {
-    return [source]; // todo: in the future there might be multiple sources supported
+
+    var sources = [source];
+    sources.toString = function () {
+      return JSON.stringify(sources, replacer.source, _delim);
+    };
+    return sources; // todo: in the future there might be multiple sources supported
   }
 
 
@@ -24,11 +29,14 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    * @returns {{rows: (Returns|*), cols: (Returns|*)}}
    */
   function _getLayout(shelf) {
-    return {
+
+    var layout = {
       // layout shelves
       rows: new TableAlgebra(shelf.row),
-      cols: new TableAlgebra(shelf.column)
-
+      cols: new TableAlgebra(shelf.column),
+      toString: function () {
+        return JSON.stringify(layout, replacer.layout, _delim);
+      }
       // states equivalence between two fields in two different data sources
       // ... required to support multiple sources
 
@@ -42,6 +50,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
        FIELD_USAGE*
        ]*/
     };
+    return layout;
     // todo: don't include if it doesn't turn out to be needed multiple times...
     //layout.fieldUsages = layout.rows.uniqueOperands().concat(layout.rows.uniqueOperands());
   }
@@ -71,7 +80,9 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
         //label:   { FIELD_USAGE_NAME* },//future feature
         //hover:   { FIELD_USAGE_NAME* } //future feature
       },
-
+      toString : function () {
+        return JSON.stringify(layer, replacer.layer, _delim);
+      }
       //specializations: [] // future feature
     };
     return [layer];
@@ -111,10 +122,10 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
 
   // delimiter for JSON conversion
   var _delim = '\t';
+
+  // replacer function for JSON conversion
   var replacer = {
     query : function (key, value) {
-      //console.log("this = ", this, "\nkey = ", key, "\nvalue = ", value);
-
       var str = "";
       if (key === "sources")
         str = JSON.stringify(value[0], replacer.source, _delim);
@@ -125,7 +136,6 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       if (str === "")
         return value;
       else
-        //return str.substr(1,str.length-2);
       return str;
     },
 
@@ -148,18 +158,19 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     }};
 
   /**
-   * @returns {String} Returns a string representation of the VisMEL query.
+   * @returns {String} Returns a string / JSON representation of the VisMEL query.
    */
   VisMEL.prototype.toString = function () {
-    var source =  this.sources[0],
+    /*var source =  this.sources[0],
       layer = this.layers[0],
-      layout = this.layout,
-      str = "";
+      layout = this.layout;*/
+    var  str = "";
     str += JSON.stringify(this, replacer.query, _delim);
     //str += JSON.stringify(source, replacer.source, _delim);
     //str += JSON.stringify(layout, replacer.layout, _delim);
     //str += JSON.stringify(layer, replacer.layer, _delim);
-    //todo: hacky...!
+    //todo: hacky...!?
+    // problem is: JSON.stringify returns
     return str.replace(/\\n/gi,'\n')
       .replace(/\\t/gi,'\t')
       .replace(/\\"/gi,'"')

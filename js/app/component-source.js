@@ -81,28 +81,28 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/
         shelf.filter.toPQLString();
     }
 
-    function printPQLString () {
-      $('#pqlTextBox').text(pqlString());
+    function printQuery () {
+      var myQuery = new VisMEL(shelf, model);
+      $('#pqlTextBox').text(
+        "layout:\n" + myQuery.layout.toString() +
+        "\nlayers:\n" + myQuery.layers.toString() );
     }
 
     // listen for GUI changes and trigger extraction of VisMEL queries
     for (var key in shelf) { if (!shelf.hasOwnProperty(key)) continue;
       // todo: fix it: it triggers multiple times for most/all drag&drop operations
-      shelf[key].on(sh.Shelf.ChangedEvent, printPQLString);
+      shelf[key].on(sh.Shelf.ChangedEvent, printQuery);
     }
 
     // trigger intial PQL writeout
-    printPQLString();
+    printQuery();
 
     $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
       var myQuery = new VisMEL(shelf, model);
       var myModelTable = new ModelTable(myQuery);
-      console.log(myModelTable.baseModel.toString());
-      console.log(myModelTable.at[0][0].toString());
-      var mystr = myQuery.toString();
-      console.log(mystr);
-      //console.log(JSON.stringify(myQuery, null, "\t"));      
+      console.log(myModelTable.baseModel.describe());
+      console.log(myModelTable.at[0][0].describe());
     });
 
     function myScript () {
