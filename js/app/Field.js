@@ -2,7 +2,7 @@
  * This module defines the dimensions/fields/attributes of a model and their usages: Field, FieldUsage and various other types.
  *
  * @author Philipp Lucas
- * @module
+ * @module Field
  */
 
 define(['./utils'], function (utils) {
@@ -11,7 +11,7 @@ define(['./utils'], function (utils) {
   /**
    * Type definitions of a Field.
    * @type {{Type: {string: string, num: string}, Role: {measure: string, dimension: string}, Kind: {cont: string, discrete: string}}}
-   * @alias module:shelves.FieldT
+   * @alias module:Field.FieldT
    */
   var FieldT = {
     Type: {string: 'string', num: 'numerical'},
@@ -22,7 +22,7 @@ define(['./utils'], function (utils) {
   /**
    * Type definitions of a FieldUsage.
    * @type {{Aggregation: {sum: string, avg: string}, Scale: {linear: string, log: string}, Order: {ascending: string, descending: string}}}
-   * @alias module:shelves.FUsageT
+   * @alias module:Field.FUsageT
    */
   var FUsageT = {
     Aggregation: {sum: 'sum', avg: 'avg'},
@@ -44,7 +44,7 @@ define(['./utils'], function (utils) {
    * @param {DataSource|null} dataSource - The data source this is a field of, or null (if a {@link Field} is provided for name).
    * @param [args] Additional optional arguments. They will override those of a given {@link Field}.
    * @constructor
-   * @alias module:shelves.Field
+   * @alias module:Field.Field
    */
   var Field; Field = function (nameOrField, dataSource, args) {
     if (!args) args = {};
@@ -78,7 +78,7 @@ define(['./utils'], function (utils) {
    * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If  a {@link FieldUsage} is provided a copy of it will be created.
    * @param [args] Optional parameters for scale and aggregation function of the new {@link FieldUsage}. If set, it overrides the settings of base, in case base is a {@link FieldUsage}.
    * @constructor
-   * @alias module:shelves.FieldUsage
+   * @alias module:Field.FieldUsage
    */
   var FieldUsage; FieldUsage = function (base, args) {
     console.assert(base instanceof Field || base instanceof FieldUsage);

@@ -1,5 +1,7 @@
 /**
- * Visuals module. This adds a visual layer on top of shelves and records by mixin appropriate functions into the prototype of {@link module:app/Shelves#Shelf}
+ * Visuals module. This adds a visual layer on top of shelves and records by mixin appropriate functions into the
+ * prototype of {@link module:shelves.Shelf} and {@link module:shelves.Record}.
+ *
  * @module visuals
  * @author Philipp Lucas
  */

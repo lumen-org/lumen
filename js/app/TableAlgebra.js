@@ -1,11 +1,10 @@
 /**
- * Created by philipp on 18/11/15.
- */
-
-/**
  * Table Algebra Expression module.
  *
  * This module allows to construct table algebra expressions from row and column shelves, as well as normalizing them to their normalized set form (NSF).
+ *
+ * @module TableAlgebra
+ * @author Philipp Lucas
  */
 define(['./Field', './shelves'], function (F, sh) {
   "use strict";
@@ -38,6 +37,7 @@ define(['./Field', './shelves'], function (F, sh) {
    * Constructor for a table algebra expression from a row or column shelf.
    * @constructor
    * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsages}.
+   * @alias module:TableAlgebra
    */
   var TableAlgebraExpr = function (shelf) {
     Array.call(this);

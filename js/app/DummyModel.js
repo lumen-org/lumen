@@ -1,8 +1,8 @@
 /**
  * "Dummy Model" module.
  *
+ * @module DummyModel
  * @author Philipp Lucas
- * @module
  */
 
 define(['./Model', './Field'], function (Model, F) {
@@ -16,6 +16,7 @@ define(['./Model', './Field'], function (Model, F) {
    * @param name Name for the model.
    * @returns {DummyModel}
    * @constructor
+   * @alias module:DummyModel
    */
   var DummyModel = function (name) {
     Model.call(this, name);
@@ -28,6 +29,7 @@ define(['./Model', './Field'], function (Model, F) {
    * Collection of generators of dummy models.
    */
   DummyModel.generator = {
+
     /**
      * generates a dummy model about census data
      * @returns {DummyModel}
@@ -145,8 +147,8 @@ define(['./Model', './Field'], function (Model, F) {
 
 
   /**
-   * @returns Returns a copy of this model.
    * @param {string} [name] - the new name of the model.
+   * @returns Returns a copy of this model.
    * @constructor
    */
   DummyModel.prototype.copy = function (name) {

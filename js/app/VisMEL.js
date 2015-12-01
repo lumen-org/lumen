@@ -1,7 +1,9 @@
 /**
- VisMEL query module.
-
- This module allows to construct VisMEL queries from shelves and sources, and defines utility functions on VisMEL queries.
+ * VisMEL query module.
+ *
+ * This module allows to construct VisMEL queries from shelves and sources, and defines utility functions on VisMEL queries.
+ *
+ * @module VisMEL
  */
 
 define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
@@ -94,6 +96,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    * @param shelf
    * @param source
    * @constructor
+   * @alias module:VisMEL
    */
   var VisMEL; VisMEL = function (shelf, source) {
     this.sources = _getSources(source);

@@ -1,6 +1,6 @@
 /**
  * This module does initializations that have to be done before everything else.
- * @module
+ * @module init
  */
 define([], function () {
   "use strict";

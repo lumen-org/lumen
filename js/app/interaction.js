@@ -1,5 +1,6 @@
 /**
  * Adds interactivity to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
+ *
  * @module interaction
  * @author Philipp Lucas
  */
@@ -9,7 +10,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   var logger = Logger.get('pl-interaction');
   logger.setLevel(Logger.WARN);
 
-  var OverlapEnum = Object.freeze({
+  var _OverlapEnum = Object.freeze({
     left: 'left',
     top: 'top',
     right: 'right',
@@ -31,8 +32,9 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   /**
    * Functions for calculating positions and overlaps of DOM elements.
    * @type {{center: Function, within: Function, overlap: Function}}
+   * @private
    */
-  var geom = {
+  var _geom = {
     /**
      * Returns the center as {x,y} of the first element of the $selection relative to the document
      * @param elem DOM element.
@@ -78,7 +80,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
       var o = $.extend({}, elem.getBoundingClientRect());
       o.width = o.right - o.left;
       o.height = o.bottom - o.top;
-      o.center = geom.center(elem);
+      o.center = _geom.center(elem);
 
       // calculate dimensions of inner rectangle
       var i;
@@ -104,18 +106,18 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
       }
 
       // check overlap
-      if (geom.within(relPos, [[o.left, o.top], [i.left, i.top], [i.left, i.bottom], [o.left, o.bottom]])) {
-        return OverlapEnum.left;
-      } else if (geom.within(relPos, [[o.left, o.top], [o.right, o.top], [i.right, i.top], [i.left, i.top]])) {
-        return OverlapEnum.top;
-      } else if (geom.within(relPos, [[i.right, i.top], [o.right, o.top], [o.right, o.bottom], [i.right, i.bottom]])) {
-        return OverlapEnum.right;
-      } else if (geom.within(relPos, [[i.left, i.bottom], [i.right, i.bottom], [o.right, o.bottom], [o.left, o.bottom]])) {
-        return OverlapEnum.bottom;
-      } else if (geom.within(relPos, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
-        return OverlapEnum.center;
+      if (_geom.within(relPos, [[o.left, o.top], [i.left, i.top], [i.left, i.bottom], [o.left, o.bottom]])) {
+        return _OverlapEnum.left;
+      } else if (_geom.within(relPos, [[o.left, o.top], [o.right, o.top], [i.right, i.top], [i.left, i.top]])) {
+        return _OverlapEnum.top;
+      } else if (_geom.within(relPos, [[i.right, i.top], [o.right, o.top], [o.right, o.bottom], [i.right, i.bottom]])) {
+        return _OverlapEnum.right;
+      } else if (_geom.within(relPos, [[i.left, i.bottom], [i.right, i.bottom], [o.right, o.bottom], [o.left, o.bottom]])) {
+        return _OverlapEnum.bottom;
+      } else if (_geom.within(relPos, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
+        return _OverlapEnum.center;
       } else {
-        return OverlapEnum.none;
+        return _OverlapEnum.none;
       }
     }
   };
@@ -126,7 +128,11 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
    */
   var _draggedElem = null;
 
-  var highlight = {
+  /**
+   * @type {{clear: _highlight.clear, set: _highlight.set}}
+   * @private
+   */
+  var _highlight = {
     /**
      * Clears the highlighting of the given droppable
      * @param elem
@@ -143,7 +149,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
      */
     set : function  (elem, overlap) {
       if (elem) {
-        highlight.clear(elem);
+        _highlight.clear(elem);
         $(elem).addClass('overlap-' + overlap);
       }
     }
@@ -174,8 +180,8 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   function onDragOverHandler (event) {
     var mousePos = [event.pageX, event.pageY];
     var dropElem = event.currentTarget;
-    var overlap = geom.overlap(mousePos, dropElem, _OverlapMargins);
-    highlight.set(dropElem, overlap);
+    var overlap = _geom.overlap(mousePos, dropElem, _OverlapMargins);
+    _highlight.set(dropElem, overlap);
     event.preventDefault();
   }
 
@@ -186,7 +192,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   function onDragLeaveHandler (event) {
     logger.debug('leaving');
     logger.debug(event.currentTarget);
-    highlight.clear(event.currentTarget);
+    _highlight.clear(event.currentTarget);
   }
 
   /**
@@ -202,14 +208,14 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
       var targetShelf = $curTarget.data(vis.AttachStringT.shelf);
       var target = ( $target.hasClass('shelf-list-item') ? $target.data(vis.AttachStringT.record) : targetShelf );
       var source= $(_draggedElem).data(vis.AttachStringT.record);
-      var overlap = geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
+      var overlap = _geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
       onDrop[targetShelf.type](target, source, overlap);
       _draggedElem = null;
       event.stopPropagation();
       event.preventDefault();
       onDrop.emit(onDrop.dropDoneEvent); // emit dropped event for outside world
     }
-    highlight.clear(event.currentTarget);
+    _highlight.clear(event.currentTarget);
   }
 
   /**
@@ -246,6 +252,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   /**
    * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
    * @param {jQuery} $elem
+   * @alias module:interaction.asRemoveElem
    */
   function asRemoveElem ($elem) {
     $elem.get(0).addEventListener('dragover', function (event) {
@@ -307,17 +314,17 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
     var newRecord = null;
     if (target instanceof sh.Record) {
       switch (overlap) {
-        case OverlapEnum.left:
-        case OverlapEnum.top:
+        case _OverlapEnum.left:
+        case _OverlapEnum.top:
           // insert before element
           newRecord = target.prepend(source);
           break;
-        case OverlapEnum.right:
-        case OverlapEnum.bottom:
+        case _OverlapEnum.right:
+        case _OverlapEnum.bottom:
           // insert after target element
           newRecord = target.append(source);
           break;
-        case OverlapEnum.center:
+        case _OverlapEnum.center:
           // replace
           target.removeVisual().remove();
           newRecord = target.replaceBy(source);
@@ -376,7 +383,10 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
     if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
 
-  // the dropDoneEvent is fired after completing a drop in onDrop
+  /**
+   * the dropDoneEvent is fired after completing a drop in onDrop
+   * @name module:interaction.onDrop.dropDoneEvent
+   */
   Object.defineProperty(onDrop, 'dropDoneEvent', {
     value: 'interaction.dropDoneEvent',
     enumerable: false

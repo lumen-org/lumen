@@ -1,19 +1,15 @@
 /**
  * Model module.
- *
- * This module describes the API to models and allows to train models from data.
- *
- * todo: a lot!
- *
- * So far this module only describes the API for querying a model, which must be implemented by all actual model classes.
- *
- * @module
+ * @module Model
  * @author Philipp Lucas
  */
 define(['./Field'], function (F) {
   "use strict";
 
   /**
+   * This module describes the API to models and allows to train models from data.
+   * So far this module only describes the API for querying a model, which must be implemented by all actual model classes.
+   * @alias module:Model
    * @constructor
    */
   var Model; Model = function (name) {
