@@ -25,5 +25,4 @@ require(['app/component-source'], function  (proto) {
 
   // start the app!
   proto.start();
-
 });

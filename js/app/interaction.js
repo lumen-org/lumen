@@ -3,14 +3,13 @@
  * @module interaction
  * @author Philipp Lucas
  */
-define(['app/shelves', 'app/visuals'], function (sh, vis) {
+define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   'use strict';
 
   var logger = Logger.get('pl-interaction');
   logger.setLevel(Logger.WARN);
 
   var OverlapEnum = Object.freeze({
-    // todo: change code to use enum
     left: 'left',
     top: 'top',
     right: 'right',
@@ -208,6 +207,7 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
       _draggedElem = null;
       event.stopPropagation();
       event.preventDefault();
+      onDrop.emit(onDrop.dropDoneEvent); // emit dropped event for outside world
     }
     highlight.clear(event.currentTarget);
   }
@@ -270,18 +270,20 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
 
   /**
    * Mixin to make make a shelf interactable. i.e. its records can be dragged and be dropped on and the shelf itself can be dropped on.
+   * Note that it also makes all current records of that shelf interactable.
    * @returns {sh.Records}
    */
   sh.Shelf.prototype.beInteractable = function () {
     _makeShelfDroppable(this.$visual);
     this.records.forEach(function (record) {
-      _makeRecordDraggable(record.$visual);
-      _makeRecordDroppable(record.$visual);
+      record.beInteractable();
     });
   };
 
   /**
    * Primary interaction handler. There is one handler for each value in {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
+   *
+   * Drops emit an {@link module:interaction.onDrop.dropDoneEvent} after a drop has been processed.
    *
    * @type {{}}
    * @alias module:interaction.onDrop
@@ -373,6 +375,14 @@ define(['app/shelves', 'app/visuals'], function (sh, vis) {
   onDrop[sh.ShelfTypeT.remove] = function (target, source, overlap) {
     if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
   };
+
+  // the dropDoneEvent is fired after completing a drop in onDrop
+  Object.defineProperty(onDrop, 'dropDoneEvent', {
+    value: 'interaction.dropDoneEvent',
+    enumerable: false
+  });
+
+  e.Emitter(onDrop);
 
   return {
     onDrop : onDrop,

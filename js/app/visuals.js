@@ -6,7 +6,7 @@
 define(['./Field', './shelves','app/utils'], function(F, s, util) {
   'use strict';
   var logger = Logger.get('pl-visuals');
-  logger.setLevel(Logger.DEBUG);
+  logger.setLevel(Logger.WARN);
 
   /**
    * Enum for possible layout types of shelves.
@@ -79,7 +79,7 @@ define(['./Field', './shelves','app/utils'], function(F, s, util) {
   }
 
   /**
-   * A mixin function that creates a visual representation (as HTML elements) of this shelf and its records.
+   * A mixin function that creates a visual representation (as HTML elements) of this shelf and all its records.
    * That representation is stored in an attribute $visual of the shelf.
    * @return {module:shelves.Shelf} The instance it was called on.
    * @alias module:shelves.Shelf.beVisual
@@ -131,7 +131,7 @@ define(['./Field', './shelves','app/utils'], function(F, s, util) {
     this.$visual.direction = opt.direction;
 
     // make all records visuals too
-    this.records.forEach(function(record) {record.beVisual();});
+    this.records.forEach(function(record){record.beVisual();});
     return this;
   };
 
@@ -156,10 +156,7 @@ define(['./Field', './shelves','app/utils'], function(F, s, util) {
    */
   s.Record.prototype.beVisual = function () {
     var visual = _before4Record(this);
-
-    visual.addClass('shelf-list-item')
-      .text(this.toPQLString());
-
+    visual.text(this.toString());
     return _after4Record(this);
   };
 
@@ -182,14 +179,18 @@ define(['./Field', './shelves','app/utils'], function(F, s, util) {
    */
   s.ColorRecord.prototype.beVisual = function () {
     var visual = _before4Record(this);
-
     visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
-    var attr = this.content;
-    var text = (attr instanceof F.FieldUsage ? attr.aggr + '(' + attr.name + ')': attr.name );
-    visual.append($('<span>'+ text +'</span>'));
-
+    visual.append($('<span>'+ this.toString() +'</span>'));
     return _after4Record(this);
   };
+
+  s.DimensionRecord.prototype.beVisual = function () {
+    var visual = _before4Record(this);
+    visual.text(this.content.name);
+    return _after4Record(this);
+  };
+
+  s.MeasureRecord.prototype.beVisual = s.DimensionRecord.prototype.beVisual;
 
   return {
     AttachStringT: AttachStringT,

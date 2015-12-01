@@ -15,7 +15,7 @@ define(['./utils'], function (utils) {
    */
   var FieldT = {
     Type: {string: 'string', num: 'numerical'},
-    Role: {measure: 'measure', dimension: 'dimension'}, //todo: ????
+    Role: {measure: 'measure', dimension: 'dimension'},
     Kind: {cont: 'continuous', discrete: 'discrete'}
   };
 
@@ -58,7 +58,7 @@ define(['./utils'], function (utils) {
     this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
     this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure);
     this.kind = utils.selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
-    this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);  //todo: this means: default domains to empty domain. is that clean?
+    this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);
   };
 
   /**
@@ -73,7 +73,7 @@ define(['./utils'], function (utils) {
   };
 
   /**
-   * A {FieldUsage} represents a certain configuration of a {Field} for use in a PQL expression.
+   * A {FieldUsage} represents a certain configuration of a {Field} for use in a VisMEL expression.
    * It details how the data of a certain dimension of a data source is mapped to some numerical output range.
    * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If  a {@link FieldUsage} is provided a copy of it will be created.
    * @param [args] Optional parameters for scale and aggregation function of the new {@link FieldUsage}. If set, it overrides the settings of base, in case base is a {@link FieldUsage}.
@@ -91,6 +91,12 @@ define(['./utils'], function (utils) {
   };
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;
+
+  FieldUsage.prototype.toString = function () {
+     return (this.role === FieldT.Role.measure ?
+      this.aggr + '(' + this.name + ')' :
+      this.name);
+  };
 
   return {
     FieldT : FieldT,

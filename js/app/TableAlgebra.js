@@ -79,6 +79,9 @@ define(['./Field', './shelves'], function (F, sh) {
     // e.g. sex -> [{value:"female", fieldUsage: sex}, {value:"male", fieldUsage: sex}]
     var domainExpr = [];
 
+    if (this.length === 0)
+      return [];
+
     this.forEach( function(fu) {
       if (fu instanceof F.FieldUsage) {
         // store field usage with each symbol
@@ -112,7 +115,6 @@ define(['./Field', './shelves'], function (F, sh) {
     });
 
     // only a array set of arrays should be left
-    // note: however, all sub arrays must also store their original fieldUsage
     // todo : test
 
     return domainExpr[0];
@@ -120,7 +122,6 @@ define(['./Field', './shelves'], function (F, sh) {
 
   /**
    * @returns {string} Returns a concise string representation...
-   * todo: maybe too concise. cannot really reconstruct the actual query from it...
    */
   TableAlgebraExpr.prototype.toString = function () {
     var str = "";
@@ -132,8 +133,6 @@ define(['./Field', './shelves'], function (F, sh) {
     });
     return str;
   };
-
-  //TableAlgebraExpr.prototype.toJSON = TableAlgebraExpr.prototype.toString;
 
   return TableAlgebraExpr;
 });

@@ -18,8 +18,6 @@ define(['./Field'], function(F) {
     var model = query.sources[0];
     var layout = query.layout;
 
-    //this.model = ... // todo: get actual model reference from somewhere
-
     // 1. normalize expressions
     this.rowNSF = layout.rows.normalize();
     this.colNSF = layout.cols.normalize();

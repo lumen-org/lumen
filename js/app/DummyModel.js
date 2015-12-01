@@ -8,8 +8,8 @@
 define(['./Model', './Field'], function (Model, F) {
   "use strict";
 
-  var logger = Logger.get('pl-DummyModel');
-  logger.setLevel(Logger.DEBUG);
+  /*var logger = Logger.get('pl-DummyModel');
+  logger.setLevel(Logger.DEBUG);*/
 
   /**
    * Creates and returns an empty dummy model with given name
@@ -92,15 +92,6 @@ define(['./Model', './Field'], function (Model, F) {
         nameField,
         cityField
       ];
-      /*myModel.fields = {
-        age: ageField,
-        weight: weightField,
-        income: incomeField,
-        children: childrenField,
-        sex: sexField,
-        name: nameField,
-        city: cityField
-      };*/
 
       return myModel;
     }
@@ -132,7 +123,11 @@ define(['./Model', './Field'], function (Model, F) {
     v.forEach( function(e) {
       // dummy model: don't do anything with value, but remove the marginalized field
       this.fields = _.without(this.fields, this.fields[ this._asIndex(e)] );
-    });
+    }, this);
+/*
+    for (var i=0; i< v.length; ++i) {
+      this.fields = _.without(this.fields, this.fields[ this._asIndex(v[i])] );
+    }*/
     return this;
   };
 
@@ -160,7 +155,7 @@ define(['./Model', './Field'], function (Model, F) {
     var myCopy = new DummyModel(name);
     myCopy.fields = this.fields.slice();
     return myCopy;
-  }
+  };
 
   return DummyModel;
 

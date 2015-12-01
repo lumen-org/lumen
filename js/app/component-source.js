@@ -3,24 +3,21 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/interaction', 'app/VisMEL', './ModelTable', 'lib/emitter'],
-  function (d3, dmodel, sh, F, vis, inter, VisMEL, ModelTable, e) {
+define(['./init', 'd3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/interaction', 'app/VisMEL', './ModelTable', 'lib/emitter'],
+  function (init, d3, dmodel, sh, F, vis, inter, VisMEL, ModelTable, e) {
     'use strict';
-    Logger.useDefaults();
+
+    var query = {},
+      modeltable = {};
 
     // define shelves
-    var shelf = {
-      dim :  new sh.DimensionShelf(),
-      meas : new sh.MeasureShelf(),
-      detail : new sh.DetailShelf(),
-      color : new sh.ColorShelf(),
-      filter : new sh.FilterShelf(),
-      shape : new sh.ShapeShelf(),
-      size : new sh.SizeShelf(),
-      row : new sh.RowShelf(),
-      column : new sh.ColumnShelf(),
-      remove : new sh.RemoveShelf()
-    };
+    var shelf = sh.construct();
+
+    // get 'dummy' model
+    var model = dmodel.generator.census();
+
+    // populate shelves
+    sh.populate(model, shelf.dim, shelf.meas);
 
     // make all shelves visual and interactable
     shelf.meas.beVisual({label: 'Measures'}).beInteractable();
@@ -48,61 +45,37 @@ define(['d3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/
     layout.append(shelf.row.$visual);
     layout.append(shelf.column.$visual);
 
-    // get 'dummy' model
-    var model = dmodel.generator.census();
-
-    // populate shelves
-    sh.populate(model, shelf.dim, shelf.meas);
-
-    // do some dummy drag and drops
+    // do some drag and drops to start with so VisMEL query
     inter.onDrop[sh.ShelfTypeT.color](shelf.color, shelf.meas.at(3));
     inter.onDrop[sh.ShelfTypeT.filter](shelf.filter, shelf.dim.at(2));
     inter.onDrop[sh.ShelfTypeT.detail](shelf.detail, shelf.dim.at(1));
     inter.onDrop[sh.ShelfTypeT.shape](shelf.shape, shelf.dim.at(0));
     inter.onDrop[sh.ShelfTypeT.size](shelf.size, shelf.meas.at(2));
-
     inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.dim.at(0));
     inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(0));
     inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.dim.at(1));
     inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.meas.at(1));
-
-    // todo: debug - it doesn't work I think
     inter.asRemoveElem($(document.body).find('main'));
 
-    function pqlString () {
-      return 'SELECT AS auto \n' +
-        (shelf.color.toPQLString() ? '\t' + shelf.color.toPQLString() : '') +
-        (shelf.detail.toPQLString()? '\t' + shelf.detail.toPQLString() : '') +
-        (shelf.shape.toPQLString() ? '\t' + shelf.shape.toPQLString() : '') +
-        (shelf.size.toPQLString() ? '\t' + shelf.size.toPQLString() : '') +
-        (shelf.column.toPQLString()? '\t' + shelf.column.toPQLString() : '') +
-        (shelf.row.toPQLString()? '\t' + shelf.row.toPQLString() : '') +
-        'FROM\n\tmyDataSource\n' +
-        shelf.filter.toPQLString();
+    function onUpdate () {
+      query = new VisMEL(shelf, model);
+      modeltable = new ModelTable(query);
+      $('#queryTextBox').text(
+        "layout:\n" + query.layout.toString() +
+        "\nlayers:\n" + query.layers.toString() );
     }
 
-    function printQuery () {
-      var myQuery = new VisMEL(shelf, model);
-      $('#pqlTextBox').text(
-        "layout:\n" + myQuery.layout.toString() +
-        "\nlayers:\n" + myQuery.layers.toString() );
-    }
+    inter.onDrop.on( inter.onDrop.dropDoneEvent, onUpdate);
 
-    // listen for GUI changes and trigger extraction of VisMEL queries
-    for (var key in shelf) { if (!shelf.hasOwnProperty(key)) continue;
-      // todo: fix it: it triggers multiple times for most/all drag&drop operations
-      shelf[key].on(sh.Shelf.ChangedEvent, printQuery);
-    }
-
-    // trigger intial PQL writeout
-    printQuery();
+    // trigger intial query write out
+    onUpdate();
 
     $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
-      var myQuery = new VisMEL(shelf, model);
-      var myModelTable = new ModelTable(myQuery);
-      console.log(myModelTable.baseModel.describe());
-      console.log(myModelTable.at[0][0].describe());
+      onUpdate();
+      //console.log(modeltable.baseModel.describe());
+      //console.log(modeltable.at[0][0].describe());
+      //eval('console.log("");'); // prevents auto-optimization of the closure
     });
 
     function myScript () {

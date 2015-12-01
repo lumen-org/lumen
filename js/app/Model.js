@@ -121,13 +121,16 @@ define(['./Field'], function (F) {
    * Returns a textual description of the model.
    * @returns {String}
    */
-  Model.prototype.describe = function (mode) {
+  Model.prototype.describe = function () {
     var desc = "-- Model '" + this.name + "' --\n" +
-        "consists of " + this.size() + " fields, as follows\n";
-      this.fields.forEach( function(field) {
-        desc += field.toString() + "\n";
-      });
-    return desc;
+      "consists of " + this.size() + " fields, as follows\n";
+
+    return this.fields.reduce(
+      function(str, field) {
+        return str + field.toString() + "\n";
+      },
+      desc
+    );
   };
 
   return Model;

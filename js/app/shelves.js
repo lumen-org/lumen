@@ -11,49 +11,8 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
 //  logger.setLevel(Logger.DEBUG);
 
   /**
-   * Small helper function - see usages
-   * @returns {string}
-   * @private
-   */
-  function _concatAsPQLString (records, delim) {
-    var pqlString = "";
-    records.forEach( function (r) {
-      pqlString += r.toPQLString() + delim;
-    });
-    return pqlString;
-  }
-
-  /**
-   * Small helper function - see usages
-   * @returns {string}
-   * @private
-   */
-  function _concatAsPQLString4RowCol (shelf) {
-    if(shelf.empty()) return [];
-    var pqlString = shelf.at(0).toPQLString();
-    for( var idx = 1; idx < shelf.length(); ++idx ) {
-      var op = '/';
-      if (shelf.at(idx).content.role === F.FieldT.Role.measure &&
-        shelf.at(idx - 1).content.role === F.FieldT.Role.measure) op = '+';
-      pqlString += op + shelf.at(idx).toPQLString();
-    }
-    return pqlString;
-  }
-
-  /**
-   * ColorMap class
-   * @type {{auto: Function}}
-   * @alias module:shelves.ColorMap
-   */
-  var ColorMap = {
-    auto: function (item) {
-      return "auto colormap :-)";
-    }
-  };
-
-
-  /**
    * Populates the given dimension and measure shelf with the field from the given model
+   * Note: it does not make added fields {@link beVisual} or {@link beInteractable}!
    * @param model
    * @param {DimensionShelf} dimShelf
    * @param {MeasureShelf} measShelf
@@ -63,10 +22,10 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
       function(field) {
         switch (field.role) {
           case F.FieldT.Role.measure:
-            measShelf.append(field).beVisual().beInteractable();
+            measShelf.append(field);
             break;
           case F.FieldT.Role.dimension:
-            dimShelf.append(field).beVisual().beInteractable();
+            dimShelf.append(field);
             break;
           default:
             throw new Error('invalid value in field.role');
@@ -196,6 +155,11 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     return(this.length() === 0);
   };
 
+  Shelf.prototype.toString = function () {
+    return this.records.reduce(function (val, elem) {
+      return val + elem.content.toString() + "\n";
+    }, "");
+  };
 
   /**
    * An {@link Record} has an attribute (i.e. a {@link Field} or {@link FieldUsage}) and is bound to a certain {@link Shelf}.
@@ -237,6 +201,11 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     return this.shelf.indexOf(this);
   };
 
+  Record.prototype.toString = function () {
+    return this.content.toString();
+  };
+
+
   /**
    * An {FieldRecord} is a {Record} that may only contain a {Field}.
    * @param obj {Field|Record} Either a {Field} (will be stored as is), or a {Record} (used to construct a new {Field}).
@@ -246,26 +215,11 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
    */
   var FieldRecord; FieldRecord = function (obj, shelf) {
     console.assert(obj instanceof Record || obj instanceof F.Field);
-    var field;
-    if (obj instanceof Record) {
-      field = obj.content;
-      // <<old
-      // todo: why do we create a new instance? why not use the existing one?
-      // create new instance of Field if not a Field is given
-      // obj = obj.content;
-      //field = new F.Field(obj.name, obj.dataSource, obj);
-      // old>>
-    } else {
-      // otherwise use the given Field
-      field = obj;
-    }
-    Record.call(this, field, shelf);
+    Record.call(this, (obj instanceof Record ? obj.content : obj), shelf);
   };
   FieldRecord.prototype = Object.create(Record.prototype);
   FieldRecord.prototype.constructor = FieldRecord;
-  FieldRecord.prototype.toPQLString = function () {
-    return this.content.name;
-  };
+
 
   /**
    * An {FUsageRecord} is a {Record} that may only contain a {FieldUsage}.
@@ -295,12 +249,7 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   FUsageRecord.prototype = Object.create(Record.prototype);
   FUsageRecord.prototype.constructor = FUsageRecord;
-  FUsageRecord.prototype.toPQLString = function () {
-    var fusage = this.content;
-    return (fusage.role === F.FieldT.Role.measure ?
-      fusage.aggr + '(' + fusage.name + ')' :
-      fusage.name);
-  };
+
 
   /**
    * Constructors of XXXRecord should always construct new content to store and never use the object that is passed in to the constructor.
@@ -319,7 +268,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
       obj = obj.content;
     }
     FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
-    this.colorMap = (obj instanceof ColorRecord ? obj.colorMap : ColorMap.auto(obj));
   };
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
   ColorRecord.prototype.constructor = ColorRecord;
@@ -335,7 +283,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    //FieldRecord.call(this, new F.Field(obj), shelf);
     FieldRecord.call(this, obj, shelf);
     if (this.content.role === F.FieldT.Role.measure) {
       this.content.role = F.FieldT.Role.dimension;
@@ -354,7 +301,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    //FieldRecord.call(this, new F.Field(obj), shelf);
     FieldRecord.call(this, obj, shelf);
     if (this.content.role === F.FieldT.Role.dimension) {
       this.content.role = F.FieldT.Role.measure;
@@ -424,7 +370,7 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   FilterRecord.prototype = Object.create(FUsageRecord.prototype);
   FilterRecord.prototype.constructor = FilterRecord;
-  FilterRecord.prototype.toPQLString = function () {
+  FilterRecord.prototype.toString = function () {
     return this.content.name + " IN ( ... )";
   };
 
@@ -477,24 +423,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   RowShelf.prototype = Object.create(Shelf.prototype);
   RowShelf.prototype.constructor = RowShelf;
-  RowShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString4RowCol(this);
-    return (pqlString ? pqlString + ' ON ROWS\n' : '');
-  };
-  /**
-   * @returns Returns the table algebra expression of shelf. Note however, that there is no brackets applied yet. It's simply an array of the records
-   * @untested
-   */
-  RowShelf.prototype.tableAlgebraExpr = function () {
-    var expr = [];
-    for( var idx = 0; idx < this.length(); ++idx ) {
-      if (idx !== 0) {
-        expr.push( (this.contentAt(idx).role === F.FieldT.Role.measure && this.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '/' );
-      }
-      expr.push( this.contentAt(idx) );
-    }
-    return expr;
-  };
 
   /**
    * @constructor
@@ -506,11 +434,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   ColumnShelf.prototype = Object.create(Shelf.prototype);
   ColumnShelf.prototype.constructor = ColumnShelf;
-  ColumnShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString4RowCol(this);
-    return (pqlString ? pqlString + ' ON COLUMNS\n' : '');
-  };
-  ColumnShelf.prototype.tableAlgebraExpr = RowShelf.prototype.tableAlgebraExpr;
 
   /**
    * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
@@ -523,10 +446,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   ColorShelf.prototype = Object.create(Shelf.prototype);
   ColorShelf.prototype.constructor = ColorShelf;
-  ColorShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON COLOR\n' : '');
-  };
 
   /**
    * @constructor
@@ -538,10 +457,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   ShapeShelf.prototype = Object.create(Shelf.prototype);
   ShapeShelf.prototype.constructor = ShapeShelf;
-  ShapeShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON SHAPE\n' : '');
-  };
 
   /**
    * @constructor
@@ -553,10 +468,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   SizeShelf.prototype = Object.create(Shelf.prototype);
   SizeShelf.prototype.constructor = SizeShelf;
-  SizeShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON SIZE\n' : '');
-  };
 
   /**
    * @constructor
@@ -568,10 +479,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   FilterShelf.prototype = Object.create(Shelf.prototype);
   FilterShelf.prototype.constructor = FilterShelf;
-  FilterShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString(this.records, '\n');
-    return (pqlString ? 'WHERE\n' + pqlString: '');
-  };
 
   /**
    * @constructor
@@ -583,10 +490,6 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   DetailShelf.prototype = Object.create(Shelf.prototype);
   DetailShelf.prototype.constructor = DetailShelf;
-  DetailShelf.prototype.toPQLString = function () {
-    var pqlString = _concatAsPQLString(this.records, ' ');
-    return (pqlString ? pqlString + ' ON DETAILS\n' : '');
-  };
 
   /**
    * @constructor
@@ -598,13 +501,27 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
   };
   RemoveShelf.prototype = Object.create(Shelf.prototype);
   RemoveShelf.prototype.constructor = RemoveShelf;
-  RemoveShelf.prototype.toPQLString = function () {
-    return '';
-  };
+
+  /**
+   * Returns a new set of types of shelves.
+   * @returns {{dim: (exports|module.exports|DimensionShelf|*), meas: (exports|module.exports|MeasureShelf|*), detail: (exports|module.exports|DetailShelf|*), color: (exports|module.exports|ColorShelf|*), filter: (exports|module.exports|FilterShelf|*), shape: (exports|module.exports|ShapeShelf|*), size: (exports|module.exports|SizeShelf|*), row: (exports|module.exports|RowShelf|*), column: (exports|module.exports|ColumnShelf|*), remove: (exports|module.exports|RemoveShelf|*)}}
+   */
+  function construct () {
+    return {
+      dim :  new DimensionShelf(),
+      meas : new MeasureShelf(),
+      detail : new DetailShelf(),
+      color : new ColorShelf(),
+      filter : new FilterShelf(),
+      shape : new ShapeShelf(),
+      size : new SizeShelf(),
+      row : new RowShelf(),
+      column : new ColumnShelf(),
+      remove : new RemoveShelf()
+    };
+  }
 
   return {
-    ColorMap: ColorMap,
-
     Shelf: Shelf,
     ShelfTypeT: ShelfTypeT,
 
@@ -632,6 +549,7 @@ define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
     ColumnShelf: ColumnShelf,
     RemoveShelf: RemoveShelf,
 
-    populate: populate
+    populate: populate,
+    construct:  construct
   };
 });

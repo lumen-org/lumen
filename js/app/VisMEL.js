@@ -112,8 +112,6 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       this.layout.cols.uniqueFields(),
       _.map(layer.aestetics.details, function(e){return e.base;}),
       _.map(layer.filters, function(e){return e.base;}),
-      // todo: make it cleaner: make only the aesthetics enumerable, such that you can do:
-      //.map(layer.aestetics, function(e){return e.base;}), ???
       [layer.aestetics.color.base, layer.aestetics.shape.base, layer.aestetics.size.base]
     );
     return usedVars.filter( function(e){return e instanceof F.Field;} );
