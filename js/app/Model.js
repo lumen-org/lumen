@@ -13,7 +13,6 @@ define(['./Field'], function (F) {
    * @constructor
    */
   var Model; Model = function (name) {
-    console.assert(_.isString(name));
     this.name = name;
     this.fields = []; // array of Fields
   };
@@ -67,7 +66,7 @@ define(['./Field'], function (F) {
    * @param idx
    */
   Model.prototype.isIndex = function(idx) {
-    return (_.isNumber(idx) && (this.size < idx) );
+    return (_.isNumber(idx) && (idx < this.size()) && (idx >= 0));
   };
 
   /**
@@ -120,7 +119,6 @@ define(['./Field'], function (F) {
   Model.prototype.describe = function () {
     var desc = "-- Model '" + this.name + "' --\n" +
       "consists of " + this.size() + " fields, as follows\n";
-
     return this.fields.reduce(
       function(str, field) {
         return str + field.toString() + "\n";

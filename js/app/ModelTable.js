@@ -40,12 +40,6 @@ define(['./Field'], function(F) {
     // 5. derive submodels for each cell
     // todo: speedup: dynamically decide whether it's faster to do get a row- or column-wise base-model
     // iterate on rows
-
-    /*var _conditioningCallback = function(model, symbol) {
-      if (symbol.role === F.FieldT.Kind.discrete)
-        model.condition(symbol.fieldUsage.base, symbol.value);
-    }*/
-
     this.at = new Array(this.rows);
     for (var rIdx=0; rIdx<this.rows; rIdx++) {
       // get basis of all models of this row

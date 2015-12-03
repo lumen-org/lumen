@@ -96,6 +96,10 @@ define(['./Model', './Field'], function (Model, F) {
       ];
 
       return myModel;
+    },
+
+    empty : function () {
+      return new DummyModel('empty');
     }
   };
 
@@ -107,8 +111,8 @@ define(['./Model', './Field'], function (Model, F) {
    * @returns {DummyModel}
    */
   DummyModel.prototype.condition = function (v, value) {
-    var idx = this._asIndex(v);
     // dummy model: don't do anything with value, but remove the conditioned field
+    var idx = this._asIndex(v);
     this.fields = _.without(this.fields, this.fields[idx]);
     return this;
   };
@@ -140,7 +144,8 @@ define(['./Model', './Field'], function (Model, F) {
    * @returns {Number}
    */
   DummyModel.prototype.density = function (values) {
-    console.assert(Array.isArray(values) && this.size() === values.length);
+    if (!(Array.isArray(values) && this.size() <= values.length))
+      throw new Error("invalid number of arguments");
     // todo: implement something smarter?
     return Math.random();
   };

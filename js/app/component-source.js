@@ -44,9 +44,14 @@ define(['./init', 'd3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visua
     var layout = $('#layout');
     layout.append(shelf.row.$visual);
     layout.append(shelf.column.$visual);
-
+    inter.asRemoveElem($(document.body).find('main'));
     // do some drag and drops to start with so VisMEL query
-    inter.onDrop[sh.ShelfTypeT.color](shelf.color, shelf.meas.at(3));
+
+
+    //inter.onDrop[sh.ShelfTypeT.color](shelf.color, shelf.dim.at(0));
+    //inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(3));
+    //inter.onDrop[sh.ShelfTypeT.size](shelf.size, shelf.meas.at(2));
+
     inter.onDrop[sh.ShelfTypeT.filter](shelf.filter, shelf.dim.at(2));
     inter.onDrop[sh.ShelfTypeT.detail](shelf.detail, shelf.dim.at(1));
     inter.onDrop[sh.ShelfTypeT.shape](shelf.shape, shelf.dim.at(0));
@@ -55,7 +60,9 @@ define(['./init', 'd3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visua
     inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(0));
     inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.dim.at(1));
     inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.meas.at(1));
-    inter.asRemoveElem($(document.body).find('main'));
+
+    //inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(2));
+    //inter.onDrop[sh.ShelfTypeT.col](shelf.column, shelf.meas.at(3));
 
     function onUpdate () {
       query = new VisMEL(shelf, model);
