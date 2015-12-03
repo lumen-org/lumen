@@ -49,7 +49,7 @@ define(['./Field'], function(F) {
           if (symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
             rowModel.condition(symbol.fieldUsage.base, symbol.value);
         }
-      );
+      ); // jshint ignore:line
       //iterate on cols for this row
       this.at[rIdx] = new Array(this.cols);
       for (var cIdx=0; cIdx<this.cols; cIdx++) {
@@ -59,7 +59,7 @@ define(['./Field'], function(F) {
             if (symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
               cell.condition(symbol.fieldUsage.base, symbol.value);
           }
-        );
+        ); // jshint ignore:line
         this.at[rIdx][cIdx] = cell;
       }
     }

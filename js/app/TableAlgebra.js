@@ -76,7 +76,7 @@ define(['./Field', './shelves'], function (F, sh) {
     // (i) a single symbol, i.e. the name of the field, if the field is quantitative
     // (ii) all possible values of the field , if the field is ordinal
     // Note that the symbols are stored under 'val', while a reference to the original FieldUsage is stored under 'fieldUsage'
-    // e.g. sex -> [{value:"female", fieldUsage: sex}, {value:"male", fieldUsage: sex}]
+    // e.g. sex -> [{value:"0", fieldUsage: sex}, {value:"1", fieldUsage: sex}]
     var domainExpr = [];
 
     if (this.length === 0)

@@ -100,14 +100,15 @@ define(['app/Model', 'app/DummyModel'], function (Model, DummyModel) {
     }
 
     for (var model in myModels) {
-      it('tests Model.marginalize', function() {
-        testMarginalizeField(model, [0]);
-        testMarginalizeField(model, [3]);
-        testMarginalizeField(model, [6]);
-        testMarginalizeField(model, [-3]);
-        testMarginalizeField(model, [Number.MAX_VALUE]);
-        testMarginalizeField(model, [0,3,6,-3,Number.MAX_VALUE]);
-      });
+      if (model.isPrototypeOf(myModels))
+        it('tests Model.marginalize', function() {
+          testMarginalizeField(model, [0]);
+          testMarginalizeField(model, [3]);
+          testMarginalizeField(model, [6]);
+          testMarginalizeField(model, [-3]);
+          testMarginalizeField(model, [Number.MAX_VALUE]);
+          testMarginalizeField(model, [0,3,6,-3,Number.MAX_VALUE]);
+        }); // jshint ignore:line
     }
 
     it('tests Model.density', function () {

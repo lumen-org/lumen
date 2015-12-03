@@ -5,11 +5,11 @@
  * @author Philipp Lucas
  */
 
-define(['./Model', './Field'], function (Model, F) {
+define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
   "use strict";
 
-  /*var logger = Logger.get('pl-DummyModel');
-  logger.setLevel(Logger.DEBUG);*/
+  var logger = Logger.get('pl-DummyModel');
+  logger.setLevel(Logger.DEBUG);
 
   /**
    * Creates and returns an empty dummy model with given name
@@ -112,8 +112,7 @@ define(['./Model', './Field'], function (Model, F) {
    */
   DummyModel.prototype.condition = function (v, value) {
     // dummy model: don't do anything with value, but remove the conditioned field
-    var idx = this._asIndex(v);
-    this.fields = _.without(this.fields, this.fields[idx]);
+    this.fields = _.without(this.fields, this.fields[this._asIndex(v)]);
     return this;
   };
 

@@ -5,7 +5,8 @@
  * @module visuals
  * @author Philipp Lucas
  */
-define(['./Field', './shelves','app/utils'], function(F, s, util) {
+define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, F, s) {
+
   'use strict';
   var logger = Logger.get('pl-visuals');
   logger.setLevel(Logger.WARN);

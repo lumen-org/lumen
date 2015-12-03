@@ -4,7 +4,7 @@
  * @module interaction
  * @author Philipp Lucas
  */
-define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
+define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Logger, sh, vis) {
   'use strict';
 
   var logger = Logger.get('pl-interaction');
@@ -22,7 +22,8 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   var _OverlapMargins = Object.freeze({
     type: 'rel',
     top: 0.3, left: 0.3,
-    bottom: 0.3, right: 0.3});
+    bottom: 0.3, right: 0.3
+  });
 
   function _isDimensionOrMeasureThingy (shelfOrRecord) {
     if (shelfOrRecord instanceof sh.Record) shelfOrRecord = shelfOrRecord.shelf;
@@ -287,6 +288,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
     });
   };
 
+
   /**
    * Primary interaction handler. There is one handler for each value in {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
    *
@@ -301,10 +303,10 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
     if (source.shelf.type === sh.ShelfTypeT.dimension || source.shelf.type === sh.ShelfTypeT.measure) {
       // from field shelf to field shelf-> move to target shelf
       var newRecord = target.append(source);
-      newRecord.beVisual().beInteractable();
+      _fix(newRecord).beVisual().beInteractable();
     }
     // in all cases do:
-    source.removeVisual().remove();
+    _fix(source).removeVisual().remove();
   };
 
   onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
@@ -326,7 +328,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
           break;
         case _OverlapEnum.center:
           // replace
-          target.removeVisual().remove();
+          _fix(target).removeVisual().remove();
           newRecord = target.replaceBy(source);
           break;
         default:
@@ -335,15 +337,15 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
     } else {
       newRecord = target.append(source);
     }
-    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
-    newRecord.beVisual().beInteractable();
+    if (!_isDimensionOrMeasureThingy(source)) _fix(source).removeVisual().remove();
+    _fix(newRecord).beVisual().beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.detail] = function (target, source, overlap) {
     var newRecord = target.append(source);
-    newRecord.beVisual().beInteractable();
+    _fix(newRecord).beVisual().beInteractable();
 
-    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
+    if (!_isDimensionOrMeasureThingy(source)) _fix(source).removeVisual().remove();
   };
 
   onDrop[sh.ShelfTypeT.column] = onDrop[sh.ShelfTypeT.row];
@@ -357,22 +359,22 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
     }
 
     if (target instanceof sh.Record) { // replace
-      target.removeVisual();
+      _fix(target).removeVisual();
       newRecord = target.replaceBy(source);
     } else { // append
       newRecord = target.append(source);
     }
 
-    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
-    newRecord.beVisual().beInteractable();
+    if (!_isDimensionOrMeasureThingy(source)) _fix(source).removeVisual().remove();
+    _fix(newRecord).beVisual().beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
     target = (target instanceof sh.Record ? target.shelf : target);
-    if (!target.empty()) target.at(0).removeVisual().remove();
+    if (!target.empty()) _fix(target.at(0)).removeVisual().remove();
     var newRecord = target.append(source);
-    newRecord.beVisual().beInteractable();
-    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
+    _fix(newRecord).beVisual().beInteractable();
+    if (!_isDimensionOrMeasureThingy(source)) _fix(source).removeVisual().remove();
   };
 
   onDrop[sh.ShelfTypeT.shape] = onDrop[sh.ShelfTypeT.color];
@@ -380,8 +382,30 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
   onDrop[sh.ShelfTypeT.size] = onDrop[sh.ShelfTypeT.color];
 
   onDrop[sh.ShelfTypeT.remove] = function (target, source, overlap) {
-    if (!_isDimensionOrMeasureThingy(source)) source.removeVisual().remove();
+    if (!_isDimensionOrMeasureThingy(source)) _fix(source).removeVisual().remove();
   };
+
+  onDrop.noVisualNoInteraction = false;
+
+  /**
+   * This is a hack to make it possible to use onDrop without the visual or interactable part, but just as a set of commands to add/move/remove fields from shelves.
+   * For this, it adds empty function stubs for that function that are called in onDrop for the visual/interactable part.
+   * In order to activate this "hack", set onDrop.noVisualNoInteraction to true.
+   * todo: make it nicer... looks like onDrop is mixing up things: logic of how fields on shelves can move around, and the actual interaction and visual part
+   * In oder
+   * @param arg The record to fix
+   * @returns {*} the modified record.
+   * @private
+   */
+  function _fix (arg) {
+    function returnsItself () { return this; } //jshint ignore: line
+    if(onDrop.noVisualNoInteraction) {
+      arg.removeVisual = returnsItself;
+      arg.beVisual = returnsItself;
+      arg.beInteractable = returnsItself;
+    }
+    return arg;
+  }
 
   /**
    * the dropDoneEvent is fired after completing a drop in onDrop
@@ -396,6 +420,7 @@ define(['app/shelves', 'app/visuals', 'lib/emitter'], function (sh, vis, e) {
 
   return {
     onDrop : onDrop,
+    //onDropNVI: onDropNVI,
     asRemoveElem : asRemoveElem
   };
 });

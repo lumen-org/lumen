@@ -27,7 +27,9 @@
   "jshintConfig": {
     "globals": {
       "interact": false,
-      "Logger": false
+      "Logger": false,
+      "jasmine": false,
+      "expect": false
     },
     "unused": "vars"
   }

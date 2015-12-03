@@ -4,11 +4,11 @@
  * @module shelves
  * @author Philipp Lucas
  */
-define(['./utils', './Field', 'lib/emitter'], function(utils, F, E) {
+define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger, utils, F) {
   'use strict';
 
-//  var logger = Logger.get('pl-shelves');
-//  logger.setLevel(Logger.DEBUG);
+  var logger = Logger.get('pl-shelves');
+  logger.setLevel(Logger.DEBUG);
 
   /**
    * Populates the given dimension and measure shelf with the field from the given model

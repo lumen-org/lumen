@@ -3,8 +3,8 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['./init', 'd3', 'app/DummyModel', 'app/shelves', 'app/Field', 'app/visuals', 'app/interaction', 'app/VisMEL', './ModelTable', 'lib/emitter'],
-  function (init, d3, dmodel, sh, F, vis, inter, VisMEL, ModelTable, e) {
+define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './ModelTable'],
+  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, ModelTable) {
     'use strict';
 
     var query = {},

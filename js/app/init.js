@@ -2,7 +2,7 @@
  * This module does initializations that have to be done before everything else.
  * @module init
  */
-define([], function () {
+define(['lib/logger'], function (Logger) {
   "use strict";
 
   // init the logger object.
