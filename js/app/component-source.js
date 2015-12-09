@@ -3,12 +3,13 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './ModelTable'],
-  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, ModelTable) {
+define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './ModelTable', './ResultTable'],
+  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, ModelTable, ResultTable) {
     'use strict';
 
     var query = {},
-      modeltable = {};
+      modelTable = {},
+      resultTable = {};
 
     // define shelves
     var shelf = sh.construct();
@@ -47,32 +48,29 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     inter.asRemoveElem($(document.body).find('main'));
     // do some drag and drops to start with so VisMEL query
 
+    inter.onDrop(shelf.color, shelf.dim.at(0));
+    inter.onDrop(shelf.row, shelf.meas.at(0));
+    inter.onDrop(shelf.column, shelf.meas.at(1));
 
-    //inter.onDrop[sh.ShelfTypeT.color](shelf.color, shelf.dim.at(0));
-    //inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(3));
-    //inter.onDrop[sh.ShelfTypeT.size](shelf.size, shelf.meas.at(2));
-
-    inter.onDrop[sh.ShelfTypeT.filter](shelf.filter, shelf.dim.at(2));
-    inter.onDrop[sh.ShelfTypeT.detail](shelf.detail, shelf.dim.at(1));
-    inter.onDrop[sh.ShelfTypeT.shape](shelf.shape, shelf.dim.at(0));
-    inter.onDrop[sh.ShelfTypeT.size](shelf.size, shelf.meas.at(2));
-    inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.dim.at(0));
-    inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(0));
-    inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.dim.at(1));
-    inter.onDrop[sh.ShelfTypeT.column](shelf.column, shelf.meas.at(1));
-
-    //inter.onDrop[sh.ShelfTypeT.row](shelf.row, shelf.meas.at(2));
-    //inter.onDrop[sh.ShelfTypeT.col](shelf.column, shelf.meas.at(3));
+    //inter.onDrop(shelf.filter, shelf.dim.at(2));
+    //inter.onDrop(shelf.detail, shelf.dim.at(1));
+    //inter.onDrop(shelf.shape, shelf.dim.at(0));
+    //inter.onDrop(shelf.size, shelf.meas.at(2));
+    //inter.onDrop(shelf.row, shelf.dim.at(0));
+    //inter.onDrop(shelf.row, shelf.meas.at(0));
+    //inter.onDrop(shelf.column, shelf.dim.at(1));
+    //inter.onDrop(shelf.column, shelf.meas.at(1));
 
     function onUpdate () {
       query = new VisMEL(shelf, model);
-      modeltable = new ModelTable(query);
+      modelTable = new ModelTable(query);
+      resultTable =new ResultTable(modelTable);
       $('#queryTextBox').text(
         "layout:\n" + query.layout.toString() +
         "\nlayers:\n" + query.layers.toString() );
     }
 
-    inter.onDrop.on( inter.onDrop.dropDoneEvent, onUpdate);
+    inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
 
     // trigger intial query write out
     onUpdate();
@@ -80,8 +78,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
       onUpdate();
-      //console.log(modeltable.baseModel.describe());
-      //console.log(modeltable.at[0][0].describe());
+      //console.log(modelTable.baseModel.describe());
+      //console.log(modelTable.at[0][0].describe());
       //eval('console.log("");'); // prevents auto-optimization of the closure
     });
 

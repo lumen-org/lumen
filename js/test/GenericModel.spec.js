@@ -69,6 +69,16 @@ define(['app/Model', 'app/DummyModel'], function (Model, DummyModel) {
       expect(copy2.name).toBe('another name');
     });
 
+    it('tests the dimensions() function', function () {
+      expect(modelEmpty.dimensions().length).toBe(0);
+      var dims = model1.dimensions();
+      expect(dims.length).toBe(3);
+      expect(dims.some(function(field) {return field.name === 'sex';})).toBe(true);
+      expect(dims.some(function(field) {return field.name === 'name';})).toBe(true);
+      expect(dims.some(function(field) {return field.name === 'city';})).toBe(true);
+      expect(dims.some(function(field) {return field.name === 'sx';})).toBe(false);
+    });
+
   });
 
   describe('Tests for each subclass of functions of Model', function () {

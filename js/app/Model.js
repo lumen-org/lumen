@@ -54,7 +54,7 @@ define(['./Field'], function (F) {
   };
 
   /**
-   * Returns the number of free fields in the model.
+   * Returns the number of fields in the model.
    * @returns {*}
    */
   Model.prototype.size = function () {
@@ -125,6 +125,17 @@ define(['./Field'], function (F) {
       },
       desc
     );
+  };
+
+  /**
+   * Returns an array of all {@link F.Field}s of this model, which are dimensions.
+   */
+  Model.prototype.dimensions = function () {
+    return this.fields.filter(function (field) {return field.role === F.FieldT.Role.dimension;});
+  };
+
+  Model.prototype.measures = function () {
+    return this.fields.filter(function (field) {return field.role === F.FieldT.Role.measure;});
   };
 
   return Model;

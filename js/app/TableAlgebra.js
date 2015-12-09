@@ -13,11 +13,11 @@ define(['./Field', './shelves'], function (F, sh) {
    * Returns the cartesian product of the two arrays a and b
    */
   function _cross (a, b) {
-    console.assert(a instanceof Array && b instanceof Array);
+    if( !(a instanceof Array && b instanceof Array) ) throw new TypeError();
     var ret = [];
     a.forEach( function(ea) {
       b.forEach( function(eb) {
-        ret.push([ea,eb]);
+        ret.push(_.flatten([ea,eb]));
       });
     });
     return ret;
@@ -27,7 +27,8 @@ define(['./Field', './shelves'], function (F, sh) {
    * Returns the concatenation of the two array a and b.
    */
   function _plus (a, b) {
-    console.assert(a instanceof Array && b instanceof Array);
+    if( !(a instanceof Array && b instanceof Array) ) throw new TypeError();
+    // todo test
     return a.concat(b);
     //alternative: return [...this, ...expr];
   }
@@ -40,8 +41,8 @@ define(['./Field', './shelves'], function (F, sh) {
    * @alias module:TableAlgebra
    */
   var TableAlgebraExpr = function (shelf) {
+    if( !(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf)) throw new TypeError();
     Array.call(this);
-    console.assert(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf);
     for( var idx = 0; idx < shelf.length(); ++idx ) {
       if (idx !== 0)
         this.push( (shelf.contentAt(idx).role === F.FieldT.Role.measure &&
@@ -54,15 +55,19 @@ define(['./Field', './shelves'], function (F, sh) {
 
 
   /**
-   * Returns the set of unique {@link Field s} used this table algebra expression.
-   * Note that unique-ness is decided on the level of Field not FieldUsages.
+   * Returns the set of (unique) {@link FieldUsage}s used this table algebra expression.
    */
-  TableAlgebraExpr.prototype.uniqueFields = function () {
-    return _.chain(this)
-      .filter(function(e){return (e instanceof F.FieldUsage);})
-      .map(function(e){return e.base;})
-      .uniq()
-      .value();
+  TableAlgebraExpr.prototype.fieldUsages = function () {
+    return _.uniq( _.filter(this, function(e){return (e instanceof F.FieldUsage);}) );
+  };
+
+
+  /**
+   * Returns the set of (unique) {@link Field}s used this table algebra expression.
+   * Note that uniqueness is decided (and returned) on the level of Field not FieldUsages.
+   */
+  TableAlgebraExpr.prototype.fields = function () {
+    return _.uniq( _.map(this.fieldUsages(), function(e){return e.base;}) );
   };
 
 
@@ -76,7 +81,17 @@ define(['./Field', './shelves'], function (F, sh) {
     // (i) a single symbol, i.e. the name of the field, if the field is quantitative
     // (ii) all possible values of the field , if the field is ordinal
     // Note that the symbols are stored under 'val', while a reference to the original FieldUsage is stored under 'fieldUsage'
-    // e.g. sex -> [{value:"0", fieldUsage: sex}, {value:"1", fieldUsage: sex}]
+
+    // also note the way its encapsulated in three array levels:
+    // level 1: expression level: each element is an operand / operator
+    // level 2: element level: each element is a combination of domain values / symbols
+    // level 3: value level: each element is a certain domain value / symbol of a fieldUsage
+    // note: at the end of the normalization, there is naturally only one element at the expression level left
+
+    // example 1: [sex]
+    //  -> [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]] ]
+    // example 2: [sex, *, avg(age)]
+    //  -> [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]], *, [[{value: "age", fieldUsage: age}]] ]
     var domainExpr = [];
 
     if (this.length === 0)
@@ -87,9 +102,9 @@ define(['./Field', './shelves'], function (F, sh) {
         // store field usage with each symbol
         var operand = [];
         if (fu.kind === F.FieldT.Kind.discrete)
-          fu.domain.forEach(function (val, idx) { operand[idx] = {value : val, fieldUsage : fu};} );
+          fu.domain.forEach( function (val, idx) { operand[idx] = [{value : val, fieldUsage : fu}];} );
         else
-          operand = [{value: fu.name, fieldUsage : fu}];
+          operand = [[{value: fu.name, fieldUsage : fu}]];
         domainExpr.push(operand);
       } else {
         // elem is an operator
@@ -98,6 +113,12 @@ define(['./Field', './shelves'], function (F, sh) {
     });
 
     // 2. evaluate expression. that results in a single ordered set of arrays
+    // example 1 cont'd: [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]] ]
+    //  -> stays the same
+    // example 2 cont'd: [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]], *, [[{value: "age", fieldUsage: age}]] ]
+    //  -> [[ [{value:"0", fieldUsage: sex}, {value: "age", fieldUsage: age}],
+    //        [{value:"1", fieldUsage: sex}, {value: "age", fieldUsage: age}] ]]
+
     //   2a) evaluate all "*"
     domainExpr.forEach( function(elem, idx) {
       if (elem === "*") {
@@ -114,8 +135,10 @@ define(['./Field', './shelves'], function (F, sh) {
       }
     });
 
-    // only a array set of arrays should be left
-    // todo : test
+    // an array of arrays should be left
+    if (domainExpr.length !== 1) {
+      throw new Error("after normalization there must be only 1 element left at expression level.");
+    }
 
     return domainExpr[0];
   };

@@ -143,12 +143,20 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
    * @returns {Number}
    */
   DummyModel.prototype.density = function (values) {
-    if (!(Array.isArray(values) && this.size() <= values.length))
+    if (! (Array.isArray(values) && this.size() <= values.length) )
       throw new Error("invalid number of arguments");
     // todo: implement something smarter?
     return Math.random();
   };
 
+
+  /**
+   *
+   */
+  DummyModel.prototype.aggregate = DummyModel.prototype.density;
+//  function () {
+//    return this.density(arguments);
+//  };
 
   /**
    * @param {string} [name] - the new name of the model.

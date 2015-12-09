@@ -106,13 +106,13 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
 
 
   /**
-   * Returns the set of variables (i.e. {@link Field} that are used in this VisMEL query.
+   * Returns the set of (unique) variables (i.e. {@link Field} that are used in this VisMEL query.
    */
-  VisMEL.prototype.allUsedVariables = function () {
+  VisMEL.prototype.fields = function () {
     var layer = this.layers[0];
     var usedVars = _.union(
-      this.layout.rows.uniqueFields(),
-      this.layout.cols.uniqueFields(),
+      this.layout.rows.fields(),
+      this.layout.cols.fields(),
       _.map(layer.aestetics.details, function(e){return e.base;}),
       _.map(layer.filters, function(e){return e.base;}),
       [layer.aestetics.color.base, layer.aestetics.shape.base, layer.aestetics.size.base]
@@ -120,6 +120,46 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     return usedVars.filter( function(e){return e instanceof F.Field;} );
   };
 
+  /**
+   * @returns Returns the set of {@link FieldUsage}s of this query.
+   */
+  VisMEL.prototype.fieldUsages = function () {
+    var layer = this.layers[0];
+    var usedVars = _.union(
+      this.layout.rows.fieldUsages(),
+      this.layout.cols.fieldUsages(),
+      layer.aestetics.details,
+      [ layer.filters, layer.aestetics.color.base, layer.aestetics.shape.base, layer.aestetics.size.base ]
+    );
+    return usedVars.filter( function(e){return e instanceof F.Field;} );
+  };
+
+
+  /**
+   * @returns Returns the set of {@link FieldUsage}s of this query that are measures.
+   */
+  VisMEL.prototype.measureUsages = function () {
+    return this.fieldUsages()
+      .filter( function(field) {return field.role === F.FieldT.Role.measure;});
+  };
+
+  /**
+   * Returns the set of all {@link FieldUsage}s of this query, that:
+   *  (1) are dimensions, and
+   *  (2) marks per pane are splitted by
+   * i.e.: all dimension usages on color, shape, size, orientation, details, ... but not on rows, columns, filters.
+   */
+  VisMEL.prototype.splittingDimensionUsages = function () {
+    var layer = this.layers[0];
+    return _.filter(
+      _.union(
+        layer.aestetics.details,
+        [ layer.aestetics.color, layer.aestetics.shape, layer.aestetics.size]
+      ),
+      function (e) {
+        return e instanceof F.FieldUsage && e.role === F.FieldT.Role.dimension;
+      });
+  };
 
   // delimiter for JSON conversion
   var _delim = '\t';

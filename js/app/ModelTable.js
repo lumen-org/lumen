@@ -16,6 +16,8 @@ define(['./Field'], function(F) {
    */
   var ModelTable = function (query) {
 
+    this.query = query;
+
     // shortcuts
     // todo: extend: only 1 layer and 1 source is supported for now
     var model = query.sources[0];
@@ -31,9 +33,11 @@ define(['./Field'], function(F) {
 
     // 2. compile set of unique Fields (not field Usages) that are used in a VisMEL query.
     // -> Fields not part of that set can be marginalized out
-    var usedVariables = query.allUsedVariables();
+    var usedVariables = query.fields();
 
-    // 3. filters on independent variables, and
+    // 3. apply filters on independent variables
+    // todo: implement
+
     // 4. derive base model
     this.baseModel = model.marginalize( _.difference(model.fields, usedVariables) ); // todo: implement filtering
 

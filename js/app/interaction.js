@@ -210,11 +210,10 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
       var target = ( $target.hasClass('shelf-list-item') ? $target.data(vis.AttachStringT.record) : targetShelf );
       var source= $(_draggedElem).data(vis.AttachStringT.record);
       var overlap = _geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
-      onDrop[targetShelf.type](target, source, overlap);
+      onDrop(target, source, overlap);
       _draggedElem = null;
       event.stopPropagation();
       event.preventDefault();
-      onDrop.emit(onDrop.dropDoneEvent); // emit dropped event for outside world
     }
     _highlight.clear(event.currentTarget);
   }
@@ -260,7 +259,7 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
       event.preventDefault();
     });
     $elem.get(0).addEventListener('drop', function (event) {
-      onDrop[sh.ShelfTypeT.remove] ({}, $(_draggedElem).data(vis.AttachStringT.record), {});
+      onDrop(new sh.RemoveShelf(), $(_draggedElem).data(vis.AttachStringT.record), {});
       _draggedElem = null;
       event.stopPropagation();
     });
@@ -297,7 +296,18 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
    * @type {{}}
    * @alias module:interaction.onDrop
    */
-  var onDrop = {};
+  //var onDrop = {};
+
+  var onDrop = function (target, source, overlap) {
+    // delegate to correct handler
+    if (target instanceof sh.Record)
+      onDrop[target.shelf.type](target, source, overlap);
+    else if (target instanceof sh.Shelf)
+      onDrop[target.type](target, source, overlap);
+    else
+      throw new TypeError('wrong type for parameter target');
+    onDrop.emit(onDrop.dropDoneEvent); // emit dropped event for outside world
+  };
 
   onDrop[sh.ShelfTypeT.dimension] = function (target, source, overlap) {
     if (source.shelf.type === sh.ShelfTypeT.dimension || source.shelf.type === sh.ShelfTypeT.measure) {
@@ -386,6 +396,8 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
   };
 
   onDrop.noVisualNoInteraction = false;
+
+
 
   /**
    * This is a hack to make it possible to use onDrop without the visual or interactable part, but just as a set of commands to add/move/remove fields from shelves.
