@@ -26,8 +26,6 @@ define(['./ModelTable'], function (ModelTable) {
    * naive implementation
    */
   function _join(a, b) {
-
-    // todo: what happens if a and/or be are empty?
     var aCols = a.length,
       bCols = b.length,
       cols = aCols + bCols;
@@ -38,8 +36,6 @@ define(['./ModelTable'], function (ModelTable) {
     var aRows = a[0].length,
       bRows = b[0].length,
       rows = aRows * bRows;
-
-    if (aRows !== bRows) throw new Error("a and b have different number of rows");
 
     var rowIdx, colIdx, aRowIdx, bRowIdx;
     var column, aVal;
@@ -96,9 +92,7 @@ define(['./ModelTable'], function (ModelTable) {
         // todo: how to do that!?
         // actually I need for each aggregation (be it on multiple fields or not) a separate model!
         column[i] = model.aggregate(
-
 //          todo continue here
-
           new Array(model.size())
         );
       }

@@ -211,7 +211,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     //str += JSON.stringify(layout, replacer.layout, _delim);
     //str += JSON.stringify(layer, replacer.layer, _delim);
     //todo: hacky...!?
-    // problem is: JSON.stringify returns
+    // problem is: JSON.stringify returns a string that contains the escape characters in front of "special character"
     return str.replace(/\\n/gi,'\n')
       .replace(/\\t/gi,'\t')
       .replace(/\\"/gi,'"')

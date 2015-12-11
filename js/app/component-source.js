@@ -90,12 +90,12 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
 
        var d3box = d3.select('#d3box');
 
-       var xScale = d3.scale.linear()
+       var x = d3.scale.linear()
        .domain([0, d3.max(dataX)])
        //.range([0, parseInt(d3box.style("width"),10)]);
        .range([0, 100]);
 
-       var yScale = d3.scale.linear()
+       var y = d3.scale.linear()
        .domain([0, d3.max(dataY)])
        .range([0, 100]);
 
@@ -106,7 +106,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
        .enter().append('div')
        .classed("d3bar", true)
        .style("height", "20px")
-       .style("width", function(d) {return xScale(d)+"%";})
+       .style("width", function(d) {return x(d)+"%";})
        .text( function(d){return d;});
        //debugger;
        */
