@@ -17,9 +17,46 @@
             font-family: sans-serif;
             font-size: 11px;
         }
+
+        .tick line {
+            opacity: 0.1;
+        }
+
+        #tooltip {
+            position: absolute;
+            width: 200px;
+            height: auto;
+            padding: 10px;
+            background-color: lightgrey;
+            opacity: 0.6;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+        }
+
+        #tooltip.hidden {
+            display: none;
+        }
+
+        #tooltip p {
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 16px;
+            line-height: 20px;
+        }
     </style>
 </head>
 <body>
-    <script src="progress.js"></script>
+<div id="tooltip" class="hidden">
+    <p><strong>Daphne</strong></p>
+    <p><span id="daphne">100</span>%</p>
+    <p><strong>Philipp</strong></p>
+    <p><span id="philipp">100</span>%</p>
+</div>
+<script src="progress.js"></script>
 </body>
 </html>
