@@ -1,4 +1,13 @@
 /**
+ * meaning of css classes:
+ *
+ *  - .mark: super class of <g> elements that contain marks to represent data
+ *  - .point: class of <g> elements that contain one-dimensional  "pointy" marks to represent data
+ *  - .line: class of <g> elements that contain two-dimensional "line-y" marks
+ *  - .shape: class of a svg element that actually is the geometric shape representating a .point .mark. This may be a circle, a rect or other svg elements
+ */
+
+/**
  * Initialize a pane for charting.
  */
 function initPane () {
@@ -28,7 +37,7 @@ function initPane () {
     x : -pane.padding.left,
     y : -pane.padding.top,
     width: pane.width + pane.padding.left + pane.padding.right,
-    height: pane.height+ pane.padding.top + pane.padding.bottom,});
+    height: pane.height+ pane.padding.top + pane.padding.bottom});
 
   // add axis
   pane.axis = {};
@@ -76,6 +85,29 @@ function onSvgChanged () {
   scale.radius.range([5,20]);
 }
 
+
+/**
+ * @param elem A D3 selection of a DOM element
+ * @returns {*} The center of the DOM element
+ */
+function getCenter (elem) {
+  "use strict";
+  var name = elem[0][0].nodeName.toLowerCase();
+  if (name === 'rect')
+    return {
+      x: parseFloat(elem.attr("x")) + parseFloat(elem.attr("width")) / 2,
+      y: parseFloat(elem.attr("y")) + parseFloat(elem.attr("height")) / 2
+    };
+  else if (name === 'circle')
+    return {
+      x: parseFloat(elem.attr("cx")),
+      y: parseFloat(elem.attr("cy"))
+    };
+  else
+    throw new Error("unknown elem class.");
+}
+
+
 /**
  * Adpot to changed data
  * @param dataset
@@ -84,50 +116,26 @@ function onDataChanged (dataset) {
   "use strict";
 
   function onMouseOver(d) {
-    var mark = d3.select(this);
-    mark.select("circle")
-      .attr("fill", "orange");
-    mark.append("textArea")
-      .text(attrMappers.hoverText)
-      .attr("text-anchor", "middle")
-      .attr("x", attrMappers.x)
-      .attr("y", attrMappers.y)
-      //.attr("font-family", "sans-serif")
-      .attr("font-size", "15px")
-      .attr("clip-path", "url(#canvasClipPath)")
-      .style("pointer-events", "none");
-
-    //et this bar's x/y values, then augment for the tooltip
-    var xPosition = parseFloat(mark.attr("x")); // + xScale.rangeBand() / 2;
-    //var yPosition = parseFloat(d3.select(this).attr("y")) / 2 + h / 2;
-    var yPosition = pane.height / 2;
-
-//Update the tooltip position and value
+    var shape = d3.select(this).attr("fill", "orange");
+    var c = getCenter(shape);
     var tooltip = d3.select("#tooltip")
-      .style("left", xPosition + "px")
-      .style("top", yPosition + "px");
-    tooltip.select("#daphne").text(d.daphne);
-    tooltip.select("#philipp").text(d.philipp);
-
-//Show the tooltip
+      .style("left", c.x + "px")
+      .style("top", c.y + "px");
+    var daphne = (d.daphne ? d.daphne : d.pages.toString());
+    var philipp = (d.philipp ? d.philipp : "--");
+    tooltip.select("#daphne").text(daphne);
+    tooltip.select("#philipp").text(philipp);
     d3.select("#tooltip").classed("hidden", false);
-
   }
 
   function onMouseOut (d) {
-    var mark = d3.select(this);
-    mark.select("circle")
-      .attr("fill", attrMappers.color(d));
-    mark.select("textArea")
-      .remove();
-
+    d3.select(this).attr("fill", attrMappers.color(d));
     d3.select("#tooltip").classed("hidden", true);
   }
 
   var mapperGenerator = {
     pred : function(fct) {
       return function (d, i) {
-        //problem : i is always 0 !? something about "this" ?
         //if (i <=0 || i >= dataset.length) return 1; // todo: hacky!!
         if (i===0) i=1;
         return fct(dataset[i-1], i-1);
@@ -166,6 +174,19 @@ function onDataChanged (dataset) {
   attrMappers.predX = mapperGenerator.pred(attrMappers.x);
   attrMappers.predY = mapperGenerator.pred(attrMappers.y);
 
+  var elemMapper = {
+    weekend: function (d) {
+      var type = "",
+        day = d.date.getDay();
+      if (day === 1 || day === 7)  // 1 is sunday, 7 is saturday
+        type = "circle";
+      else
+        type = "rect";
+      return document.createElementNS("http://www.w3.org/2000/svg", type);
+    }
+
+  };
+
   // calculate virtual fields
   var prev = 0;
   for (var i=0; i<dataset.length; ++i) {
@@ -183,47 +204,63 @@ function onDataChanged (dataset) {
   scale.y.domain([0,extent.pages[1]]);
   scale.radius.domain([0,extent.diff[1]]);
 
-  // update / remove / add marks
-
+  /// update / remove / add marks
   // store update selection
+  var lines = pane.lines.selectAll(".line").data(dataset);
   var points = pane.points.selectAll(".point").data(dataset);
-  var lines = pane.lines.selectAll(".lines").data(dataset);
 
   // add new elements
-  var newPoints = points.enter().append("g").classed("point mark", true);
+  // note: they are grouped as to allow z-level control of how they are drawn on the canvas
   var newLines = lines.enter().append("g").classed("line mark", true);
-
-  newPoints
-    // handles hovering
-    .on('mouseover', onMouseOver)
-    .on('mouseout', onMouseOut);
+  var newPoints = points.enter().append("g").classed("point mark", true);
 
   newLines
     .append("line")
     .attr("clip-path", "url(#canvasClipPath)");
 
+  // append element based on weekday
   newPoints
-    .append("circle")
-    .attr("clip-path", "url(#canvasClipPath)");
+    .append(elemMapper.weekend)
+    .classed("shape", true)
+    .attr("clip-path", "url(#canvasClipPath)")
+    .on('mouseover', onMouseOver)
+    .on('mouseout', onMouseOut);
 
   // the just appended elements are now part of the update selection!
-  // -> then update all remaining the same way
-  points.select("circle")
+  // -> then update all the same way
+  // todo: improve: however (and that is ugly) I need different updates based on the svg element representing a data point...
+  points.select(".shape") // select actual graphical object
     //.transition()
-    .attr("cx", attrMappers.x)
-    .attr("cy", attrMappers.y)
-    .attr("r", attrMappers.size)
-    .attr("fill", attrMappers.color)
-    .attr("stroke", attrMappers.stroke)
-    .attr("stroke-width", attrMappers.strokeWidth);
+    .each(
+      function (d, i) {
+        var nodeName = this.nodeName.toLowerCase();
+        var sel = d3.select(this);
+        var x = attrMappers.x(d, i);
+        var y = attrMappers.y(d, i);
+        var size = attrMappers.size(d, i);
 
-  lines.select("line")
+        if (nodeName === "rect")
+          sel.attr("x", x - size/2)
+            .attr("y", y - size/2)
+            .attr("width", size)
+            .attr("height", size)
+        else if (nodeName === "circle")
+          sel.attr("cx", x)
+            .attr("cy", y)
+            .attr("r", size);
+        sel.attr("fill", attrMappers.color(d, i))
+          .attr("stroke", attrMappers.stroke(d, i))
+          .attr("stroke-width", attrMappers.strokeWidth(d, i));
+      }
+    );
+
+  lines.select("line") // select actual graphical object
     .attr({
       x1: attrMappers.predX,
       y1: attrMappers.predY,
       x2: attrMappers.x,
       y2: attrMappers.y,
-      "stroke-width": 3,
+      "stroke-width": 2,
       stroke: attrMappers.color
     });
 
@@ -261,5 +298,4 @@ var axis = {
 };
 
 onSvgChanged();
-
 loadData(onDataChanged);
