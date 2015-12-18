@@ -1,6 +1,4 @@
 /**
- * A result table holds the raw data for a single pane for a VisMEL query.
- *
  * @module ResultTable
  * @author Philipp Lucas
  */
@@ -13,13 +11,13 @@ define(['./ModelTable'], function (ModelTable) {
    * @param times Times to replicate
    * @returns {Array} Returns an array of length times that contains value as all its elements.
    * @private
-   */
+   *
   function _repeat(value, times) {
     var array = new Array(times);
     for(var i=0;i<times;++i)
       array[i] = value;
     return array;
-  }
+  }*/
 
   /**
    * Joins the two tables a and b
@@ -79,11 +77,12 @@ define(['./ModelTable'], function (ModelTable) {
 
 
   function _resultTablePerPane(model, dimensions, measures, rows) {
-    // todo: performance: let _join work on a preallocated (possibly larger than needed) array
-    // pair-wise joins
-    var resultTable = dimensions.reduce( function (table, dim) {
-      return _join(table, [dim.domain]);
-    }, []);
+    // todo: performance: let _join work on a preallocated (possibly larger than for a particular _join call needed) array
+    // pair-wise joins of dimension domains
+    var resultTable = dimensions.reduce(
+      function (table, dim) {
+        return _join(table, [dim.domain]);
+      }, []);
 
     // add columns for measures
     measures.forEach( function (m) {
@@ -92,7 +91,7 @@ define(['./ModelTable'], function (ModelTable) {
         // todo: how to do that!?
         // actually I need for each aggregation (be it on multiple fields or not) a separate model!
         column[i] = model.aggregate(
-//          todo continue here
+//          todo continue here: need get the actual data for the aggregation calculation
           new Array(model.size())
         );
       }
@@ -115,7 +114,13 @@ define(['./ModelTable'], function (ModelTable) {
     // common among all panes
     var dimensions = modelTable.query.splittingDimensionUsages();
     var measures = modelTable.query.measureUsages();
-    var resultLength = dimensions.reduce( function(rows, dim) { return rows * dim.domain.length;}, 1);   // todo: doesn't work for measures. have create domain of a previous measure when converting it to a dimension?
+    // todo: the follwing doesn't work for measures. Do I have to create a domain of a "previous" measure when converting it to a dimension?
+    var resultLength = dimensions.reduce( function(rows, dim) { return rows * dim.domain.length;}, 1);
+
+    // add header, i.e. array of FieldUsages that belong to the result table.
+    // note: header is same for all "per pane result tables"!
+    // todo: that's wrong! e.g imagine height+weight ON COLS .... then not all per-pane result tables contain both, height and weight!
+    this.header = dimensions.concat(measures);
 
     // for each model in the modelTable
     this.at = new Array(this.rows);

@@ -16,7 +16,9 @@ function initPane () {
   /* My Box Model:
    like http://www.w3schools.com/css/css_boxmodel.asp but without Border and with the convention
    that the "Content" area is the actual drawing area for the chart, but axis are drawn in the margins. */
-// margin convention: http://bl.ocks.org/mbostock/3019563
+
+  // canvas geometry
+  // -> margin convention: http://bl.ocks.org/mbostock/3019563
   var svgMargin = 40;
   var svgPadding = 40;
   var pane = {};
@@ -26,7 +28,7 @@ function initPane () {
   pane.padding = {top: svgPadding, right: svgPadding, bottom: svgPadding, left: svgPadding};
   pane.width   = pane.outerWidth - pane.margin.left - pane.margin.right -  pane.padding.left - pane.padding.right; // i.e. inner width
   pane.height  = pane.outerHeight- pane.margin.top - pane.margin.bottom - pane.padding.top - pane.padding.bottom; // i.e. inner height
-  pane.pane = d3.select("body").append("svg")
+  pane.pane = d3.select("#graphicscontainer").append("svg")
     .attr("width", pane.outerWidth)
     .attr("height", pane.outerHeight);
   pane.canvas = pane.pane
@@ -55,7 +57,7 @@ function initPane () {
 }
 
 /**
- * Asynchroniously load data and call callback when ready
+ * Asynchronously load data and call callback when ready
  * @param callback
  */
 function loadData (callback) {
@@ -77,7 +79,7 @@ function loadData (callback) {
  * Adopt to changes of pixel dimensions of the pane
  * todo: this isn't really working yet, I don't even know if I'd ever need it
  */
-function onSvgChanged () {
+function onCanvasSizeChanged () {
   "use strict";
   // todo fix ?
   scale.x.range([0, pane.width]);
@@ -87,8 +89,8 @@ function onSvgChanged () {
 
 
 /**
- * @param elem A D3 selection of a DOM element
- * @returns {*} The center of the DOM element
+ * @param elem A D3 selection of a svg DOM element
+ * @returns {*} The center of the svg DOM element
  */
 function getCenter (elem) {
   "use strict";
@@ -107,100 +109,37 @@ function getCenter (elem) {
     throw new Error("unknown elem class.");
 }
 
-
 /**
- * Adpot to changed data
- * @param dataset
+ * Recalculates all virtual fields for the given data set.
  */
-function onDataChanged (dataset) {
+function updateVirtualFields (dataset) {
   "use strict";
-
-  function onMouseOver(d) {
-    var shape = d3.select(this).attr("fill", "orange");
-    var c = getCenter(shape);
-    var tooltip = d3.select("#tooltip")
-      .style("left", c.x + "px")
-      .style("top", c.y + "px");
-    var daphne = (d.daphne ? d.daphne : d.pages.toString());
-    var philipp = (d.philipp ? d.philipp : "--");
-    tooltip.select("#daphne").text(daphne);
-    tooltip.select("#philipp").text(philipp);
-    d3.select("#tooltip").classed("hidden", false);
-  }
-
-  function onMouseOut (d) {
-    d3.select(this).attr("fill", attrMappers.color(d));
-    d3.select("#tooltip").classed("hidden", true);
-  }
-
-  var mapperGenerator = {
-    pred : function(fct) {
-      return function (d, i) {
-        //if (i <=0 || i >= dataset.length) return 1; // todo: hacky!!
-        if (i===0) i=1;
-        return fct(dataset[i-1], i-1);
-      };
-    }
-  };
-
-  var attrMappers = {
-    x: function (d, i) {
-      return scale.x(d.date);
-    },
-    y: function (d, i) {
-      return scale.y(d.pages);
-    },
-    size: function (d, i) {
-      return scale.radius(Math.abs(d.diff));
-    },
-    color: function (d, i) {
-      if (Math.abs(d.diff) < 10)
-        return "yellow";
-      else if (d.diff > 0)
-        return "green";
-      else
-        return "red";
-    },
-    stroke: function (d, i) {
-      return "black";
-    },
-    strokeWidth: function (d, i) {
-      return 1.5;
-    },
-    hoverText: function (d, i) {
-      return d.daphne;
-    }
-  };
-  attrMappers.predX = mapperGenerator.pred(attrMappers.x);
-  attrMappers.predY = mapperGenerator.pred(attrMappers.y);
-
-  var elemMapper = {
-    weekend: function (d) {
-      var type = "",
-        day = d.date.getDay();
-      if (day === 1 || day === 7)  // 1 is sunday, 7 is saturday
-        type = "circle";
-      else
-        type = "rect";
-      return document.createElementNS("http://www.w3.org/2000/svg", type);
-    }
-
-  };
-
-  // calculate virtual fields
   var prev = 0;
   for (var i=0; i<dataset.length; ++i) {
     dataset[i].diff = dataset[i].pages - prev;
     prev = dataset[i].pages;
   }
+}
 
-  // update scales
+/**
+ * Adpot to changed data
+ * @param dataset
+ */
+function onDataChanged (loadedData) {
+  "use strict";
+
+  dataset = loadedData;
+
+  // calculate virtual fields
+  updateVirtualFields(dataset);
+
+  // update scales (data changed)
   var extent = {
     dates: d3.extent(dataset, function (d) {return d.date;}),
     pages: d3.extent(dataset, function (d) {return d.pages;}),
     diff: d3.extent(dataset, function (d) {return Math.abs(d.diff);})
   };
-  scale.x.domain(extent.dates);
+  scale.x.domain([extent.dates[0], new Date()]);
   scale.y.domain([0,extent.pages[1]]);
   scale.radius.domain([0,extent.diff[1]]);
 
@@ -229,6 +168,7 @@ function onDataChanged (dataset) {
   // the just appended elements are now part of the update selection!
   // -> then update all the same way
   // todo: improve: however (and that is ugly) I need different updates based on the svg element representing a data point...
+  // at least I'm using the same mappers already ... i gues
   points.select(".shape") // select actual graphical object
     //.transition()
     .each(
@@ -243,11 +183,12 @@ function onDataChanged (dataset) {
           sel.attr("x", x - size/2)
             .attr("y", y - size/2)
             .attr("width", size)
-            .attr("height", size)
+            .attr("height", size);
         else if (nodeName === "circle")
           sel.attr("cx", x)
             .attr("cy", y)
             .attr("r", size);
+
         sel.attr("fill", attrMappers.color(d, i))
           .attr("stroke", attrMappers.stroke(d, i))
           .attr("stroke-width", attrMappers.strokeWidth(d, i));
@@ -273,6 +214,97 @@ function onDataChanged (dataset) {
   pane.axis.y.call(axis.y);
 }
 
+/**
+ * Handler for mouse over event.
+ * @param d The datum bound to this.
+ * @param this The DOM element that the event occured on.
+ */
+function onMouseOver(d) {
+  var shape = d3.select(this).attr("fill", "orange");
+  var c = getCenter(shape);
+  var tooltip = d3.select("#tooltip")
+    .style("left", c.x + "px")
+    .style("top", c.y + "px");
+  var daphne = (d.daphne ? d.daphne : d.pages.toString());
+  var philipp = (d.philipp ? d.philipp : "--");
+  tooltip.select("#daphne").text(daphne);
+  tooltip.select("#philipp").text(philipp);
+  d3.select("#tooltip").classed("hidden", false);
+}
+
+/**
+* Handler for mouse out event.
+* @param d The datum bound to this.
+* @param this The DOM element that the event occured on.
+*/
+function onMouseOut (d) {
+  d3.select(this).attr("fill", attrMappers.color(d));
+  d3.select("#tooltip").classed("hidden", true);
+}
+
+/**
+ * Collection of generators for attribute mappers.
+ */
+var mapperGenerator = {
+  pred : function(fct) {
+    return function (d, i) {
+      //if (i <=0 || i >= dataset.length) return 1; // todo: hacky!!
+      if (i===0) i=1;
+      return fct(dataset[i-1], i-1);
+    };
+  }
+};
+
+/**
+ * Collection of mapper functions that map data items to (visual) attributes
+ * @param d datum
+ * @param i index
+ */
+var attrMappers = {
+  x: function (d, i) {
+    return scale.x(d.date);
+  },
+  y: function (d, i) {
+    return scale.y(d.pages);
+  },
+  size: function (d, i) {
+    return scale.radius(Math.abs(d.diff));
+  },
+  color: function (d, i) {
+    if (Math.abs(d.diff) < 10)
+      return "gold";
+    else if (d.diff > 0)
+      return "green";
+    else
+      return "red";
+  },
+  stroke: function (d, i) {
+    return "black";
+
+  },
+  strokeWidth: function (d, i) {
+    return 1.5;
+  }
+};
+attrMappers.predX = mapperGenerator.pred(attrMappers.x);
+attrMappers.predY = mapperGenerator.pred(attrMappers.y);
+
+/**
+ * Collection of mapper function that map data items to svg elements.
+ */
+var elemMapper = {
+  weekend: function (d) {
+    var type = "",
+      day = d.date.getDay();
+    if (day === 1 || day === 7)  // 1 is sunday, 7 is saturday
+      type = "circle";
+    else
+      type = "rect";
+    return document.createElementNS("http://www.w3.org/2000/svg", type);
+  }
+};
+
+var dataset = [];
 
 var pane = initPane();
 
@@ -288,7 +320,6 @@ var axis = {
     .scale(scale.x)
     .orient("bottom")
     .innerTickSize(-(pane.width + pane.padding.left))
-    //.innerTickSize(-10)
     .outerTickSize(0),
   y: d3.svg.axis()
     .scale(scale.y)
@@ -297,5 +328,5 @@ var axis = {
     .outerTickSize(0)
 };
 
-onSvgChanged();
+onCanvasSizeChanged();
 loadData(onDataChanged);
