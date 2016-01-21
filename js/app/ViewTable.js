@@ -17,10 +17,72 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   var logger = Logger.get('pl-ViewTable');
   logger.setLevel(Logger.DEBUG);
 
-  // todo: this stuff should be css !?
-  /*var _config = {
-    axis.thickness = 20
-  }*/
+  var scaleGenerator = {};
+  /**
+   * Creates a color scale based on a given field usage.
+   * @param fu A {@link FieldUsage}.
+   * @returns the created color scale.
+   * todo: respect scales and ordering as set in the FUsageT attributes
+   */
+  scaleGenerator.color = function (fu) {
+    // the following is how I think this may be done for the color mapping.
+    var colormap = [],
+      scale = [];
+    switch(fu.kind) {
+      case F.FieldT.Kind.cont:
+        scale = d3.scale.linear();
+        colormap = cbrew.Blues["9"];
+        break;
+      case F.FieldT.Kind.discrete:
+        scale = d3.scale.ordinal();
+        var l = fu.domain.length;
+        if (l <= 2) {
+          colormap = cbrew.Set1[3].slice(0, l);
+        } else if (l <= 9) {
+          colormap = cbrew.Set1[l];
+        } else { //if (l <= 12) {
+          if (l > 12) {
+            logger.warn("the domain of the dimension " + fu.name + " has too many elements: " + l + "\n I'll just use 12, anyway.");
+            l = 12;
+          }
+          colormap = cbrew.Paired[l];
+        }
+        break;
+      default:
+        throw new TypeError("invalid Field.Kind" + fu.kind);
+    }
+    return scale.domain(fu.domain)
+      .range(colormap);
+  };
+
+
+  /**
+   * Creates a 'positional' scale based on given field usage and desired range.
+   * @param fu A {@link FieldUsage}.
+   * @param range
+   */
+  scaleGenerator.pos = function (fu, range) {
+    var scale = [];
+    switch(fu.kind) {
+      case F.FieldT.Kind.cont:
+        // continuous domain: todo: map according to FUsageT.Scale attribute
+        scale = d3.scale.linear()
+          .domain(fu.domain)
+          .range(range);
+        break;
+      case F.FieldT.Kind.discrete:
+        // categorial domain: map to center of equally sized bands
+        scale = d3.scale.ordinal()
+          .domain(fu.domain)
+          .rangeRoundPoints(range, 1.0);  // 1.0 makes points centered in their band
+        break;
+      default:
+        throw new TypeError("invalid Field.Kind: " + fu.kind);
+    }
+    return scale;
+  };
+  // todo: all the other aesthetics
+
 
   /**
    * Creates a canvas within the given <svg> element, respecting the given margin and padding.
@@ -81,96 +143,13 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   }
 
 
-  /**
-   * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
-   * A scale in this context is a function that maps from the domain of a {@link FieldUsage} to the range the visual variable representing it in the visualization.
-   * @param query {VisMEL} A VisMEL query.
-   */
-  function setupScales (query) {
-
-    /* todo: consider these notes!!
-     notes:
-      - a '"scale" maps values of an input domain to values of an output range.'
-      - x and y scales are common for a row / column
-      - this holds for both: measures and dimensions! but it seems tricky...
-      - however: there definitely is always at most one scale per FieldUsage:
-        - measures:
-          - maps to x/y, then it's common for a whole row/column
-          - maps to shape, color, size: obviously common
-        - dimensions:
-          - part of row/column-NSF statements: maybe there is no use for a scale here ... not sure...
-          - "on details": simply splits into more marks - no other visual implication ... no scale needed
-          - maps to shape, color, size: obviously needs discrete scale to shape / color / size ...
-      - idea: attach scales to the field usages!?
-        - "traverse" query for fieldUsages and add them accordingly!?
-     */
-
-     /* todo: aren't the scales already in the fieldUsages?! hence just in something like:
-      query.layer[0].aesthetics.color.scale ?
-      answer: not really, this is more a kind of "simple preprocessing/prescaling".
-      but the actual scale we talk about here, are for mapping to *visual* dimensions!
-      however, we will very much access the scales like that (with a different name), once we created
-      them here in this function!
-     */
-
-    // setup row and col NSF (partial) scales
-
-    var scale = { };
-    scale.color = function (colorFU) {
-      // the following is how I think this may be done for the color mapping.
-      // todo: all the other aesthetics
-      var colormap = [],
-        scale = [];
-      switch(colorFU.kind) {
-        case F.FieldT.Kind.cont:
-          scale = d3.scale.linear();
-          colormap = cbrew.Blues["9"];
-          break;
-        case F.FieldT.Kind.discrete:
-          scale = d3.scale.ordinal();
-          var l = colorFU.domain.length;
-          if (l <= 2) {
-            colormap = cbrew.Set1[3].slice(0, l);
-          } else if (l <= 9) {
-            colormap = cbrew.Set1[l];
-          } else { //if (l <= 12) {
-            if (l > 12) {
-              logger.warn("the domain of the dimension " + colorFU.name + " has too many elements: " + l);
-              l = 12;
-            }
-            colormap = cbrew.Paired[l];
-          }
-          break;
-        default:
-          throw new TypeError("invalid Field.Kind");
-      }
-      scale.domain(colorFU.domain)
-        .range(colormap);
-    };
-    // todo: all the other aesthetics
-
-    var aesthetics = query.layers[0].aestetics;
-    aesthetics.color.visScale = scale.color(aesthetics.color);
-
-    //aesthetics.color.visScale = ... todo!!
-      // set domain: already there for dimensions. what to do for measures? todo: implement too!
-      // set range :
-      // set interpolation?
-
-    // no need for scales in: filters, details
-
-    // then, i can use it like this, for example:
-    // heights.visScale(180); // assuming heights is a FieldUsage :)
-  }
-
-
-  /**
+    /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
    * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
    *
    * A ViewTable is, as you would expect, a table of {@link ViewPane}s. Each {@link ViewPane} represents a single cell of the table.
    *
-   * Note that the axis are part of the {@link ViewTable}, not the {@link ViewPane}s. They (actually the scales that the axis are based on) are reused in the {@link ViewPanes}s, however.
+   * Note that the axis are part of the {@link ViewTable}, not the {@link ViewPane}s. Also note that axis' are based on scales. And scales are attached to (almost) each {@link F.FieldUsage} of this query, as they are reused accross many of the sub-{@link ViewPane}s.
    *
    * @param paneD3 A <svg> element, wrapped in a D3 selection. This must already have a width and height.
    * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
@@ -180,6 +159,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   var ViewTable; ViewTable = function (paneD3, resultTable) {
 
     this.query = resultTable.query;
+    this.resultTable = resultTable;
 
     /// one time on init:
     /// todo: is this actually "redo on canvas size change" ?
@@ -187,18 +167,26 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // init table canvas
     this.canvas = setupCanvas(paneD3, 25, 25);
 
+    // infer configuration (e.g. sizes of subplots)
+    this.updateConfig();
+
     // add scales to field usages of this query
-    setupScales(this.query);
+    this.setupScales(this.query);
 
     // init axis
-    // 1. axis of discrete variables: todo!
-    // note that these span the whole canvas
+    // 1. axis of discrete variables:
 
     // 2. axis of
 
-
     // create table of ViewPanes
-
+    this.at = new Array(this.config.rows);
+    for (var rIdx=0; rIdx<this.config.rows; rIdx++) {
+      this.at[rIdx] = new Array(this.config.cols);
+      for (var cIdx=0; cIdx<this.config.rows; cIdx++) {
+        // todo: continue here
+        this.at[rIdx][cIdx] = 1;
+      }
+    }
 
     /// redo on data change
 
@@ -215,12 +203,75 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
       this.update(resultTable);
   };
 
+
+  ViewTable.prototype.updateConfig = function () {
+    this.config = {
+      rows: this.resultTable.rows,
+      cols: this.resultTable.cols
+    };
+    // the size of a subpane in px
+    this.config.subPane = {
+      height: this.canvas.width / this.config.cols,
+      width: this.canvas.height / this.config.rows
+    };
+  };
+
+
+  /**
+   * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
+   * A scale in this context is a function that maps from the domain of a {@link FieldUsage} to the range the visual variable representing it in the visualization.
+   * @param query {VisMEL} A VisMEL query.
+   */
+  ViewTable.prototype.setupScales = function (query) {
+
+    /* todo: consider these notes!!
+     notes:
+     - a '"scale" maps values of an input domain to values of an output range.'
+     - x and y scales are common for a row / column
+     - this holds for both: measures and dimensions! but it seems tricky...
+     - however: there definitely is always at most one scale per FieldUsage:
+     - measures:
+     - maps to x/y, then it's common for a whole row/column
+     - maps to shape, color, size: obviously common
+     - dimensions:
+     - part of row/column-NSF statements: maybe there is no use for a scale here ... not sure...
+     - "on details": simply splits into more marks - no other visual implication ... no scale needed
+     - maps to shape, color, size: obviously needs discrete scale to shape / color / size ...
+     - idea: attach scales to the field usages!?
+     - "traverse" query for fieldUsages and add them accordingly!?
+     */
+
+    /* Note: aren't the scales already in the fieldUsages?! hence just in something like:
+     query.layer[0].aesthetics.color.scale ?
+     answer: not really, this is more a kind of "simple preprocessing/prescaling".
+     but the actual scale we talk about here, are for mapping to *visual* dimensions!
+     however, we will very much access the scales like that (with a different name), once we created
+     them here in this function!
+     */
+
+    var aesthetics = query.layers[0].aestetics;
+    aesthetics.color.visScale = scaleGenerator.color(aesthetics.color);
+
+    query.layout.cols.forEach( function(c){c.visScale = scaleGenerator.pos(c, this.config.subPane.width);}, this );
+    query.layout.rows.forEach( function(c){c.visScale = scaleGenerator.pos(c, this.config.subPane.height);}, this );
+
+    //aesthetics.color.visScale = ... todo!!
+    // set domain: already there for dimensions. what to do for measures? todo: implement too!
+    // set range :
+    // set interpolation?
+
+    // no need for scales in: filters, details
+
+    // then, i can use it like this, for example:
+    // heights.visScale(180); // assuming heights is a FieldUsage :)
+  };
+
+
   /**
    * Update this {@link ViewTable} with the given {@link ResultTable}.
    */
   ViewTable.prototype.update = function (resultTable) {
-
-
+    //todo? just create a new ViewTable ... :-)
   };
 
 
@@ -228,7 +279,6 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
    * A ViewPane is a
    */
   var ViewPane; ViewPane = function () {
-
   };
 
   return ViewTable;

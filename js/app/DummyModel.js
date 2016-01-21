@@ -41,26 +41,28 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
         'age', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont
+          kind: F.FieldT.Kind.cont,
+          domain: [0, 100]
         });
       var weightField = new F.Field(
         'weight', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont
+          kind: F.FieldT.Kind.cont,
+          domain: [0, 150]
         });
       var incomeField = new F.Field(
         'income', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont
+          kind: F.FieldT.Kind.cont,
+          domain: [0, 100000]
         });
       var childrenField = new F.Field(
         'children', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.discrete,
-          // todo: future feature: domain: {min: 0, max: 6}
           domain: [0, 1, 2, 3, 4, 5, 6]
         });
       var sexField = new F.Field(

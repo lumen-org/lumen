@@ -168,7 +168,7 @@ function onDataChanged (loadedData) {
   // the just appended elements are now part of the update selection!
   // -> then update all the same way
   // todo: improve: however (and that is ugly) I need different updates based on the svg element representing a data point...
-  // at least I'm using the same mappers already ... i gues
+  // at least I'm using the same mappers already ... i guess
   points.select(".shape") // select actual graphical object
     //.transition()
     .each(
