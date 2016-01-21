@@ -1,5 +1,11 @@
 /**
  *
+ * Nomenclature
+ *   .*D3 : a variable that is a D3 selection
+ *   .*DOM : a variable that is a DOM element
+ *
+ *   pane : the entire space take by a visualization
+ *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
  * @module ViewTable
  * @author Philipp Lucas
@@ -11,24 +17,29 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   var logger = Logger.get('pl-ViewTable');
   logger.setLevel(Logger.DEBUG);
 
+  // todo: this stuff should be css !?
+  /*var _config = {
+    axis.thickness = 20
+  }*/
+
   /**
    * Creates a canvas within the given <svg> element, respecting the given margin and padding.
-   * @param paneDOM A <svg> DOM element.
+   * @param paneD3 A <svg> element wrapped in a D3 selection.
    * @param margin Margin (outer) for the drawing canvas
    * @param padding Padding (inner) for the drawing canvas
-   * @returns {{}} A canvas object that warps the basic the geometry of the pane, its canvas, margin and padding
+   * @returns {{}} A wrapper object that contains the basic the geometry of the pane, its canvas (the drawing area), margin and padding
    */
-  function setupCanvas(paneDOM, margin, padding) {
+  function setupCanvas(paneD3, margin, padding) {
     // normalize arguments
     if (_.isFinite(margin))
-      margin = {top: margin, right: margin, buttom: margin, left: margin};
+      margin = {top: margin, right: margin, bottom: margin, left: margin};
     if (_.isFinite(padding))
-      padding = {top: padding, right: padding, buttom: padding, left: padding};
+      padding = {top: padding, right: padding, bottom: padding, left: padding};
 
     // setup basic geometry of actual drawing canvas, with margin (outer) and padding (inner)
     var canvas = {};
-    canvas.paneD3 = d3.select(paneDOM); 
-    canvas.outerHeight = canvas.paneD3.attr2num("width");
+    canvas.paneD3 = paneD3;
+    canvas.outerWidth  = canvas.paneD3.attr2num("width");
     canvas.outerHeight = canvas.paneD3.attr2num("height");
     canvas.padding  = padding;
     canvas.margin = margin;
@@ -38,18 +49,28 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // setup the real canvas for drawing and a clippath
     canvas.canvasD3 = canvas.paneD3.append("g")
       .attr("transform", "translate(" + (canvas.margin.left + canvas.padding.left) + "," + (canvas.margin.top + canvas.padding.top) + ")");
-    canvas.clipPath = canvas.canvas.append("clipPath").attr("id", "canvasClipPath");
-    canvas.clipPath.append("rect").attr({
-      x : -canvas.padding.left,
-      y : -canvas.padding.top,
-      width: canvas.width + canvas.padding.left + canvas.padding.right,
-      height: canvas.height+ canvas.padding.top + canvas.padding.bottom});
+    canvas.clipPathD3 = canvas.canvasD3
+      .append("clipPath")
+      .attr("id", "canvasClipPath");
+    canvas.clipPathD3
+      .append("rect")
+      .attr({
+        x : -canvas.padding.left,
+        y : -canvas.padding.top,
+        width: canvas.width + canvas.padding.left + canvas.padding.right,
+        height: canvas.height+ canvas.padding.top + canvas.padding.bottom
+      });
     
     return canvas;
   }
-  
-  
-  function setupAxisDOM(canvas) {
+
+
+  /**
+   * todo: is that needed?
+   * todo: document me
+   * @param canvas
+   */
+  function setupAxis(canvas) {
     canvas.axis = {};
     canvas.axis.x = canvas.canvas.append("g")
       .classed("axis", true)
@@ -61,7 +82,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
 
   /**
-   *
+   * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
+   * A scale in this context is a function that maps from the domain of a {@link FieldUsage} to the range the visual variable representing it in the visualization.
    * @param query {VisMEL} A VisMEL query.
    */
   function setupScales (query) {
@@ -93,38 +115,42 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
     // setup row and col NSF (partial) scales
 
-    // setup aesthetics scales
-    var aesthetics = query.layers[0].aestetics;
-
-    // the following is how I think this may be done for the color mapping.
-    // todo: all the other aestetics
-    var color = aesthetics.color;
-    var colormap = [],
-      scale = [];
-    switch(color.kind) {
-      case F.FieldT.Kind.cont:
-        scale = d3.scale.linear();
-        colormap = cbrew.Blues["9"];
-        break;
-      case F.FieldT.Kind.discrete:
-        scale = d3.scale.ordinal();
-        var l = domain.length;
-        if (l <= 2) {
-          colormap = cbrew.Set1[3].slice(0, l - 1);
-        } else if (l <= 9) {
-          colormap = cbrew.Set1[l];
-        } else { //if (l <= 12) {
-          if (l > 12) {
-            logger.warn("the domain of the dimension " + color.name + " has too many elements: " + l);
-            l = 12;
+    var scale = { };
+    scale.color = function (colorFU) {
+      // the following is how I think this may be done for the color mapping.
+      // todo: all the other aesthetics
+      var colormap = [],
+        scale = [];
+      switch(colorFU.kind) {
+        case F.FieldT.Kind.cont:
+          scale = d3.scale.linear();
+          colormap = cbrew.Blues["9"];
+          break;
+        case F.FieldT.Kind.discrete:
+          scale = d3.scale.ordinal();
+          var l = colorFU.domain.length;
+          if (l <= 2) {
+            colormap = cbrew.Set1[3].slice(0, l);
+          } else if (l <= 9) {
+            colormap = cbrew.Set1[l];
+          } else { //if (l <= 12) {
+            if (l > 12) {
+              logger.warn("the domain of the dimension " + colorFU.name + " has too many elements: " + l);
+              l = 12;
+            }
+            colormap = cbrew.Paired[l];
           }
-          colormap = cbrew.Paired[l];
-        }
-        break;
-      default:
-        throw new TypeError("invalid Field.Kind");
-    }
-    scale.domain(color.domain).range(colormap);
+          break;
+        default:
+          throw new TypeError("invalid Field.Kind");
+      }
+      scale.domain(colorFU.domain)
+        .range(colormap);
+    };
+    // todo: all the other aesthetics
+
+    var aesthetics = query.layers[0].aestetics;
+    aesthetics.color.visScale = scale.color(aesthetics.color);
 
     //aesthetics.color.visScale = ... todo!!
       // set domain: already there for dimensions. what to do for measures? todo: implement too!
@@ -135,8 +161,6 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
     // then, i can use it like this, for example:
     // heights.visScale(180); // assuming heights is a FieldUsage :)
-
-    return scales;
   }
 
 
@@ -144,27 +168,31 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
    * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
    *
-   * A ViewTable is, not very surprisingly, a table of {@link ViewPane}s. Each {@link ViewPane} represents a single cell of the table.
+   * A ViewTable is, as you would expect, a table of {@link ViewPane}s. Each {@link ViewPane} represents a single cell of the table.
    *
-   * Note that the axis are part of the {@link ViewTable}, not the {@link ViewPane}s. They are (actually the scales that the axis are based on) reused in the {@link ViewPanes}s, however.
+   * Note that the axis are part of the {@link ViewTable}, not the {@link ViewPane}s. They (actually the scales that the axis are based on) are reused in the {@link ViewPanes}s, however.
    *
-   * @param paneDOM A <svg> DOM element. This must already have a width and height.
+   * @param paneD3 A <svg> element, wrapped in a D3 selection. This must already have a width and height.
    * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
    * @constructor
    * @alias module:ViewTable
    */
-  var ViewTable; ViewTable = function (paneDOM, resultTable) {
+  var ViewTable; ViewTable = function (paneD3, resultTable) {
+
+    this.query = resultTable.query;
 
     /// one time on init:
+    /// todo: is this actually "redo on canvas size change" ?
 
     // init table canvas
-    this.canvas = setupCanvas(paneDOM, 25, 25);
+    this.canvas = setupCanvas(paneD3, 25, 25);
 
-    // init scales
-    this.scale = setupScales(resultTable);
+    // add scales to field usages of this query
+    setupScales(this.query);
 
     // init axis
     // 1. axis of discrete variables: todo!
+    // note that these span the whole canvas
 
     // 2. axis of
 
@@ -172,7 +200,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // create table of ViewPanes
 
 
-    /// redo on data change (same everything else...)
+    /// redo on data change
 
     // augment data (min, max, ...)
 

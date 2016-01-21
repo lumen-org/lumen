@@ -102,10 +102,13 @@ define(['./ModelTable'], function (ModelTable) {
   }
 
   /**
+   * A ResultTable contains the raw data that are the answers to the actual queries to the model(s).
    * @alias module:ResultTable
    * @constructor
    */
   var ResultTable; ResultTable = function (modelTable) {
+    this.modelTable = modelTable;
+    this.query = modelTable.query;
     this.rows = modelTable.rows;
     this.cols = modelTable.cols;
     if (this.rows === 0 || this.cols === 0)

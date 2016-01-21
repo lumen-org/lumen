@@ -18,7 +18,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
 
     var sources = [source];
     sources.toString = function () {
-      return JSON.stringify(sources, replacer.source, _delim);
+      return JSON.stringify(sources, _replacer.source, _delim);
     };
     return sources; // todo: in the future there might be multiple sources supported
   }
@@ -37,7 +37,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       rows: new TableAlgebra(shelf.row),
       cols: new TableAlgebra(shelf.column),
       toString: function () {
-        return JSON.stringify(layout, replacer.layout, _delim);
+        return JSON.stringify(layout, _replacer.layout, _delim);
       }
       // states equivalence between two fields in two different data sources
       // ... required to support multiple sources
@@ -83,7 +83,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
         //hover:   { FIELD_USAGE_NAME* } //future feature
       },
       toString : function () {
-        return JSON.stringify(layer, replacer.layer, _delim);
+        return JSON.stringify(layer, _replacer.layer, _delim);
       }
       //specializations: [] // future feature
     };
@@ -136,7 +136,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
 
 
   /**
-   * @returns Returns the set of {@link FieldUsage}s of this query that are measures.
+   * @returns Returns the set of {@link FieldUsage}s of this query which are measures.
    */
   VisMEL.prototype.measureUsages = function () {
     return this.fieldUsages()
@@ -144,9 +144,9 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   };
 
   /**
-   * Returns the set of all {@link FieldUsage}s of this query, that:
+   * Returns the set of all {@link FieldUsage}s of this query that:
    *  (1) are dimensions, and
-   *  (2) marks per pane are splitted by
+   *  (2) marks per pane are split by
    * i.e.: all dimension usages on color, shape, size, orientation, details, ... but not on rows, columns, filters.
    */
   VisMEL.prototype.splittingDimensionUsages = function () {
@@ -165,15 +165,15 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   var _delim = '\t';
 
   // replacer function for JSON conversion
-  var replacer = {
+  var _replacer = {
     query : function (key, value) {
       var str = "";
       if (key === "sources")
-        str = JSON.stringify(value[0], replacer.source, _delim);
+        str = JSON.stringify(value[0], _replacer.source, _delim);
       if (key === "layers")
-        str = JSON.stringify(value[0], replacer.layer, _delim);
+        str = JSON.stringify(value[0], _replacer.layer, _delim);
       if (key === "layout")
-        str = JSON.stringify(value, replacer.layout, _delim);
+        str = JSON.stringify(value, _replacer.layout, _delim);
       if (str === "")
         return value;
       else
@@ -206,7 +206,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       layer = this.layers[0],
       layout = this.layout;*/
     var  str = "";
-    str += JSON.stringify(this, replacer.query, _delim);
+    str += JSON.stringify(this, _replacer.query, _delim);
     //str += JSON.stringify(source, replacer.source, _delim);
     //str += JSON.stringify(layout, replacer.layout, _delim);
     //str += JSON.stringify(layer, replacer.layer, _delim);

@@ -45,6 +45,14 @@ define(['./Field', './shelves'], function (F, sh) {
     Array.call(this);
     for( var idx = 0; idx < shelf.length(); ++idx ) {
       if (idx !== 0)
+        /* todo: bug: fix this. this is not a proper way of deciding on the operators. see as follows:
+          - dimensions have to be positioned before measures, as we split the axis in accordance of the order of symbols in a NSF entry.
+          - measures have to be added up, before the cross operator with dimensions is applied, i.e.
+            wrong: dim1 * meas1 + meas2
+              because it leads to something like: {(d1 meas1), (d2 meas1), ..., (dn meas1), meas2
+            right: dim1 * (meas1 + meas2)}
+              because it leads to something like: {(d1 meas1 meas2), (d2 meas1 meas2), ..., (dn meas1, meas2)}
+         */
         this.push( (shelf.contentAt(idx).role === F.FieldT.Role.measure &&
         shelf.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '*' );
       this.push( shelf.contentAt(idx) );
@@ -77,7 +85,7 @@ define(['./Field', './shelves'], function (F, sh) {
   TableAlgebraExpr.prototype.normalize = function () {
 
     // 1. turn FieldUsages into their domain representation
-    // the domain representation of a FieldUsage is an array of symbols:
+    // the domain representation of a FieldUsage is an array of symbols, i.e.:
     // (i) a single symbol, i.e. the name of the field, if the field is quantitative
     // (ii) all possible values of the field , if the field is ordinal
     // Note that the symbols are stored under 'val', while a reference to the original FieldUsage is stored under 'fieldUsage'

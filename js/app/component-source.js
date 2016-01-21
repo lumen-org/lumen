@@ -3,13 +3,22 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './ModelTable', './ResultTable'],
-  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, ModelTable, ResultTable) {
+define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './ModelTable', './ResultTable', './ViewTable'],
+  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, ModelTable, ResultTable, ViewTable) {
     'use strict';
 
     var query = {},
       modelTable = {},
-      resultTable = {};
+      resultTable = {},
+      viewTable = {};
+
+    // visualiztion base element
+    var visPaneD3 = d3.select("#visDiv")
+      .append("svg")
+      .attr({
+        width:300,
+        height:50
+      });
 
     // define shelves
     var shelf = sh.construct();
@@ -64,10 +73,22 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     function onUpdate () {
       query = new VisMEL(shelf, model);
       modelTable = new ModelTable(query);
-      resultTable =new ResultTable(modelTable);
+      resultTable = new ResultTable(modelTable);
+      viewTable = new ViewTable(visPaneD3, resultTable);
+
       $('#queryTextBox').text(
         "layout:\n" + query.layout.toString() +
         "\nlayers:\n" + query.layers.toString() );
+
+      console.log("query: ");
+      console.log(query);
+      console.log("ModelTabel: ");
+      console.log(modelTable);
+      console.log("resultTable: ");
+      console.log(resultTable);
+      console.log("viewTable: ");
+      console.log(viewTable);
+      console.log("...");
     }
 
     inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);

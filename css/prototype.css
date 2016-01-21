@@ -98,3 +98,7 @@
 .d3bar {
     background-color: orangered;
 }
+
+#queryTextBox {
+    font-size: small;
+}

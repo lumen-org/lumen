@@ -248,7 +248,7 @@ function onMouseOut (d) {
 var mapperGenerator = {
   pred : function(fct) {
     return function (d, i) {
-      //if (i <=0 || i >= dataset.length) return 1; // todo: hacky!!
+      //if (i <=0 || i >= dataset.length) return 1; // todo: hacky. Because we have to access the closure variable dataset. Hence it breaks, if its used in a different context.
       if (i===0) i=1;
       return fct(dataset[i-1], i-1);
     };

@@ -1,7 +1,6 @@
 
 /**
  * Model Table module.
- *
  * @module ModelTable
  * @author Philipp Lucas
  */
@@ -9,8 +8,11 @@ define(['./Field'], function(F) {
   'use strict';
 
   /**
-   * A model table is table of submodels according to a layout of VisMEL query. It contains one submodel for each cell of the table, and each submodel will be used to generate samples/aggregations for that cell.
-   * Creates a {@link ModelTable} from given VisMEL query.
+   * A {@link ModelTable} is table of submodels according to a layout of VisMEL query.
+   * It contains one submodel for each cell of the table, and each submodel will be used
+   * to generate samples/aggregations for that cell.
+   *
+   * This contstructor creates a {@link ModelTable} from given VisMEL query.
    * @alias module:ModelTable
    * @constructor
    */

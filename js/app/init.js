@@ -17,7 +17,7 @@ define(['lib/logger','d3'], function (Logger, d3) {
    * todo: only works on single element selections for now.
    * @returns {Number}
    */
-  d3.selection.prototype.attr2Num = function (attributeString) {
+  d3.selection.prototype.attr2num = function (attributeString) {
     return parseFloat(this.attr(attributeString));
   };
 
