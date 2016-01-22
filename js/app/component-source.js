@@ -17,7 +17,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       .append("svg")
       .attr({
         width:300,
-        height:50
+        height:300
       });
 
     // define shelves

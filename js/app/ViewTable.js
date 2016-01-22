@@ -85,13 +85,13 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
 
   /**
-   * Creates a canvas within the given <svg> element, respecting the given margin and padding.
-   * @param paneD3 A <svg> element wrapped in a D3 selection.
+   * Creates a pane within the given <svg> element, respecting the given margin and padding.
+   * @param canvasD3 A <svg> element wrapped in a D3 selection.
    * @param margin Margin (outer) for the drawing canvas
    * @param padding Padding (inner) for the drawing canvas
-   * @returns {{}} A wrapper object that contains the basic the geometry of the pane, its canvas (the drawing area), margin and padding
+   * @returns {{}} A wrapper object that contains properties of the geometry of the pane, the pane (the root of this , its canvas (the drawing area), margin and padding
    */
-  function setupCanvas(paneD3, margin, padding) {
+  function setupCanvas(canvasD3, margin, padding) {
     // normalize arguments
     if (_.isFinite(margin))
       margin = {top: margin, right: margin, bottom: margin, left: margin};
@@ -100,7 +100,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
     // setup basic geometry of actual drawing canvas, with margin (outer) and padding (inner)
     var canvas = {};
-    canvas.paneD3 = paneD3;
+    canvas.paneD3 = canvasD3;
     canvas.outerWidth  = canvas.paneD3.attr2num("width");
     canvas.outerHeight = canvas.paneD3.attr2num("height");
     canvas.padding  = padding;
@@ -173,18 +173,67 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // add scales to field usages of this query
     this.setupScales(this.query);
 
+    var _config = this.config;
+    var _canvas = this.canvas;
+
     // init axis
     // 1. axis of discrete variables:
 
     // 2. axis of
 
     // create table of ViewPanes
-    this.at = new Array(this.config.rows);
-    for (var rIdx=0; rIdx<this.config.rows; rIdx++) {
-      this.at[rIdx] = new Array(this.config.cols);
-      for (var cIdx=0; cIdx<this.config.rows; cIdx++) {
-        // todo: continue here
-        this.at[rIdx][cIdx] = 1;
+    this.at = new Array(_config.rows);
+    for (var rIdx=0; rIdx<_config.rows; rIdx++) {
+      this.at[rIdx] = new Array(_config.cols);
+      for (var cIdx=0; cIdx<_config.rows; cIdx++) {
+        // todo: continue here: create actual sub plot in svg sub element that is translated off the original svg?  resuse the progress.js code
+
+        /// create subpane
+        var subpaneD3 = _canvas.canvasD3.append('svg')
+          .attr({
+            "width": _config.subPane.width,
+            "height": _config.subPane.height,
+            "x": cIdx * _config.subPane.width,
+            "y": rIdx * _config.subPane.height
+          });
+        subpaneD3.append('rect')//todo: this is just for debugging
+          .attr({
+            "width": _config.subPane.width,
+            "height": _config.subPane.height,
+            "style": "fill:blue"
+         });
+
+        this.at[rIdx][cIdx] = subpaneD3;
+
+        /// plot samples as circles
+
+        // create a group for point marks
+        // @init
+        subpaneD3.pointsD3 = subpaneD3.append("g");
+
+        /// update / remove / add marks
+        // store update selection, this also creates enter and exit subselections
+        var pointsD3 = subpaneD3.pointsD3
+          .selectAll(".point")
+          .data(d3.range(10));
+
+        // add new elements for all enter subselections
+        var newPointsD3 = pointsD3
+          .enter()
+          .append("g")
+          .classed("point mark", true);
+        newPointsD3
+          .append("circle")
+          .classed("shape", true);
+
+        // the just appended elements are now part of the update selection!
+        // -> then update all the same way
+        pointsD3.select(".shape")
+          .attr({
+            cx: 10,
+            cy: 10,
+            fill: "red"
+          });
       }
     }
 
