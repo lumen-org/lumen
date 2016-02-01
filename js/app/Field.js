@@ -75,7 +75,7 @@ define(['./utils'], function (utils) {
   /**
    * A {FieldUsage} represents a certain configuration of a {Field} for use in a VisMEL expression.
    * It details how the data of a certain dimension of a data source is mapped to some numerical output range.
-   * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If  a {@link FieldUsage} is provided a copy of it will be created.
+   * @param {Field|FieldUsage} base - The field or fieldUsage this field usage is based on. If a {@link FieldUsage} is provided a copy of it will be created.
    * @param [args] Optional parameters for scale and aggregation function of the new {@link FieldUsage}. If set, it overrides the settings of base, in case base is a {@link FieldUsage}.
    * @constructor
    * @alias module:Field.FieldUsage
@@ -86,6 +86,7 @@ define(['./utils'], function (utils) {
     if (!args) args = {};
     var isFU = base instanceof FieldUsage;
     this.base = (isFU ? base.base : base);
+    // todo: find proper defaults?
     this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
     this.scale = utils.selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);
   };

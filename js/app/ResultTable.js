@@ -76,22 +76,34 @@ define(['./ModelTable'], function (ModelTable) {
   }
 
 
+  /**
+   * Sample the given model.
+   * Note: the parameters dimensions and measures are {@link FieldUsage}s, not {@link Field}s. They contain the required information on how exactly the model is to be sampled.
+   * @param model The model to sample.
+   * @param {FieldUsage} The dimensions of the model to sample.
+   * @param {FieldUsage} The measures of the model to sample.
+   * @param rows The precomputed length of the result table.
+   * @param nsfe the nsf (normalized set form) element that belongs to this model. This is needed to get the pane specific measure (on rows or columns).
+   * @returns {*}
+   * @private
+   */
   function _resultTablePerPane(model, dimensions, measures, rows) {
     // todo: performance: let _join work on a preallocated (possibly larger than for a particular _join call needed) array
-    // pair-wise joins of dimension domains
+    // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
     var resultTable = dimensions.reduce(
       function (table, dim) {
         return _join(table, [dim.domain]);
       }, []);
 
-    // add columns for measures
+    // add columns for values of measures
     measures.forEach( function (m) {
       var column = new Array(rows);
       for (var i = 0; i < rows; ++i) {
         // todo: how to do that!?
-        // actually I need for each aggregation (be it on multiple fields or not) a separate model!
+        // todo: actually I need for each aggregation (be it on multiple fields or not) a separate model!
+        // and there may very well be multiple measure per pane! e.g. avg(age) on color and avg(income) on rows
         column[i] = model.aggregate(
-//          todo continue here: need get the actual data for the aggregation calculation
+//          todo continue here: need to get the actual data for the aggregation calculation
           new Array(model.size())
         );
       }
@@ -102,7 +114,9 @@ define(['./ModelTable'], function (ModelTable) {
   }
 
   /**
-   * A ResultTable contains the raw data that are the answers to the actual queries to the model(s).
+   * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s). Each cell of the result table holds its own data, and is access by its row and column index via the at property.
+   * Note that the header of each cell may not be identical, e.g. when using something like "avg(age)+avg(income)" for the row mapping.
+    Therefore a {@link ResultTable} also attaches index values to the aesthetics and layers of a query. The index's value is the index in the data table of a cell.
    * @alias module:ResultTable
    * @constructor
    */
@@ -115,15 +129,21 @@ define(['./ModelTable'], function (ModelTable) {
       return; //todo: do I need that?
 
     // common among all panes
-    var dimensions = modelTable.query.splittingDimensionUsages();
-    var measures = modelTable.query.measureUsages();
+    var dimensions = this.query.splittingDimensionUsages();
+    // todo: this is wrong. We may not include measure of the layout part, as they may be not be the same for all panes
+    var measures = this.query.measureUsages();
+
     // todo: the follwing doesn't work for measures. Do I have to create a domain of a "previous" measure when converting it to a dimension?
+    // todo: it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
     var resultLength = dimensions.reduce( function(rows, dim) { return rows * dim.domain.length;}, 1);
 
     // add header, i.e. array of FieldUsages that belong to the result table.
     // note: header is same for all "per pane result tables"!
     // todo: that's wrong! e.g imagine height+weight ON COLS .... then not all per-pane result tables contain both, height and weight!
     this.header = dimensions.concat(measures);
+
+    // attach indices to aestethics and layer mappings of the query.
+
 
     // for each model in the modelTable
     this.at = new Array(this.rows);

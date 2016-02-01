@@ -14,7 +14,7 @@ define(['./Field'], function (F) {
    */
   var Model; Model = function (name) {
     this.name = name;
-    this.fields = []; // array of Fields
+    this.fields = []; // array of {@link F.Field}s
   };
 
   /**

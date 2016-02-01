@@ -11,7 +11,7 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
   logger.setLevel(Logger.DEBUG);
 
   /**
-   * Populates the given dimension and measure shelf with the field from the given model
+   * Populates the given dimension and measure shelf with the field from the given model. Note that references to the fields are added, not copies of them.
    * Note: it does not make added fields {@link beVisual} or {@link beInteractable}!
    * @param model
    * @param {DimensionShelf} dimShelf

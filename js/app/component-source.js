@@ -1,5 +1,9 @@
 /**
  * Main component that assembles and manages the actual GUI of the EMV tool.
+ *
+ * # Fields, Field Usages, Models and Shelves
+ * About {@F.Field} and {@F.FieldUsage}
+ *
  * @module main
  * @author Philipp Lucas
  */

@@ -41,7 +41,8 @@ define(['./Field'], function(F) {
     // todo: implement
 
     // 4. derive base model
-    this.baseModel = model.copy().marginalize( _.difference(model.fields, usedVariables) ); // todo: implement filtering
+    this.baseModel = model.copy().marginalize( _.difference(model.fields, usedVariables) );
+    // todo: implement filtering
 
     // 5. derive submodels for each cell
     // todo: speedup: dynamically decide whether it's faster to do get a row- or column-wise base-model

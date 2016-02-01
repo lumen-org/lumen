@@ -7,6 +7,8 @@
  *   pane : the entire space take by a visualization
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
+ * ToDo:
+ *
  * @module ViewTable
  * @author Philipp Lucas
  */
@@ -108,7 +110,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     canvas.width   = canvas.outerWidth - canvas.margin.left - canvas.margin.right -  canvas.padding.left - canvas.padding.right; // i.e. inner width
     canvas.height  = canvas.outerHeight- canvas.margin.top - canvas.margin.bottom - canvas.padding.top - canvas.padding.bottom; // i.e. inner height
 
-    // setup the real canvas for drawing and a clippath
+    // setup the real canvas for drawing and a clip path
     canvas.canvasD3 = canvas.paneD3.append("g")
       .attr("transform", "translate(" + (canvas.margin.left + canvas.padding.left) + "," + (canvas.margin.top + canvas.padding.top) + ")");
     canvas.clipPathD3 = canvas.canvasD3
@@ -147,7 +149,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
    * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
    *
-   * A ViewTable is, as you would expect, a table of {@link ViewPane}s. Each {@link ViewPane} represents a single cell of the table.
+   * A ViewTable is a table of {@link ViewPane}s. Each {@link ViewPane} represents a single cell of the table.
    *
    * Note that the axis are part of the {@link ViewTable}, not the {@link ViewPane}s. Also note that axis' are based on scales. And scales are attached to (almost) each {@link F.FieldUsage} of this query, as they are reused accross many of the sub-{@link ViewPane}s.
    *
@@ -173,49 +175,50 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // add scales to field usages of this query
     this.setupScales(this.query);
 
+    // shortcuts for usage
     var _config = this.config;
     var _canvas = this.canvas;
 
     // init axis
     // 1. axis of discrete variables:
-
-    // 2. axis of
+    // 2. axis of ??
+    // todo: implement later
 
     // create table of ViewPanes
     this.at = new Array(_config.rows);
     for (var rIdx=0; rIdx<_config.rows; rIdx++) {
       this.at[rIdx] = new Array(_config.cols);
       for (var cIdx=0; cIdx<_config.rows; cIdx++) {
-        // todo: continue here: create actual sub plot in svg sub element that is translated off the original svg?  resuse the progress.js code
+        // todo: continue here: create actual sub plot in svg sub element that is translated off the original svg? resuse the progress.js code
+
+        var _samples = this.resultTable.at[rIdx][cIdx];
+
+        // subpane is a collection of variables that make up a subpane, including its data marks
+        var subpane = {};
+
 
         /// create subpane
-        var subpaneD3 = _canvas.canvasD3.append('svg')
+        // note: as it is a svg element no translation relative to the full view pane is required
+        // note: d3 selection are arrays of arrays, hence at is a "four fold"-array. just so that you aren't confused.
+        subpane.paneD3 = _canvas.canvasD3.append('svg')
           .attr({
             "width": _config.subPane.width,
             "height": _config.subPane.height,
             "x": cIdx * _config.subPane.width,
             "y": rIdx * _config.subPane.height
           });
-        subpaneD3.append('rect')//todo: this is just for debugging
-          .attr({
-            "width": _config.subPane.width,
-            "height": _config.subPane.height,
-            "style": "fill:blue"
-         });
-
-        this.at[rIdx][cIdx] = subpaneD3;
 
         /// plot samples as circles
 
         // create a group for point marks
         // @init
-        subpaneD3.pointsD3 = subpaneD3.append("g");
+        subpane.pointsD3 = subpane.paneD3.append("g");
 
         /// update / remove / add marks
         // store update selection, this also creates enter and exit subselections
-        var pointsD3 = subpaneD3.pointsD3
+        var pointsD3 = subpane.pointsD3
           .selectAll(".point")
-          .data(d3.range(10));
+          .data(d3.range(25));
 
         // add new elements for all enter subselections
         var newPointsD3 = pointsD3
@@ -230,10 +233,15 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
         // -> then update all the same way
         pointsD3.select(".shape")
           .attr({
-            cx: 10,
-            cy: 10,
+        //    cx: _samples[this.query.layout.xIdx],
+            cx: function() {return Math.floor(Math.random() * _config.subPane.width);},
+            cy: function() {return Math.floor(Math.random() * _config.subPane.height);},
+            r: 6,
             fill: "red"
           });
+
+        // save it
+        this.at[rIdx][cIdx] = subpane;
       }
     }
 
