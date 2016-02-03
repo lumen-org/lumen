@@ -131,9 +131,10 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
   }
 
   /**
-   * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s). Each cell of the result table holds its own data, and is access by its row and column index via the at property.
-   * Note that the header of each cell may not be identical, e.g. when using something like "avg(age)+avg(income)" for the row mapping.
-   Therefore a {@link ResultTable} also attaches index values to the aesthetics and layers of a query. The index's value is the index in the data table of a cell.
+   * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s). Each cell of the result table holds its own data, and is accessed by its row and column index via the at property.
+   *
+   * The at propery contains no information about what FieldUsages are encoded in what index. Therefore, a {@link ResultTable} has the indexes property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
+   *
    * @alias module:ResultTable
    * @constructor
    */

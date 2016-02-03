@@ -70,7 +70,7 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: [0, 1]
+          domain: _.range(30) //[0, 1]
         });
       var nameField = new F.Field(
         'name', myModel, {
@@ -126,8 +126,7 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
    * @returns {DummyModel}
    */
   DummyModel.prototype.marginalize = function (v) {
-    if (!Array.isArray(v))
-      v = [v];
+    if (!Array.isArray(v)) v = [v];
     logger.info(v);
     v.forEach( function(e) {
       // dummy model: don't do anything with value, but remove the marginalized field
@@ -169,10 +168,10 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
 
     // todo: implement
     if (aggregation === F.FUsageT.Aggregation.avg) {
-      return Math.random();
+      return Math.random()*100;
     } else
     if (aggregation === F.FUsageT.Aggregation.sum) {
-      return Math.random();
+      return Math.random()*100;
     } else {
       throw new Error("not supported aggregation type given: " + aggregation);
     }

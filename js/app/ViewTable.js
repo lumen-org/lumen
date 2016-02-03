@@ -76,7 +76,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
         // categorial domain: map to center of equally sized bands
         scale = d3.scale.ordinal()
           .domain(fu.domain)
-          .rangeRoundPoints(range, 1.0);  // 1.0 makes points centered in their band
+          .rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
       default:
         throw new TypeError("invalid Field.Kind: " + fu.kind);
@@ -220,7 +220,21 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
         let pointsD3 = subpane.pointsD3
           .selectAll(".point")
           //.data(d3.range(25));
-          .data(samples);
+          // todo: fix: use tuple-storage in result table already
+          .data(
+            // converts column based to tuple based!
+            function () {
+              var len = samples[0].length;
+              var tupleData = new Array(len);
+              for (var i=0; i<len; ++i) {
+                tupleData[i] = samples.map( function(dim) {
+                  return dim[i];
+                } );
+              }
+              console.log(tupleData);
+              return tupleData;
+            }
+          );
 
         // add new elements for all enter subselections
         let newPointsD3 = pointsD3
@@ -235,14 +249,17 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
         // -> then update all the same way
         pointsD3.select(".shape")
           .attr({
-            cx: function (d, i) {
-              return d;
+            cx: function (d) {
+              return d[indexes.x];
+            },
+            cy: function (d) {
+              return d[indexes.y];
             },
             /*  samples[indexes.x],
             cy: samples[indexes.y],*/
 /*            cx: function() {return Math.floor(Math.random() * _config.subPane.width);},
             cy: function() {return Math.floor(Math.random() * _config.subPane.height);},*/
-            r: 6,
+            r: 3,
             fill: "red"
           });
 
@@ -315,8 +332,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     var aesthetics = query.layers[0].aestetics;
     aesthetics.color.visScale = scaleGenerator.color(aesthetics.color);
 
-    query.layout.cols.forEach( function(c){c.visScale = scaleGenerator.pos(c, this.config.subPane.width);}, this );
-    query.layout.rows.forEach( function(c){c.visScale = scaleGenerator.pos(c, this.config.subPane.height);}, this );
+    query.layout.cols.forEach( function(c){c.visScale = scaleGenerator.pos(c, [0, this.config.subPane.width]);}, this );
+    query.layout.rows.forEach( function(c){c.visScale = scaleGenerator.pos(c, [0, this.config.subPane.height]);}, this );
 
     //aesthetics.color.visScale = ... todo!!
     // set domain: already there for dimensions. what to do for measures? todo: implement too!
