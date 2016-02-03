@@ -33,7 +33,6 @@ define(['./Field'], function (F) {
    */
   Model.prototype.marginalize = function (v) {
     throw new Error("You have to implement this function in your subclass");
-    // implement
   };
 
   /**
@@ -78,14 +77,19 @@ define(['./Field'], function (F) {
   };
 
   /**
-   * Returns true iff field is a field of this model.
+   * Returns true iff field is a field of this model. Note that it returns false, if it is a FieldUsage that is based on a Field of this model.
    * @param field
    */
   Model.prototype.isField = function (field) {
     return field instanceof F.Field && (-1 !== this.fields.indexOf(field));
-    /* version including FieldUsages:
-    return ( (field instanceof F.Field && (-1 !== this.fields.indexOf(field))) ||
-             (field instanceof F.FieldUsage && (-1 !== this.fields.indexOf(field.base))) );*/
+  };
+
+  /**
+   * Returns true iff fu is a {@link FieldUsage} that is based on a {@link Field} of this model.
+   * @param fu
+   */
+  Model.prototype.isFieldUsage = function (fu) {
+    return fu instanceof F.FieldUsage && (-1 !== this.fields.indexOf(fu.base));
   };
 
   /**
@@ -98,6 +102,8 @@ define(['./Field'], function (F) {
       return id;
     if (this.isName(id))
       return _.findIndex(this.fields, function(f){return f.name === id;});
+    if (this.isFieldUsage(id))
+      return this.fields.indexOf(id.base);
     if (this.isField(id))
       return this.fields.indexOf(id);
     throw new Error("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");

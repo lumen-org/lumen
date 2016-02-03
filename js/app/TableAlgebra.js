@@ -84,6 +84,9 @@ define(['./Field', './shelves'], function (F, sh) {
    */
   TableAlgebraExpr.prototype.normalize = function () {
 
+    // todo: implement check: each NSF element may not contain more than 1 measure usage
+    // todo: implement check: if a NSF element contains a measure usage, this must be the last piece of that NSF element.
+
     // 1. turn FieldUsages into their domain representation
     // the domain representation of a FieldUsage is an array of symbols, i.e.:
     // (i) a single symbol, i.e. the name of the field, if the field is quantitative

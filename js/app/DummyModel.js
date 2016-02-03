@@ -111,6 +111,7 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
    * @param v - A variable of the model, given by its index (a number) or its name (a string).
    * @param value - The value to condition v on.
    * @returns {DummyModel}
+   * todo: implement such that it works with arrays of variables and values too
    */
   DummyModel.prototype.condition = function (v, value) {
     // dummy model: don't do anything with value, but remove the conditioned field
@@ -127,8 +128,11 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
   DummyModel.prototype.marginalize = function (v) {
     if (!Array.isArray(v))
       v = [v];
+    logger.info(v);
     v.forEach( function(e) {
       // dummy model: don't do anything with value, but remove the marginalized field
+      logger.info(e);
+      logger.info(this._asIndex(e));
       this.fields = _.without(this.fields, this.fields[ this._asIndex(e)] );
     }, this);
 /*
@@ -153,12 +157,26 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
 
 
   /**
-   *
+   * Returns the requested aggregation on the model, using the given values as input.
+   * @param values An array pairs of fields and value.
+   * @returns {Number}
    */
-  DummyModel.prototype.aggregate = DummyModel.prototype.density;
-//  function () {
-//    return this.density(arguments);
-//  };
+  DummyModel.prototype.aggregate = function (values, aggregation) {
+
+    // todo: in the future we might want to support aggregation on more than one variables
+    if (values.length !== this.size()-1)
+      throw new Error("for now only aggregations on 1 variable are allowed.");
+
+    // todo: implement
+    if (aggregation === F.FUsageT.Aggregation.avg) {
+      return Math.random();
+    } else
+    if (aggregation === F.FUsageT.Aggregation.sum) {
+      return Math.random();
+    } else {
+      throw new Error("not supported aggregation type given: " + aggregation);
+    }
+  };
 
   /**
    * @param {string} [name] - the new name of the model.

@@ -186,16 +186,16 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
     // create table of ViewPanes
     this.at = new Array(_config.rows);
-    for (var rIdx=0; rIdx<_config.rows; rIdx++) {
+    let indexes = this.resultTable.indexes;
+    for (let rIdx=0; rIdx<_config.rows; rIdx++) {
       this.at[rIdx] = new Array(_config.cols);
-      for (var cIdx=0; cIdx<_config.rows; cIdx++) {
+      for (let cIdx=0; cIdx<_config.rows; cIdx++) {
         // todo: continue here: create actual sub plot in svg sub element that is translated off the original svg? resuse the progress.js code
 
-        var _samples = this.resultTable.at[rIdx][cIdx];
+        let samples = this.resultTable.at[rIdx][cIdx];
 
         // subpane is a collection of variables that make up a subpane, including its data marks
-        var subpane = {};
-
+        let subpane = {};
 
         /// create subpane
         // note: as it is a svg element no translation relative to the full view pane is required
@@ -216,12 +216,14 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
         /// update / remove / add marks
         // store update selection, this also creates enter and exit subselections
-        var pointsD3 = subpane.pointsD3
+        // @update
+        let pointsD3 = subpane.pointsD3
           .selectAll(".point")
-          .data(d3.range(25));
+          //.data(d3.range(25));
+          .data(samples);
 
         // add new elements for all enter subselections
-        var newPointsD3 = pointsD3
+        let newPointsD3 = pointsD3
           .enter()
           .append("g")
           .classed("point mark", true);
@@ -233,9 +235,13 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
         // -> then update all the same way
         pointsD3.select(".shape")
           .attr({
-        //    cx: _samples[this.query.layout.xIdx],
-            cx: function() {return Math.floor(Math.random() * _config.subPane.width);},
-            cy: function() {return Math.floor(Math.random() * _config.subPane.height);},
+            cx: function (d, i) {
+              return d;
+            },
+            /*  samples[indexes.x],
+            cy: samples[indexes.y],*/
+/*            cx: function() {return Math.floor(Math.random() * _config.subPane.width);},
+            cy: function() {return Math.floor(Math.random() * _config.subPane.height);},*/
             r: 6,
             fill: "red"
           });

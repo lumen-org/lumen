@@ -99,11 +99,30 @@ define(['./utils'], function (utils) {
       this.name);
   };
 
+
+  /**
+   * Returns true iff obj is a {@Field} that is a measure.
+   * @param obj
+   */
+  function isMeasure (obj) {
+    return obj instanceof Field && obj.role === FieldT.Role.measure;
+  }
+
+  /**
+   * Returns true iff obj is a {@Field} that is a dimension.
+   * @param obj
+   */
+  function isDimension (obj) {
+    return obj instanceof Field && obj.role === FieldT.Role.dimension;
+  }
+
   return {
     FieldT : FieldT,
     FUsageT : FUsageT,
     Field: Field,
-    FieldUsage: FieldUsage
+    FieldUsage: FieldUsage,
+    isMeasure: isMeasure,
+    isDimension: isDimension
   };
 
 });

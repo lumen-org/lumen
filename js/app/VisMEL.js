@@ -38,7 +38,8 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       cols: new TableAlgebra(shelf.column),
       toString: function () {
         return JSON.stringify(layout, _replacer.layout, _delim);
-      }
+      },
+
       // states equivalence between two fields in two different data sources
       // ... required to support multiple sources
 
@@ -141,6 +142,14 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   VisMEL.prototype.measureUsages = function () {
     return this.fieldUsages()
       .filter( function(field) {return field.role === F.FieldT.Role.measure;});
+  };
+
+  /**
+   * @returns Returns the set of {@link FieldUsage}s of this query that are common among all implied submodels, i.e. all field usages except those of the layout part of the query.
+   */
+  VisMEL.prototype.commonMeasureUsages = function () {
+    return _.without( this.measureUsages(),
+      ...this.layout.rows.fieldUsages(), ...this.layout.cols.fieldUsages() );
   };
 
   /**

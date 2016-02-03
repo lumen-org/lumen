@@ -3,8 +3,11 @@
  * @author Philipp Lucas
  */
 
-define(['./ModelTable'], function (ModelTable) {
+define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTable) {
   "use strict";
+
+  var logger = Logger.get('pl-ResultTable');
+  logger.setLevel(Logger.DEBUG);
 
   /**
    * @param value The value to replicate
@@ -12,7 +15,7 @@ define(['./ModelTable'], function (ModelTable) {
    * @returns {Array} Returns an array of length times that contains value as all its elements.
    * @private
    *
-  function _repeat(value, times) {
+   function _repeat(value, times) {
     var array = new Array(times);
     for(var i=0;i<times;++i)
       array[i] = value;
@@ -64,7 +67,7 @@ define(['./ModelTable'], function (ModelTable) {
       // repeat sequence of elements aRows many times
       for (aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
         // iterate over elements (of current column of b)
-        for (bRowIdx = 0; bRowIdx < bRows; ++bRowIdx){
+        for (bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
           column[rowIdx] = b[colIdx][bRowIdx];
           ++rowIdx;
         }
@@ -83,74 +86,123 @@ define(['./ModelTable'], function (ModelTable) {
    * @param {FieldUsage} The dimensions of the model to sample.
    * @param {FieldUsage} The measures of the model to sample.
    * @param rows The precomputed length of the result table.
-   * @param nsfe the nsf (normalized set form) element that belongs to this model. This is needed to get the pane specific measure (on rows or columns).
+   * @param nsfe the nsf (normalized set form) element that belongs to this model. This is needed to get the pane specific measure (i.e. on rows or columns).
    * @returns {*}
    * @private
    */
-  function _resultTablePerPane(model, dimensions, measures, rows) {
+  function _resultTablePerPane(model, dimensions, measures, rows, nsfe) {
     // todo: performance: let _join work on a preallocated (possibly larger than for a particular _join call needed) array
+    // todo: implement aggregations on multiple variables of a model.
+    // todo: how to pass values to the model efficiently? idea: just expect the values in the order of variables of the model
+
     // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
-    var resultTable = dimensions.reduce(
+    var inputTable = dimensions.reduce(
       function (table, dim) {
         return _join(table, [dim.domain]);
       }, []);
+    var outputTable = [];
 
     // add columns for values of measures
-    measures.forEach( function (m) {
-      var column = new Array(rows);
-      for (var i = 0; i < rows; ++i) {
-        // todo: how to do that!?
-        // todo: actually I need for each aggregation (be it on multiple fields or not) a separate model!
-        // and there may very well be multiple measure per pane! e.g. avg(age) on color and avg(income) on rows
-        column[i] = model.aggregate(
-//          todo continue here: need to get the actual data for the aggregation calculation
-          new Array(model.size())
+    measures.forEach(function (m) {
+      let column = new Array(rows);
+
+      // generate specialized model for the current measure.
+      let measureModel = model.copy().marginalize(_.without(measures, m));
+
+      // sample accordingly
+      for (var rowIdx = 0; rowIdx < rows; ++rowIdx) {
+
+        // condition on dimension values / collect dimension values
+        let dimValues = inputTable.map(
+          function (v) {
+            return v[rowIdx];
+          }
         );
+
+        // aggregate remaining model
+        // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure
+        // then calculate the aggregation on that measure
+        column[rowIdx] = measureModel.aggregate(dimValues, m.aggr);
       }
-      resultTable.push(column);
+      outputTable.push(column);
     });
 
-    return resultTable;
+    return [...outputTable, ...inputTable];
   }
 
   /**
    * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s). Each cell of the result table holds its own data, and is access by its row and column index via the at property.
    * Note that the header of each cell may not be identical, e.g. when using something like "avg(age)+avg(income)" for the row mapping.
-    Therefore a {@link ResultTable} also attaches index values to the aesthetics and layers of a query. The index's value is the index in the data table of a cell.
+   Therefore a {@link ResultTable} also attaches index values to the aesthetics and layers of a query. The index's value is the index in the data table of a cell.
    * @alias module:ResultTable
    * @constructor
    */
-  var ResultTable; ResultTable = function (modelTable) {
+  var ResultTable;
+  ResultTable = function (modelTable) {
     this.modelTable = modelTable;
     this.query = modelTable.query;
     this.rows = modelTable.rows;
     this.cols = modelTable.cols;
     if (this.rows === 0 || this.cols === 0)
       return; //todo: do I need that?
+    this.indexes = {};
 
     // common among all panes
     var dimensions = this.query.splittingDimensionUsages();
-    // todo: this is wrong. We may not include measure of the layout part, as they may be not be the same for all panes
-    var measures = this.query.measureUsages();
+    var commonMeasures = this.query.commonMeasureUsages();
 
-    // todo: the follwing doesn't work for measures. Do I have to create a domain of a "previous" measure when converting it to a dimension?
-    // todo: it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
-    var resultLength = dimensions.reduce( function(rows, dim) { return rows * dim.domain.length;}, 1);
-
-    // add header, i.e. array of FieldUsages that belong to the result table.
-    // note: header is same for all "per pane result tables"!
-    // todo: that's wrong! e.g imagine height+weight ON COLS .... then not all per-pane result tables contain both, height and weight!
-    this.header = dimensions.concat(measures);
+    // todo: the follwing doesn't work for measures yet. Do I have to create a domain of a "previous" measure when converting it to a dimension? with this approach yes, however it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
+    var resultLength = dimensions.reduce(function (rows, dim) {
+      return rows * dim.domain.length;
+    }, 1);
 
     // attach indices to aestethics and layer mappings of the query.
+    // this is needed to know how field usages of the VisMEL query map to vectors in the result table
+    // todo: this seems ugly
 
+    var rowNSF = this.modelTable.rowNSF;
+    var colNSF = this.modelTable.colNSF;
+    {
+      /* important note:
+         this assumes a certain order of fieldUages in the result table columns:
+           1. layoutMeasures
+           2. commonMeasures
+           3. dimensionUsages
+         this order has to be used when constructring the actual result table later!
+        */
+      let idx = 0;
+      let fu = [...dimensions, ...commonMeasures];
+      let aesthetics = this.query.layers[0].aestetics;
 
-    // for each model in the modelTable
+      if (F.isMeasure(colNSF[0].last().fieldUsage))
+        this.indexes.x = idx++;
+      if (F.isMeasure(rowNSF[0].last().fieldUsage))
+        this.indexes.y = idx++;
+      if (aesthetics.color instanceof F.FieldUsage)
+        this.indexes.color = fu.indexOf(aesthetics.color) + idx;
+      if (aesthetics.shape instanceof F.FieldUsage)
+        this.indexes.shape = fu.indexOf(aesthetics.shape) + idx;
+      if (aesthetics.size instanceof F.FieldUsage)
+        this.indexes.size = fu.indexOf(aesthetics.size) + idx;
+        // todo: implement this for details - though its not necessarily needed for visualization
+        // todo: what about filter??
+    }
+
+    // do sampling for each model in the modelTable
     this.at = new Array(this.rows);
-    for (var rIdx=0; rIdx<this.rows; rIdx++) {
+    for (let rIdx = 0; rIdx < this.rows; rIdx++) {
       this.at[rIdx] = new Array(this.cols);
-      for (var cIdx=0; cIdx<this.cols; cIdx++) {
-         this.at[rIdx][cIdx]  = _resultTablePerPane(modelTable.at[rIdx][cIdx], dimensions, measures, resultLength); // geht das so???
+      for (let cIdx = 0; cIdx < this.cols; cIdx++) {
+        // there may be pane specific measures, i.e. measures in the table algebra expression
+        // note: if there is one, it always is the last in a NSF element
+        let layoutMeasures = [rowNSF[rIdx].last().fieldUsage, colNSF[cIdx].last().fieldUsage]
+          .filter(F.isMeasure);
+
+        this.at[rIdx][cIdx] = _resultTablePerPane(
+          modelTable.at[rIdx][cIdx],
+          dimensions,
+          [...layoutMeasures, ...commonMeasures],
+          resultLength);
       }
     }
   };

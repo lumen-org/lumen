@@ -52,7 +52,7 @@ define(['app/Model', 'app/DummyModel'], function (Model, DummyModel) {
       expect(model1.isField(model1.fields[model1.size()-1])).toBe(true);
     });
 
-    it('tests all the ways of converting field specification into one another', function () {
+    it('tests all the ways of converting field specifications into one another', function () {
       expect(model1._asIndex(0)).toBe(0);
       expect(model1._asIndex(model1.fields[6])).toBe(6);
       expect(model1._asIndex(model1.fields[1].name)).toBe(1);

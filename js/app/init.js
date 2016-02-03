@@ -21,4 +21,11 @@ define(['lib/logger','d3'], function (Logger, d3) {
     return parseFloat(this.attr(attributeString));
   };
 
+
+  // extent array prototype
+
+  Array.prototype.last = function() {
+    return this[this.length-1];
+  };
+
 });
