@@ -120,8 +120,7 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
         );
 
         // aggregate remaining model
-        // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure
-        // then calculate the aggregation on that measure
+        // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
         column[rowIdx] = measureModel.aggregate(dimValues, m.aggr);
       }
       outputTable.push(column);
@@ -173,7 +172,7 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
         */
       let idx = 0;
       let fu = [...dimensions, ...commonMeasures];
-      let aesthetics = this.query.layers[0].aestetics;
+      let aesthetics = this.query.layers[0].aesthetics;
 
       if (F.isMeasure(colNSF[0].last().fieldUsage))
         this.indexes.x = idx++;

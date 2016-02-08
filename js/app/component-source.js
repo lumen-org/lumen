@@ -20,8 +20,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width:300,
-        height:300
+        width:500,
+        height:500
       });
 
     // define shelves
@@ -61,9 +61,14 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     inter.asRemoveElem($(document.body).find('main'));
     // do some drag and drops to start with so VisMEL query
 
-    inter.onDrop(shelf.color, shelf.dim.at(0));
+
+    inter.onDrop(shelf.row, shelf.dim.at(1));
     inter.onDrop(shelf.row, shelf.meas.at(0));
     inter.onDrop(shelf.column, shelf.meas.at(1));
+    inter.onDrop(shelf.color, shelf.dim.at(2));
+    inter.onDrop(shelf.shape, shelf.dim.at(0));
+//    inter.onDrop(shelf.size, shelf.meas.at(2));
+
 
     //inter.onDrop(shelf.filter, shelf.dim.at(2));
     //inter.onDrop(shelf.detail, shelf.dim.at(1));
@@ -109,32 +114,6 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     });
 
     function myScript () {
-
-      /* var dataX = [1,2,3,4,5,6,7,2];
-       var dataY = [4,5,1,6,7,1,2,3];
-
-       var d3box = d3.select('#d3box');
-
-       var x = d3.scale.linear()
-       .domain([0, d3.max(dataX)])
-       //.range([0, parseInt(d3box.style("width"),10)]);
-       .range([0, 100]);
-
-       var y = d3.scale.linear()
-       .domain([0, d3.max(dataY)])
-       .range([0, 100]);
-
-       //debugger;
-
-       d3box.selectAll('g')
-       .data(dataX)
-       .enter().append('div')
-       .classed("d3bar", true)
-       .style("height", "20px")
-       .style("width", function(d) {return x(d)+"%";})
-       .text( function(d){return d;});
-       //debugger;
-       */
     }
 
     return {

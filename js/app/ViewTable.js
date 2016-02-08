@@ -21,7 +21,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
   var scaleGenerator = {};
   /**
-   * Creates a color scale based on a given field usage.
+   * Creates a color scale based on a given {@link F.FieldUsage}.
    * @param fu A {@link FieldUsage}.
    * @returns the created color scale.
    * todo: respect scales and ordering as set in the FUsageT attributes
@@ -30,7 +30,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // the following is how I think this may be done for the color mapping.
     var colormap = [],
       scale = [];
-    switch(fu.kind) {
+    switch (fu.kind) {
       case F.FieldT.Kind.cont:
         scale = d3.scale.linear();
         colormap = cbrew.Blues["9"];
@@ -59,13 +59,40 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
 
   /**
+   * Creates a size scale based on a given {@link F.FieldUsage}.
+   * @param fu {@link FieldUsage}.
+   * @returns the created size scale.
+   */
+  scaleGenerator.size = function (fu) {
+    throw new Error("Using scaleGenerator.pos at the moment. This one is not implemented yet.");
+    // todo: implement this one!?
+  };
+
+
+  scaleGenerator.shape = function (fu) {
+    var scale = [];
+    switch (fu.kind) {
+      case F.FieldT.Kind.cont:
+        throw new Error("continuous shapes not yet implemented.");
+      case F.FieldT.Kind.discrete:
+        scale = d3.scale.ordinal()
+          .range(d3.svg.symbolTypes);
+        break;
+      default:
+        throw new TypeError("invalid Field.Kind" + fu.kind);
+    }
+    return scale.domain(fu.domain);
+  };
+
+
+  /**
    * Creates a 'positional' scale based on given field usage and desired range.
    * @param fu A {@link FieldUsage}.
    * @param range
    */
   scaleGenerator.pos = function (fu, range) {
     var scale = [];
-    switch(fu.kind) {
+    switch (fu.kind) {
       case F.FieldT.Kind.cont:
         // continuous domain: todo: map according to FUsageT.Scale attribute
         scale = d3.scale.linear()
@@ -83,6 +110,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     }
     return scale;
   };
+
   // todo: all the other aesthetics
 
 
@@ -103,12 +131,15 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // setup basic geometry of actual drawing canvas, with margin (outer) and padding (inner)
     var canvas = {};
     canvas.paneD3 = canvasD3;
-    canvas.outerWidth  = canvas.paneD3.attr2num("width");
+    canvas.outerWidth = canvas.paneD3.attr2num("width");
     canvas.outerHeight = canvas.paneD3.attr2num("height");
-    canvas.padding  = padding;
+    canvas.padding = padding;
     canvas.margin = margin;
-    canvas.width   = canvas.outerWidth - canvas.margin.left - canvas.margin.right -  canvas.padding.left - canvas.padding.right; // i.e. inner width
-    canvas.height  = canvas.outerHeight- canvas.margin.top - canvas.margin.bottom - canvas.padding.top - canvas.padding.bottom; // i.e. inner height
+    canvas.width = canvas.outerWidth - canvas.margin.left - canvas.margin.right - canvas.padding.left - canvas.padding.right; // i.e. inner width
+    canvas.height = canvas.outerHeight - canvas.margin.top - canvas.margin.bottom - canvas.padding.top - canvas.padding.bottom; // i.e. inner height
+
+    // remove all previous content of canvasD3
+    canvasD3.selectAll("g").remove();
 
     // setup the real canvas for drawing and a clip path
     canvas.canvasD3 = canvas.paneD3.append("g")
@@ -119,12 +150,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     canvas.clipPathD3
       .append("rect")
       .attr({
-        x : -canvas.padding.left,
-        y : -canvas.padding.top,
+        x: -canvas.padding.left,
+        y: -canvas.padding.top,
         width: canvas.width + canvas.padding.left + canvas.padding.right,
-        height: canvas.height+ canvas.padding.top + canvas.padding.bottom
+        height: canvas.height + canvas.padding.top + canvas.padding.bottom
       });
-    
+
     return canvas;
   }
 
@@ -145,7 +176,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   }
 
 
-    /**
+  /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
    * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
    *
@@ -158,7 +189,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
    * @constructor
    * @alias module:ViewTable
    */
-  var ViewTable; ViewTable = function (paneD3, resultTable) {
+  var ViewTable;
+  ViewTable = function (paneD3, resultTable) {
 
     this.query = resultTable.query;
     this.resultTable = resultTable;
@@ -173,11 +205,16 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     this.updateConfig();
 
     // add scales to field usages of this query
-    this.setupScales(this.query);
+    this.attachScales(this.query);
+
+    // attach mappers
+    this.attachMappers(this.query);
 
     // shortcuts for usage
     var _config = this.config;
     var _canvas = this.canvas;
+    var _aesthetics = this.query.layers[0].aesthetics;
+    var _layout = this.query.layout;
 
     // init axis
     // 1. axis of discrete variables:
@@ -187,10 +224,9 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     // create table of ViewPanes
     this.at = new Array(_config.rows);
     let indexes = this.resultTable.indexes;
-    for (let rIdx=0; rIdx<_config.rows; rIdx++) {
+    for (let rIdx = 0; rIdx < _config.rows; rIdx++) {
       this.at[rIdx] = new Array(_config.cols);
-      for (let cIdx=0; cIdx<_config.rows; cIdx++) {
-        // todo: continue here: create actual sub plot in svg sub element that is translated off the original svg? resuse the progress.js code
+      for (let cIdx = 0; cIdx < _config.cols; cIdx++) {
 
         let samples = this.resultTable.at[rIdx][cIdx];
 
@@ -199,7 +235,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
 
         /// create subpane
         // note: as it is a svg element no translation relative to the full view pane is required
-        // note: d3 selection are arrays of arrays, hence at is a "four fold"-array. just so that you aren't confused.
+        // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
         subpane.paneD3 = _canvas.canvasD3.append('svg')
           .attr({
             "width": _config.subPane.width,
@@ -208,7 +244,21 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
             "y": rIdx * _config.subPane.height
           });
 
-        /// plot samples as circles
+        // @debug
+        subpane.paneD3.append('rect')
+          .attr({
+            x: 0,
+            y: 0,
+            width: _config.subPane.width,
+            height: _config.subPane.height,
+            stroke: _config.default.appearance.pane.borderColor,
+            'stroke-width': 2,
+            'fill': _config.default.appearance.pane.fill
+            //'fill-opacity': 0
+          });
+
+
+        /// plot samples
 
         // create a group for point marks
         // @init
@@ -219,49 +269,52 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
         // @update
         let pointsD3 = subpane.pointsD3
           .selectAll(".point")
-          //.data(d3.range(25));
           // todo: fix: use tuple-storage in result table already
           .data(
             // converts column based to tuple based!
             function () {
               var len = samples[0].length;
               var tupleData = new Array(len);
-              for (var i=0; i<len; ++i) {
-                tupleData[i] = samples.map( function(dim) {
+              for (var i = 0; i < len; ++i) {
+                tupleData[i] = samples.map(function (dim) {
                   return dim[i];
-                } );
+                });
               }
-              console.log(tupleData);
               return tupleData;
             }
           );
 
-        // add new elements for all enter subselections
+        // add new svg elements for enter subselection
         let newPointsD3 = pointsD3
           .enter()
           .append("g")
           .classed("point mark", true);
         newPointsD3
-          .append("circle")
-          .classed("shape", true);
+          .append("path")
+          .classed("path", true);
 
         // the just appended elements are now part of the update selection!
-        // -> then update all the same way
-        pointsD3.select(".shape")
-          .attr({
-            cx: function (d) {
-              return d[indexes.x];
-            },
-            cy: function (d) {
-              return d[indexes.y];
-            },
-            /*  samples[indexes.x],
-            cy: samples[indexes.y],*/
-/*            cx: function() {return Math.floor(Math.random() * _config.subPane.width);},
-            cy: function() {return Math.floor(Math.random() * _config.subPane.height);},*/
-            r: 3,
-            fill: "red"
-          });
+        // -> now update all the same way
+
+        // set position of shapes by translating the enclosing g group
+        pointsD3.attr( {
+          'transform': function (d) { return 'translate(' +
+              _layout.cols.last().visScale(d[indexes.x]) + ',' +
+              _layout.rows.last().visScale(d[indexes.y]) + ')';
+            }
+        });
+
+        // setup shape path generator
+        // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
+        let shapePathGen = d3.svg.symbol()
+          .size(_aesthetics.size.mapper)
+          .type(_aesthetics.shape.mapper);
+
+        // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
+        pointsD3.select(".path").attr({
+          'd': shapePathGen,
+          fill: _aesthetics.color.mapper,
+        });
 
         // save it
         this.at[rIdx][cIdx] = subpane;
@@ -284,6 +337,9 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   };
 
 
+  /**
+   * todo: document me
+   */
   ViewTable.prototype.updateConfig = function () {
     this.config = {
       rows: this.resultTable.rows,
@@ -291,8 +347,26 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
     };
     // the size of a subpane in px
     this.config.subPane = {
-      height: this.canvas.width / this.config.cols,
-      width: this.canvas.height / this.config.rows
+      height: this.canvas.height / this.config.rows,
+      width: this.canvas.width  / this.config.cols
+    };
+
+    // defaults for visualization
+    // todo: this is static, move to initialization
+    this.config.default = {
+      maps: {
+        size: 64,
+        minSize: 32,
+        maxSize: 2048,
+        color: "red",
+        shape: d3.svg.symbol()
+      },
+      appearance: {
+        pane: {
+          borderColor: "#d4d4d4",
+          fill: '#fbfbfb'
+        }
+      }
     };
   };
 
@@ -302,7 +376,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
    * A scale in this context is a function that maps from the domain of a {@link FieldUsage} to the range the visual variable representing it in the visualization.
    * @param query {VisMEL} A VisMEL query.
    */
-  ViewTable.prototype.setupScales = function (query) {
+  ViewTable.prototype.attachScales = function (query) {
 
     /* todo: consider these notes!!
      notes:
@@ -329,21 +403,72 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
      them here in this function!
      */
 
-    var aesthetics = query.layers[0].aestetics;
-    aesthetics.color.visScale = scaleGenerator.color(aesthetics.color);
+    let aesthetics = query.layers[0].aesthetics;
 
-    query.layout.cols.forEach( function(c){c.visScale = scaleGenerator.pos(c, [0, this.config.subPane.width]);}, this );
-    query.layout.rows.forEach( function(c){c.visScale = scaleGenerator.pos(c, [0, this.config.subPane.height]);}, this );
+    if (!_.isEmpty(aesthetics.color))
+      aesthetics.color.visScale = scaleGenerator.color(aesthetics.color);
 
-    //aesthetics.color.visScale = ... todo!!
-    // set domain: already there for dimensions. what to do for measures? todo: implement too!
-    // set range :
-    // set interpolation?
+    if (!_.isEmpty(aesthetics.size))
+      aesthetics.size.visScale = scaleGenerator.pos(aesthetics.size,
+        [this.config.default.maps.minSize, this.config.default.maps.maxSize]);
+
+    if(!_.isEmpty(aesthetics.shape))
+    if(!_.isEmpty(aesthetics.shape))
+      aesthetics.shape.visScale = scaleGenerator.shape(aesthetics.shape);
+
+    // todo: warum mache ich das für alle field usages in cols and rows?
+    // erst einmal brauche ich nur eine scale für die measures. und die measures erstrecken sich immer entlang der subpane
+    query.layout.cols.filter(F.isMeasure).forEach(
+      function (c) {
+        c.visScale = scaleGenerator.pos(c, [0, this.config.subPane.width]);
+      },
+      this);
+    query.layout.rows.filter(F.isMeasure).forEach(
+      function (c) {
+        c.visScale = scaleGenerator.pos(c, [0, this.config.subPane.height]);
+      },
+      this);
 
     // no need for scales in: filters, details
 
     // then, i can use it like this, for example:
     // heights.visScale(180); // assuming heights is a FieldUsage :)
+  };
+
+
+  /**
+   * Setup mappers  for the given query. mappers are function that maß data items to visual attributes, svg elements and other. Mappers are used in D3 to bind data to visuals.
+   *
+   * Before mappers can be set up, the scales need to be set up.
+   */
+  ViewTable.prototype.attachMappers = function (query) {
+    let aesthetics = query.layers[0].aesthetics;
+    let indexes = this.resultTable.indexes;
+    let defaults = this.config.default.maps;
+
+    let color = aesthetics.color;
+    color.mapper = (_.isEmpty(color) ?
+      defaults.color :
+      function (d) {
+        return color.visScale(d[indexes.color]);
+      } );
+
+    let size = aesthetics.size;
+    size.mapper = (_.isEmpty(size) ?
+      defaults.size :
+      function (d) {
+        return size.visScale(d[indexes.size]);
+      } );
+
+    let shape = aesthetics.shape;
+    shape.mapper = (_.isEmpty(shape) ?
+        "circle":
+        function (d) {
+          return shape.visScale(d[indexes.shape]);
+        }
+    );
+
+    // todo: add mapper for cols, rows, shape, ...
   };
 
 
@@ -358,7 +483,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field', './VisMEL', './ResultT
   /**
    * A ViewPane is a
    */
-  var ViewPane; ViewPane = function () {
+  var ViewPane;
+  ViewPane = function () {
   };
 
   return ViewTable;

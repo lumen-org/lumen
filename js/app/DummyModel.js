@@ -70,7 +70,7 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: _.range(30) //[0, 1]
+          domain: [0,1] //_.range(10) //[0, 1]
         });
       var nameField = new F.Field(
         'name', myModel, {
@@ -84,7 +84,7 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: ['Jena', 'Weimar', 'Berlin']
+          domain: ['Jena', 'Weimar', 'Berlin', 'Erfurt']
         });
 
       myModel.fields = [

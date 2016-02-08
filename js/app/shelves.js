@@ -103,8 +103,8 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
   };
   
   Shelf.prototype.contentAt = function (idx) {
-	var record = this.records[idx];
-	return (record ? record.content : {});
+    var record = this.records[idx];
+    return (record ? record.content : {});
   };
 
   Shelf.prototype.remove = function (recordOrIdx) {

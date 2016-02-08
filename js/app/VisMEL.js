@@ -71,7 +71,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       filters: _.map(shelf.filter.records, function (r){return r.content;} ), //todo: implement fully: what range do we condition on
       //field_usages: not needed, as we use references
 
-      aestetics: {
+      aesthetics: {
         mark: "auto",
         // shelves that hold a single field usages
         color: shelf.color.contentAt(0),
@@ -114,9 +114,9 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     var usedVars = _.union(
       this.layout.rows.fields(),
       this.layout.cols.fields(),
-      _.map(layer.aestetics.details, function(e){return e.base;}),
+      _.map(layer.aesthetics.details, function(e){return e.base;}),
       _.map(layer.filters, function(e){return e.base;}),
-      [layer.aestetics.color.base, layer.aestetics.shape.base, layer.aestetics.size.base]
+      [layer.aesthetics.color.base, layer.aesthetics.shape.base, layer.aesthetics.size.base]
     );
     return usedVars.filter( function(e){return e instanceof F.Field;} );
   };
@@ -129,8 +129,8 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     var usedVars = _.union(
       this.layout.rows.fieldUsages(),
       this.layout.cols.fieldUsages(),
-      layer.aestetics.details,
-      [ layer.filters, layer.aestetics.color.base, layer.aestetics.shape.base, layer.aestetics.size.base ]
+      layer.aesthetics.details,
+      [ layer.filters, layer.aesthetics.color.base, layer.aesthetics.shape.base, layer.aesthetics.size.base ]
     );
     return usedVars.filter( function(e){return e instanceof F.Field;} );
   };
@@ -162,8 +162,8 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     var layer = this.layers[0];
     return _.filter(
       _.union(
-        layer.aestetics.details,
-        [ layer.aestetics.color, layer.aestetics.shape, layer.aestetics.size]
+        layer.aesthetics.details,
+        [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size]
       ),
       function (e) {
         return e instanceof F.FieldUsage && e.role === F.FieldT.Role.dimension;
