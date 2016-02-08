@@ -8,20 +8,20 @@
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
  * ToDo:
+ *  - split into ViewPanes instead of a whole view table?
+ *  - debug: fix for multiple measures on row/column
+ *  - debug: fix for missing measures on row/column
+ *  - debug: fix for multiple usage of the same field
  *
  * @module ViewTable
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGenerator'], function (Logger, d3, F, VisMEL, ResultTable, ScaleGen) {
+define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGenerator', './ViewSettings'], function (Logger, d3, F, VisMEL, ResultTable, ScaleGen, Settings) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');
   logger.setLevel(Logger.DEBUG);
-
-  var config = {
-
-  };
 
   /**
    * Creates a pane within the given <svg> element, respecting the given margin and padding.
@@ -162,9 +162,9 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
             y: 0,
             width: _config.subPane.width,
             height: _config.subPane.height,
-            stroke: _config.default.appearance.pane.borderColor,
+            stroke: Settings.appearance.pane.borderColor,
             'stroke-width': 2,
-            'fill': _config.default.appearance.pane.fill
+            'fill': Settings.appearance.pane.fill
             //'fill-opacity': 0
           });
 
@@ -183,7 +183,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           // todo: fix: use tuple-storage in result table already
           .data(
             // converts column based to tuple based!
-            function () {
+            function () { // jshint ignore:line
               var len = samples[0].length;
               var tupleData = new Array(len);
               for (var i = 0; i < len; ++i) {
@@ -208,12 +208,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         // -> now update all the same way
 
         // set position of shapes by translating the enclosing g group
-        pointsD3.attr( {
-          'transform': function (d) { return 'translate(' +
-              _layout.cols.last().visScale(d[indexes.x]) + ',' +
-              _layout.rows.last().visScale(d[indexes.y]) + ')';
-            }
-        });
+        pointsD3.attr('transform', _layout.transformMapper);
 
         // setup shape path generator
         // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
@@ -255,24 +250,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     this.config.subPane = {
       height: this.canvas.height / this.config.rows,
       width: this.canvas.width  / this.config.cols
-    };
-
-    // defaults for visualization
-    // todo: this is static, move to initialization
-    this.config.default = {
-      maps: {
-        size: 64,
-        minSize: 32,
-        maxSize: 2048,
-        color: "red",
-        shape: "circle"
-      },
-      appearance: {
-        pane: {
-          borderColor: "#d4d4d4",
-          fill: '#fbfbfb'
-        }
-      }
     };
   };
 
@@ -317,7 +294,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     if (!_.isEmpty(aesthetics.size)) {
       aesthetics.size.visScale = ScaleGen.position(aesthetics.size,
-        [this.config.default.maps.minSize, this.config.default.maps.maxSize]);
+        [Settings.maps.minSize, Settings.maps.maxSize]);
     }
 
     if (!_.isEmpty(aesthetics.shape)) {
@@ -345,35 +322,74 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path, color, size and others. Mappers are used in D3 to bind data to visuals.
    *
    * Before mappers can be set up, the scales need to be set up.
+   *
+   * todo: add mapper for hovering on marks
    */
   ViewTable.prototype.attachMappers = function (query) {
     let aesthetics = query.layers[0].aesthetics;
     let indexes = this.resultTable.indexes;
-    let defaults = this.config.default.maps;
 
-    let color = aesthetics.color;
-    color.mapper = (_.isEmpty(color) ?
-      defaults.color :
-      function (d) {
-        return color.visScale(d[indexes.color]);
-      } );
-
-    let size = aesthetics.size;
-    size.mapper = (_.isEmpty(size) ?
-      defaults.size :
-      function (d) {
-        return size.visScale(d[indexes.size]);
-      } );
-
-    let shape = aesthetics.shape;
-    shape.mapper = (_.isEmpty(shape) ?
-        defaults.shape:
+    {
+      let color = aesthetics.color;
+      color.mapper = (_.isEmpty(color) ?
+        Settings.maps.color :
         function (d) {
-          return shape.visScale(d[indexes.shape]);
-        }
-    );
+          return color.visScale(d[indexes.color]);
+        } );
+    }
+    {
+      let size = aesthetics.size;
+      size.mapper = (_.isEmpty(size) ?
+        Settings.maps.size :
+        function (d) {
+          return size.visScale(d[indexes.size]);
+        } );
+    }
+    {
+      let shape = aesthetics.shape;
+      shape.mapper = (_.isEmpty(shape) ?
+          Settings.maps.shape:
+          function (d) {
+            return shape.visScale(d[indexes.shape]);
+          }
+      );
+    }
+    {
+      let _layout = query.layout;
+      let colFU = _layout.cols.last(),
+        rowFU = _layout.rows.last();
+      let colHasMeas = F.isMeasure(colFU),
+        rowHasMeas = F.isMeasure(rowFU);
+      let xPos = this.config.subPane.width/2,
+        yPos = this.config.subPane.height/2;
 
-    // todo: add mapper for cols, rows, shape, ...
+      if (colHasMeas && rowHasMeas) {
+        _layout.transformMapper = function (d) {
+          return 'translate(' +
+            colFU.visScale(d[indexes.x]) + ',' +
+            rowFU.visScale(d[indexes.y]) + ')';
+        };
+      }
+      else if (colHasMeas && !rowHasMeas) {
+        _layout.mapper = function (d) {
+          return 'translate(' +
+            colFU.visScale(d[indexes.x]) + ',' +
+            yPos + ')';
+        };
+      }
+      else if (!colHasMeas && rowHasMeas) {
+        _layout.mapper = function (d) {
+          return 'translate(' +
+            xPos + ',' +
+            rowFU.visScale(d[indexes.y])+ ')';
+        };
+      }
+      else {
+        // todo: jitter?
+        _layout.mapper = 'translate(' + xPos + ',' + yPos + ')';
+      }
+    }
+
   };
 
   return ViewTable;
