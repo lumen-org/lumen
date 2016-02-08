@@ -29,8 +29,10 @@
       "interact": false,
       "Logger": false,
       "jasmine": false,
-      "expect": false
+      "expect": false,
+      "_": false
     },
-    "unused": "vars"
+    "unused": "vars",
+    "esnext": true
   }
 }

@@ -13,7 +13,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
   var scaleGenerator = {};
 
   /**
-   * Creates a color scale based on a given {@link F.FieldUsage}.
+   * Creates a color scale based on a given {@link FieldUsage}.
    * @param fu A {@link FieldUsage}.
    * @returns the created color scale.
    * todo: respect scales and ordering as set in the FUsageT attributes
@@ -51,7 +51,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
 
 
   /**
-   * Creates a size scale based on a given {@link F.FieldUsage}.
+   * Creates a size scale based on a given {@link FieldUsage}.
    * @param fu {@link FieldUsage}.
    * @returns the created size scale.
    */

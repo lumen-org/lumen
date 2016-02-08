@@ -1,7 +1,7 @@
 define([], function () {
   "use strict";
 
-  var settings = Object.freeze({
+  return Object.freeze({
     maps: {
       size: 64,
       minSize: 32,
@@ -17,6 +17,4 @@ define([], function () {
       }
     }
   });
-
-  return settings;
 });

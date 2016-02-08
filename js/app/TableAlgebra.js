@@ -37,7 +37,7 @@ define(['./Field', './shelves'], function (F, sh) {
   /**
    * Constructor for a table algebra expression from a row or column shelf.
    * @constructor
-   * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsages}.
+   * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsage}s.
    * @alias module:TableAlgebra
    */
   var TableAlgebraExpr = function (shelf) {

@@ -75,7 +75,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * todo: is that needed?
    * todo: document me
    * @param canvas
-   */
+   *
   function setupAxis(canvas) {
     canvas.axis = {};
     canvas.axis.x = canvas.canvas.append("g")
@@ -84,7 +84,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     canvas.axis.y = canvas.canvas.append("g")
       .classed("axis", true)
       .attr("transform", "translate(" + (-canvas.padding.left) + ",0)");
-  }
+  }*/
 
 
   /**
@@ -134,7 +134,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     // create table of ViewPanes
     this.at = new Array(_config.rows);
-    let indexes = this.resultTable.indexes;
     for (let rIdx = 0; rIdx < _config.rows; rIdx++) {
       this.at[rIdx] = new Array(_config.cols);
       for (let cIdx = 0; cIdx < _config.cols; cIdx++) {
@@ -183,17 +182,17 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           // todo: fix: use tuple-storage in result table already
           .data(
             // converts column based to tuple based!
-            function () { // jshint ignore:line
+            function () {
               var len = samples[0].length;
               var tupleData = new Array(len);
-              for (var i = 0; i < len; ++i) {
+              for (let i = 0; i < len; ++i) {
                 tupleData[i] = samples.map(function (dim) {
                   return dim[i];
-                });
+                }); // jshint ignore:line
               }
               return tupleData;
             }
-          );
+          ); // jshint ignore:line
 
         // add new svg elements for enter subselection
         let newPointsD3 = pointsD3
@@ -219,7 +218,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
         pointsD3.select(".path").attr({
           'd': shapePathGen,
-          fill: _aesthetics.color.mapper,
+          fill: _aesthetics.color.mapper
         });
 
         // save it

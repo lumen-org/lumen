@@ -3,7 +3,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTable) {
+define(['lib/logger', './Field'], function (Logger, F) {
   "use strict";
 
   var logger = Logger.get('pl-ResultTable');
@@ -38,20 +38,18 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
       bRows = b[0].length,
       rows = aRows * bRows;
 
-    var rowIdx, colIdx, aRowIdx, bRowIdx;
-    var column, aVal;
-
-    var res = new Array(cols);
+    var rowIdx, column, aVal,
+      res = new Array(cols);
 
     // iterate over columns of a
-    for (colIdx = 0; colIdx < aCols; ++colIdx) {
+    for (let colIdx = 0; colIdx < aCols; ++colIdx) {
       rowIdx = 0;
       column = new Array(rows);
       // iterate over elements (of current column of a)
-      for (aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
+      for (let aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
         // write each element bRows many times
         aVal = a[colIdx][aRowIdx];
-        for (bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
+        for (let bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
           column[rowIdx] = aVal;
           ++rowIdx;
         }
@@ -61,13 +59,13 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
 
     // iterate of columns of b
     // similar but instead of repeating the same element, repeat the sequence of all elements
-    for (colIdx = 0; colIdx < bCols; ++colIdx) {
+    for (let colIdx = 0; colIdx < bCols; ++colIdx) {
       rowIdx = 0;
       column = new Array(rows);
       // repeat sequence of elements aRows many times
-      for (aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
+      for (let aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
         // iterate over elements (of current column of b)
-        for (bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
+        for (let bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
           column[rowIdx] = b[colIdx][bRowIdx];
           ++rowIdx;
         }
@@ -83,8 +81,8 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
    * Sample the given model.
    * Note: the parameters dimensions and measures are {@link FieldUsage}s, not {@link Field}s. They contain the required information on how exactly the model is to be sampled.
    * @param model The model to sample.
-   * @param {FieldUsage} The dimensions of the model to sample.
-   * @param {FieldUsage} The measures of the model to sample.
+   * @param {FieldUsage} dimensions The dimensions of the model to sample.
+   * @param {FieldUsage} measures The measures of the model to sample.
    * @param rows The precomputed length of the result table.
    * @param nsfe the nsf (normalized set form) element that belongs to this model. This is needed to get the pane specific measure (i.e. on rows or columns).
    * @returns {*}
@@ -103,21 +101,19 @@ define(['lib/logger', './Field', './ModelTable'], function (Logger, F, ModelTabl
     var outputTable = [];
 
     // add columns for values of measures
-    measures.forEach(function (m) {
+    measures.forEach( function (m) {
       let column = new Array(rows);
 
       // generate specialized model for the current measure.
       let measureModel = model.copy().marginalize(_.without(measures, m));
 
       // sample accordingly
-      for (var rowIdx = 0; rowIdx < rows; ++rowIdx) {
+      for (let rowIdx = 0; rowIdx < rows; ++rowIdx) {
 
         // condition on dimension values / collect dimension values
         let dimValues = inputTable.map(
-          function (v) {
-            return v[rowIdx];
-          }
-        );
+          function (v) { return v[rowIdx]; }
+        ); // jshint ignore:line
 
         // aggregate remaining model
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure

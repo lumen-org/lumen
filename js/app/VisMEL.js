@@ -38,7 +38,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       cols: new TableAlgebra(shelf.column),
       toString: function () {
         return JSON.stringify(layout, _replacer.layout, _delim);
-      },
+      }
 
       // states equivalence between two fields in two different data sources
       // ... required to support multiple sources
