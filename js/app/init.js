@@ -28,4 +28,8 @@ define(['lib/logger','d3'], function (Logger, d3) {
     return this[this.length-1];
   };
 
+  Array.prototype.names = function () {
+    return this.map(function(s){return s.name;});
+  };
+
 });

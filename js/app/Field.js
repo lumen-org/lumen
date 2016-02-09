@@ -50,7 +50,6 @@ define(['./utils'], function (utils) {
     if (!args) args = {};
     var isF = nameOrField instanceof Field;
     var isD = args.kind === FieldT.Kind.discrete;
-//    console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
     console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
 
     this.name = (isF ? nameOrField.name : nameOrField);
@@ -99,6 +98,7 @@ define(['./utils'], function (utils) {
       this.name);
   };
 
+  //var EmptyField = new Field("empty", {role: "none",  kind:"none", domain:"none", dataType:"none"});
 
   /**
    * Returns true iff obj is a {@Field} that is a measure.
@@ -123,6 +123,7 @@ define(['./utils'], function (utils) {
     FieldUsage: FieldUsage,
     isMeasure: isMeasure,
     isDimension: isDimension
+    //EmptyField :EmptyField
   };
 
 });

@@ -62,11 +62,13 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     // do some drag and drops to start with so VisMEL query
 
 
-    inter.onDrop(shelf.row, shelf.dim.at(1));
-    inter.onDrop(shelf.row, shelf.meas.at(0));
+    /*inter.onDrop(shelf.row, shelf.dim.at(1));
+    inter.onDrop(shelf.row, shelf.meas.at(0));*/
+    inter.onDrop(shelf.row, shelf.dim.at(0));
     inter.onDrop(shelf.column, shelf.meas.at(1));
+
     inter.onDrop(shelf.color, shelf.dim.at(2));
-    inter.onDrop(shelf.shape, shelf.dim.at(0));
+//    inter.onDrop(shelf.shape, shelf.dim.at(0));
 //    inter.onDrop(shelf.size, shelf.meas.at(2));
 
 
@@ -85,9 +87,9 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       resultTable = new ResultTable(modelTable);
       viewTable = new ViewTable(visPaneD3, resultTable);
 
-      $('#queryTextBox').text(
+     /* $('#queryTextBox').text(
         "layout:\n" + query.layout.toString() +
-        "\nlayers:\n" + query.layers.toString() );
+        "\nlayers:\n" + query.layers.toString() );*/
 
       console.log("query: ");
       console.log(query);

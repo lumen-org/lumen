@@ -81,6 +81,8 @@ define(['./Field', './shelves'], function (F, sh) {
 
   /**
    * Returns the normalized set form (NSF) of this table algebra expression. It does not modify this table algebra expression.
+   *
+   * If the table algebra expression is empty, it returns an 'empty NSF element' {@link TableAlgebraExpr.emptyNsfElement}
    */
   TableAlgebraExpr.prototype.normalize = function () {
 
@@ -105,8 +107,11 @@ define(['./Field', './shelves'], function (F, sh) {
     //  -> [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]], *, [[{value: "age", fieldUsage: age}]] ]
     var domainExpr = [];
 
-    if (this.length === 0)
-      return [];
+    if (this.length === 0) {
+      // return the "empty NSF element" (not an empty array)
+      return [[this.emptyNsfElement]];
+    }
+
 
     this.forEach( function(fu) {
       if (fu instanceof F.FieldUsage) {
@@ -153,6 +158,8 @@ define(['./Field', './shelves'], function (F, sh) {
 
     return domainExpr[0];
   };
+
+  TableAlgebraExpr.prototype.emptyNsfElement = {value: undefined, fieldUsage: {}};
 
   /**
    * @returns {string} Returns a concise string representation...

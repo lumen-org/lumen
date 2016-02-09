@@ -141,13 +141,14 @@ define(['lib/logger', './Field'], function (Logger, F) {
     this.cols = modelTable.cols;
     if (this.rows === 0 || this.cols === 0)
       return; //todo: do I need that?
+
     this.indexes = {};
 
     // common among all panes
     var dimensions = this.query.splittingDimensionUsages();
     var commonMeasures = this.query.commonMeasureUsages();
 
-    // todo: the follwing doesn't work for measures yet. Do I have to create a domain of a "previous" measure when converting it to a dimension? with this approach yes, however it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
+    // todo: the following doesn't work for measures yet. Do I have to create a domain of a "previous" measure when converting it to a dimension? with this approach yes, however it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
     var resultLength = dimensions.reduce(function (rows, dim) {
       return rows * dim.domain.length;
     }, 1);
@@ -160,11 +161,11 @@ define(['lib/logger', './Field'], function (Logger, F) {
     var colNSF = this.modelTable.colNSF;
     {
       /* important note:
-         this assumes a certain order of fieldUages in the result table columns:
+         this assumes a certain order of fieldUsages in the result table columns:
            1. layoutMeasures
            2. commonMeasures
            3. dimensionUsages
-         this order has to be used when constructring the actual result table later!
+         this order has to be used when constructing the actual result table later!
         */
       let idx = 0;
       let fu = [...dimensions, ...commonMeasures];

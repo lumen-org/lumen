@@ -183,6 +183,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           .data(
             // converts column based to tuple based!
             function () {
+              if (samples.length === 0)
+                return [];
               var len = samples[0].length;
               var tupleData = new Array(len);
               for (let i = 0; i < len; ++i) {
@@ -256,6 +258,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   /**
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
+   *
    * @param query {VisMEL} A VisMEL query.
    */
   ViewTable.prototype.attachScales = function (query) {
@@ -309,7 +312,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       this);
     query.layout.rows.filter(F.isMeasure).forEach(
       function (c) {
-        c.visScale = ScaleGen.position(c, [0, this.config.subPane.height]);
+        // note: invert range interval, since origin is in the upper left, not bottom left
+        c.visScale = ScaleGen.position(c, [this.config.subPane.height, 0]);
       },
       this);
 
@@ -370,14 +374,14 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         };
       }
       else if (colHasMeas && !rowHasMeas) {
-        _layout.mapper = function (d) {
+        _layout.transformMapper = function (d) {
           return 'translate(' +
             colFU.visScale(d[indexes.x]) + ',' +
             yPos + ')';
         };
       }
       else if (!colHasMeas && rowHasMeas) {
-        _layout.mapper = function (d) {
+        _layout.transformMapper = function (d) {
           return 'translate(' +
             xPos + ',' +
             rowFU.visScale(d[indexes.y])+ ')';
@@ -385,7 +389,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       }
       else {
         // todo: jitter?
-        _layout.mapper = 'translate(' + xPos + ',' + yPos + ')';
+        _layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
       }
     }
 

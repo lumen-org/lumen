@@ -53,7 +53,7 @@ define(['./Field'], function(F) {
       var rowModel = this.baseModel.copy();
       this.rowNSF[rIdx].forEach(
         function (symbol) {
-          if (symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
+          if (symbol.fieldUsage instanceof F.Field && symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
             rowModel.condition(symbol.fieldUsage.base, symbol.value);
         }
       ); // jshint ignore:line
@@ -63,7 +63,7 @@ define(['./Field'], function(F) {
         var cell = rowModel.copy( rowModel.name + "(" + rIdx + "," + cIdx + ")");
         this.colNSF[cIdx].forEach(
           function (symbol) {
-            if (symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
+            if (symbol.fieldUsage instanceof F.Field && symbol.fieldUsage.kind === F.FieldT.Kind.discrete)
               cell.condition(symbol.fieldUsage.base, symbol.value);
           }
         ); // jshint ignore:line
