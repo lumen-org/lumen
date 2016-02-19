@@ -35,9 +35,9 @@ define(['./Field', './shelves'], function (F, sh) {
 
 
   /**
-   * Constructor for a table algebra expression from a row or column shelf.
+   * Constructs a table algebra expression from a row or column shelf.
    * @constructor
-   * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsage}s.
+   * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsage}s with proper operators in between.
    * @alias module:TableAlgebra
    */
   var TableAlgebraExpr = function (shelf) {
@@ -111,7 +111,6 @@ define(['./Field', './shelves'], function (F, sh) {
       // return the "empty NSF element" (not an empty array)
       return [[this.emptyNsfElement]];
     }
-
 
     this.forEach( function(fu) {
       if (fu instanceof F.FieldUsage) {

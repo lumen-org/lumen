@@ -114,7 +114,7 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
    * todo: implement such that it works with arrays of variables and values too
    */
   DummyModel.prototype.condition = function (v, value) {
-    // dummy model: don't do anything with value, but remove the conditioned field
+    // dummy model: doesn't do anything with value, but remove the conditioned field
     this.fields = _.without(this.fields, this.fields[this._asIndex(v)]);
     return this;
   };

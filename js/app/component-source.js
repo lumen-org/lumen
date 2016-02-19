@@ -12,6 +12,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     'use strict';
 
     var query = {},
+      queryTable = {},
       modelTable = {},
       resultTable = {},
       viewTable = {};
@@ -82,7 +83,10 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     //inter.onDrop(shelf.column, shelf.meas.at(1));
 
     function onUpdate () {
+      // templated query
       query = new VisMEL(shelf, model);
+      // evaulate template and thus creat atomic queries from it
+     // queryTable = new QueryTable(query);
       modelTable = new ModelTable(query);
       resultTable = new ResultTable(modelTable);
       viewTable = new ViewTable(visPaneD3, resultTable);

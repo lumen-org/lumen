@@ -10,8 +10,8 @@
  * ToDo:
  *  - split into ViewPanes instead of a whole view table?
  *  - debug: fix for multiple measures on row/column
- *  - debug: fix for missing measures on row/column
  *  - debug: fix for multiple usage of the same field
+ *  - debug: fix for 3 dims on rows/cols
  *
  * @module ViewTable
  * @author Philipp Lucas
@@ -154,7 +154,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
             "y": rIdx * _config.subPane.height
           });
 
-        // @debug
+        // border of subpane
         subpane.paneD3.append('rect')
           .attr({
             x: 0,
@@ -209,15 +209,18 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         // -> now update all the same way
 
         // set position of shapes by translating the enclosing g group
+        // @specific for each view cell
         pointsD3.attr('transform', _layout.transformMapper);
 
         // setup shape path generator
         // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
+        // @common for all view cells
         let shapePathGen = d3.svg.symbol()
           .size(_aesthetics.size.mapper)
           .type(_aesthetics.shape.mapper);
 
         // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
+        // @common for all view cells
         pointsD3.select(".path").attr({
           'd': shapePathGen,
           fill: _aesthetics.color.mapper

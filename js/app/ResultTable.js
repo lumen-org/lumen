@@ -171,10 +171,13 @@ define(['lib/logger', './Field'], function (Logger, F) {
       let fu = [...dimensions, ...commonMeasures];
       let aesthetics = this.query.layers[0].aesthetics;
 
+      // todo: implement properly for multiple FU on rows and columns
       if (F.isMeasure(colNSF[0].last().fieldUsage))
         this.indexes.x = idx++;
       if (F.isMeasure(rowNSF[0].last().fieldUsage))
         this.indexes.y = idx++;
+
+      // todo: buggy: in case of a multiple usage of a dimension this code breaks, as the FU below will not be found, as they are filtered in splittingDimensionUsages() above...
       if (aesthetics.color instanceof F.FieldUsage)
         this.indexes.color = fu.indexOf(aesthetics.color) + idx;
       if (aesthetics.shape instanceof F.FieldUsage)

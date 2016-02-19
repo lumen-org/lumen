@@ -153,21 +153,23 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   };
 
   /**
-   * Returns the set of all {@link FieldUsage}s of this query that:
+   * Returns the set of all unqiue {@link FieldUsage}s of this query that:
    *  (1) are dimensions, and
    *  (2) marks per pane are split by
    * i.e.: all dimension usages on color, shape, size, orientation, details, ... but not on rows, columns, filters.
+   * note: 'Unique' means only one FieldUsage per Field is kept, e.g. if there is several dimension usages of a field with name "age" only the first one is kept. This convention is applied, as multiple dimension usages of the same field do NOT lead to more splitting of marks.
    */
   VisMEL.prototype.splittingDimensionUsages = function () {
     var layer = this.layers[0];
-    return _.filter(
+    return _.unique( _.filter(
       _.union(
-        layer.aesthetics.details,
-        [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size]
-      ),
-      function (e) {
-        return e instanceof F.FieldUsage && e.role === F.FieldT.Role.dimension;
-      });
+          layer.aesthetics.details,
+          [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size]
+        ),
+        function (e) {
+          return e instanceof F.FieldUsage && e.role === F.FieldT.Role.dimension;
+        }),
+      function (dim) {return dim.name;});
   };
 
   // delimiter for JSON conversion
