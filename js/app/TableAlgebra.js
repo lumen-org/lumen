@@ -18,6 +18,7 @@ define(['./Field', './shelves'], function (F, sh) {
     a.forEach( function(ea) {
       b.forEach( function(eb) {
         ret.push(_.flatten([ea,eb]));
+        // todo alternative: ret.push([...ea, ...eb]) ?
       });
     });
     return ret;
@@ -29,20 +30,24 @@ define(['./Field', './shelves'], function (F, sh) {
   function _plus (a, b) {
     if( !(a instanceof Array && b instanceof Array) ) throw new TypeError();
     // todo test
-    return a.concat(b);
-    //alternative: return [...this, ...expr];
+    // alternative: return a.concat(b);
+    return [...a, ...b];
   }
 
 
   /**
-   * Constructs a table algebra expression from a row or column shelf.
-   * @constructor
+   * Constructs a table algebra expression from a row or column shelf, or creates an empty expression.
+   * @param {ColumnShelf|RowShelf} [shelf] The shelf to build the expression from.
    * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsage}s with proper operators in between.
+   * @constructor
    * @alias module:TableAlgebra
    */
   var TableAlgebraExpr = function (shelf) {
-    if( !(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf)) throw new TypeError();
     Array.call(this);
+    if (arguments.length === 0)
+      return;
+
+    if( !(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf)) throw new TypeError();
     for( var idx = 0; idx < shelf.length(); ++idx ) {
       if (idx !== 0)
         /* todo: bug: fix this. this is not a proper way of deciding on the operators. see as follows:
@@ -60,6 +65,12 @@ define(['./Field', './shelves'], function (F, sh) {
   };
   TableAlgebraExpr.prototype = Object.create(Array.prototype);
   TableAlgebraExpr.prototype.constructor = TableAlgebraExpr;
+
+  TableAlgebraExpr.prototype.shallowCopy = function () {
+    var copy = new TableAlgebraExpr();
+    this.forEach(function(e){copy.push(e)});
+    return copy;
+  };
 
 
   /**
@@ -88,12 +99,12 @@ define(['./Field', './shelves'], function (F, sh) {
 
     // todo: implement check: each NSF element may not contain more than 1 measure usage
     // todo: implement check: if a NSF element contains a measure usage, this must be the last piece of that NSF element.
+    // todo: in the previous version we distinguished by ordinal vs discrete, not dimension vs measure. what is correct?
 
     // 1. turn FieldUsages into their domain representation
-    // the domain representation of a FieldUsage is an array of symbols, i.e.:
-    // (i) a single symbol, i.e. the name of the field, if the field is quantitative
-    // (ii) all possible values of the field , if the field is ordinal
-    // Note that the symbols are stored under 'val', while a reference to the original FieldUsage is stored under 'fieldUsage'
+    // the domain representation of a FieldUsage is:
+    // (i) in case of a measure: an array containing a single element: the measure itself
+    // (ii) in case of a dimension: an array containing the split/sampling of the dimension, according to its split/sampling function
 
     // also note the way its encapsulated in three array levels:
     // level 1: expression level: each element is an operand / operator
@@ -102,9 +113,10 @@ define(['./Field', './shelves'], function (F, sh) {
     // note: at the end of the normalization, there is naturally only one element at the expression level left
 
     // example 1: [sex]
-    //  -> [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]] ]
+    // -> [[ [sex (domain: 0)], [sex (domain: 1)] ]]
     // example 2: [sex, *, avg(age)]
-    //  -> [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]], *, [[{value: "age", fieldUsage: age}]] ]
+    // -> [[ [sex (domain: 0)], [sex (domain: 1)] ], *, [[age]] ]
+
     var domainExpr = [];
 
     if (this.length === 0) {
@@ -112,27 +124,25 @@ define(['./Field', './shelves'], function (F, sh) {
       return [[this.emptyNsfElement]];
     }
 
-    this.forEach( function(fu) {
-      if (fu instanceof F.FieldUsage) {
-        // store field usage with each symbol
-        var operand = [];
-        if (fu.kind === F.FieldT.Kind.discrete)
-          fu.domain.forEach( function (val, idx) { operand[idx] = [{value : val, fieldUsage : fu}];} );
-        else
-          operand = [[{value: fu.name, fieldUsage : fu}]];
-        domainExpr.push(operand);
+    this.forEach( function(elem) {
+      if (elem instanceof F.FieldUsage) {
+        if (F.isDimension(elem)) {
+          // splitted returns an array of FieldUsages, however, we need an array of array where each inner array only has a single element, i.e. the field usage with reduces domain
+          let splitted = elem.split();
+          domainExpr.push(splitted.map (function (e) {return [e]; }));
+        } else
+          domainExpr.push([[elem]]);
       } else {
         // elem is an operator
-        domainExpr.push(fu);
+        domainExpr.push(elem);
       }
     });
 
     // 2. evaluate expression. that results in a single ordered set of arrays
-    // example 1 cont'd: [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]] ]
+    // example 1 cont'd: [[ [sex (domain: 0)], [sex (domain: 1)] ]]
     //  -> stays the same
-    // example 2 cont'd: [ [[{value:"0", fieldUsage: sex}], [{value:"1", fieldUsage: sex}]], *, [[{value: "age", fieldUsage: age}]] ]
-    //  -> [[ [{value:"0", fieldUsage: sex}, {value: "age", fieldUsage: age}],
-    //        [{value:"1", fieldUsage: sex}, {value: "age", fieldUsage: age}] ]]
+    // example 2 cont'd: [ [ [sex with domain=[0]], [sex with domain=[1]] ], *, [[age]] ]
+    // -> [[ [sex with domain=[0], age], [sex with domain=[1], age] ]]
 
     //   2a) evaluate all "*"
     domainExpr.forEach( function(elem, idx) {

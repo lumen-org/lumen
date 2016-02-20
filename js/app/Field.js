@@ -5,7 +5,7 @@
  * @module Field
  */
 
-define(['./utils'], function (utils) {
+define(['./utils', './SplitSample'], function (utils, S) {
   "use strict";
 
   /**
@@ -46,11 +46,11 @@ define(['./utils'], function (utils) {
    * @constructor
    * @alias module:Field.Field
    */
-  var Field; Field = function (nameOrField, dataSource, args) {
+  var Field;
+  Field = function (nameOrField, dataSource, args) {
     if (!args) args = {};
     var isF = nameOrField instanceof Field;
-    var isD = args.kind === FieldT.Kind.discrete;
-    console.assert(isF || (dataSource  && (isD ? typeof args.domain !== 'undefined' : true)) );
+    console.assert(isF || (dataSource && (this.isDiscrete() ? typeof args.domain !== 'undefined' : true)));
 
     this.name = (isF ? nameOrField.name : nameOrField);
     this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
@@ -60,13 +60,29 @@ define(['./utils'], function (utils) {
     this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);
   };
 
+  Field.prototype.isDimension = function () {
+    return isDimension(this);
+  };
+
+  Field.prototype.isMeasure = function () {
+    return isMeasure(this);
+  };
+
+  Field.prototype.isDiscrete = function () {
+    return this.kind === FieldT.Kind.discrete;
+  };
+
+  Field.prototype.isContinuous = function () {
+    return this.kind === FieldT.Kind.cont;
+  };
+
   /**
    * Returns a textual description of this field.
    * @returns {String}
    */
   Field.prototype.toString = function () {
     var desc = "'" + this.name + "': " + this.dataType + ", " + this.kind + " " + this.role;
-    if (this.kind === FieldT.Kind.discrete)
+    if (this.isDiscrete())
       desc += ". domain = [" + this.domain + "]";
     return desc;
   };
@@ -79,7 +95,8 @@ define(['./utils'], function (utils) {
    * @constructor
    * @alias module:Field.FieldUsage
    */
-  var FieldUsage; FieldUsage = function (base, args) {
+  var FieldUsage;
+  FieldUsage = function (base, args) {
     console.assert(base instanceof Field || base instanceof FieldUsage);
     Field.call(this, base.name, base.dataSource, base);
     if (!args) args = {};
@@ -87,14 +104,31 @@ define(['./utils'], function (utils) {
     this.base = (isFU ? base.base : base);
     // todo: find proper defaults?
     this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
+    // todo: remove/change/merge scale?
     this.scale = utils.selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);
+    this.splitter = utils.selectValue(args.splitter,
+      isFU, base.splitter,
+      this.isDiscrete(), S.plitter.singleElements,
+      S.plitter.equiIntervals);
   };
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;
 
+  FieldUsage.prototype.split = function () {
+    // split domain
+    var domains = this.splitter(this.domain);
+
+    // create copies of this field usage but use the just created 'split domains'
+    return domains.map( function (domain) {
+      var copy = new FieldUsage(this);
+      copy.domain = domain;
+      return copy;
+    }, this);
+  };
+
   FieldUsage.prototype.toString = function () {
-     return (this.role === FieldT.Role.measure ?
-      this.aggr + '(' + this.name + ')' :
+    return (this.role === FieldT.Role.measure ?
+    this.aggr + '(' + this.name + ')' :
       this.name);
   };
 
@@ -104,7 +138,7 @@ define(['./utils'], function (utils) {
    * Returns true iff obj is a {@Field} that is a measure.
    * @param obj
    */
-  function isMeasure (obj) {
+  function isMeasure(obj) {
     return obj instanceof Field && obj.role === FieldT.Role.measure;
   }
 
@@ -112,13 +146,13 @@ define(['./utils'], function (utils) {
    * Returns true iff obj is a {@Field} that is a dimension.
    * @param obj
    */
-  function isDimension (obj) {
+  function isDimension(obj) {
     return obj instanceof Field && obj.role === FieldT.Role.dimension;
   }
 
   return {
-    FieldT : FieldT,
-    FUsageT : FUsageT,
+    FieldT: FieldT,
+    FUsageT: FUsageT,
     Field: Field,
     FieldUsage: FieldUsage,
     isMeasure: isMeasure,

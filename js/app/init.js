@@ -32,4 +32,11 @@ define(['lib/logger','d3'], function (Logger, d3) {
     return this.map(function(s){return s.name;});
   };
 
+  /**
+   * Clears this Array.
+   */
+  Array.prototype.clear = function () {
+    this.length = 0;
+  };
+
 });

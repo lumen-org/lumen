@@ -5,7 +5,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
+define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domain, F, Model) {
   "use strict";
 
   var logger = Logger.get('pl-DummyModel');
@@ -70,7 +70,8 @@ define(['lib/logger', './Field', './Model'], function (Logger, F, Model) {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: [0,1] //_.range(10) //[0, 1]
+          domain: new Domain.Discrete([0,1])
+          //domain: [0,1] //_.range(10) //[0, 1]
         });
       var nameField = new F.Field(
         'name', myModel, {

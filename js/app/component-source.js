@@ -7,8 +7,8 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './ModelTable', './ResultTable', './ViewTable'],
-  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, ModelTable, ResultTable, ViewTable) {
+define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable'],
+  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable) {
     'use strict';
 
     var query = {},
@@ -85,8 +85,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     function onUpdate () {
       // templated query
       query = new VisMEL(shelf, model);
-      // evaulate template and thus creat atomic queries from it
-     // queryTable = new QueryTable(query);
+      // evaulate template and thus create atomic queries from it
+      queryTable = new QueryTable(query);
       modelTable = new ModelTable(query);
       resultTable = new ResultTable(modelTable);
       viewTable = new ViewTable(visPaneD3, resultTable);

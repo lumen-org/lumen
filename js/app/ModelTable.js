@@ -26,12 +26,10 @@ define(['./Field'], function(F) {
     var layout = query.layout;
 
     // 1. normalize expressions
-    this.rowNSF = layout.rows.normalize();
-    this.colNSF = layout.cols.normalize();
 
-    this.rows = this.rowNSF.length;
-    this.cols = this.colNSF.length;
-    this.size = [this.rows, this.cols];
+
+    // fixme // there is no more normalization
+
 
     // 2. compile set of unique Fields (not field Usages) that are used in a VisMEL query.
     // -> Fields not part of that set can be marginalized out
