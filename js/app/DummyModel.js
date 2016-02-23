@@ -165,7 +165,8 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
     // todo: in the future we might want to support aggregation on more than one variables
     if (values.length !== this.size()-1)
-      throw new Error("for now only aggregations on 1 variable are allowed.");
+      //throw new Error("for now only aggregations on 1 variable are allowed.");
+      logger.warn("for now only aggregations on 1 variable are allowed.");
 
     // todo: implement
     if (aggregation === F.FUsageT.Aggregation.avg) {

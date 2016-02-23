@@ -102,7 +102,6 @@ define(['./utils', './SplitSample'], function (utils, S) {
     if (!args) args = {};
     var isFU = base instanceof FieldUsage;
     this.base = (isFU ? base.base : base);
-    // todo: find proper defaults?
     this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
     // todo: remove/change/merge scale?
     this.scale = utils.selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);

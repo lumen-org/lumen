@@ -111,14 +111,23 @@ define(['lib/logger', './Field'], function (Logger, F) {
         let sameBase = dimensions.find( function (e) {
           return (fu.base === e.base);
         });
-        if (sameBase && fu.splitter !== sameBase.splitter)
+        if (sameBase) {
+          // fu is already there
+          if (fu.splitter !== sameBase.splitter)
             throw new RangeError("If using multiple dimensions of the same field in an atomic query, their splitter functions must match!");
-          // note: in any case we don't need to add it again
-        else
+          else
+            fu.index = sameBase.index;
+        }
+        else {
+          // fu is new
+          fu.index = idx++;
           dimensions.push(fu);
-      } else
-      if (fu.isMeasure())
+        }
+      }
+      else if (fu.isMeasure()) {
+        fu.index = idx++;
         measures.push(fu);
+      }
       else
         throw new TypeError();
     });

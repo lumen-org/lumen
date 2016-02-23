@@ -1,5 +1,4 @@
 /**
- *
  * Nomenclature
  *   .*D3 : a variable that is a D3 selection
  *   .*DOM : a variable that is a DOM element
@@ -12,6 +11,8 @@
  *  - debug: fix for multiple measures on row/column
  *  - debug: fix for multiple usage of the same field
  *  - debug: fix for 3 dims on rows/cols
+ *
+ * // http://jsbin.com/viqenirimu/edit?html,output
  *
  * @module ViewTable
  * @author Philipp Lucas
@@ -232,10 +233,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     let canvas = this.canvas;
 
-    // init axis
-    // 1. axis of discrete variables:
-    // 2. axis of ??
-    // todo: implement later
+    // create axis
+    // todo: implement
 
     // create table of ViewPanes
     this.at = new Array(this.size.rows);
@@ -255,15 +254,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         );
       }
     }
-
-    /// redo on data change
-
-    // augment data (min, max, ...)
-
-    // update scales (data changed)
-
-    // add marks for new data
-    // remove marks for gone data
   };
 
 
@@ -275,57 +265,25 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    */
   var attachScales = function (query, paneSize) {
 
-    /* todo: consider these notes!!
-     notes:
-     - a '"scale" maps values of an input domain to values of an output range.'
-     - x and y scales are common for a row / column
-     - this holds for both: measures and dimensions! but it seems tricky...
-     - however: there definitely is always at most one scale per FieldUsage:
-     - measures:
-     - maps to x/y, then it's common for a whole row/column
-     - maps to shape, color, size: obviously common
-     - dimensions:
-     - part of row/column-NSF statements: maybe there is no use for a scale here ... not sure...
-     - "on details": simply splits into more marks - no other visual implication ... no scale needed
-     - maps to shape, color, size: obviously needs discrete scale to shape / color / size ...
-     - idea: attach scales to the field usages!?
-     - "traverse" query for fieldUsages and add them accordingly!?
-     */
-
-    /* Note: aren't the scales already in the fieldUsages?! hence just in something like:
-     query.layer[0].aesthetics.color.scale ?
-     answer: not really, this is more a kind of "simple preprocessing/prescaling".
-     but the actual scale we talk about here, are for mapping to *visual* dimensions!
-     however, we will very much access the scales like that (with a different name), once we created
-     them here in this function!
-     */
-
     let aesthetics = query.layers[0].aesthetics;
 
-    if (F.isFieldUsage(aesthetics.color)) {
+    if (F.isFieldUsage(aesthetics.color))
       aesthetics.color.visScale = ScaleGen.color(aesthetics.color);
-    }
 
-    if (F.isFieldUsage(aesthetics.size)) {
-      aesthetics.size.visScale = ScaleGen.position(aesthetics.size,
-        [Settings.maps.minSize, Settings.maps.maxSize]);
-    }
+    if (F.isFieldUsage(aesthetics.size))
+      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, [Settings.maps.minSize, Settings.maps.maxSize]);
 
-    if (F.isFieldUsage(aesthetics.shape)) {
+    if (F.isFieldUsage(aesthetics.shape))
       aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape);
-    }
-
-    // todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let row = query.layout.rows[0];
-    if (F.isFieldUsage(row) && row.isMeasure()) {
+    if (F.isFieldUsage(row) && row.isMeasure())
       row.visScale = ScaleGen.position(row, [0, paneSize.width]);
-    }
+    // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
-    if (F.isFieldUsage(col) && col.isMeasure()) {
+    if (F.isFieldUsage(col) && col.isMeasure())
       col.visScale = ScaleGen.position(col, [paneSize.height, 0]);
-    }
 
     // no need for scales in: filters, details
   };
@@ -341,70 +299,63 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   var attachMappers = function (query, results, paneSize) {
     let aesthetics = query.layers[0].aesthetics;
 
-    {
-      let color = aesthetics.color;
-      color.mapper = (F.isFieldUsage(color) ?
-        function (d) {
-          return color.visScale(d[color.index]);
-        } :
-        Settings.maps.color);
-    }
-    {
-      let size = aesthetics.size;
-      size.mapper = (F.isFieldUsage(size) ?
-        function (d) {
-          return size.visScale(d[size.index]);
-        } :
-        Settings.maps.size);
-    }
-    {
-      let shape = aesthetics.shape;
-      shape.mapper = (F.isFieldUsage(shape) ?
-        function (d) {
-          return shape.visScale(d[shape.index]);
-        } :
-        Settings.maps.shape
-      );
-    }
-    {
-      let layout = query.layout;
-      let cols = layout.cols,
-        rows = layout.rows;
-      let colHasMeas = !cols.empty(),
-        rowHasMeas = !rows.empty;
-      let colFU = (colHasMeas ? cols[0]: {}),
-       rowFU = (rowHasMeas ? rows[0]: {});
-      let xPos = paneSize.width/2,
-        yPos = paneSize.height/2;
+    let color = aesthetics.color;
+    color.mapper = ( F.isFieldUsage(color) ?
+      function (d) {
+        return color.visScale(d[color.index]);
+      } :
+      Settings.maps.color );
 
-      if (colHasMeas && rowHasMeas) {
-        layout.transformMapper = function (d) {
-          return 'translate(' +
-            colFU.visScale(d[colFU.index]) + ',' +
-            rowFU.visScale(d[rowFU.index]) + ')';
-        };
-      }
-      else if (colHasMeas && !rowHasMeas) {
-        layout.transformMapper = function (d) {
-          return 'translate(' +
-            colFU.visScale(d[colFU.index]) + ',' +
-            yPos + ')';
-        };
-      }
-      else if (!colHasMeas && rowHasMeas) {
-        layout.transformMapper = function (d) {
-          return 'translate(' +
-            xPos + ',' +
-            rowFU.visScale(d[rowFU.index])+ ')';
-        };
-      }
-      else {
-        // todo: jitter?
-        layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
-      }
-    }
+    let size = aesthetics.size;
+    size.mapper = ( F.isFieldUsage(size) ?
+      function (d) {
+        return size.visScale(d[size.index]);
+      } :
+      Settings.maps.size );
 
+    let shape = aesthetics.shape;
+    shape.mapper = ( F.isFieldUsage(shape) ?
+      function (d) {
+        return shape.visScale(d[shape.index]);
+      } :
+      Settings.maps.shape );
+
+    let layout = query.layout;
+    let cols = layout.cols,
+      rows = layout.rows;
+    let colHasMeas = !cols.empty(),
+      rowHasMeas = !rows.empty;
+    let colFU = (colHasMeas ? cols[0] : {}),
+      rowFU = (rowHasMeas ? rows[0] : {});
+    let xPos = paneSize.width / 2,
+      yPos = paneSize.height / 2;
+
+    if (colHasMeas && rowHasMeas) {
+      layout.transformMapper = function (d) {
+        return 'translate(' +
+          colFU.visScale(d[colFU.index]) + ',' +
+          rowFU.visScale(d[rowFU.index]) + ')';
+      };
+    }
+    else if (colHasMeas && !rowHasMeas) {
+      layout.transformMapper = function (d) {
+        return 'translate(' +
+          colFU.visScale(d[colFU.index]) + ',' +
+          yPos + ')';
+      };
+    }
+    else if (!colHasMeas && rowHasMeas) {
+      layout.transformMapper = function (d) {
+        return 'translate(' +
+          xPos + ',' +
+          rowFU.visScale(d[rowFU.index]) + ')';
+      };
+    }
+    else {
+      // todo: jitter?
+      layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
+    }
   };
 
   return ViewTable;
-}); // http://jsbin.com/viqenirimu/edit?html,output
+});
