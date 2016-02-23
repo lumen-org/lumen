@@ -32,6 +32,10 @@ define(['lib/logger','d3'], function (Logger, d3) {
     return this.map(function(s){return s.name;});
   };
 
+  Array.prototype.empty = function () {
+    return this.length === 0;
+  };
+
   /**
    * Clears this Array.
    */

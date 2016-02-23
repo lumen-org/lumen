@@ -150,13 +150,34 @@ define(['./utils', './SplitSample'], function (utils, S) {
     return obj instanceof Field && obj.role === FieldT.Role.dimension;
   }
 
+  /**
+   * Returns true iff obj is a {@link FieldUsage}
+   * @param obj
+   * @returns {boolean}
+   */
+  function isFieldUsage(obj) {
+    return obj instanceof FieldUsage;
+  }
+
+  /**
+   * Returns true iff obj is a {@link Field}
+   * @param obj
+   * @returns {boolean}
+   */
+  function isField(obj) {
+    return obj instanceof Field;
+  }
+
+
   return {
     FieldT: FieldT,
     FUsageT: FUsageT,
     Field: Field,
     FieldUsage: FieldUsage,
     isMeasure: isMeasure,
-    isDimension: isDimension
+    isDimension: isDimension,
+    isFieldUsage: isFieldUsage,
+    isField: isField
     //EmptyField :EmptyField
   };
 

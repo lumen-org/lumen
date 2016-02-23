@@ -237,7 +237,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    * Returns the set of (unique) variables (i.e. {@link Field} that are used in this VisMEL query.
    */
   VisMEL.prototype.fields = function () {
-    var layer = this.layers[0];
+    /*var layer = this.layers[0];
     var usedVars = _.union(
       this.layout.rows.fields(),
       this.layout.cols.fields(),
@@ -245,7 +245,13 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       _.map(layer.filters, function(e){return e.base;}),
       [layer.aesthetics.color.base, layer.aesthetics.shape.base, layer.aesthetics.size.base]
     );
-    return usedVars.filter( function(e){return e instanceof F.Field;} );
+    return usedVars.filter( function(e){return e instanceof F.Field;} ); */
+
+    // note: this assumes that fields of a model are always referenced, never copied
+    var fus = this.fieldUsages();
+    return _.uniq( fus.map(
+      function(fu){return fu.base;}
+    ));
   };
 
   /**
@@ -257,9 +263,9 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       this.layout.rows.fieldUsages(),
       this.layout.cols.fieldUsages(),
       layer.aesthetics.details,
-      [ layer.filters, layer.aesthetics.color.base, layer.aesthetics.shape.base, layer.aesthetics.size.base ]
+      [ layer.filters, layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size ]
     );
-    return usedVars.filter( function(e){return e instanceof F.Field;} );
+    return usedVars.filter(F.isField);
   };
 
 
@@ -268,7 +274,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    */
   VisMEL.prototype.measureUsages = function () {
     return this.fieldUsages()
-      .filter( function(field) {return field.role === F.FieldT.Role.measure;});
+      .filter(F.isMeasure);
   };
 
   /**
@@ -356,6 +362,52 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       .replace(/}"/gi,'}')
       .replace(/"{/gi,'{');
   };
+
+
+  /*VisMEL.prototype.FieldUsageIterator = function () {
+
+    var position = {};
+
+    var stages = Object.freeze([
+      'layout.rows',
+      'layout.cols',
+      'layer.filter',
+      'layer.color',
+      'layer.shape',
+      'layer.size',
+      'layer.orientation',
+      'layer.details',
+      'layer.label',
+      'layer.hover'
+    ]);
+
+    var stageIdx = 0;
+    var stage = stages[stageIdx];
+
+    /!*
+      sources: n/a
+      layout:
+    *!/
+
+    return {
+      next: function () {
+
+        switch stage:
+          case 'layout:
+            break;
+
+
+        // todo: go to next element
+        var current
+
+
+        return {
+          value: current;
+        };
+      }
+    };
+  };
+*/
 
   /**
     public interface

@@ -85,7 +85,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
    * @param {FieldUsage} measures The measures of the model to sample.
    * @param rows The precomputed length of the result table.
    * @param nsfe the nsf (normalized set form) element that belongs to this model. This is needed to get the pane specific measure (i.e. on rows or columns).
-   * @returns {*}
+   * @returns {*} The result table for this pane.
    * @private
    */
   function _resultTablePerPane(model, dimensions, measures, rows, nsfe) {
@@ -134,78 +134,163 @@ define(['lib/logger', './Field'], function (Logger, F) {
    * @constructor
    */
   var ResultTable;
-  ResultTable = function (modelTable) {
-    this.modelTable = modelTable;
-    this.query = modelTable.query;
-    this.rows = modelTable.rows;
-    this.cols = modelTable.cols;
-    if (this.rows === 0 || this.cols === 0)
-      return; //todo: do I need that?
 
-    this.indexes = {};
+  /**
+   * Checks that dimensions based on the same field use the same split function. If not it issues a warning.
+   * @param dimensions
+   */
+  var checkDimensions = function (dimensions) {
+    // sort by their name
+    dimensions.sort( function(d1, d2) {
+      return (d1.name < d2.name ? -1 : (d1.name > d2.name ? 1 : 0) );
+    });
 
-    // common among all panes
-    var dimensions = this.query.splittingDimensionUsages();
-    var commonMeasures = this.query.commonMeasureUsages();
+    // sequentially check
+    // todo implement later
+  };
 
-    // todo: the following doesn't work for measures yet. Do I have to create a domain of a "previous" measure when converting it to a dimension? with this approach yes, however it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
-    var resultLength = dimensions.reduce(function (rows, dim) {
-      return rows * dim.domain.length;
-    }, 1);
 
-    // attach indices to aestethics and layer mappings of the query.
-    // this is needed to know how field usages of the VisMEL query map to vectors in the result table
-    // todo: this seems ugly
+  var aggregate = function (model, query) {
+    // 1. generate mapping and empty result table
+    // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
+    // - multiple measures of the same field are possible and
+    // - multi-dimensional measures aren't supported yet
 
-    var rowNSF = this.modelTable.rowNSF;
-    var colNSF = this.modelTable.colNSF;
-    {
-      /* important note:
-         this assumes a certain order of fieldUsages in the result table columns:
-           1. layoutMeasures
-           2. commonMeasures
-           3. dimensionUsages
-         this order has to be used when constructing the actual result table later!
-        */
-      let idx = 0;
-      let fu = [...dimensions, ...commonMeasures];
-      let aesthetics = this.query.layers[0].aesthetics;
 
-      // todo: implement properly for multiple FU on rows and columns
-      if (F.isMeasure(colNSF[0].last().fieldUsage))
-        this.indexes.x = idx++;
-      if (F.isMeasure(rowNSF[0].last().fieldUsage))
-        this.indexes.y = idx++;
+    //var iter = query.FieldUsageIterator()
+    //var idx2fu = [];
 
-      // todo: buggy: in case of a multiple usage of a dimension this code breaks, as the FU below will not be found, as they are filtered in splittingDimensionUsages() above...
-      if (aesthetics.color instanceof F.FieldUsage)
-        this.indexes.color = fu.indexOf(aesthetics.color) + idx;
-      if (aesthetics.shape instanceof F.FieldUsage)
-        this.indexes.shape = fu.indexOf(aesthetics.shape) + idx;
-      if (aesthetics.size instanceof F.FieldUsage)
-        this.indexes.size = fu.indexOf(aesthetics.size) + idx;
-        // todo: implement this for details - though its not necessarily needed for visualization
-        // todo: what about filter??
-    }
+    //for (let current = iter.next(); !current.done; iter.next()) {
 
-    // do sampling for each model in the modelTable
-    this.at = new Array(this.rows);
-    for (let rIdx = 0; rIdx < this.rows; rIdx++) {
-      this.at[rIdx] = new Array(this.cols);
-      for (let cIdx = 0; cIdx < this.cols; cIdx++) {
-        // there may be pane specific measures, i.e. measures in the table algebra expression
-        // note: if there is one, it always is the last in a NSF element
-        let layoutMeasures = [rowNSF[rIdx].last().fieldUsage, colNSF[cIdx].last().fieldUsage]
-          .filter(F.isMeasure);
+    // attach index in aggregation table and build of the set of dimensions and measures of the aggregation table
+    // note: in the general case query.fieldUsage and [...dimensions, ...measures] doesn't contain the same set of field usages, as duplicate dimensions won't show up in dimensions
+    var dimensions = [];
+    var measures = [];
+    var fieldUsages = query.fieldUsages();
+    var idx = 0;
+    fieldUsages.forEach( function (fu) {
+      // attach to maps
+      fu.index = idx;
+      //idx2fu[idx] = fu;
 
-        this.at[rIdx][cIdx] = _resultTablePerPane(
-          modelTable.at[rIdx][cIdx],
-          dimensions,
-          [...layoutMeasures, ...commonMeasures],
-          resultLength);
+      if (fu.isDimension()) {
+        let sameBase = dimensions.find( function (e) {
+          return (fu.base === e.base);
+        });
+        if (sameBase && fu.splitter !== sameBase.splitter)
+            throw new RangeError("If using multiple dimensions of the same field in an atomic query, their splitter functions must match!");
+          // note: in any case we don't need to add it again
+        else
+          dimensions.push(fu);
+      } else
+      if (fu.isMeasure())
+        measures.push(fu);
+      else
+        throw new TypeError();
+    });
+
+    // 9,30-10,00 - baum fällen??
+
+    fieldUsages = [...dimensions, ...measures];
+
+    // 2. setup input tuples, i.e. calculate the cross product of all dim.sample()
+    // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
+    var inputTable = dimensions.reduce(
+      function (table, dim) {
+        return _join(table, [dim.domain]);
+      }, []);
+
+    // 3. generate output tuples from
+
+    // 4. apply aggregation filters
+
+    // 5. return aggregation table
+
+  };
+
+  ResultTable = function (models, queries) {
+    this.size = models.size;
+    this.at = new Array(this.size.rows);
+    for (let rIdx=0; rIdx<this.size.rows; ++rIdx) {
+      this.at[rIdx] = new Array(this.size.cols);
+      for (let cIdx=0; cIdx<this.size.cols; ++cIdx) {
+        this.at[rIdx][cIdx] = aggregate(models.at[rIdx][cIdx], queries.at[rIdx][cIdx]);
       }
     }
   };
+
+  //ResultTable = function (models, queries) {
+  //  this.modelTable = modelTable;
+  //  this.query = modelTable.query;
+  //  this.rows = modelTable.rows;
+  //  this.cols = modelTable.cols;
+  //  if (this.rows === 0 || this.cols === 0)
+  //    return; //todo: do I need that?
+  //
+  //  this.indexes = {};
+  //
+  //  // common among all panes
+  //  var dimensions = this.query.splittingDimensionUsages();
+  //  var commonMeasures = this.query.commonMeasureUsages();
+  //
+  //  // todo: the following doesn't work for measures yet. Do I have to create a domain of a "previous" measure when converting it to a dimension? with this approach yes, however it's maybe not nice that I already at this point of the pipeline have to decide how neatly I want to sample a measure that has become a dimension
+  //  var resultLength = dimensions.reduce(function (rows, dim) {
+  //    return rows * dim.domain.length;
+  //  }, 1);
+  //
+  //  // attach indices to aestethics and layer mappings of the query.
+  //  // this is needed to know how field usages of the VisMEL query map to vectors in the result table
+  //  // todo: this seems ugly
+  //
+  //  var rowNSF = this.modelTable.rowNSF;
+  //  var colNSF = this.modelTable.colNSF;
+  //  {
+  //     //important note:
+  //     //  this assumes a certain order of fieldUsages in the result table columns:
+  //     //    1. layoutMeasures
+  //     //    2. commonMeasures
+  //     //    3. dimensionUsages
+  //     //  this order has to be used when constructing the actual result table later!
+  //
+  //    let idx = 0;
+  //    let fu = [...dimensions, ...commonMeasures];
+  //    let aesthetics = this.query.layers[0].aesthetics;
+  //
+  //    // todo: implement properly for multiple FU on rows and columns
+  //    if (F.isMeasure(colNSF[0].last().fieldUsage))
+  //      this.indexes.x = idx++;
+  //    if (F.isMeasure(rowNSF[0].last().fieldUsage))
+  //      this.indexes.y = idx++;
+  //
+  //    // todo: buggy: in case of a multiple usage of a dimension this code breaks, as the FU below will not be found, as they are filtered in splittingDimensionUsages() above...
+  //    if (aesthetics.color instanceof F.FieldUsage)
+  //      this.indexes.color = fu.indexOf(aesthetics.color) + idx;
+  //    if (aesthetics.shape instanceof F.FieldUsage)
+  //      this.indexes.shape = fu.indexOf(aesthetics.shape) + idx;
+  //    if (aesthetics.size instanceof F.FieldUsage)
+  //      this.indexes.size = fu.indexOf(aesthetics.size) + idx;
+  //      // todo: implement this for details - though its not necessarily needed for visualization
+  //      // todo: what about filter??
+  //  }
+  //
+  //  // do sampling for each model in the modelTable
+  //  this.at = new Array(this.rows);
+  //  for (let rIdx = 0; rIdx < this.rows; rIdx++) {
+  //    this.at[rIdx] = new Array(this.cols);
+  //    for (let cIdx = 0; cIdx < this.cols; cIdx++) {
+  //      // there may be pane specific measures, i.e. measures in the table algebra expression
+  //      // note: if there is one, it always is the last in a NSF element
+  //      let layoutMeasures = [rowNSF[rIdx].last().fieldUsage, colNSF[cIdx].last().fieldUsage]
+  //        .filter(F.isMeasure);
+  //
+  //      this.at[rIdx][cIdx] = _resultTablePerPane(
+  //        modelTable.at[rIdx][cIdx],
+  //        dimensions,
+  //        [...layoutMeasures, ...commonMeasures],
+  //        resultLength);
+  //    }
+  //  }
+  //};
 
   return ResultTable;
 });

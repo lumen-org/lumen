@@ -68,7 +68,7 @@ define(['./Field', './shelves'], function (F, sh) {
 
   TableAlgebraExpr.prototype.shallowCopy = function () {
     var copy = new TableAlgebraExpr();
-    this.forEach(function(e){copy.push(e)});
+    this.forEach(function(e){copy.push(e);});
     return copy;
   };
 
@@ -77,7 +77,7 @@ define(['./Field', './shelves'], function (F, sh) {
    * Returns the set of (unique) {@link FieldUsage}s used this table algebra expression.
    */
   TableAlgebraExpr.prototype.fieldUsages = function () {
-    return _.uniq( _.filter(this, function(e){return (e instanceof F.FieldUsage);}) );
+    return _.uniq( _.filter(this, F.isFieldUsage));
   };
 
 

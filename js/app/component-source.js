@@ -87,8 +87,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       query = new VisMEL(shelf, model);
       // evaulate template and thus create atomic queries from it
       queryTable = new QueryTable(query);
-      modelTable = new ModelTable(query);
-      resultTable = new ResultTable(modelTable);
+      modelTable = new ModelTable(queryTable);
+      resultTable = new ResultTable(modelTable, queryTable);
       viewTable = new ViewTable(visPaneD3, resultTable);
 
      /* $('#queryTextBox').text(

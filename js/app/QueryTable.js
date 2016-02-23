@@ -14,8 +14,8 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
   /**
    * Extends the field usages template in query, possibly merging domains if applicable.
    * @param query {VisMEL} The templated query.
-   * @param what {"rows"|"cols"} Is the template the rows or cols
-   * @return Returns the array of template instantiations.
+   * @param what {"rows"|"cols"} Is the template the rows or cols?
+   * @return {Array} Returns the array of template instantiations.
    * @private
    */
   var _extendTemplate = function (query, what) {
@@ -25,7 +25,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
 
     var nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize());
     var len = nsf.length;
-    var extension = new Array(len);
+    var expansion = new Array(len);
 
     for (let i=0; i<len; ++i) {
       // shallow copy query. shallow means that all {@link FieldUsage}s in the copy are references to those in query.
@@ -45,7 +45,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
               return F.isDimension(o) && fu.name === o.name;
             });
             if (idx !== -1) {
-              throw new Error('merging of domains for template extension not implemented yet');
+              throw new Error('merging of domains for template expansion not implemented yet');
               // todo: merge the domains of the existing fieldUsage with fieldUsage of NSF
               // do NOT modify the existing fieldUsage since it is a shallow copy!!
             }
@@ -53,15 +53,15 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
           }
           else {
             if (!instLayout.empty())
-              throw new Error("After template extension there must be only one FU on a row/col shelf");
+              throw new Error("After template expansion there must be only one FU on a row/col shelf");
             instLayout.push(fu);
           }
         }
       );
-      extension[i] = instance;
+      expansion[i] = instance;
     }
 
-    return extension;
+    return expansion;
   };
 
   /**
@@ -69,10 +69,16 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
    * @constructor
    */
   var QueryTable = function (query) {
-    this.at = _extendTemplate(query, 'rows');
+    this.base = query;
+    this.rowBase = _extendTemplate(query, 'rows');
+    this.at = new Array(this.rowBase.length);
     for (let i = 0; i < this.at.length; ++i) {
-      this.at = _extendTemplate(this.at[i], 'cols');
+      this.at[i] = _extendTemplate(this.rowBase[i], 'cols');
     }
+    this.size = {
+      rows: this.at.length,
+      cols: (this.at.length > 0 ? this.at[0].length : 0)
+    };
   };
 
   return QueryTable;
