@@ -120,7 +120,7 @@ define(['./Field', './shelves'], function (F, sh) {
     var domainExpr = [];
 
     if (this.length === 0) {
-      // return the "empty NSF element" (not an empty array)
+      // return the "empty NSF element"
       return [[this.emptyNsfElement]];
     }
 
@@ -168,7 +168,7 @@ define(['./Field', './shelves'], function (F, sh) {
     return domainExpr[0];
   };
 
-  TableAlgebraExpr.prototype.emptyNsfElement = {value: undefined, fieldUsage: {}};
+  TableAlgebraExpr.prototype.emptyNsfElement = {};
 
   /**
    * @returns {string} Returns a concise string representation...

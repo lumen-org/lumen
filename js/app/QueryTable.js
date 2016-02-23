@@ -39,7 +39,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
       // iterate over all field usages of the current NSF element
       nsf[i].forEach(
         function (fu) {
-          if (fu.isDimension()) {
+          if (F.isDimension(fu)) {
             // find dimension usages on details shelf that are based on the same name.
             let idx = instDetails.findIndex( function (o) {
               return F.isDimension(o) && fu.name === o.name;

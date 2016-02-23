@@ -89,7 +89,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
       resultTable = new ResultTable(modelTable, queryTable);
-      viewTable = new ViewTable(visPaneD3, resultTable);
+      viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
 
      /* $('#queryTextBox').text(
         "layout:\n" + query.layout.toString() +

@@ -71,6 +71,116 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   }
 
 
+  function createAtomicPane (parentD3, size, offset) {
+    /// create subpane
+    // note: as it is a svg element no translation relative to the full view pane is required
+    // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
+    let subPaneD3 = parentD3.append('svg')
+      .attr({
+        "width": size.width,
+        "height": size.height,
+        "x": offset.x,
+        "y": offset.y
+      });
+
+    // border of subpane
+    subPaneD3.append('rect')
+      .attr({
+        x: 0,
+        y: 0,
+        width: size.width,
+        height: size.height,
+        stroke: Settings.appearance.pane.borderColor,
+        'stroke-width': 2,
+        'fill': Settings.appearance.pane.fill
+        //'fill-opacity': 0
+      });
+    return subPaneD3;
+  }
+
+
+  function drawAtomicPane (query, samples, subPaneD3, size) {
+
+    // working variables
+    let aesthetics = query.layers[0].aesthetics;
+    let layout = query.layout;
+
+    // add scales to field usages of this query
+    attachScales(query, size);
+
+    // attach mappers
+    attachMappers(query, samples, size);
+
+    // the subpane is a collection of variables that make up a subpane, including its data marks
+    let subpane = {};
+
+    /// create subpane
+    // note: as it is a svg element no translation relative to the full view pane is required
+    // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
+    subpane.paneD3 = subPaneD3;
+
+    /// plot samples
+
+    // create a group for point marks
+    // @init
+    subpane.pointsD3 = subpane.paneD3.append("g");
+
+    /// update / remove / add marks
+    // store update selection, this also creates enter and exit subselections
+    // @update
+    let pointsD3 = subpane.pointsD3
+      .selectAll(".point")
+      // todo: fix: use tuple-storage in result table already
+      .data(
+        // converts column based to tuple based!
+        function () {
+          if (samples.length === 0)
+            return [];
+          var len = samples[0].length;
+          var tupleData = new Array(len);
+          for (let i = 0; i < len; ++i) {
+            tupleData[i] = samples.map(function (dim) {
+              return dim[i];
+            }); // jshint ignore:line
+          }
+          return tupleData;
+        }
+      ); // jshint ignore:line
+
+    // add new svg elements for enter subselection
+    let newPointsD3 = pointsD3
+      .enter()
+      .append("g")
+      .classed("point mark", true);
+    newPointsD3
+      .append("path")
+      .classed("path", true);
+
+    // the just appended elements are now part of the update selection!
+    // -> now update all the same way
+
+    // set position of shapes by translating the enclosing g group
+    // @specific for each view cell
+    pointsD3.attr('transform', layout.transformMapper);
+
+    // setup shape path generator
+    // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
+    // @common for all view cells
+    let shapePathGen = d3.svg.symbol()
+      .size(aesthetics.size.mapper)
+      .type(aesthetics.shape.mapper);
+
+    // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
+    // @common for all view cells
+    pointsD3.select(".path").attr({
+      'd': shapePathGen,
+      fill: aesthetics.color.mapper
+    });
+
+    return subpane;
+  }
+
+
   /**
    * todo: is that needed?
    * todo: document me
@@ -101,10 +211,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * @alias module:ViewTable
    */
   var ViewTable;
-  ViewTable = function (paneD3, resultTable) {
+  ViewTable = function (paneD3, results, queries) {
 
-    this.query = resultTable.query;
-    this.resultTable = resultTable;
+    this.results = results;
+    this.queries = queries;
+    this.query = queries.base;
+    this.size = results.size;
 
     /// one time on init:
     /// todo: is this actually "redo on canvas size change" ?
@@ -112,20 +224,13 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     // init table canvas
     this.canvas = setupCanvas(paneD3, 25, 25);
 
-    // infer configuration (e.g. sizes of subplots)
-    this.updateConfig();
+    // infer size of atomic plots
+    this.subPaneSize = {
+      height: this.canvas.height / this.size.rows,
+      width: this.canvas.width  / this.size.cols
+    };
 
-    // add scales to field usages of this query
-    this.attachScales(this.query);
-
-    // attach mappers
-    this.attachMappers(this.query);
-
-    // shortcuts for usage
-    var _config = this.config;
-    var _canvas = this.canvas;
-    var _aesthetics = this.query.layers[0].aesthetics;
-    var _layout = this.query.layout;
+    let canvas = this.canvas;
 
     // init axis
     // 1. axis of discrete variables:
@@ -133,101 +238,21 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     // todo: implement later
 
     // create table of ViewPanes
-    this.at = new Array(_config.rows);
-    for (let rIdx = 0; rIdx < _config.rows; rIdx++) {
-      this.at[rIdx] = new Array(_config.cols);
-      for (let cIdx = 0; cIdx < _config.cols; cIdx++) {
-
-        let samples = this.resultTable.at[rIdx][cIdx];
-
-        // subpane is a collection of variables that make up a subpane, including its data marks
-        let subpane = {};
-
-        /// create subpane
-        // note: as it is a svg element no translation relative to the full view pane is required
-        // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
-        subpane.paneD3 = _canvas.canvasD3.append('svg')
-          .attr({
-            "width": _config.subPane.width,
-            "height": _config.subPane.height,
-            "x": cIdx * _config.subPane.width,
-            "y": rIdx * _config.subPane.height
-          });
-
-        // border of subpane
-        subpane.paneD3.append('rect')
-          .attr({
-            x: 0,
-            y: 0,
-            width: _config.subPane.width,
-            height: _config.subPane.height,
-            stroke: Settings.appearance.pane.borderColor,
-            'stroke-width': 2,
-            'fill': Settings.appearance.pane.fill
-            //'fill-opacity': 0
-          });
-
-
-        /// plot samples
-
-        // create a group for point marks
-        // @init
-        subpane.pointsD3 = subpane.paneD3.append("g");
-
-        /// update / remove / add marks
-        // store update selection, this also creates enter and exit subselections
-        // @update
-        let pointsD3 = subpane.pointsD3
-          .selectAll(".point")
-          // todo: fix: use tuple-storage in result table already
-          .data(
-            // converts column based to tuple based!
-            function () {
-              if (samples.length === 0)
-                return [];
-              var len = samples[0].length;
-              var tupleData = new Array(len);
-              for (let i = 0; i < len; ++i) {
-                tupleData[i] = samples.map(function (dim) {
-                  return dim[i];
-                }); // jshint ignore:line
-              }
-              return tupleData;
-            }
-          ); // jshint ignore:line
-
-        // add new svg elements for enter subselection
-        let newPointsD3 = pointsD3
-          .enter()
-          .append("g")
-          .classed("point mark", true);
-        newPointsD3
-          .append("path")
-          .classed("path", true);
-
-        // the just appended elements are now part of the update selection!
-        // -> now update all the same way
-
-        // set position of shapes by translating the enclosing g group
-        // @specific for each view cell
-        pointsD3.attr('transform', _layout.transformMapper);
-
-        // setup shape path generator
-        // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
-        // @common for all view cells
-        let shapePathGen = d3.svg.symbol()
-          .size(_aesthetics.size.mapper)
-          .type(_aesthetics.shape.mapper);
-
-        // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
-        // @common for all view cells
-        pointsD3.select(".path").attr({
-          'd': shapePathGen,
-          fill: _aesthetics.color.mapper
-        });
-
-        // save it
-        this.at[rIdx][cIdx] = subpane;
+    this.at = new Array(this.size.rows);
+    for (let rIdx = 0; rIdx < this.size.rows; rIdx++) {
+      this.at[rIdx] = new Array(this.size.cols);
+      for (let cIdx = 0; cIdx < this.size.cols; cIdx++) {
+        let subPaneD3 = createAtomicPane(
+          canvas.canvasD3,
+          this.subPaneSize,
+          {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
+        );
+        this.at[rIdx][cIdx] = drawAtomicPane(
+          this.queries.at[rIdx][cIdx],
+          this.results.at[rIdx][cIdx],
+          subPaneD3,
+          this.subPaneSize
+        );
       }
     }
 
@@ -243,28 +268,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
 
   /**
-   * todo: document me
-   */
-  ViewTable.prototype.updateConfig = function () {
-    this.config = {
-      rows: this.resultTable.rows,
-      cols: this.resultTable.cols
-    };
-    // the size of a subpane in px
-    this.config.subPane = {
-      height: this.canvas.height / this.config.rows,
-      width: this.canvas.width  / this.config.cols
-    };
-  };
-
-
-  /**
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
    *
    * @param query {VisMEL} A VisMEL query.
    */
-  ViewTable.prototype.attachScales = function (query) {
+  var attachScales = function (query, paneSize) {
 
     /* todo: consider these notes!!
      notes:
@@ -293,32 +302,30 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     let aesthetics = query.layers[0].aesthetics;
 
-    if (!_.isEmpty(aesthetics.color)) {
+    if (F.isFieldUsage(aesthetics.color)) {
       aesthetics.color.visScale = ScaleGen.color(aesthetics.color);
     }
 
-    if (!_.isEmpty(aesthetics.size)) {
+    if (F.isFieldUsage(aesthetics.size)) {
       aesthetics.size.visScale = ScaleGen.position(aesthetics.size,
         [Settings.maps.minSize, Settings.maps.maxSize]);
     }
 
-    if (!_.isEmpty(aesthetics.shape)) {
+    if (F.isFieldUsage(aesthetics.shape)) {
       aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape);
     }
 
-    // todo: warum mache ich das für alle field usages in cols and rows?
-    // erst einmal brauche ich nur eine scale für die measures. und die measures erstrecken sich immer entlang der subpane. später brauche ich auch scales für dimensions, um die Aufteilung der Pane zu beschriften.
-    query.layout.cols.filter(F.isMeasure).forEach(
-      function (c) {
-        c.visScale = ScaleGen.position(c, [0, this.config.subPane.width]);
-      },
-      this);
-    query.layout.rows.filter(F.isMeasure).forEach(
-      function (c) {
-        // note: invert range interval, since origin is in the upper left, not bottom left
-        c.visScale = ScaleGen.position(c, [this.config.subPane.height, 0]);
-      },
-      this);
+    // todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
+
+    let row = query.layout.rows[0];
+    if (F.isFieldUsage(row) && row.isMeasure()) {
+      row.visScale = ScaleGen.position(row, [0, paneSize.width]);
+    }
+
+    let col = query.layout.cols[0];
+    if (F.isFieldUsage(col) && col.isMeasure()) {
+      col.visScale = ScaleGen.position(col, [paneSize.height, 0]);
+    }
 
     // no need for scales in: filters, details
   };
@@ -331,68 +338,69 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    *
    * todo: add mapper for hovering on marks
    */
-  ViewTable.prototype.attachMappers = function (query) {
+  var attachMappers = function (query, results, paneSize) {
     let aesthetics = query.layers[0].aesthetics;
-    let indexes = this.resultTable.indexes;
 
     {
       let color = aesthetics.color;
-      color.mapper = (_.isEmpty(color) ?
-        Settings.maps.color :
+      color.mapper = (F.isFieldUsage(color) ?
         function (d) {
-          return color.visScale(d[indexes.color]);
-        } );
+          return color.visScale(d[color.index]);
+        } :
+        Settings.maps.color);
     }
     {
       let size = aesthetics.size;
-      size.mapper = (_.isEmpty(size) ?
-        Settings.maps.size :
+      size.mapper = (F.isFieldUsage(size) ?
         function (d) {
-          return size.visScale(d[indexes.size]);
-        } );
+          return size.visScale(d[size.index]);
+        } :
+        Settings.maps.size);
     }
     {
       let shape = aesthetics.shape;
-      shape.mapper = (_.isEmpty(shape) ?
-          Settings.maps.shape:
-          function (d) {
-            return shape.visScale(d[indexes.shape]);
-          }
+      shape.mapper = (F.isFieldUsage(shape) ?
+        function (d) {
+          return shape.visScale(d[shape.index]);
+        } :
+        Settings.maps.shape
       );
     }
     {
-      let _layout = query.layout;
-      let colFU = _layout.cols.last(),
-        rowFU = _layout.rows.last();
-      let colHasMeas = F.isMeasure(colFU),
-        rowHasMeas = F.isMeasure(rowFU);
-      let xPos = this.config.subPane.width/2,
-        yPos = this.config.subPane.height/2;
+      let layout = query.layout;
+      let cols = layout.cols,
+        rows = layout.rows;
+      let colHasMeas = !cols.empty(),
+        rowHasMeas = !rows.empty;
+      let colFU = (colHasMeas ? cols[0]: {}),
+       rowFU = (rowHasMeas ? rows[0]: {});
+      let xPos = paneSize.width/2,
+        yPos = paneSize.height/2;
 
       if (colHasMeas && rowHasMeas) {
-        _layout.transformMapper = function (d) {
+        layout.transformMapper = function (d) {
           return 'translate(' +
-            colFU.visScale(d[indexes.x]) + ',' +
-            rowFU.visScale(d[indexes.y]) + ')';
+            colFU.visScale(d[colFU.index]) + ',' +
+            rowFU.visScale(d[rowFU.index]) + ')';
         };
       }
       else if (colHasMeas && !rowHasMeas) {
-        _layout.transformMapper = function (d) {
+        layout.transformMapper = function (d) {
           return 'translate(' +
-            colFU.visScale(d[indexes.x]) + ',' +
+            colFU.visScale(d[colFU.index]) + ',' +
             yPos + ')';
         };
       }
       else if (!colHasMeas && rowHasMeas) {
-        _layout.transformMapper = function (d) {
+        layout.transformMapper = function (d) {
           return 'translate(' +
             xPos + ',' +
-            rowFU.visScale(d[indexes.y])+ ')';
+            rowFU.visScale(d[rowFU.index])+ ')';
         };
       }
       else {
         // todo: jitter?
-        _layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
+        layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
       }
     }
 

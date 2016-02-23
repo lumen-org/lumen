@@ -43,4 +43,21 @@ define(['lib/logger','d3'], function (Logger, d3) {
     this.length = 0;
   };
 
+
+  // custom utility functions
+
+  /**
+   * @param value The value to replicate
+   * @param times Times to replicate
+   * @returns {Array} Returns an array of length times that contains value as all its elements.
+   * @private
+   *
+   function _repeat(value, times) {
+    var array = new Array(times);
+    for(var i=0;i<times;++i)
+      array[i] = value;
+    return array;
+  }*/
+
+
 });

@@ -63,7 +63,8 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.discrete,
-          domain: [0, 1, 2, 3, 4, 5, 6]
+          //domain: [0, 1, 2, 3, 4, 5, 6]
+          domain: new Domain.Discrete([0, 1, 2, 3, 4, 5, 6])
         });
       var sexField = new F.Field(
         'sex', myModel, {
@@ -71,21 +72,20 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
           domain: new Domain.Discrete([0,1])
-          //domain: [0,1] //_.range(10) //[0, 1]
         });
       var nameField = new F.Field(
         'name', myModel, {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: ['John', 'Philipp', 'Maggie']
+          domain: new Domain.Discrete(['John', 'Philipp', 'Maggie'])
         });
       var cityField = new F.Field(
         'city', myModel, {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: ['Jena', 'Weimar', 'Berlin', 'Erfurt']
+          domain: new Domain.Discrete(['Jena', 'Weimar', 'Berlin', 'Erfurt'])
         });
 
       myModel.fields = [
