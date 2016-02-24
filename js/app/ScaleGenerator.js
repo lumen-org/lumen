@@ -24,12 +24,17 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       scale = [];
     switch (fu.kind) {
       case F.FieldT.Kind.cont:
-        scale = d3.scale.linear();
-        colormap = cbrew.Blues["9"];
+        colormap = cbrew.Blues["9"];              
+        scale = d3.scale.linear().domain(fu.domain);
+        // todo: adjust for domain class usage: 
+        //scale = d3.scale.linear().domain([fu.domain.l, fu.domain.h]);
         break;
       case F.FieldT.Kind.discrete:
         scale = d3.scale.ordinal();
-        var l = fu.domain.length;
+        let domainValues = fu.split(true);
+        let l = domainValues.length;
+
+        // colormap
         if (l <= 2) {
           colormap = cbrew.Set1[3].slice(0, l);
         } else if (l <= 9) {
@@ -41,12 +46,15 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
           }
           colormap = cbrew.Paired[l];
         }
+
+        // domain values
+        scale.domain(domainValues);
+
         break;
       default:
         throw new TypeError("invalid Field.Kind" + fu.kind);
     }
-    return scale.domain(fu.domain)
-      .range(colormap);
+    return scale.range(colormap);
   };
 
 
@@ -56,7 +64,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * @returns the created size scale.
    */
   scaleGenerator.size = function (fu) {
-    throw new Error("Using scaleGenerator.position at the moment. This one is not implemented yet.");
+    throw new Error("Use scaleGenerator.position for the moment. This one is not implemented yet.");
     // todo: implement this one!?
   };
 
@@ -73,6 +81,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       case F.FieldT.Kind.discrete:
         scale = d3.scale.ordinal()
           .range(d3.svg.symbolTypes);
+        scale.domain(fu.split(true));
         if (fu.domain.length > d3.svg.symbolTypes.length) {
           logger.warn("the domain of '" + fu.name + "' has too many elements. I can only encode " +
             d3.svg.symbolTypes.length + " many. I will 'wrap around'..");
@@ -81,7 +90,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       default:
         throw new TypeError("invalid Field.Kind" + fu.kind);
     }
-    return scale.domain(fu.domain);
+    return scale;
   };
 
 
@@ -102,7 +111,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       case F.FieldT.Kind.discrete:
         // categorial domain: map to center of equally sized bands
         scale = d3.scale.ordinal()
-          .domain(fu.domain)
+          .domain(fu.split(true))
           .rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
       default:

@@ -25,26 +25,18 @@ define(['./Domain'], function (Domain) {
     /**
      * Splits a discrete domain into all its individual elements
      * @param {DiscreteDomain} domain The domain to split.
+     * @param {boolean} valueFlag If set, this function returns an array all values of the domain, otherwise, it returns an array of domains, each having only a single element as its domain.
      */
-    singleElements: function (domain) {
-      if (domain instanceof Domain.Discrete)
-        return domain.map(function (e) {
-          return new Domain.Discrete([e]);
-        });
-      else
-        throw new TypeError("domain must be of type NumericDiscreteDomain or StringDomain");
-    },
-
-    /**
-     * Splits a discrete domain into all its individual elements
-     */
-    singleElements2: function () {
-      if (!(this instanceof Domain.Discrete))
-        throw new TypeError("domain must be of type DiscreteDomain to use this splitter");
-
-      return this.map(function (e) {
-        return new Domain.Discrete([e], this.split);
-      }, this);
+    singleElements: function (domain, valueFlag) {
+      if (domain instanceof Domain.Discrete) {
+        if (valueFlag)
+          return domain.values.slice();
+        else
+          return domain.values.map(function (e) {
+            return new Domain.Discrete([e]);
+          });
+      } else
+        throw new TypeError("domain must be of type Domain.Discrete");
     },
 
     identity: function  (domain) {
@@ -79,3 +71,36 @@ define(['./Domain'], function (Domain) {
     plitter: Splitter
   };
 });
+
+
+///**
+// * Returns a cached function
+// * @param domain
+// * @returns {Function}
+// */
+//function singleElements (domain) {
+//
+//  var cachedDomain, cachedSplitDomain, cachedSplitValues;
+//
+//  /**
+//   * Caches result of split
+//   */
+//  function cacheIt (domain) {
+//    cachedDomain = domain;
+//    cachedSplitDomain = Splitter.singleElements(domain, false);
+//    cachedSplitValues = Splitter.singleElements(domain, true);
+//  }
+//
+//  cacheIt(domain);
+//
+//  // return function to retrieve the cached values
+//  return function (domain, valueFlag) {
+//
+//    // todo: how to properly check that it is unchanged ... ?!
+//    if (domain !== cachedDomain) {
+//      cacheIt(domain);
+//    }
+//
+//    return (valueFlag ? cachedSplitValues : cachedSplitDomain);
+//  };
+//}

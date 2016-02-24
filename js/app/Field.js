@@ -113,9 +113,12 @@ define(['./utils', './SplitSample'], function (utils, S) {
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;
 
-  FieldUsage.prototype.split = function () {
+  FieldUsage.prototype.split = function (valueFlag) {
+    if (valueFlag)
+      return this.splitter(this.domain, true);
+
     // split domain
-    var domains = this.splitter(this.domain);
+    var domains = this.splitter(this.domain, false);
 
     // create copies of this field usage but use the just created 'split domains'
     return domains.map( function (domain) {

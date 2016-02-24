@@ -13,13 +13,9 @@ define([], function () {
    * @constructor
    */
   var DiscreteDomain = function (values) {
-    Array.call(this);
-    values.forEach(function (e) {
-      this.push(e);
-    }, this);
+    this.values = [];
+    values.forEach(function (v) { this.values.push(v);}, this);
   };
-  DiscreteDomain.prototype = Object.create(Array.prototype);
-  DiscreteDomain.prototype.constructor = DiscreteDomain;
 
   DiscreteDomain.prototype._checkType = function (d) {
     if (!(d instanceof DiscreteDomain))
@@ -28,17 +24,17 @@ define([], function () {
 
   DiscreteDomain.prototype.union = function (domain) {
     this._checkType(domain);
-    return _.union(this, domain);
+    return new DiscreteDomain( _.union(this.values, domain.values));
   };
 
   DiscreteDomain.prototype.intersection = function (domain) {
     this._checkType(domain);
-    return _.intersection(this, domain);
+    return new DiscreteDomain( _.intersection(this.values, domain.values));
   };
 
   DiscreteDomain.prototype.minus = function (domain) {
     this._checkType(domain);
-    return _.difference(this, domain);
+    return new DiscreteDomain( _.difference(this.values, domain.values));
   };
 
 

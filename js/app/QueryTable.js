@@ -30,31 +30,34 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
     for (let i=0; i<len; ++i) {
       // shallow copy query. shallow means that all {@link FieldUsage}s in the copy are references to those in query.
       let instance = query.shallowCopy();
-      let instDetails = instance.layers[0].aesthetics.details;
-      let instLayout = (what === "rows" ? instance.layout.rows : instance.layout.cols);
+      let details = instance.layers[0].aesthetics.details;
+      let layout = (what === "rows" ? instance.layout.rows : instance.layout.cols);
 
       // delete templated part
-      instLayout.clear();
+      layout.clear();
 
       // iterate over all field usages of the current NSF element
       nsf[i].forEach(
         function (fu) {
           if (F.isDimension(fu)) {
-            // find dimension usages on details shelf that are based on the same name.
-            let idx = instDetails.findIndex( function (o) {
+            // find dimension usages on details shelf that are based on the same name
+            let idx = details.findIndex( function (o) {
               return F.isDimension(o) && fu.name === o.name;
             });
             if (idx !== -1) {
-              throw new Error('merging of domains for template expansion not implemented yet');
-              // todo: merge the domains of the existing fieldUsage with fieldUsage of NSF
-              // do NOT modify the existing fieldUsage since it is a shallow copy!!
+              // merge the domains of the existing fieldUsage with fieldUsage of NSF
+              // do NOT modify the existing fieldUsage since it is a shallow copy. Instead create a new FieldUsage.
+              let mergedFU = new F.FieldUsage(details[idx]);
+              mergedFU.domain = mergedFU.domain.intersection(fu.domain);
+              details[idx] = mergedFU;
+              logger.log('mering domains...');
             }
-            instDetails.push(fu);
+            details.push(fu);
           }
           else {
-            if (!instLayout.empty())
+            if (!layout.empty())
               throw new Error("After template expansion there must be only one FU on a row/col shelf");
-            instLayout.push(fu);
+            layout.push(fu);
           }
         }
       );

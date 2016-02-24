@@ -9,7 +9,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
   "use strict";
 
   var logger = Logger.get('pl-DummyModel');
-  logger.setLevel(Logger.DEBUG);
+  logger.setLevel(Logger.WARN);
 
   /**
    * Creates and returns an empty dummy model with given name

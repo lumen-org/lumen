@@ -31,7 +31,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * @param padding Padding (inner) for the drawing canvas
    * @returns {{}} A wrapper object that contains properties of the geometry of the pane, the pane (the root of this , its canvas (the drawing area), margin and padding
    */
-  function setupCanvas(canvasD3, margin, padding) {
+  function initCanvas(canvasD3, margin, padding) {
     // normalize arguments
     if (_.isFinite(margin)) {
       margin = {top: margin, right: margin, bottom: margin, left: margin};
@@ -72,7 +72,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   }
 
 
-  function createAtomicPane (parentD3, size, offset) {
+  function initAtomicPaneD3 (parentD3, size, offset) {
     /// create subpane
     // note: as it is a svg element no translation relative to the full view pane is required
     // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
@@ -100,7 +100,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   }
 
 
-  function drawAtomicPane (query, samples, subPaneD3, size) {
+  function buildAtomicPane (query, samples, subPaneD3, size) {
 
     // working variables
     let aesthetics = query.layers[0].aesthetics;
@@ -223,7 +223,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     /// todo: is this actually "redo on canvas size change" ?
 
     // init table canvas
-    this.canvas = setupCanvas(paneD3, 25, 25);
+    this.canvas = initCanvas(paneD3, 25, 25);
 
     // infer size of atomic plots
     this.subPaneSize = {
@@ -241,12 +241,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     for (let rIdx = 0; rIdx < this.size.rows; rIdx++) {
       this.at[rIdx] = new Array(this.size.cols);
       for (let cIdx = 0; cIdx < this.size.cols; cIdx++) {
-        let subPaneD3 = createAtomicPane(
+        let subPaneD3 = initAtomicPaneD3(
           canvas.canvasD3,
           this.subPaneSize,
           {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
         );
-        this.at[rIdx][cIdx] = drawAtomicPane(
+        this.at[rIdx][cIdx] = buildAtomicPane(
           this.queries.at[rIdx][cIdx],
           this.results.at[rIdx][cIdx],
           subPaneD3,
@@ -262,6 +262,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
    *
    * @param query {VisMEL} A VisMEL query.
+   * @param paneSize {width, height} Width and heights of the target pane in px.
    */
   var attachScales = function (query, paneSize) {
 
@@ -321,30 +322,28 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       Settings.maps.shape );
 
     let layout = query.layout;
-    let cols = layout.cols,
-      rows = layout.rows;
-    let colHasMeas = !cols.empty(),
-      rowHasMeas = !rows.empty;
-    let colFU = (colHasMeas ? cols[0] : {}),
-      rowFU = (rowHasMeas ? rows[0] : {});
+    let colFU = layout.cols[0],
+      rowFU = layout.rows[0];
+    let isColMeas = F.isMeasure(colFU),
+      isRowMeas = F.isMeasure(rowFU);
     let xPos = paneSize.width / 2,
       yPos = paneSize.height / 2;
 
-    if (colHasMeas && rowHasMeas) {
+    if (isColMeas && isRowMeas) {
       layout.transformMapper = function (d) {
         return 'translate(' +
           colFU.visScale(d[colFU.index]) + ',' +
           rowFU.visScale(d[rowFU.index]) + ')';
       };
     }
-    else if (colHasMeas && !rowHasMeas) {
+    else if (isColMeas && !isRowMeas) {
       layout.transformMapper = function (d) {
         return 'translate(' +
           colFU.visScale(d[colFU.index]) + ',' +
           yPos + ')';
       };
     }
-    else if (!colHasMeas && rowHasMeas) {
+    else if (!isColMeas && isRowMeas) {
       layout.transformMapper = function (d) {
         return 'translate(' +
           xPos + ',' +

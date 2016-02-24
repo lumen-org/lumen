@@ -91,54 +91,47 @@ define(['lib/logger', './Field'], function (Logger, F) {
    * @private
    */
   var aggregate = function (model, query) {
-    // 1. generate mapping and empty result table
+    // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
     // - multiple measures of the same field are possible and
     // - multi-dimensional measures aren't supported yet
 
+    // 1. generate mapping and empty result table
     // attach index in aggregation table and build of the set of dimensions and measures of the aggregation table
     // note: in the general case query.fieldUsage and [...dimensions, ...measures] do not contain the same set of field usages, as duplicate dimensions won't show up in dimensions
-    var dimensions = [];
-    var measures = [];
     var fieldUsages = query.fieldUsages();
-    var idx = 0;
-    fieldUsages.forEach( function (fu) {
-      // attach to maps
-      fu.index = idx;
-      //idx2fu[idx] = fu;
-
-      if (fu.isDimension()) {
-        let sameBase = dimensions.find( function (e) {
-          return (fu.base === e.base);
-        });
-        if (sameBase) {
-          // fu is already there
-          if (fu.splitter !== sameBase.splitter)
-            throw new RangeError("If using multiple dimensions of the same field in an atomic query, their splitter functions must match!");
-          else
-            fu.index = sameBase.index;
-        }
-        else {
-          // fu is new
-          fu.index = idx++;
-          dimensions.push(fu);
-        }
+    var dimensions = [];
+    let idx = 0;
+    fieldUsages.filter(F.isDimension).forEach( function (fu) {
+      let sameBase = dimensions.find( function (e) {
+        return (fu.base === e.base);
+      });
+      if (sameBase) {
+        // fu is already there
+        if (fu.splitter !== sameBase.splitter)
+          throw new RangeError("If using multiple dimensions of the same field in an atomic query, their splitter functions must match!");
+        else
+          fu.index = sameBase.index;
       }
-      else if (fu.isMeasure()) {
+      else {
+        // fu is new
         fu.index = idx++;
-        measures.push(fu);
+        dimensions.push(fu);
       }
-      else
-        throw new TypeError();
+    });
+
+    var measures = [];
+    fieldUsages.filter(F.isMeasure).forEach( function (fu) {
+      fu.index = idx++;
+      measures.push(fu);
     });
 
     // 2. setup input tuples, i.e. calculate the cross product of all dim.sample()
     // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
     let inputTable = dimensions.reduce(
       function (table, dim) {
-        // todo: use dim.split()
-        // but I need the values, not splitted domains now
-        return _join(table, [dim.domain]);
+        //use the values of the splitted domain --> pass "true" as arg
+        return _join(table, [dim.split(true)]);
       }, []);
 
     // 3. generate output tuples
@@ -170,7 +163,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
     // todo 5. return aggregation table
 
-    return [...outputTable, ...inputTable];
+    return [...inputTable, ...outputTable];
   };
 
 
