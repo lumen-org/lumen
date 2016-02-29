@@ -140,9 +140,6 @@ define(['lib/logger', './Field'], function (Logger, F) {
     measures.forEach( function (m) {
       let column = new Array(len);
 
-      // generate specialized model for the current measure.
-      //let measureModel = model.copy().marginalize(_.without(measures, m));
-
       // sample accordingly
       for (let tupleIdx = 0; tupleIdx < len; ++tupleIdx) {
 

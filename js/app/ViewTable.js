@@ -96,7 +96,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   }
 
 
-  function buildAtomicPane (query, samples, subPaneD3, size) {
+  function buildAtomicPane (query, samples, subPaneD3, size, extent) {
 
     // working variables
     let aesthetics = query.layers[0].aesthetics;
@@ -157,7 +157,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     });
 
     // add scales to field usages of this query
-    attachScales(query, size);
+    attachScales(query, size, extent);
 
     // attach mappers
     attachMappers(query, samples, size);
@@ -247,27 +247,106 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     let canvas = this.canvas;
 
+    // create extents
+    let extents = attachExtents(queries, results);
+
+    // create scales
+
     // create axis
     // todo: implement
 
+    // create visuals mappers (common for all view panes)
+
     // create table of ViewPanes
     this.at = new Array(this.size.rows);
-    for (let rIdx = 0; rIdx < this.size.rows; rIdx++) {
+    for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
       this.at[rIdx] = new Array(this.size.cols);
-      for (let cIdx = 0; cIdx < this.size.cols; cIdx++) {
+      for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
         let subPaneD3 = initAtomicPaneD3(
           canvas.canvasD3,
           this.subPaneSize,
           {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
         );
+
         this.at[rIdx][cIdx] = buildAtomicPane(
           this.queries.at[rIdx][cIdx],
           this.results.at[rIdx][cIdx],
           subPaneD3,
-          this.subPaneSize
+          this.subPaneSize,
+          { color: extents.color,
+            shape: extents.shape,
+            size: extents.size,
+            row: extents.row[rIdx],
+            col: extents.col[cIdx]
+          }
         );
       }
     }
+  };
+
+  /**
+   * Returns the collection of global extents of the values of those {@link FieldUsage}s that are mapped to visuals.
+   *
+   * @param queries
+   * @param results
+   * @returns {{color: Array, shape: Array, size: Array, row: Array, col: Array}}
+   */
+  var attachExtents = function (queries, results) {
+
+    function myUnion(extent, data, discreteFlag) {
+      return (discreteFlag ?
+          _.union(extent, _.unique(data)) :
+          d3.extent([...extent, ...d3.extent(data)])
+      );
+    }
+
+    let color = [],
+      shape = [],
+      size = [];
+    let row = new Array(queries.size.rows);
+    for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+      row[rIdx] = [];
+      for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
+        let r = results.at[rIdx][cIdx],
+          q = queries.at[rIdx][cIdx];
+
+        // aesthetics extents
+        let qa = q.layers[0].aesthetics;
+        if (F.isFieldUsage(qa.color))
+          color = myUnion(color, r[qa.color.index], qa.color.isDiscrete());
+        if (F.isFieldUsage(qa.shape))
+          shape = myUnion(shape, r[qa.shape.index], qa.shape.isDiscrete());
+        if (F.isFieldUsage(qa.size))
+          size = myUnion(size, r[qa.size.index], qa.size.isDiscrete());
+
+        // row extents
+        let lr = q.layout.rows[0];
+        if (F.isMeasure(lr))
+          row[rIdx] = myUnion(row[rIdx], r[lr.index], lr.isDiscrete());
+      }
+    }
+
+    // column extents
+    let col = new Array(queries.size.cols);
+    for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
+      col[cIdx] = [];
+      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+        let r = results.at[rIdx][cIdx],
+          q = queries.at[rIdx][cIdx];
+        let lc = q.layout.cols[0];
+        if (F.isMeasure(lc))
+          col[cIdx] = myUnion(col[cIdx], r[lc.index], lc.isDiscrete());
+      }
+    }
+
+    return {
+      color: color,
+      shape: shape,
+      size: size,
+      row: row,
+      col: col
+    };
+
   };
 
 
@@ -278,29 +357,29 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * @param query {VisMEL} A VisMEL query.
    * @param paneSize {width, height} Width and heights of the target pane in px.
    */
-  var attachScales = function (query, paneSize) {
+  var attachScales = function (query, paneSize, extent) {
 
     let aesthetics = query.layers[0].aesthetics;
 
     if (F.isFieldUsage(aesthetics.color))
-      aesthetics.color.visScale = ScaleGen.color(aesthetics.color);
+      aesthetics.color.visScale = ScaleGen.color(aesthetics.color, extent.color);
 
     if (F.isFieldUsage(aesthetics.size))
-      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, [Settings.maps.minSize, Settings.maps.maxSize]);
+      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, extent.size, [Settings.maps.minSize, Settings.maps.maxSize]);
 
     if (F.isFieldUsage(aesthetics.shape))
-      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape);
+      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, extent.shape);
 
     let row = query.layout.rows[0];
     if (F.isFieldUsage(row) && row.isMeasure())
-      row.visScale = ScaleGen.position(row, [0, paneSize.height]);
+      row.visScale = ScaleGen.position(row, extent.row, [0, paneSize.height]);
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
     if (F.isFieldUsage(col) && col.isMeasure())
-      col.visScale = ScaleGen.position(col, [paneSize.width, 0]);
+      col.visScale = ScaleGen.position(col, extent.col, [paneSize.width, 0]);
 
-    // no need for scales in: filters, details
+    // no need for scales of: filters, details
   };
 
 

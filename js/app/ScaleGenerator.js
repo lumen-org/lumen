@@ -26,7 +26,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * @returns the created color scale.
    * todo: respect scales and ordering as set in the FUsageT attributes
    */
-  scaleGenerator.color = function (fu) {
+  scaleGenerator.color = function (fu, domain) {
     var colormap = [],
       scale = [];
     switch (fu.kind) {
@@ -36,7 +36,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
         break;
       case F.FieldT.Kind.discrete:
         scale = d3.scale.ordinal();
-        let l = fu.extent.length;
+        let l = domain.length;
         // colormap
         if (l <= 2) {
           colormap = cbrew.Set1[3].slice(0, l);
@@ -52,7 +52,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
         break;
       default: throw new TypeError("invalid Field.Kind" + fu.kind);
     }
-    return scale.range(colormap).domain(fu.extent);
+    //return scale.range(colormap).domain(fu.extent);
+    return scale.range(colormap).domain(domain);
   };
 
 
@@ -61,7 +62,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * @param fu {@link FieldUsage}.
    * @returns the created size scale.
    */
-  scaleGenerator.size = function (fu) {
+  scaleGenerator.size = function (fu, domain) {
     throw new Error("Use scaleGenerator.position for the moment. This one is not implemented yet.");
     // todo: implement this one!?
   };
@@ -70,7 +71,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
   /**
    * @param fu
    */
-  scaleGenerator.shape = function (fu) {
+  scaleGenerator.shape = function (fu, domain) {
     var scale = [];
     switch (fu.kind) {
       case F.FieldT.Kind.cont:
@@ -78,8 +79,9 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       case F.FieldT.Kind.discrete:
         scale = d3.scale.ordinal()
           .range(d3.svg.symbolTypes)
-          .domain(fu.extent);
-        if (fu.extent.length > d3.svg.symbolTypes.length) {
+          .domain(domain);
+          //.domain(fu.extent);
+        if (domain.length > d3.svg.symbolTypes.length) {
           logger.warn("the domain/extend of '" + fu.name + "' has too many elements. I can only encode " +
             d3.svg.symbolTypes.length + " many. I will 'wrap around'..");
         }
@@ -95,7 +97,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * @param fu A {@link FieldUsage}.
    * @param range
    */
-  scaleGenerator.position = function (fu, range) {
+  scaleGenerator.position = function (fu, domain, range) {
     var scale = [];
     switch (fu.kind) {
       case F.FieldT.Kind.cont:
@@ -111,7 +113,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       default:
         throw new TypeError("invalid Field.Kind: " + fu.kind);
     }
-    return scale.domain(fu.extent);
+    return scale.domain(domain);
   };
 
   return scaleGenerator;
