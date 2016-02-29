@@ -137,11 +137,11 @@ define(['./Field'], function (F) {
    * Returns an array of all {@link F.Field}s of this model, which are dimensions.
    */
   Model.prototype.dimensions = function () {
-    return this.fields.filter(function (field) {return field.role === F.FieldT.Role.dimension;});
+    return this.fields.filter(F.isDimension);
   };
 
   Model.prototype.measures = function () {
-    return this.fields.filter(function (field) {return field.role === F.FieldT.Role.measure;});
+    return this.fields.filter(F.isMeasure);
   };
 
   return Model;

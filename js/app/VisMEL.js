@@ -192,6 +192,14 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
   };
 
   /**
+   * @returns Returns the set of {@link FieldUsage}s of this query which are dimensions.
+   */
+  VisMEL.prototype.dimensionUsages = function () {
+    return this.fieldUsages()
+      .filter(F.isDimension);
+  };
+
+  /**
    * @returns Returns the set of {@link FieldUsage}s of this query that are common among all implied submodels, i.e. all field usages except those of the layout part of the query.
    */
   VisMEL.prototype.commonMeasureUsages = function () {
@@ -213,10 +221,8 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
           layer.aesthetics.details,
           [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size]
         ),
-        function (e) {
-          return e instanceof F.FieldUsage && e.role === F.FieldT.Role.dimension;
-        }),
-      function (dim) {return dim.name;});
+        F.isDimension),
+      F.nameMap);
   };
 
   // delimiter for JSON conversion

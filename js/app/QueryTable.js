@@ -84,5 +84,20 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
     };
   };
 
+
+  /**
+   * For debugging
+   */
+  QueryTable.prototype.first = function () {
+    return this.at[0][0];
+  };
+
+  /**
+   * For debugging
+   */
+  QueryTable.prototype.firstColumn = function () {
+    return this.at[0][0].layout.cols[0];
+  };
+
   return QueryTable;
 });

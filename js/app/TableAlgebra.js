@@ -127,7 +127,7 @@ define(['./Field', './shelves'], function (F, sh) {
     this.forEach( function(elem) {
       if (elem instanceof F.FieldUsage) {
         if (F.isDimension(elem)) {
-          // splitted returns an array of FieldUsages, however, we need an array of array where each inner array only has a single element, i.e. the field usage with reduces domain
+          // splitted returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
           let splitted = elem.split();
           domainExpr.push(splitted.map (function (e) {return [e]; }));
         } else
@@ -144,21 +144,27 @@ define(['./Field', './shelves'], function (F, sh) {
     // example 2 cont'd: [ [ [sex with domain=[0]], [sex with domain=[1]] ], *, [[age]] ]
     // -> [[ [sex with domain=[0], age], [sex with domain=[1], age] ]]
 
-    //   2a) evaluate all "*"
-    domainExpr.forEach( function(elem, idx) {
-      if (elem === "*") {
-        // replace that element by the result of "domainExpr[idx-1] * domainExpr[idx+1]"
-        domainExpr.splice(idx-1, 3, _cross(domainExpr[idx-1], domainExpr[idx+1]) );
-      }
-    });
-
-    //   2b) evaluate all "+"
-    domainExpr.forEach( function(elem, idx) {
+    //   2a) evaluate all "+"
+    for (let idx=0; idx<domainExpr.length; ++idx) {
+      let elem = domainExpr[idx];
       if (elem === "+") {
         // replace that element by the result of "domainExpr[idx-1] + domainExpr[idx+1]"
         domainExpr.splice(idx-1, 3, _plus(domainExpr[idx-1], domainExpr[idx+1]) );
+        // decrease idx, since we merged three elements of domainExpr into one. Otherwise we would skip elements.
+        --idx;
       }
-    });
+    }
+
+    //   2b) evaluate all "*"
+    for (let idx=0; idx<domainExpr.length; ++idx) {
+      let elem = domainExpr[idx];
+      if (elem === "*") {
+        // replace that element by the result of "domainExpr[idx-1] * domainExpr[idx+1]"
+        domainExpr.splice(idx-1, 3, _cross(domainExpr[idx-1], domainExpr[idx+1]) );
+        // decrease idx, since we merged three elements of domainExpr into one. Otherwise we would skip elements.
+        --idx;
+      }
+    }
 
     // an array of arrays should be left
     if (domainExpr.length !== 1) {

@@ -4,8 +4,33 @@
  * @module ModelTable
  * @author Philipp Lucas
  */
-define([], function() {
+define(['./Field'], function(F) {
   'use strict';
+
+  /**
+   * Attaches a model to each measure/aggregation of a query.
+   * @param query
+   * @param base
+   */
+  var attachModel = function (query, base) {
+    let measures = query.measureUsages();
+
+    // marginalize all those measures out of the model, for which the base field isn't also used for a dimension or another measure
+    let uniqueMeasures = _.unique(measures, F.nameMap);
+    let uniqueDimension = query.dimensionUsages();
+    let toBeRemoved = uniqueMeasures.filter( function (m) {
+      return undefined === uniqueDimension.find( function(d) {return (d.name === m.name);} );
+    });
+
+    measures.forEach(
+      function (m) {
+        m.model = base.copy().marginalize(
+          toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
+        );
+      }
+    );
+  };
+
 
   var model = function (query) {
     // todo: extend: only 1 layer and 1 source is supported for now
@@ -21,18 +46,14 @@ define([], function() {
     //var dimensions = fieldUsages.filter(F.isDimension);
     //var measures = fieldUsages.filter(F.isMeasure);
 
-    // 3. merge domains of FieldUsages based on the same Field
+    // 3. merge (i.e. intersect) domains of FieldUsages based on the same Field
     // todo: implement
 
-    // 4. compile set of unique Fields (not field Usages) that are used in a VisMEL query.
-    // -> Fields not part of that set can be marginalized out
-    //var usedVariables = query.fields();
-
-    // 5. apply filters on independent variables
+    // 4. apply filters on independent variables
     // todo: implement
     // todo: don't forget to remove filters from sub query?
 
-    // 6. derive model and return
+    // 5. derive model and return
     return base.copy().marginalize( _.difference(base.fields, fields) );
   };
 
@@ -47,16 +68,17 @@ define([], function() {
    * @constructor
    */
   var ModelTable = function (queryTable) {
-
     this.size = queryTable.size;
     this.at = new Array(this.size.rows);
     for (let rIdx=0; rIdx<this.size.rows; ++rIdx) {
       this.at[rIdx] = new Array(this.size.cols);
       for (let cIdx=0; cIdx<this.size.cols; ++cIdx) {
-        this.at[rIdx][cIdx] = model(queryTable.at[rIdx][cIdx]);
+        let query = queryTable.at[rIdx][cIdx];
+        // derive base model for a single query, then:
+        // attach model for each measure to the measure of the query
+        attachModel(query, this.at[rIdx][cIdx] = model(query));
       }
     }
-
   };
 
   /**

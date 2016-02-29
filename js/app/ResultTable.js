@@ -141,7 +141,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
       let column = new Array(len);
 
       // generate specialized model for the current measure.
-      let measureModel = model.copy().marginalize(_.without(measures, m));
+      //let measureModel = model.copy().marginalize(_.without(measures, m));
 
       // sample accordingly
       for (let tupleIdx = 0; tupleIdx < len; ++tupleIdx) {
@@ -153,8 +153,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
         // aggregate remaining model
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
-        // todo: oh oh: I think I need a model for each aggregation. Maybe better attach sub models to each aggregation in each atomic query?
-        column[tupleIdx] = measureModel.aggregate(dimValues, m.aggr);
+        column[tupleIdx] = m.model.aggregate(dimValues, m.aggr);
       }
       outputTable.push(column);
     });
@@ -162,6 +161,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     // todo 4. apply aggregation filters
 
     // todo 5. return aggregation table
+
 
     return [...inputTable, ...outputTable];
   };

@@ -164,9 +164,11 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
   DummyModel.prototype.aggregate = function (values, aggregation) {
 
     // todo: in the future we might want to support aggregation on more than one variables
-    if (values.length !== this.size()-1)
-      //throw new Error("for now only aggregations on 1 variable are allowed.");
-      logger.warn("for now only aggregations on 1 variable are allowed.");
+    if (values.length > this.size()-1)
+      throw new Error("you gave too many values. For now only aggregations on 1 variable are allowed.");
+    else if (values.length < this.size()-1)
+      throw new Error("you gave too few values. For now only aggregations on 1 variable are allowed.");
+      //logger.warn("for now only aggregations on 1 variable are allowed.");
 
     // todo: implement
     if (aggregation === F.FUsageT.Aggregation.avg) {

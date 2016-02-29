@@ -7,12 +7,8 @@
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
  * ToDo:
- *  - split into ViewPanes instead of a whole view table?
- *  - debug: fix for multiple measures on row/column
- *  - debug: fix for multiple usage of the same field
- *  - debug: fix for 3 dims on rows/cols
  *
- * // http://jsbin.com/viqenirimu/edit?html,output
+ * http://jsbin.com/viqenirimu/edit?html,output
  *
  * @module ViewTable
  * @author Philipp Lucas
@@ -106,12 +102,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     let aesthetics = query.layers[0].aesthetics;
     let layout = query.layout;
 
-    // add scales to field usages of this query
-    attachScales(query, size);
-
-    // attach mappers
-    attachMappers(query, samples, size);
-
     // the subpane is a collection of variables that make up a subpane, including its data marks
     let subpane = {};
 
@@ -147,6 +137,30 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           return tupleData;
         }
       ); // jshint ignore:line
+
+    // add extents of values to all field usages
+    // note: it is by design/decision that the extent is calculated also on all dimensions from the result table, but not taken from their domain
+    //query.measureUsages().forEach( function (m) {
+    query.fieldUsages().forEach( function (fu) {
+      if (fu.dataType === F.FieldT.Type.num) {
+        // todo: differ between continuous and discrete? not sure how to handle it, since the "kind" of the values in the result table, depend on the "kind" of the return type of the aggregation... is this the right way to distinguish?
+        if (fu.kind === F.FieldT.Kind.discrete)
+          fu.extent = _.unique(samples[fu.index]);
+        else if (fu.kind === F.FieldT.Kind.cont)
+          fu.extent = d3.extent(samples[fu.index]);
+      }
+      else if (fu.dataType === F.FieldT.Type.string)
+        if (fu.kind === F.FieldT.Kind.discrete)
+          fu.extent = _.unique(samples[fu.index]);
+        else throw new TypeError("invalid Field.Kind" + fu.kind);
+      else throw new TypeError("invalid Field.Type" + fu.dataType);
+    });
+
+    // add scales to field usages of this query
+    attachScales(query, size);
+
+    // attach mappers
+    attachMappers(query, samples, size);
 
     // add new svg elements for enter subselection
     let newPointsD3 = pointsD3
@@ -279,12 +293,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     let row = query.layout.rows[0];
     if (F.isFieldUsage(row) && row.isMeasure())
-      row.visScale = ScaleGen.position(row, [0, paneSize.width]);
+      row.visScale = ScaleGen.position(row, [0, paneSize.height]);
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
     if (F.isFieldUsage(col) && col.isMeasure())
-      col.visScale = ScaleGen.position(col, [paneSize.height, 0]);
+      col.visScale = ScaleGen.position(col, [paneSize.width, 0]);
 
     // no need for scales in: filters, details
   };

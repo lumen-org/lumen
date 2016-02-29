@@ -116,10 +116,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
   FieldUsage.prototype.split = function (valueFlag) {
     if (valueFlag)
       return this.splitter(this.domain, true);
-
     // split domain
     var domains = this.splitter(this.domain, false);
-
     // create copies of this field usage but use the just created 'split domains'
     return domains.map( function (domain) {
       var copy = new FieldUsage(this);
@@ -170,6 +168,10 @@ define(['./utils', './SplitSample'], function (utils, S) {
     return obj instanceof Field;
   }
 
+  function nameMap (field) {
+    return field.name;
+  }
+
 
   return {
     FieldT: FieldT,
@@ -179,7 +181,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
     isMeasure: isMeasure,
     isDimension: isDimension,
     isFieldUsage: isFieldUsage,
-    isField: isField
+    isField: isField,
+    nameMap: nameMap
     //EmptyField :EmptyField
   };
 
