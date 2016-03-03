@@ -52,8 +52,11 @@ define(['./Domain'], function (Domain) {
      * @param {SimpleNumericContinuousDomain} domain The domain to sample.
      * @param n
      */
-    equiDistance: function (domain, n) {
-      throw new Error("not implemented"); // todo: implement
+    equiDistance: function (domain, n, valueFlag) {
+      if (domain instanceof Domain.SimpleNumericContinuousDomain) {
+        throw new Error("not implemented"); // todo: implement
+      } else
+        throw new TypeError("domain must be of type Domain.SimpleNumericContinuousDomain");
     },
 
     /**

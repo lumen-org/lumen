@@ -21,8 +21,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width:500,
-        height:500
+        width:1000,
+        height:1000
       });
 
     // define shelves

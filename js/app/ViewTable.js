@@ -285,11 +285,9 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   };
 
   /**
-   * Returns the collection of global extents of the values of those {@link FieldUsage}s that are mapped to visuals.
-   *
+   * Returns a collection of 'global' extents of the values of those {@link FieldUsage}s that are mapped to visuals.
    * @param queries
    * @param results
-   * @returns {{color: Array, shape: Array, size: Array, row: Array, col: Array}}
    */
   var attachExtents = function (queries, results) {
 
@@ -346,7 +344,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       row: row,
       col: col
     };
-
   };
 
 
