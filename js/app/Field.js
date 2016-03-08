@@ -1,6 +1,8 @@
 /**
  * This module defines the dimensions/fields/attributes of a model and their usages: Field, FieldUsage and various other types.
  *
+ * todo: at the moment I am restricted to splits/samplings that result in singular values, for both continuous and discrete domains. problem is that i cannot handle the implications of dealing with intervals, i.e. there are intervals in the results table, and hence the scales used for visualization in the view table get intervals as inputs...
+ *
  * @author Philipp Lucas
  * @module Field
  */
@@ -108,14 +110,18 @@ define(['./utils', './SplitSample'], function (utils, S) {
     this.splitter = utils.selectValue(args.splitter,
       isFU, base.splitter,
       this.isDiscrete(), S.plitter.singleElements,
-      S.plitter.equiIntervals);
+      //S.plitter.equiIntervals);
+      S.ampler.equiDistance);
   };
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;
 
-  FieldUsage.prototype.split = function (valueFlag) {
-    if (valueFlag)
-      return this.splitter(this.domain, true);
+  FieldUsage.prototype.splitToValues = function () {
+    // todo: 10 is a magic number. introduce a configuration variable to allow custom splitting
+    return this.splitter(this.domain, true, 10);
+  };
+
+  FieldUsage.prototype.split = function () {
     // split domain
     var domains = this.splitter(this.domain, false);
     // create copies of this field usage but use the just created 'split domains'

@@ -4,6 +4,7 @@
   "description": "A tool for exploratory visualization of probabilistic models",
   "dependencies": {
     "js-logger": "^1.2.0",
+    "modernizr": "^3.3.1",
     "requirejs": "^2.1.15"
   },
   "devDependencies": {

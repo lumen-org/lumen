@@ -42,28 +42,27 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.cont,
-          domain: [0, 100]
+          domain: new Domain.SimpleNumericContinuous(0, 100)
         });
       var weightField = new F.Field(
         'weight', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.cont,
-          domain: [0, 150]
+          domain: new Domain.SimpleNumericContinuous(0, 150)
         });
       var incomeField = new F.Field(
         'income', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.cont,
-          domain: [0, 100000]
+          domain: new Domain.SimpleNumericContinuous(500, 100000)
         });
       var childrenField = new F.Field(
         'children', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.discrete,
-          //domain: [0, 1, 2, 3, 4, 5, 6]
           domain: new Domain.Discrete([0, 1, 2, 3, 4, 5, 6])
         });
       var sexField = new F.Field(
@@ -164,9 +163,12 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
   DummyModel.prototype.aggregate = function (values, aggregation) {
 
     // todo: in the future we might want to support aggregation on more than one variables
-    if (values.length > this.size()-1)
-      throw new Error("you gave too many values. For now only aggregations on 1 variable are allowed.");
-    else if (values.length < this.size()-1)
+
+    // todo: fix it ... problem occurs on multi-mixed-usage of a field.
+    //if (values.length > this.size()-1)
+    //  throw new Error("you gave too many values. For now only aggregations on 1 variable are allowed.");
+    //else 
+    if (values.length < this.size()-1)
       throw new Error("you gave too few values. For now only aggregations on 1 variable are allowed.");
       //logger.warn("for now only aggregations on 1 variable are allowed.");
 

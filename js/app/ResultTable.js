@@ -96,7 +96,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     // - multiple measures of the same field are possible and
     // - multi-dimensional measures aren't supported yet
 
-    // 1. generate mapping and empty result table
+    // 1. generate indices and empty result table
     // attach index in aggregation table and build of the set of dimensions and measures of the aggregation table
     // note: in the general case query.fieldUsage and [...dimensions, ...measures] do not contain the same set of field usages, as duplicate dimensions won't show up in dimensions
     var fieldUsages = query.fieldUsages();
@@ -131,7 +131,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     let inputTable = dimensions.reduce(
       function (table, dim) {
         //use the values of the splitted domain --> pass "true" as arg
-        return _join(table, [dim.split(true)]);
+        return _join(table, [dim.splitToValues()]);
       }, []);
 
     // 3. generate output tuples
@@ -157,9 +157,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
     // todo 4. apply aggregation filters
 
-    // todo 5. return aggregation table
-
-
+    // 5. return aggregation table
     return [...inputTable, ...outputTable];
   };
 

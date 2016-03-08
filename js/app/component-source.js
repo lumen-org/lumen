@@ -21,8 +21,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width:1000,
-        height:1000
+        width:400,
+        height:400
       });
 
     // define shelves
@@ -60,15 +60,23 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     layout.append(shelf.row.$visual);
     layout.append(shelf.column.$visual);
     inter.asRemoveElem($(document.body).find('main'));
-    // do some drag and drops to start with so VisMEL query
 
+    // do some drag and drops to start with some VisMEL query
+
+    // basic setup 1
+    //inter.onDrop(shelf.row, shelf.dim.at(0));
+    //inter.onDrop(shelf.column, shelf.meas.at(1));
+    //inter.onDrop(shelf.color, shelf.dim.at(2));
+
+    // multi-mixed use of a continuous variable as both, dimension and measure
+    inter.onDrop(shelf.column, shelf.meas.at(0));
+    inter.onDrop(shelf.row, shelf.meas.at(1));
+    inter.onDrop(shelf.dim, shelf.meas.at(0));
+    inter.onDrop(shelf.color, shelf.dim.at(3));
 
     /*inter.onDrop(shelf.row, shelf.dim.at(1));
     inter.onDrop(shelf.row, shelf.meas.at(0));*/
-    inter.onDrop(shelf.row, shelf.dim.at(0));
-    inter.onDrop(shelf.column, shelf.meas.at(1));
 
-    inter.onDrop(shelf.color, shelf.dim.at(2));
 //    inter.onDrop(shelf.shape, shelf.dim.at(0));
 //    inter.onDrop(shelf.size, shelf.meas.at(2));
 

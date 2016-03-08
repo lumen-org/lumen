@@ -138,24 +138,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         }
       ); // jshint ignore:line
 
-    // add extents of values to all field usages
-    // note: it is by design/decision that the extent is calculated also on all dimensions from the result table, but not taken from their domain
-    //query.measureUsages().forEach( function (m) {
-    query.fieldUsages().forEach( function (fu) {
-      if (fu.dataType === F.FieldT.Type.num) {
-        // todo: differ between continuous and discrete? not sure how to handle it, since the "kind" of the values in the result table, depend on the "kind" of the return type of the aggregation... is this the right way to distinguish?
-        if (fu.kind === F.FieldT.Kind.discrete)
-          fu.extent = _.unique(samples[fu.index]);
-        else if (fu.kind === F.FieldT.Kind.cont)
-          fu.extent = d3.extent(samples[fu.index]);
-      }
-      else if (fu.dataType === F.FieldT.Type.string)
-        if (fu.kind === F.FieldT.Kind.discrete)
-          fu.extent = _.unique(samples[fu.index]);
-        else throw new TypeError("invalid Field.Kind" + fu.kind);
-      else throw new TypeError("invalid Field.Type" + fu.dataType);
-    });
-
     // add scales to field usages of this query
     attachScales(query, size, extent);
 
@@ -249,13 +231,17 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     // create extents
     let extents = attachExtents(queries, results);
+    // todo: also attach extents to table algebra FU ... needed to create proper axis. just resplitting is no option, since filters or other may have reduced the actual values in the result table
 
     // create scales
+    // todo: move scales outside of atomic panes, like extents
+
+    // create visuals mappers
+    // todo: move mappers outside of atomic panes, like extents
 
     // create axis
     // todo: implement
-
-    // create visuals mappers (common for all view panes)
+    // find a nice way to create the stack of them. somehow matches the result of the table algebra stuff ... ?!
 
     // create table of ViewPanes
     this.at = new Array(this.size.rows);
@@ -286,21 +272,33 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
   /**
    * Returns a collection of 'global' extents of the values of those {@link FieldUsage}s that are mapped to visuals.
+   * Note that results may consist of single values, but also of intervals (continuous FU) and sets of single values (discrete FU).
+   * For discrete {@link FieldUsage}s the extent is the set of unique values / tuples of values that occurred in the results for this particular {@link FieldUsage}. tuples are not reduced to their individual values.
+   * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
    * @param queries
    * @param results
    */
   var attachExtents = function (queries, results) {
 
+    /**
+     * Local utility function. Takes the "so far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
+     * @returns The updated extent
+     */
     function myUnion(extent, data, discreteFlag) {
-      return (discreteFlag ?
-          _.union(extent, _.unique(data)) :
-          d3.extent([...extent, ...d3.extent(data)])
-      );
+      if (discreteFlag) {
+        return _.union(extent, _.unique(data));
+      } else {
+        // flatten data by default, such that intervals in data are handled correctly
+        let dataExtent = d3.extent(_.flatten(data));
+        // merge with extent so far
+        return d3.extent([...extent, ...dataExtent]);
+      }
     }
 
     let color = [],
       shape = [],
       size = [];
+    // iterate over results for each atomic query
     let row = new Array(queries.size.rows);
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       row[rIdx] = [];
@@ -336,6 +334,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           col[cIdx] = myUnion(col[cIdx], r[lc.index], lc.isDiscrete());
       }
     }
+
+    // fix for possible intervals
 
     return {
       color: color,

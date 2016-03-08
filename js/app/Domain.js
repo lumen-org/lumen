@@ -48,9 +48,7 @@ define([], function () {
   var SimpleNumericContinuousDomain = function (low, high) {
     this.l = low;
     this.h = high;
-    //Array.call(this, interval[0], interval[1]);
   };
-//SimpleNumericContinuousDomain.prototype = Object.create(Array.prototype);
   SimpleNumericContinuousDomain.prototype.constructor = SimpleNumericContinuousDomain;
 
   SimpleNumericContinuousDomain.prototype._checkType = function (d) {
@@ -73,7 +71,6 @@ define([], function () {
     throw new Error("not implemented"); // todo: implement
   };
 
-
   /**
    * Constructs a continuous numerical domain from the given interval.
    * A continuous numeric domain is described by an array of intervals, and the union of all those intervals gives the actual domain.
@@ -81,7 +78,7 @@ define([], function () {
    * @param interval An array of ranges defining the domain.
    * @constructor
    *
-   var NumericContinuousDomain = function (interval) {
+   var NumericContinuousDomain = function (interval)
     Array.call(this, interval);
     // sort by start value of intervals
     throw new Error("not implemented"); // todo: implement
@@ -108,70 +105,6 @@ define([], function () {
     _checkType(domain);
     throw new Error("not implemented"); // todo: implement
   };*/
-
-
-  /**
-   * Constructs a discrete numerical domain.
-   * @param values Values of the domain.
-   * @constructor
-   *
-   var NumericDiscreteDomain = function (values) {
-    Array.call(this, values);
-  };
-   NumericDiscreteDomain.prototype = Object.create(Array.prototype);
-   NumericDiscreteDomain.prototype.constructor = NumericDiscreteDomain;
-
-   NumericDiscreteDomain.prototype._checkType = function (d) {
-    if (!(d instanceof NumericDiscreteDomain))
-      throw new TypeError("domain must also be of type NumericDiscreteDomain");
-  };
-
-   NumericDiscreteDomain.prototype.union = function (domain) {
-    _checkType(domain);
-    return _.union(this, domain);
-  };
-
-   NumericDiscreteDomain.prototype.intersection = function (domain) {
-    _checkType(domain);
-    return _.intersection(this, domain);
-  };
-
-   NumericDiscreteDomain.prototype.minus = function (domain) {
-    _checkType(domain);
-    return _.difference(this, domain);
-  };*/
-
-  /**
-   * Constructs a string domain.
-   * @param values Values of the domain
-   * @constructor
-   *
-   var StringDomain = function (values) {
-    Array.call(this, values);
-  };
-   StringDomain.prototype = Object.create(Array.prototype);
-   StringDomain.prototype.constructor = StringDomain;
-
-   StringDomain.prototype._checkType = function (d) {
-    if (!(d instanceof StringDomain))
-      throw new TypeError("domain must also be of type StringDomain");
-  };
-
-   StringDomain.prototype.union = function (domain) {
-    _checkType(domain);
-    return _.union(this, domain);
-  };
-
-   StringDomain.prototype.intersection = function (domain) {
-    _checkType(domain);
-    return _.intersection(this, domain);
-  };
-
-   StringDomain.prototype.minus = function (domain) {
-    _checkType(domain);
-    return _.difference(this, domain);
-  };*/
-
 
   return {
     Discrete: DiscreteDomain,

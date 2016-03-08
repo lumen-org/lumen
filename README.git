@@ -1,2 +1,11 @@
-as of 2015-06-25:
-This repository doesn't have a remote origin, i.e. it only exists here
+Development Setup
+  - install WebStorm from IntelliJ
+  - install node-js
+  - update npm: '''sudo npm install -g npm'''
+  - run '''npm install''' from project directory. this will resolve all development dependencies using the information from package.json   
+
+Now for the ugly part  
+  - download foundation 5.x, extract to correct path
+  - download foundation icons, extract to correct path
+  - download js-logger
+

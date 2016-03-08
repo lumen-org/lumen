@@ -9,13 +9,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
   var logger = Logger.get('pl-ScaleGenerator');
   logger.setLevel(Logger.Debug);
 
-  // todo: all the other aesthetics
-
   /**
    * Scale generators return a D3 scale based on a given {@link F.FieldUsage} for a certain visual usage.
    * It is important to note that the generated scale depends on:
    *   * its role: i.e. is used a dimension or a measure/aggregation. If used as a dimension, its domain values can be used as the scales domain. If it is a measure, the extend of the values of the aggregation must be used as the scales domain.
    *   *  the kind of the field usage, i.e. is it continuous or discrete
+   * todo: respect scales and ordering as set in the FUsageT attributes
    * @type {{}}
    */
   var scaleGenerator = {};
@@ -24,7 +23,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * Creates a color scale based on a given {@link FieldUsage}.
    * @param fu A {@link FieldUsage}.
    * @returns the created color scale.
-   * todo: respect scales and ordering as set in the FUsageT attributes
+
    */
   scaleGenerator.color = function (fu, domain) {
     var colormap = [],
@@ -32,7 +31,9 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
     switch (fu.kind) {
       case F.FieldT.Kind.cont:
         scale = d3.scale.linear();
-        colormap = cbrew.Blues["9"];
+        // usa poly-linear scale for a good approximation of the implicit color gradient. for that we need to extend the domain to also have 9 values.
+        colormap = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
+        domain = d3.range(domain[0], domain[1], (domain[1]-domain[0])/(9-1) );
         break;
       case F.FieldT.Kind.discrete:
         scale = d3.scale.ordinal();
@@ -53,7 +54,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
       default: throw new TypeError("invalid Field.Kind" + fu.kind);
     }
     //return scale.range(colormap).domain(fu.extent);
-    return scale.range(colormap).domain(domain);
+    return scale.domain(domain).range(colormap);
   };
 
 
@@ -101,12 +102,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
     var scale = [];
     switch (fu.kind) {
       case F.FieldT.Kind.cont:
-        // continuous domain: todo: map according to FUsageT.Scale attribute
+        // continuous domain
         scale = d3.scale.linear()
           .range(range);
         break;
       case F.FieldT.Kind.discrete:
-        // categorial domain: map to center of equally sized bands
+        // discrete domain: map to center of equally sized bands
         scale = d3.scale.ordinal()
           .rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
