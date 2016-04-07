@@ -129,7 +129,12 @@ define(['./Field', './shelves'], function (F, sh) {
         if (F.isDimension(elem)) {
           // splitted returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
           let splitted = elem.split();
-          domainExpr.push(splitted.map (function (e) {return [e]; }));
+          domainExpr.push(splitted.map (
+            function (e) {
+              // save the 'origin' of a FieldUsage that was created in the process of template expansion
+              e.origin = (elem.origin ? elem.origin : elem);
+              return [e];
+            }));
         } else
           domainExpr.push([[elem]]);
       } else {

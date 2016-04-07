@@ -112,12 +112,15 @@ define(['./utils', './SplitSample'], function (utils, S) {
       this.isDiscrete(), S.plitter.singleElements,
       //S.plitter.equiIntervals);
       S.ampler.equiDistance);
+
+    // todo: this is kinda ugly and so far it doesn't even help...
+    if (isFU && base.origin) this.origin = base.origin;
   };
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;
 
   FieldUsage.prototype.splitToValues = function () {
-    // todo: 10 is a magic number. introduce a configuration variable to allow custom splitting
+    // todo: 0 is a magic number. introduce a configuration variable to allow custom splitting
     return this.splitter(this.domain, true, 10);
   };
 

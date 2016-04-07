@@ -19,7 +19,7 @@ define(['./Field'], function(F) {
     let uniqueMeasures = _.unique(measures, F.nameMap);
     let uniqueDimension = query.dimensionUsages();
     let toBeRemoved = uniqueMeasures.filter( function (m) {
-      return undefined === uniqueDimension.find( function(d) {return (d.name === m.name);} );
+      return (undefined === uniqueDimension.find( function(d) {return (d.name === m.name);} ) );
     });
 
     measures.forEach(

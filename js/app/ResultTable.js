@@ -63,6 +63,17 @@ define(['lib/logger', './Field'], function (Logger, F) {
     return res;
   }
 
+  /**
+   * Utility function that returns the domain of some given discrete or continuous data.
+   * @param data
+   * @param discreteFlag
+   * @returns {*}
+   * @private
+   */
+  var _domain = function (data, discreteFlag) {
+    return (discreteFlag? _.unique(data) : d3.extent(_.flatten(data)) );
+  };
+
 
   /**
    * Checks that dimensions based on the same field use the same split function. If not it issues a warning.
@@ -80,7 +91,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
 
   /**
-   * Sample the given model.
+   * Aggregate the given model.
    * Note: the parameters dimensions and measures are {@link FieldUsage}s, not {@link Field}s. They contain the required information on how exactly the model is to be sampled.
    * @param model The model to sample.
    * @param {FieldUsage} dimensions The dimensions of the model to sample.
@@ -126,15 +137,28 @@ define(['lib/logger', './Field'], function (Logger, F) {
       measures.push(fu);
     });
 
-    // 2. setup input tuples, i.e. calculate the cross product of all dim.sample()
+    // push index to ancestors
+    [...measures, ...dimensions].forEach( function(fu) {
+      if (fu.origin) fu.origin.index = fu.index;
+    } );
+
+    // 2. setup input tuple, i.e. calculate the cross product of all dim.sample()
     // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
     let inputTable = dimensions.reduce(
       function (table, dim) {
-        //use the values of the splitted domain --> pass "true" as arg
         return _join(table, [dim.splitToValues()]);
       }, []);
 
-    // 3. generate output tuples
+    // attach extent and corresponding field usage
+    // todo/note/check: there may be more than one field usages corresponding to this column. However, I believe we don't need more. otherwise we have to attach the full vector of corresponding FU in the code above (1.)
+    inputTable.forEach(
+      function (column, idx) {
+        let dim = column.fu = dimensions[idx];
+        column.extent = _domain(column, dim.isDiscrete());
+      }
+    );
+
+    // 3. generate output tuple
     let outputTable = [];
     let len = (inputTable.length === 0 ? 0 : inputTable[0].length);
     measures.forEach( function (m) {
@@ -152,12 +176,18 @@ define(['lib/logger', './Field'], function (Logger, F) {
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
         column[tupleIdx] = m.model.aggregate(dimValues, m.aggr);
       }
+
+      // attach extent and corresponding field usage
+      column.fu = m;
+      column.extent = _domain(column, m.isDiscrete());
+
       outputTable.push(column);
     });
 
     // todo 4. apply aggregation filters
+    // todo: domains must be calculcated _after_ applying filters.... fix it when you implement aggregation filters!
 
-    // 5. return aggregation table
+    // 6. return aggregation table
     return [...inputTable, ...outputTable];
   };
 

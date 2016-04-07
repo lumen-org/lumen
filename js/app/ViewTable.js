@@ -179,20 +179,99 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
 
   /**
-   * todo: is that needed?
-   * todo: document me
-   * @param canvas
-   *
-  function setupAxis(canvas) {
-    canvas.axis = {};
-    canvas.axis.x = canvas.canvas.append("g")
-      .classed("axis", true)
-      .attr("transform", "translate(0," + (canvas.height + canvas.padding.bottom) + ")");
-    canvas.axis.y = canvas.canvas.append("g")
-      .classed("axis", true)
-      .attr("transform", "translate(" + (-canvas.padding.left) + ",0)");
-  }*/
+   * @param size The size in pixel of the full canvas.
+   */
+  function setupAxis(query, queryTable, size) {
 
+    // utility function that extracts all {@link FieldUsage}s from an array of objects.
+    function extract (FUs) {
+      return FUs.filter(F.isFieldUsage);
+    }
+
+    // add container svg elements for axis
+    /*canvas.axis = {};
+     canvas.axis.x = canvas.canvas.append("g")
+     .classed("axis", true)
+     .attr("transform", "translate(0," + (canvas.height + canvas.padding.bottom) + ")");
+     canvas.axis.y = canvas.canvas.append("g")
+     .classed("axis", true)
+     .attr("transform", "translate(" + (-canvas.padding.left) + ",0)");*/
+
+    // prepare the scales for the axis
+    var axis = {x: {}, y: {}};
+    axis.x.stack = extract(query.layout.row);
+    axis.x.domain = axis.x.stack.map( function (dim) {return dim.index;}); // todo
+    axis.x.scale = axis.x.domain.map( function () {
+      var scale = d3.scale.linear(domain);
+      // set domain (from above)
+      scale.domain(domain);
+      // set range
+      scale.range(0,size);
+      // adapt size for next level of axis
+      size = size / domain.length; // note that domain may not be an interval, as it must refer to a dimension that has been discretized
+    });
+
+    // todo: same for axis.y
+
+    // create d3 axis objects
+    //var axis = {
+    //  x: d3.svg.axis()
+    //    .scale(scale.x)
+    //    .orient("bottom")
+    //    .innerTickSize(-(pane.width + pane.padding.left))
+    //    .outerTickSize(0),
+    //  y: d3.svg.axis()
+    //    .scale(scale.y)
+    //    .orient("left")
+    //    .innerTickSize(-(pane.height + pane.padding.top))
+    //    .outerTickSize(0)
+    //};
+
+    // apply d3 axis to containers, i.e. draw the axis
+    //pane.axis.x.call(axis.x);
+    //pane.axis.y.call(axis.y);
+
+    // todo: move outwards to make space for axis
+
+    //let times = 1;
+    //for (let d=0; d<stack.length; ++d) {
+    //  let scale = stackScales[d];
+    //  times =
+    //}
+
+
+  }
+
+  /**
+   * Returns a mapping from the usages to the index in the result table. e.g. the usage 'color' maps to the index of the fieldUsage that encodes color.
+   * Note that this map is common for all atomic queries of a templated query.
+   * @param queries
+   * @returns {{}}
+   */
+  function usage2idx(queries) {
+    // this works because the same usage always has the same index, e.g. the values that are encoded to color are at the same index in the result table for all atomic queries of one templated query
+
+    let usage2idx = {};
+    let query = queries.at[0][0];//queries.base;
+
+    let aesthetics = query.layers[0].aesthetics;
+    ['color', 'shape', 'size'].forEach(
+      function (key) {
+        if ( F.isFieldUsage(aesthetics[key]) )
+          usage2idx[key] = aesthetics[key].index;
+      }
+    );
+
+    let layout = query.layout;
+    if (F.isFieldUsage(layout.cols[0]))
+      usage2idx['x'] = layout.cols[0].index;
+    if (F.isFieldUsage(layout.rows[0]))
+      usage2idx['y'] = layout.rows[0].index;
+
+    //let splitX
+
+    return usage2idx;
+  }
 
   /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
@@ -212,8 +291,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     this.results = results;
     this.queries = queries;
-    this.query = queries.base;
     this.size = results.size;
+    let query = queries.base;
 
     /// one time on init:
     /// todo: is this actually "redo on canvas size change" ?
@@ -229,8 +308,11 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     let canvas = this.canvas;
 
+    //let u2idx = usage2idx(queries);
+
+
     // create extents
-    let extents = attachExtents(queries, results);
+    let extents = globalExtents(query, queries, results); //, u2idx);
     // todo: also attach extents to table algebra FU ... needed to create proper axis. just resplitting is no option, since filters or other may have reduced the actual values in the result table
 
     // create scales
@@ -273,27 +355,35 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   /**
    * Returns a collection of 'global' extents of the values of those {@link FieldUsage}s that are mapped to visuals.
    * Note that results may consist of single values, but also of intervals (continuous FU) and sets of single values (discrete FU).
-   * For discrete {@link FieldUsage}s the extent is the set of unique values / tuples of values that occurred in the results for this particular {@link FieldUsage}. tuples are not reduced to their individual values.
+   * For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
    * @param queries
    * @param results
    */
-  var attachExtents = function (queries, results) {
+  var globalExtents = function (query, queries, results, u2idx) {
 
     /**
      * Local utility function. Takes the "so far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
      * @returns The updated extent
      */
-    function myUnion(extent, data, discreteFlag) {
-      if (discreteFlag) {
-        return _.union(extent, _.unique(data));
-      } else {
-        // flatten data by default, such that intervals in data are handled correctly
-        let dataExtent = d3.extent(_.flatten(data));
-        // merge with extent so far
-        return d3.extent([...extent, ...dataExtent]);
-      }
+    function extentUnion(e1, e2, discreteFlag) {
+      return (discreteFlag ? _.union(e1, e2) : d3.extent([...e1, ...e2]) );
     }
+
+    //for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+    //  for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
+    //    u2idx.keys
+    //  }
+    //}
+
+    let splitX = query.layout.rows.filter(F.isDimension).map( function (dim) {
+      //return results[dim.index].extent;
+      // this works since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
+      return dim.splitToValues();
+    } );
+    let splitY = query.layout.cols.filter(F.isDimension).map( function (dim) {
+      return dim.splitToValues();
+    } );
 
     let color = [],
       shape = [],
@@ -309,16 +399,16 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         // aesthetics extents
         let qa = q.layers[0].aesthetics;
         if (F.isFieldUsage(qa.color))
-          color = myUnion(color, r[qa.color.index], qa.color.isDiscrete());
+          color = extentUnion(color, r[qa.color.index].extent, qa.color.isDiscrete());
         if (F.isFieldUsage(qa.shape))
-          shape = myUnion(shape, r[qa.shape.index], qa.shape.isDiscrete());
+          shape = extentUnion(shape, r[qa.shape.index].extent, qa.shape.isDiscrete());
         if (F.isFieldUsage(qa.size))
-          size = myUnion(size, r[qa.size.index], qa.size.isDiscrete());
+          size = extentUnion(size, r[qa.size.index].extent, qa.size.isDiscrete());
 
         // row extents
         let lr = q.layout.rows[0];
         if (F.isMeasure(lr))
-          row[rIdx] = myUnion(row[rIdx], r[lr.index], lr.isDiscrete());
+          row[rIdx] = extentUnion(row[rIdx], r[lr.index].extent, lr.isDiscrete());
       }
     }
 
@@ -331,28 +421,27 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           q = queries.at[rIdx][cIdx];
         let lc = q.layout.cols[0];
         if (F.isMeasure(lc))
-          col[cIdx] = myUnion(col[cIdx], r[lc.index], lc.isDiscrete());
+          col[cIdx] = extentUnion(col[cIdx], r[lc.index].extent, lc.isDiscrete());
       }
     }
-
-    // fix for possible intervals
 
     return {
       color: color,
       shape: shape,
       size: size,
       row: row,
-      col: col
+      col: col,
+      splitX: splitX,
+      splitY: splitY
     };
   };
-
 
   /**
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
    *
    * @param query {VisMEL} A VisMEL query.
-   * @param paneSize {width, height} Width and heights of the target pane in px.
+   * @param paneSize {{width, height}} Width and heights of the target pane in px.
    */
   var attachScales = function (query, paneSize, extent) {
 

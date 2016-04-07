@@ -14,7 +14,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
   /**
    * Extends the field usages template in query, possibly merging domains if applicable.
    * @param query {VisMEL} The templated query.
-   * @param what {"rows"|"cols"} Is the template the rows or cols?
+   * @param what {"rows"|"cols"} Expand the template in the rows or cols?
    * @return {Array} Returns the array of template instantiations.
    * @private
    */
@@ -23,17 +23,17 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
     if (what !== "rows" && what !== "cols")
       throw new TypeError("the value of 'what' has to be 'rows' or 'cols' but it is : " + what);
 
-    var nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize());
-    var len = nsf.length;
-    var expansion = new Array(len);
+    let nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize()),
+      len = nsf.length,
+      expansion = new Array(len);
 
     for (let i=0; i<len; ++i) {
       // shallow copy query. shallow means that all {@link FieldUsage}s in the copy are references to those in query.
-      let instance = query.shallowCopy();
-      let details = instance.layers[0].aesthetics.details;
-      let layout = (what === "rows" ? instance.layout.rows : instance.layout.cols);
+      let instance = query.shallowCopy(),
+        details = instance.layers[0].aesthetics.details,
+        layout = (what === "rows" ? instance.layout.rows : instance.layout.cols);
 
-      // delete templated part
+      // delete templated part (this does not affect the base query)
       layout.clear();
 
       // iterate over all field usages of the current NSF element
@@ -50,9 +50,10 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
               let mergedFU = new F.FieldUsage(details[idx]);
               mergedFU.domain = mergedFU.domain.intersection(fu.domain);
               details[idx] = mergedFU;
-              logger.log('mering domains...');
+              logger.log('merging domains...');
+            } else {
+              details.push(fu);
             }
-            details.push(fu);
           }
           else {
             if (!layout.empty())
@@ -72,6 +73,9 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
    * @constructor
    */
   var QueryTable = function (query) {
+
+    // todo: apply filter on dimensions
+
     this.base = query;
     this.rowBase = _extendTemplate(query, 'rows');
     this.at = new Array(this.rowBase.length);
