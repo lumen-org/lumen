@@ -179,37 +179,89 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
 
   /**
-   * @param size The size in pixel of the full canvas.
+   * @param query The templated query object. In particular its {@link FieldUsage}s have their extent attached. This extent is know retrieved to setup axis accordingly for the canvas object.
+   * @param canvas The canvas object.
    */
-  function setupAxis(query, queryTable, size) {
+  function setupAxis(query, /*queryTable,*/ canvas) {
 
     // utility function that extracts all {@link FieldUsage}s from an array of objects.
-    function extract (FUs) {
+    function _extract (FUs) {
       return FUs.filter(F.isFieldUsage);
     }
 
-    // add container svg elements for axis
-    /*canvas.axis = {};
-     canvas.axis.x = canvas.canvas.append("g")
-     .classed("axis", true)
-     .attr("transform", "translate(0," + (canvas.height + canvas.padding.bottom) + ")");
-     canvas.axis.y = canvas.canvas.append("g")
-     .classed("axis", true)
-     .attr("transform", "translate(" + (-canvas.padding.left) + ",0)");*/
+    /*let size = {
+      x: canvas.width,
+      y: canvas.height
+    };
 
+     var axis = {x: {}, y: {}};
     // prepare the scales for the axis
-    var axis = {x: {}, y: {}};
-    axis.x.stack = extract(query.layout.row);
+    // careful: size.x is modified
+    axis.x.stack = _extract(query.layout.rows);
     axis.x.domain = axis.x.stack.map( function (dim) {return dim.index;}); // todo
-    axis.x.scale = axis.x.domain.map( function () {
+    axis.x.scale = axis.x.domain.map( function (domain) {
       var scale = d3.scale.linear(domain);
       // set domain (from above)
       scale.domain(domain);
       // set range
-      scale.range(0,size);
+      scale.range(0,size.x);
       // adapt size for next level of axis
-      size = size / domain.length; // note that domain may not be an interval, as it must refer to a dimension that has been discretized
-    });
+      size.x = size.x / domain.length; // note that domain may not be an interval, as it must refer to a dimension that has been discretized
+    });*/
+
+    /// build up axis stack
+    // todo: do this for for both: horizontal and vertical
+    // for horizontal axis stack
+    let dimUsages = query.layout.rows.filter(F.isDimension);
+    let stackDepth = dimUsages.length;
+    let axisStack = new Array(stackDepth);
+    let range = canvas.width; // the range in px of current axis stack level
+    let repeat = 1; // number of times the axis of the current level has to be repeated
+    
+    for (let d=0; d<stackDepth; ++d) {
+      let dimUsage = dimUsages[d];
+      
+      // increment to next stack level
+      if (d!==0) {
+        repeat = repeat * dimUsage.extent.length;
+        range = range / dimUsage.extent.length;
+      }
+      
+      // build axis object
+      /* an axis object consists of
+        - .FU - the corresponding FieldUsage
+        - .scale - the corresponding scale that is used to build the axis
+        - .axis - the D3 axis object
+        - .axisD3 - array of D3 (single element) selections of the g element that contains the visual representation of the axis
+        // todo: can I improve the code below by using data joins instead of a for loop for creating the axis?
+      */
+      let elem = {};
+      elem.FU = dimUsage;
+      elem.scale = d3.scale.linear()    // todo: fix this. do not use linear scale, but some categorial scale! it's always categorial, as it wouldn't split the viewpane otherwise
+        .domain(dimUsage.extent)
+        .range([0,range]);
+      elem.axis = d3.svg.axis()
+        .scale(elem.scale)
+        .orient("bottom")
+        .innerTickSize(10)
+        .outerTickSize(10); // todo: incomplete
+
+      elem.axisD3 = new Array(repeat);
+      for (let r=0; r<repeat; ++r) {
+        // attach g element
+        let xOffset = canvas.width / repeat * r
+        let yOffset = canvas.height + canvas.padding.bottom / stackDepth * d;
+        let axisG = canvas.canvasD3.append("g")
+          .classed("axis", true)
+          .attr("transform", "translate(" + xOffset + "," + yOffset + ")");
+        elem.axisD3.push(axisG);
+
+        // draw axis on it
+        elem.axis(axisG);
+      }
+
+      axisStack[d] = elem;
+    }
 
     // todo: same for axis.y
 
@@ -311,9 +363,13 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     //let u2idx = usage2idx(queries);
 
 
-    // create extents
+    /// extents
+    // extents are per Field, hence are common for all of its Field Usages ??
+    // todo: really? what about multiple use as continuous and discrete field usage?
     let extents = globalExtents(query, queries, results); //, u2idx);
     // todo: also attach extents to table algebra FU ... needed to create proper axis. just resplitting is no option, since filters or other may have reduced the actual values in the result table
+
+    setupAxis(query, this.canvas);
 
     // create scales
     // todo: move scales outside of atomic panes, like extents
@@ -357,13 +413,19 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * Note that results may consist of single values, but also of intervals (continuous FU) and sets of single values (discrete FU).
    * For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
+   *
+   * The returned extent consists of:
+   *
+   *   - splitX: extent
+   *
+   *
    * @param queries
    * @param results
    */
   var globalExtents = function (query, queries, results, u2idx) {
 
     /**
-     * Local utility function. Takes the "so far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
+     * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
      * @returns The updated extent
      */
     function extentUnion(e1, e2, discreteFlag) {
@@ -376,6 +438,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     //  }
     //}
 
+    // todo: fix this ???
+    query.layout.rows.filter(F.isDimension).forEach( function (dim) {
+      dim.extent = dim.splitToValues();
+    });
+
+    // todo: what is splitX splitY again?
     let splitX = query.layout.rows.filter(F.isDimension).map( function (dim) {
       //return results[dim.index].extent;
       // this works since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
