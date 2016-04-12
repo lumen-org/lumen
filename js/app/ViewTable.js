@@ -52,6 +52,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     // setup the real canvas for drawing and a clip path
     canvas.canvasD3 = canvas.paneD3.append("g")
       .attr("transform", "translate(" + (canvas.margin.left + canvas.padding.left) + "," + (canvas.margin.top + canvas.padding.top) + ")");
+
     canvas.clipPathD3 = canvas.canvasD3
       .append("clipPath")
       .attr("id", "canvasClipPath");
@@ -179,119 +180,77 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
 
   /**
-   * @param query The templated query object. In particular its {@link FieldUsage}s have their extent attached. This extent is know retrieved to setup axis accordingly for the canvas object.
+   * Creates axis for the templated part of the query, i.e. axis for the splitting dimensions that create the atomic panes.
+   *
+   * This attaches an axis object to the provided canvas, for both the horizontal and vertical axis.
+   * An axis object consists of
+   *  - .FU - the corresponding FieldUsage
+   *  - .scale - the corresponding scale that is used to build the axis
+   *  - .axis - the D3 axis object
+   *  - .axisD3 - array of D3 (single element) selections of the g element that contains the visual representation of the axis
+   *
+   * todo: can I improve the code below by using data joins instead of a for loop for creating the axis?
+   *
+   * @param query The templated query object. In particular its {@link FieldUsage}s have their extent attached. This extent is retrieved to setup axis accordingly for the canvas object.
    * @param canvas The canvas object.
    */
-  function setupAxis(query, /*queryTable,*/ canvas) {
+  function setupAxis(query, canvas) {
 
-    // utility function that extracts all {@link FieldUsage}s from an array of objects.
-    function _extract (FUs) {
-      return FUs.filter(F.isFieldUsage);
-    }
+    function _buildAxis (splittingDims, canvas, orientation) {
+      /// build up axis stack
+      // todo: do this for for both: horizontal and vertical
+      // for horizontal axis stack
+      let dimUsages = splittingDims.filter(F.isDimension);
+      let stackDepth = dimUsages.length;
+      let axisStack = new Array(stackDepth);
+      let range = (orientation === "xaxis" ? canvas.width : canvas.height); // the range in px of current axis stack level
+      let repeat = 1; // number of times the axis of the current level has to be repeated
 
-    /*let size = {
-      x: canvas.width,
-      y: canvas.height
-    };
+      for (let d = 0; d < stackDepth; ++d) {
+        let dimUsage = dimUsages[d];
+        let elem = {};
+        elem.FU = dimUsage;
+        elem.scale = d3.scale.ordinal()
+          .domain(dimUsage.extent)
+          .rangeRoundPoints([0, range], 1.0);
+        elem.axis = d3.svg.axis()
+          .scale(elem.scale)
+          .orient(orientation === "xaxis" ? "bottom" : "left")
+          .tickSize(1, 1);
 
-     var axis = {x: {}, y: {}};
-    // prepare the scales for the axis
-    // careful: size.x is modified
-    axis.x.stack = _extract(query.layout.rows);
-    axis.x.domain = axis.x.stack.map( function (dim) {return dim.index;}); // todo
-    axis.x.scale = axis.x.domain.map( function (domain) {
-      var scale = d3.scale.linear(domain);
-      // set domain (from above)
-      scale.domain(domain);
-      // set range
-      scale.range(0,size.x);
-      // adapt size for next level of axis
-      size.x = size.x / domain.length; // note that domain may not be an interval, as it must refer to a dimension that has been discretized
-    });*/
+        elem.axisD3 = new Array(repeat);
+        for (let r = 0; r < repeat; ++r) {
+          // attach g element
+          let xOffset, yOffset;
+          if (orientation === "xaxis") {
+            xOffset = canvas.width / repeat * r
+            yOffset = canvas.height + canvas.padding.bottom / stackDepth * (stackDepth - d - 1);
+          } else {
+            xOffset = - canvas.padding.left / stackDepth * (stackDepth - d - 1);
+            yOffset = canvas.height / repeat * r;
+          }
+          let axisG = canvas.canvasD3.append("g")
+            .classed("axis", true)
+            .attr("transform", "translate(" + xOffset + "," + yOffset + ")");
+          elem.axisD3.push(axisG);
 
-    /// build up axis stack
-    // todo: do this for for both: horizontal and vertical
-    // for horizontal axis stack
-    let dimUsages = query.layout.rows.filter(F.isDimension);
-    let stackDepth = dimUsages.length;
-    let axisStack = new Array(stackDepth);
-    let range = canvas.width; // the range in px of current axis stack level
-    let repeat = 1; // number of times the axis of the current level has to be repeated
-    
-    for (let d=0; d<stackDepth; ++d) {
-      let dimUsage = dimUsages[d];
-      
-      // increment to next stack level
-      if (d!==0) {
+          // draw axis on it
+          elem.axis(axisG);
+        }
+
+        axisStack[d] = elem;
+        // increment to next stack level
         repeat = repeat * dimUsage.extent.length;
         range = range / dimUsage.extent.length;
       }
-      
-      // build axis object
-      /* an axis object consists of
-        - .FU - the corresponding FieldUsage
-        - .scale - the corresponding scale that is used to build the axis
-        - .axis - the D3 axis object
-        - .axisD3 - array of D3 (single element) selections of the g element that contains the visual representation of the axis
-        // todo: can I improve the code below by using data joins instead of a for loop for creating the axis?
-      */
-      let elem = {};
-      elem.FU = dimUsage;
-      elem.scale = d3.scale.linear()    // todo: fix this. do not use linear scale, but some categorial scale! it's always categorial, as it wouldn't split the viewpane otherwise
-        .domain(dimUsage.extent)
-        .range([0,range]);
-      elem.axis = d3.svg.axis()
-        .scale(elem.scale)
-        .orient("bottom")
-        .innerTickSize(10)
-        .outerTickSize(10); // todo: incomplete
 
-      elem.axisD3 = new Array(repeat);
-      for (let r=0; r<repeat; ++r) {
-        // attach g element
-        let xOffset = canvas.width / repeat * r
-        let yOffset = canvas.height + canvas.padding.bottom / stackDepth * d;
-        let axisG = canvas.canvasD3.append("g")
-          .classed("axis", true)
-          .attr("transform", "translate(" + xOffset + "," + yOffset + ")");
-        elem.axisD3.push(axisG);
-
-        // draw axis on it
-        elem.axis(axisG);
-      }
-
-      axisStack[d] = elem;
+      // return axis object
+      return axisStack;
     }
 
-    // todo: same for axis.y
-
-    // create d3 axis objects
-    //var axis = {
-    //  x: d3.svg.axis()
-    //    .scale(scale.x)
-    //    .orient("bottom")
-    //    .innerTickSize(-(pane.width + pane.padding.left))
-    //    .outerTickSize(0),
-    //  y: d3.svg.axis()
-    //    .scale(scale.y)
-    //    .orient("left")
-    //    .innerTickSize(-(pane.height + pane.padding.top))
-    //    .outerTickSize(0)
-    //};
-
-    // apply d3 axis to containers, i.e. draw the axis
-    //pane.axis.x.call(axis.x);
-    //pane.axis.y.call(axis.y);
-
-    // todo: move outwards to make space for axis
-
-    //let times = 1;
-    //for (let d=0; d<stack.length; ++d) {
-    //  let scale = stackScales[d];
-    //  times =
-    //}
-
-
+    if (!canvas.axisStack) canvas.axisStack = {};
+    canvas.axisStack.x = _buildAxis(query.layout.cols, canvas, "xaxis");
+    canvas.axisStack.y = _buildAxis(query.layout.rows, canvas, "yaxis");
   }
 
   /**
@@ -350,7 +309,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     /// todo: is this actually "redo on canvas size change" ?
 
     // init table canvas
-    this.canvas = initCanvas(paneD3, 25, 25);
+    this.canvas = initCanvas(paneD3, 0, {top: 5, right: 5, bottom: 60, left: 60});
 
     // infer size of atomic plots
     this.subPaneSize = {
@@ -359,9 +318,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     };
 
     let canvas = this.canvas;
-
     //let u2idx = usage2idx(queries);
-
 
     /// extents
     // extents are per Field, hence are common for all of its Field Usages ??
@@ -440,6 +397,10 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     // todo: fix this ???
     query.layout.rows.filter(F.isDimension).forEach( function (dim) {
+      dim.extent = dim.splitToValues();
+    });
+
+    query.layout.cols.filter(F.isDimension).forEach( function (dim) {
       dim.extent = dim.splitToValues();
     });
 

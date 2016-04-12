@@ -25,8 +25,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width:400,
-        height:400
+        width:600,
+        height:600
       });
 
     // define shelves
@@ -73,6 +73,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     //inter.onDrop(shelf.color, shelf.dim.at(2));
 
     // multi-mixed use of a continuous variable as both, dimension and measure
+    inter.onDrop(shelf.column, shelf.dim.at(1));
+    inter.onDrop(shelf.column, shelf.dim.at(0));
     inter.onDrop(shelf.column, shelf.meas.at(0));
     inter.onDrop(shelf.row, shelf.meas.at(1));
     inter.onDrop(shelf.dim, shelf.meas.at(0));
