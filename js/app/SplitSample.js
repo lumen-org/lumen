@@ -65,21 +65,30 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
   var Sampler = {
 
     /**
-     * Samples the domain to n samples that are equidistancily
+     * Samples the domain to (at most) n samples that are equidistantly.
      * @param {SimpleNumericContinuousDomain} domain The domain to sample.
      * @param n
      */
     equiDistance: function (domain, valueFlag, n) {
       if (!(domain instanceof Domain.SimpleNumericContinuous))
         throw new TypeError("domain must be of type Domain.SimpleNumericContinuousDomain");
-      // slice into n values equally distanced
-      let values = d3.range(domain.l, domain.h, (domain.h - domain.l)/n);
+
+      // slice into n values equally distanced      
+      let values;
+      // special case: domain contracts to single value
+      if (domain.h === domain.l) 
+        //values = Array(n).fill(domain.l);
+        values = [domain.l]; // I think that makes more sense
+      // general case
+      else 
+        values = d3.range(domain.l, domain.h, (domain.h - domain.l)/n);
 
       if (valueFlag)
         return values;
       else
         return values.map(function (val) {
-          return new Domain.SimpleNumericContinuous([val, val]);
+          return new Domain.SimpleNumericContinuous(val, val);
+          //return new Domain.DiscreteDomain([val]);
         });
     },
 

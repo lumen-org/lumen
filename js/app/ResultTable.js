@@ -153,7 +153,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     // todo/note/check: there may be more than one field usages corresponding to this column. However, I believe we don't need more. otherwise we have to attach the full vector of corresponding FU in the code above (1.)
     inputTable.forEach(
       function (column, idx) {
-        let dim = column.fu = dimensions[idx];
+        let dim = column.fu = dimensions[idx]; // todo: is that every needed?
         column.extent = _domain(column, dim.isDiscrete());
       }
     );

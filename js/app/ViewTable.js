@@ -97,7 +97,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   }
 
 
-  function buildAtomicPane (query, samples, subPaneD3, size, extent) {
+  function buildAtomicPane (query, samples, subPaneD3, size/*, extent*/) {
 
     // working variables
     let aesthetics = query.layers[0].aesthetics;
@@ -140,7 +140,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       ); // jshint ignore:line
 
     // add scales to field usages of this query
-    attachScales(query, size, extent);
+    attachScales(query, size/*, extent*/);
 
     // attach mappers
     attachMappers(query, samples, size);
@@ -194,7 +194,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * @param query The templated query object. In particular its {@link FieldUsage}s have their extent attached. This extent is retrieved to setup axis accordingly for the canvas object.
    * @param canvas The canvas object.
    */
-  function setupAxis(query, canvas) {
+  function setupTemplatingAxis(query, canvas) {
 
     function _buildAxis (splittingDims, canvas, orientation) {
       /// build up axis stack
@@ -320,13 +320,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     let canvas = this.canvas;
     //let u2idx = usage2idx(queries);
 
-    /// extents
-    // extents are per Field, hence are common for all of its Field Usages ??
-    // todo: really? what about multiple use as continuous and discrete field usage?
-    let extents = globalExtents(query, queries, results); //, u2idx);
-    // todo: also attach extents to table algebra FU ... needed to create proper axis. just resplitting is no option, since filters or other may have reduced the actual values in the result table
-
-    setupAxis(query, this.canvas);
+    // extents
+    attachExtents(query, queries, results);
 
     // create scales
     // todo: move scales outside of atomic panes, like extents
@@ -348,38 +343,35 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           this.subPaneSize,
           {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
         );
-
         this.at[rIdx][cIdx] = buildAtomicPane(
           this.queries.at[rIdx][cIdx],
           this.results.at[rIdx][cIdx],
           subPaneD3,
-          this.subPaneSize,
-          { color: extents.color,
-            shape: extents.shape,
-            size: extents.size,
-            row: extents.row[rIdx],
-            col: extents.col[cIdx]
-          }
+          this.subPaneSize
         );
       }
     }
+
+
+    setupTemplatingAxis(query, this.canvas);
   };
 
   /**
-   * Returns a collection of 'global' extents of the values of those {@link FieldUsage}s that are mapped to visuals.
-   * Note that results may consist of single values, but also of intervals (continuous FU) and sets of single values (discrete FU).
+   * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages are inherited by the atomic queries, extents are also available there.
+   *
+   * Note that results may consist of:
+   *  - single values (discrete FU)
+   *  - intervals (continuous FU), or
+   *  - sets of single values (discrete FU, where the splitting functions splits not into single values but sets of values).
+   *
    * For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
+   *
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
-   *
-   * The returned extent consists of:
-   *
-   *   - splitX: extent
-   *
    *
    * @param queries
    * @param results
    */
-  var globalExtents = function (query, queries, results, u2idx) {
+  var attachExtents = function (query, queries, results, u2idx) {
 
     /**
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
@@ -389,31 +381,16 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       return (discreteFlag ? _.union(e1, e2) : d3.extent([...e1, ...e2]) );
     }
 
-    //for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
-    //  for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-    //    u2idx.keys
-    //  }
-    //}
-
-    // todo: fix this ???
+    // extents of splitting dimension usages in table algebra expression
     query.layout.rows.filter(F.isDimension).forEach( function (dim) {
+      // it is ok to use "splitToValues()" since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
       dim.extent = dim.splitToValues();
     });
-
     query.layout.cols.filter(F.isDimension).forEach( function (dim) {
       dim.extent = dim.splitToValues();
     });
 
-    // todo: what is splitX splitY again?
-    let splitX = query.layout.rows.filter(F.isDimension).map( function (dim) {
-      //return results[dim.index].extent;
-      // this works since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
-      return dim.splitToValues();
-    } );
-    let splitY = query.layout.cols.filter(F.isDimension).map( function (dim) {
-      return dim.splitToValues();
-    } );
-
+    // note: row and column extent means the extent of the single measure left on row / column for atomic queries. these are are common for across one row / column of the view table
     let color = [],
       shape = [],
       size = [];
@@ -454,15 +431,20 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       }
     }
 
-    return {
-      color: color,
-      shape: shape,
-      size: size,
-      row: row,
-      col: col,
-      splitX: splitX,
-      splitY: splitY
-    };
+    // attach extents to field usages of all queries
+    {
+      let qa = query.layers[0].aesthetics;
+      if (F.isFieldUsage(qa.color)) qa.color.extent = color;
+      if (F.isFieldUsage(qa.shape)) qa.shape.extent = shape;
+      if (F.isFieldUsage(qa.size)) qa.size.extent = size;
+    }
+    for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
+      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+        let ql = queries.at[rIdx][cIdx].layout;
+        if (F.isMeasure(ql.rows[0])) ql.rows[0].extent = row[rIdx];
+        if (F.isMeasure(ql.cols[0])) ql.cols[0].extent = col[cIdx];
+      }
+    }
   };
 
   /**
@@ -472,27 +454,27 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * @param query {VisMEL} A VisMEL query.
    * @param paneSize {{width, height}} Width and heights of the target pane in px.
    */
-  var attachScales = function (query, paneSize, extent) {
+  var attachScales = function (query, paneSize) {
 
     let aesthetics = query.layers[0].aesthetics;
 
     if (F.isFieldUsage(aesthetics.color))
-      aesthetics.color.visScale = ScaleGen.color(aesthetics.color, extent.color);
+      aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.extent);
 
     if (F.isFieldUsage(aesthetics.size))
-      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, extent.size, [Settings.maps.minSize, Settings.maps.maxSize]);
+      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, aesthetics.size.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
 
     if (F.isFieldUsage(aesthetics.shape))
-      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, extent.shape);
+      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.extent);
 
     let row = query.layout.rows[0];
     if (F.isFieldUsage(row) && row.isMeasure())
-      row.visScale = ScaleGen.position(row, extent.row, [0, paneSize.height]);
+      row.visScale = ScaleGen.position(row, row.extent, [0, paneSize.height]);
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
     if (F.isFieldUsage(col) && col.isMeasure())
-      col.visScale = ScaleGen.position(col, extent.col, [paneSize.width, 0]);
+      col.visScale = ScaleGen.position(col, col.extent, [paneSize.width, 0]);
 
     // no need for scales of: filters, details
   };
