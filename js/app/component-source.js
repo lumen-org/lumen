@@ -1,13 +1,6 @@
 /**
  * Main component that assembles and manages the actual GUI of the EMV tool.
  *
- * # Fields, Field Usages, Models and Shelves
- * About {@F.Field} and {@F.FieldUsage}
- *
- *
- *
- *
- *
  * @module main
  * @author Philipp Lucas
  */
@@ -34,7 +27,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
 
     // get 'dummy' model
     var model = dmodel.generator.census();
-
+    
     // populate shelves
     sh.populate(model, shelf.dim, shelf.meas);
 

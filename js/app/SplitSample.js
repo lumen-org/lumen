@@ -1,7 +1,7 @@
 /**
  * Definition of splitters and samplers for {@link Domain}s.
  *
- * todo: maybe I should move splitters and samples to the specific domain definitions. it seems a little awkward and unnatural to have them separate that much: e.g. I'm checking for the correct types in each splitters ...
+ * todo: maybe I should move splitters and samplers to the specific domain definitions. it seems a little awkward and unnatural to have them separate that much: e.g. I'm checking for the correct types in each splitters ...
  *
  * @author Philipp Lucas
  * @module SplitSample
@@ -33,7 +33,7 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
         return pairs;
       else
         return pairs.map(function (range) {
-          return new Domain.SimpleNumericContinuous(range);
+          return new Domain.SimpleNumericContinuous(...range);
         });
     },
 
@@ -78,7 +78,7 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
       // special case: domain contracts to single value
       if (domain.h === domain.l) 
         //values = Array(n).fill(domain.l);
-        values = [domain.l]; // I think that makes more sense
+        values = [domain.l]; // I think no duplicating the single value makes more sense
       // general case
       else 
         values = d3.range(domain.l, domain.h, (domain.h - domain.l)/n);

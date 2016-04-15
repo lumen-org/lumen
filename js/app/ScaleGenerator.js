@@ -119,3 +119,4 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
 
   return scaleGenerator;
 });
+

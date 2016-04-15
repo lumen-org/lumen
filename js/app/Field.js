@@ -1,8 +1,6 @@
 /**
  * This module defines the dimensions/fields/attributes of a model and their usages: Field, FieldUsage and various other types.
  *
- * todo: at the moment I am restricted to splits/samplings that result in singular values, for both continuous and discrete domains. problem is that i cannot handle the implications of dealing with intervals, i.e. there are intervals in the results table, and hence the scales used for visualization in the view table get intervals as inputs...
- *
  * @author Philipp Lucas
  * @module Field
  */
@@ -110,8 +108,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
     this.splitter = utils.selectValue(args.splitter,
       isFU, base.splitter,
       this.isDiscrete(), S.plitter.singleElements,
-      //S.plitter.equiIntervals);
-      S.ampler.equiDistance);
+      S.plitter.equiIntervals);
+      //S.ampler.equiDistance);
 
     // todo: this is kinda ugly and so far it doesn't even help...
     if (isFU && base.origin) this.origin = base.origin;
@@ -119,11 +117,17 @@ define(['./utils', './SplitSample'], function (utils, S) {
   FieldUsage.prototype = Object.create(Field.prototype);
   FieldUsage.prototype.constructor = FieldUsage;
 
+  /**
+   * @returns {*} Returns the split of the domain. For that the field's splitter is called on the field's domain. 
+   */
   FieldUsage.prototype.splitToValues = function () {
     // todo: 10 is a magic number. introduce a configuration variable to allow custom splitting
     return this.splitter(this.domain, true, 10);
   };
 
+  /**
+   * @returns {Array|*} Splits the field's domain into subdomains according to the field's splitter and returns this split.   
+   */
   FieldUsage.prototype.split = function () {
     // split domain
     // todo: 10 is a magic number. introduce a configuration variable to allow custom splitting

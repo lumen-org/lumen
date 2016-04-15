@@ -142,7 +142,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
       if (fu.origin) fu.origin.index = fu.index;
     } );
 
-    // 2. setup input tuple, i.e. calculate the cross product of all dim.sample()
+    // 2. setup input tuple, i.e. calculate the cross product of all dim.splitToValues()
     // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
     let inputTable = dimensions.reduce(
       function (table, dim) {

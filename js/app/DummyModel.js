@@ -63,7 +63,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete([0, 1, 2, 3, 4, 5, 6])
+          domain: new Domain.Discrete([0, 1, 2, 3, 4, 5])
         });
       var sexField = new F.Field(
         'sex', myModel, {

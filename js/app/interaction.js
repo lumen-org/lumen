@@ -324,6 +324,9 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
   onDrop[sh.ShelfTypeT.row] = function (target, source, overlap) {
     // general rule: measures always come after dimensions
     var newRecord = null;
+
+    // todo: fix for invalid drop positions,i.e.: dropping dimensions _after_ measures, or measures _before_ dimensions
+    // alternative: do reorder after the element has been dropped
     if (target instanceof sh.Record) {
       switch (overlap) {
         case _OverlapEnum.left:

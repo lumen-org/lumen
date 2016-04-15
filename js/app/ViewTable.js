@@ -140,10 +140,10 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       ); // jshint ignore:line
 
     // add scales to field usages of this query
-    attachScales(query, size/*, extent*/);
+    attachScales(query, size);
 
     // attach mappers
-    attachMappers(query, samples, size);
+    attachMappers(query, size);
 
     // add new svg elements for enter subselection
     let newPointsD3 = pointsD3
@@ -377,16 +377,13 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
      * @returns The updated extent
      */
-    function extentUnion(e1, e2, discreteFlag) {
-      return (discreteFlag ? _.union(e1, e2) : d3.extent([...e1, ...e2]) );
+    function _extentUnion(extent, newData, discreteFlag) {
+      return (discreteFlag ? _.union(extent, newData) : d3.extent([...extent, ...newData]) );
     }
 
     // extents of splitting dimension usages in table algebra expression
-    query.layout.rows.filter(F.isDimension).forEach( function (dim) {
+    [...query.layout.rows, ...query.layout.cols].filter(F.isDimension).forEach( function (dim) {
       // it is ok to use "splitToValues()" since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
-      dim.extent = dim.splitToValues();
-    });
-    query.layout.cols.filter(F.isDimension).forEach( function (dim) {
       dim.extent = dim.splitToValues();
     });
 
@@ -394,6 +391,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     let color = [],
       shape = [],
       size = [];
+
+    // init empty extent for measure on ROWS/COLS
+    [...query.layout.cols, ...query.layout.rows].filter(F.isMeasure).forEach(
+      (m) => {m.extent = []}
+    );
+
     // iterate over results for each atomic query
     let row = new Array(queries.size.rows);
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
@@ -405,45 +408,28 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         // aesthetics extents
         let qa = q.layers[0].aesthetics;
         if (F.isFieldUsage(qa.color))
-          color = extentUnion(color, r[qa.color.index].extent, qa.color.isDiscrete());
+          color = _extentUnion(color, r[qa.color.index].extent, qa.color.isDiscrete());
         if (F.isFieldUsage(qa.shape))
-          shape = extentUnion(shape, r[qa.shape.index].extent, qa.shape.isDiscrete());
+          shape = _extentUnion(shape, r[qa.shape.index].extent, qa.shape.isDiscrete());
         if (F.isFieldUsage(qa.size))
-          size = extentUnion(size, r[qa.size.index].extent, qa.size.isDiscrete());
+          size = _extentUnion(size, r[qa.size.index].extent, qa.size.isDiscrete());
 
-        // row extents
+        // row / col extents
         let lr = q.layout.rows[0];
         if (F.isMeasure(lr))
-          row[rIdx] = extentUnion(row[rIdx], r[lr.index].extent, lr.isDiscrete());
-      }
-    }
-
-    // column extents
-    let col = new Array(queries.size.cols);
-    for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-      col[cIdx] = [];
-      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
-        let r = results.at[rIdx][cIdx],
-          q = queries.at[rIdx][cIdx];
+          lr.extent = _extentUnion(lr.extent, r[lr.index].extent, lr.isDiscrete());
         let lc = q.layout.cols[0];
         if (F.isMeasure(lc))
-          col[cIdx] = extentUnion(col[cIdx], r[lc.index].extent, lc.isDiscrete());
+          lc.extent = _extentUnion(lc.extent, r[lc.index].extent, lc.isDiscrete());
       }
     }
 
-    // attach extents to field usages of all queries
+    // attach extents to field usages of all queries. Note that all atomic queries use references to the field usuage of the base query
     {
       let qa = query.layers[0].aesthetics;
       if (F.isFieldUsage(qa.color)) qa.color.extent = color;
       if (F.isFieldUsage(qa.shape)) qa.shape.extent = shape;
       if (F.isFieldUsage(qa.size)) qa.size.extent = size;
-    }
-    for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
-        let ql = queries.at[rIdx][cIdx].layout;
-        if (F.isMeasure(ql.rows[0])) ql.rows[0].extent = row[rIdx];
-        if (F.isMeasure(ql.cols[0])) ql.cols[0].extent = col[cIdx];
-      }
     }
   };
 
@@ -487,27 +473,32 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    *
    * todo: add mapper for hovering on marks
    */
-  var attachMappers = function (query, results, paneSize) {
+  var attachMappers = function (query, paneSize) {
     let aesthetics = query.layers[0].aesthetics;
+
+    // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
+    function _valueOrAvg (data) {
+      return _.isArray(data) ? data[0] + data[1] / 2 : data;
+    }
 
     let color = aesthetics.color;
     color.mapper = ( F.isFieldUsage(color) ?
       function (d) {
-        return color.visScale(d[color.index]);
+        return color.visScale( _valueOrAvg( d[color.index] ) );
       } :
       Settings.maps.color );
 
     let size = aesthetics.size;
     size.mapper = ( F.isFieldUsage(size) ?
       function (d) {
-        return size.visScale(d[size.index]);
+        return size.visScale( _valueOrAvg( d[size.index] ) );
       } :
       Settings.maps.size );
 
     let shape = aesthetics.shape;
     shape.mapper = ( F.isFieldUsage(shape) ?
       function (d) {
-        return shape.visScale(d[shape.index]);
+        return shape.visScale( _valueOrAvg( d[shape.index] ) );
       } :
       Settings.maps.shape );
 
