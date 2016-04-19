@@ -23,9 +23,9 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   /**
    * Creates a pane within the given <svg> element, respecting the given margin and padding.
    * @param canvasD3 A <svg> element wrapped in a D3 selection.
-   * @param margin Margin (outer) for the drawing canvas
-   * @param padding Padding (inner) for the drawing canvas
-   * @returns {{}} A wrapper object that contains properties of the geometry of the pane, the pane (the root of this , its canvas (the drawing area), margin and padding
+   * @param margin Margin (outer) for the drawing canvas. Nothing will be drawn here.
+   * @param padding Padding (inner) for the drawing canvas. All axis are drawn in this space, including axis of the
+   * @returns {{}} A wrapper object that contains properties of the geometry of the canvas and atomic panes, the pane (the root of this), its canvas (the drawing area), margin and padding
    */
   function initCanvas(canvasD3, margin, padding) {
     // normalize arguments
@@ -43,6 +43,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     canvas.outerHeight = canvas.paneD3.attr2num("height");
     canvas.padding = padding;
     canvas.margin = margin;
+
     canvas.width = canvas.outerWidth - canvas.margin.left - canvas.margin.right - canvas.padding.left - canvas.padding.right; // i.e. inner width
     canvas.height = canvas.outerHeight - canvas.margin.top - canvas.margin.bottom - canvas.padding.top - canvas.padding.bottom; // i.e. inner height
 
@@ -65,8 +66,20 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         height: canvas.height + canvas.padding.top + canvas.padding.bottom
       });
 
+    // DEBUG rect to show outer margin of the canvas
+    canvas.paneD3.append("rect")
+      .attr({
+        width: canvas.outerWidth,
+        height: canvas.outerHeight,
+        x: 0, y: 0,
+        stroke: "black",
+        "stroke-width": 1.5,
+        fill: "none"
+      });
+
     return canvas;
   }
+
 
 
   function initAtomicPaneD3 (parentD3, size, offset) {
@@ -196,18 +209,18 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    */
   function setupTemplatingAxis(query, canvas) {
 
-    function _buildAxis (splittingDims, canvas, orientation) {
-      /// build up axis stack
-      // todo: do this for for both: horizontal and vertical
-      // for horizontal axis stack
-      let dimUsages = splittingDims.filter(F.isDimension);
-      let stackDepth = dimUsages.length;
-      let axisStack = new Array(stackDepth);
-      let range = (orientation === "xaxis" ? canvas.width : canvas.height); // the range in px of current axis stack level
+    /// build up axis stack
+    function _buildAxis (fieldUsages, canvas, orientation) {
+      let stackDepth = fieldUsages.stackDepth;
+      let splittingDims = fieldUsages.filter(F.isDimension);
+      let splittingStackDepth = fieldUsages.filter(F.isDimension).length;
+
+      let axisStack = new Array(splittingStackDepth); // axis stack
+      let range = (orientation === "x axis" ? canvas.width : canvas.height); // the range in px of current axis stack level
       let repeat = 1; // number of times the axis of the current level has to be repeated
 
-      for (let d = 0; d < stackDepth; ++d) {
-        let dimUsage = dimUsages[d];
+      for (let d = 0; d < splittingStackDepth; ++d) {
+        let dimUsage = splittingDims[d];
         let elem = {};
         elem.FU = dimUsage;
         elem.scale = d3.scale.ordinal()
@@ -215,27 +228,35 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           .rangeRoundPoints([0, range], 1.0);
         elem.axis = d3.svg.axis()
           .scale(elem.scale)
-          .orient(orientation === "xaxis" ? "bottom" : "left")
+          .orient(orientation === "x axis" ? "bottom" : "left")
           .tickSize(1, 1);
 
+        // axis needs to be drawn multiple times
         elem.axisD3 = new Array(repeat);
         for (let r = 0; r < repeat; ++r) {
           // attach g element
           let xOffset, yOffset;
-          if (orientation === "xaxis") {
-            xOffset = canvas.width / repeat * r
-            yOffset = canvas.height + canvas.padding.bottom / stackDepth * (stackDepth - d - 1);
-          } else {
-            xOffset = - canvas.padding.left / stackDepth * (stackDepth - d - 1);
+          if (orientation === "x axis") {
+            xOffset = canvas.width / repeat * r;
+            yOffset = canvas.height + Settings.geometry.axis.size * (stackDepth - d - 1);
+          } else /* (orientation === "y axis") */ {
+            xOffset = - Settings.geometry.axis.size * (stackDepth - d - 1);
             yOffset = canvas.height / repeat * r;
           }
           let axisG = canvas.canvasD3.append("g")
-            .classed("axis", true)
+            .classed(orientation, true)
             .attr("transform", "translate(" + xOffset + "," + yOffset + ")");
           elem.axisD3.push(axisG);
 
           // draw axis on it
           elem.axis(axisG);
+
+          if (orientation === "y axis") {
+          axisG.selectAll("text")
+              .attr("y", "-0.6em")
+              .attr("transform", "rotate(-90)")
+              .style("text-anchor", "middle");
+          }
         }
 
         axisStack[d] = elem;
@@ -249,8 +270,12 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     }
 
     if (!canvas.axisStack) canvas.axisStack = {};
-    canvas.axisStack.x = _buildAxis(query.layout.cols, canvas, "xaxis");
-    canvas.axisStack.y = _buildAxis(query.layout.rows, canvas, "yaxis");
+    canvas.axisStack.x = _buildAxis(query.layout.cols, canvas, "x axis");
+    canvas.axisStack.y = _buildAxis(query.layout.rows, canvas, "y axis");
+
+
+
+
   }
 
   /**
@@ -308,8 +333,18 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     /// one time on init:
     /// todo: is this actually "redo on canvas size change" ?
 
+    // axis stack depth
+    [query.layout.rows, query.layout.cols].forEach(
+      rc => {rc.stackDepth = rc.filter(F.isDimension).length + !rc.filter(F.isMeasure).empty();}
+    );
+
     // init table canvas
-    this.canvas = initCanvas(paneD3, 0, {top: 5, right: 5, bottom: 60, left: 60});
+    this.canvas = initCanvas(paneD3,
+      0, // margin around the canvas
+      { top: 5, right: 5,
+        bottom: query.layout.cols.stackDepth * Settings.geometry.axis.size,
+        left: query.layout.rows.stackDepth * Settings.geometry.axis.size } // padding for axis
+    );
 
     // infer size of atomic plots
     this.subPaneSize = {
@@ -394,7 +429,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     // init empty extent for measure on ROWS/COLS
     [...query.layout.cols, ...query.layout.rows].filter(F.isMeasure).forEach(
-      (m) => {m.extent = []}
+      (m) => {m.extent = [];}
     );
 
     // iterate over results for each atomic query

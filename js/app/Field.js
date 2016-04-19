@@ -102,7 +102,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
     if (!args) args = {};
     var isFU = base instanceof FieldUsage;
     this.base = (isFU ? base.base : base);
-    this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.sum);
+    this.aggr = utils.selectValue(args.aggr, isFU, base.aggr, FUsageT.Aggregation.avg);
     // todo: remove/change/merge scale?
     this.scale = utils.selectValue(args.scale, isFU, base.scale, FUsageT.Scale.linear);
     this.splitter = utils.selectValue(args.splitter,
@@ -121,8 +121,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
    * @returns {*} Returns the split of the domain. For that the field's splitter is called on the field's domain. 
    */
   FieldUsage.prototype.splitToValues = function () {
-    // todo: 10 is a magic number. introduce a configuration variable to allow custom splitting
-    return this.splitter(this.domain, true, 10);
+    // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
+    return this.splitter(this.domain, true, 5);
   };
 
   /**
@@ -130,8 +130,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
    */
   FieldUsage.prototype.split = function () {
     // split domain
-    // todo: 10 is a magic number. introduce a configuration variable to allow custom splitting
-    var domains = this.splitter(this.domain, false, 10);
+    // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
+    var domains = this.splitter(this.domain, false, 5);
     // create copies of this field usage but use the just created 'split domains'
     return domains.map( function (domain) {
       var copy = new FieldUsage(this);

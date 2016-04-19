@@ -150,7 +150,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
   DummyModel.prototype.density = function (values) {
     if (! (Array.isArray(values) && this.size() <= values.length) )
       throw new Error("invalid number of arguments");
-    // todo: implement something smarter?
+    // todo: implement something smarter
     return Math.random();
   };
 
@@ -172,7 +172,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       throw new Error("you gave too few values. For now only aggregations on 1 variable are allowed.");
       //logger.warn("for now only aggregations on 1 variable are allowed.");
 
-    // todo: implement
+    // todo: implement something smarter that actually returns something within the domain 
     if (aggregation === F.FUsageT.Aggregation.avg) {
       return Math.random()*100;
     } else
