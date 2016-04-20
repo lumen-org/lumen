@@ -54,7 +54,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     canvas.canvasD3 = canvas.paneD3.append("g")
       .attr("transform", "translate(" + (canvas.margin.left + canvas.padding.left) + "," + (canvas.margin.top + canvas.padding.top) + ")");
 
-    canvas.clipPathD3 = canvas.canvasD3
+    // todo: clippath seems unused and unneeded, since a svg-element anyway restricts drawing to its local coordinate system
+  /*  canvas.clipPathD3 = canvas.canvasD3
       .append("clipPath")
       .attr("id", "canvasClipPath");
     canvas.clipPathD3
@@ -64,10 +65,10 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         y: -canvas.padding.top,
         width: canvas.width + canvas.padding.left + canvas.padding.right,
         height: canvas.height + canvas.padding.top + canvas.padding.bottom
-      });
+      });*/
 
     // DEBUG rect to show outer margin of the canvas
-    canvas.paneD3.append("rect")
+    /*canvas.paneD3.append("rect")
       .attr({
         width: canvas.outerWidth,
         height: canvas.outerHeight,
@@ -75,25 +76,18 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         stroke: "black",
         "stroke-width": 1.5,
         fill: "none"
-      });
+      });*/
 
     return canvas;
   }
 
 
 
-  function initAtomicPaneD3 (parentD3, size, offset) {
-    /// create subpane
-    // note: as it is a svg element no translation relative to the full view pane is required
+  function initAtomicPane (parentD3, size, offset) {
     // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
-    let subPaneD3 = parentD3.append('svg')
-      .attr({
-        "width": size.width,
-        "height": size.height,
-        "x": offset.x,
-        "y": offset.y
-      });
-
+    // create subpane
+    let subPaneD3 = parentD3.append('g')
+      .attr("transform", "translate(" + offset.x + "," + offset.y + ")");
     // border of subpane
     subPaneD3.append('rect')
       .attr({
@@ -106,23 +100,26 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         'fill': Settings.appearance.pane.fill
         //'fill-opacity': 0
       });
-    return subPaneD3;
+    return {
+      paneD3: subPaneD3,
+      size: size
+    };
   }
 
 
-  function buildAtomicPane (query, samples, subPaneD3, size/*, extent*/) {
+  function buildAtomicPane (query, samples, subpane) {
 
     // working variables
     let aesthetics = query.layers[0].aesthetics;
     let layout = query.layout;
 
     // the subpane is a collection of variables that make up a subpane, including its data marks
-    let subpane = {};
+    //let subpane = {};
 
     /// create subpane
     // note: as it is a svg element no translation relative to the full view pane is required
     // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
-    subpane.paneD3 = subPaneD3;
+    //subpane.paneD3 = subPaneD3;
 
     /// plot samples
 
@@ -153,10 +150,10 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       ); // jshint ignore:line
 
     // add scales to field usages of this query
-    attachScales(query, size);
+    attachScales(query, subpane.size);
 
     // attach mappers
-    attachMappers(query, size);
+    attachMappers(query, subpane.size);
 
     // add new svg elements for enter subselection
     let newPointsD3 = pointsD3
@@ -210,16 +207,17 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   function setupTemplatingAxis(query, canvas) {
 
     /// build up axis stack
-    function _buildAxis (fieldUsages, canvas, orientation) {
+    function _buildAxis (fieldUsages, canvas, orient) {
       let stackDepth = fieldUsages.stackDepth;
       let splittingDims = fieldUsages.filter(F.isDimension);
       let splittingStackDepth = fieldUsages.filter(F.isDimension).length;
 
       let axisStack = new Array(splittingStackDepth); // axis stack
-      let range = (orientation === "x axis" ? canvas.width : canvas.height); // the range in px of current axis stack level
+      let range = (orient === "x axis" ? canvas.width : canvas.height); // the range in px of current axis stack level
       let repeat = 1; // number of times the axis of the current level has to be repeated
 
       for (let d = 0; d < splittingStackDepth; ++d) {
+        let stackOffset = Settings.geometry.axis.size * (stackDepth - d - 1);
         let dimUsage = splittingDims[d];
         let elem = {};
         elem.FU = dimUsage;
@@ -228,30 +226,43 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           .rangeRoundPoints([0, range], 1.0);
         elem.axis = d3.svg.axis()
           .scale(elem.scale)
-          .orient(orientation === "x axis" ? "bottom" : "left")
-          .tickSize(1, 1);
+          .orient(orient === "x axis" ? "bottom" : "left")
+          .tickSize(0,Settings.geometry.axis.outerTickSize);
+          //.tickSize(-(stackOffset + (orient === "y axis" ? canvas.width : canvas.height)), Settings.geometry.axis.outerTickSize);
 
         // axis needs to be drawn multiple times
         elem.axisD3 = new Array(repeat);
         for (let r = 0; r < repeat; ++r) {
           // attach g element
           let xOffset, yOffset;
-          if (orientation === "x axis") {
+          if (orient === "x axis") {
             xOffset = canvas.width / repeat * r;
-            yOffset = canvas.height + Settings.geometry.axis.size * (stackDepth - d - 1);
+            yOffset = canvas.height + stackOffset;
           } else /* (orientation === "y axis") */ {
-            xOffset = - Settings.geometry.axis.size * (stackDepth - d - 1);
+            xOffset = - stackOffset;
             yOffset = canvas.height / repeat * r;
           }
           let axisG = canvas.canvasD3.append("g")
-            .classed(orientation, true)
+            .classed(orient, true)
             .attr("transform", "translate(" + xOffset + "," + yOffset + ")");
           elem.axisD3.push(axisG);
 
           // draw axis on it
           elem.axis(axisG);
 
-          if (orientation === "y axis") {
+          // tweak domain line: make it a bit shorter on both ends
+          {
+            let sign = orient === "top" || orient === "left" ? -1 : 1,
+              ots = Settings.geometry.axis.outerTickSize,
+              pad = d * Settings.geometry.axis.padding / stackDepth,
+              reducedRange = [pad, range-pad];
+            if (orient === "top" || orient === "left") {
+              axisG.select("path.domain").attr("d", "M" + reducedRange[0] + "," + sign * ots + "V0H" + reducedRange[1] + "V" + sign * ots);
+            } else {
+              axisG.select("path.domain").attr("d", "M" + sign * ots + "," + reducedRange[0] + "H0V" + reducedRange[1] + "H" + sign * ots);
+            }
+          }
+          if (orient === "y axis") {
           axisG.selectAll("text")
               .attr("y", "-0.6em")
               .attr("transform", "rotate(-90)")
@@ -272,11 +283,42 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     if (!canvas.axisStack) canvas.axisStack = {};
     canvas.axisStack.x = _buildAxis(query.layout.cols, canvas, "x axis");
     canvas.axisStack.y = _buildAxis(query.layout.rows, canvas, "y axis");
-
-
-
-
   }
+
+
+  function attachAtomicAxis (pane, query, canvas, axisType, orientation) {
+
+    let axis = {};
+    axis.FU = (axisType === "x axis" ? query.layout.cols[0] : query.layout.rows[0]);
+
+    // is there really anything to draw?
+    if (!F.isFieldUsage(axis.FU))
+      return;
+
+    axis.axisD3 = pane.paneD3.append("g")
+      .classed(axisType, true)
+    if (axisType === "x axis")
+      axis.axisD3.attr("transform", "translate(0," + pane.size.height + ")");
+    axis.axis = d3.svg.axis()
+      .scale(axis.FU.visScale)
+      .orient(orientation)
+      .tickSize(-(axisType === "x axis" ? canvas.height : canvas.width), 1);
+
+    // draw axis
+    axis.axis(axis.axisD3);
+
+    if (orientation === "y axis") {
+      axis.axisD3.selectAll("text")
+        .attr("y", "-0.6em")
+        .attr("transform", "rotate(-90)")
+        .style("text-anchor", "middle");
+    }
+
+    if (!pane.axis) pane.axis = {};
+    if (axisType === "x axis") pane.axis.x = axis;
+    else if (axisType === "y axis") pane.axis.y = axis;
+    else throw new RangeError("invalid value of axis:", axis);
+  };
 
   /**
    * Returns a mapping from the usages to the index in the result table. e.g. the usage 'color' maps to the index of the fieldUsage that encodes color.
@@ -373,20 +415,23 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
       this.at[rIdx] = new Array(this.size.cols);
       for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
-        let subPaneD3 = initAtomicPaneD3(
+
+        let subPane = initAtomicPane(
           canvas.canvasD3,
           this.subPaneSize,
           {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
         );
+
         this.at[rIdx][cIdx] = buildAtomicPane(
           this.queries.at[rIdx][cIdx],
           this.results.at[rIdx][cIdx],
-          subPaneD3,
-          this.subPaneSize
+          subPane
         );
+
+        if (cIdx === 0) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], canvas, 'y axis', 'left');
+        if (rIdx === (this.size.rows - 1)) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], canvas, 'x axis', 'bottom');
       }
     }
-
 
     setupTemplatingAxis(query, this.canvas);
   };
@@ -490,12 +535,13 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
     let row = query.layout.rows[0];
     if (F.isFieldUsage(row) && row.isMeasure())
-      row.visScale = ScaleGen.position(row, row.extent, [0, paneSize.height]);
+      // row.visScale = ScaleGen.position(row, row.extent, [0, paneSize.height]);
+      row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height-Settings.geometry.axis.padding]);
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
     if (F.isFieldUsage(col) && col.isMeasure())
-      col.visScale = ScaleGen.position(col, col.extent, [paneSize.width, 0]);
+      col.visScale = ScaleGen.position(col, col.extent, [paneSize.width-Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
 
     // no need for scales of: filters, details
   };

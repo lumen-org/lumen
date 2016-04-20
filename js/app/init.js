@@ -21,7 +21,6 @@ define(['lib/logger','d3'], function (Logger, d3) {
     return parseFloat(this.attr(attributeString));
   };
 
-
   // extent array prototype
 
   Array.prototype.last = function() {
@@ -40,7 +39,8 @@ define(['lib/logger','d3'], function (Logger, d3) {
    * Clears this Array.
    */
   Array.prototype.clear = function () {
-    this.length = 0;
+    //this.length = 0;
+    this.splice(0,this.length);
   };
 
 

@@ -74,13 +74,9 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     // inter.onDrop(shelf.color, shelf.dim.at(3));
 
     // multi-mixed use of a continuous variable as both, dimension and measure
-    //inter.onDrop(shelf.column, shelf.dim.at(1));
-    //inter.onDrop(shelf.column, shelf.dim.at(0));
-    inter.onDrop(shelf.column, shelf.meas.at(1));
-    //inter.onDrop(shelf.row, shelf.meas.at(1));
-    inter.onDrop(shelf.dim, shelf.meas.at(0));
-    inter.onDrop(shelf.row, shelf.dim.at(3));
-
+    inter.onDrop(shelf.row, shelf.dim.at(1));
+    inter.onDrop(shelf.column, shelf.meas.at(2));
+    inter.onDrop(shelf.color, shelf.dim.at(2));
 
     //inter.onDrop(shelf.filter, shelf.dim.at(2));
     //inter.onDrop(shelf.detail, shelf.dim.at(1));

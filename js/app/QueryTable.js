@@ -77,17 +77,25 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
     // todo: apply filter on dimensions
 
     this.base = query;
-    this.rowBase = _extendTemplate(query, 'rows');
-    this.at = new Array(this.rowBase.length);
+    let rowBase = _extendTemplate(query, 'rows');
+
+    this.at = new Array(rowBase.length);
     for (let i = 0; i < this.at.length; ++i) {
-      this.at[i] = _extendTemplate(this.rowBase[i], 'cols');
+      this.at[i] = _extendTemplate(rowBase[i], 'cols');
     }
     this.size = {
       rows: this.at.length,
       cols: (this.at.length > 0 ? this.at[0].length : 0)
     };
-  };
 
+    // verify expansion
+    // @debug
+    for (let r=0; r<this.size.rows; ++r)
+      for(let c=0; c<this.size.cols; ++c)
+        if(this.at[r][c].layout.rows.filter(F.isDimension).length !== 0 ||
+           this.at[r][c].layout.cols.filter(F.isDimension).length !== 0)
+          throw new RangeError("templated expansion failed!")
+  };
 
   /**
    * For debugging

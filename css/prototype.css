@@ -102,3 +102,17 @@
 #queryTextBox {
     font-size: small;
 }
+
+.axis text {
+    stroke: none;
+    font-weight: lighter;
+}
+
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-linecap: "round";
+    shape-rendering: crispEdges;
+    stroke-dasharray: 2,6;
+    stroke-opacity: 0.3;
+}
