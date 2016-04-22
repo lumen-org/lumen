@@ -20,10 +20,15 @@ define([], function () {
     geometry: {
       axis: {
         // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
-        size: "25",
-        // [px] padding at the beginning and end of an axis that 
+        size: 30,
+        // [px] font size of tick marks of axis
+        tickFontSizePx: 12,
+        // [px] font size of axis label (i.e. name of axis)
+        labelFontSizePx: 10,
+        // [px] padding at the beginning and end of an axis
         padding: 15,
-        outerTickSize: 1.5
+        // [px] outer tick size of axis tick marks
+        outerTickSize: 0
       }
     }
 

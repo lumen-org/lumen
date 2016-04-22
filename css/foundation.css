@@ -64,7 +64,8 @@ body {
   font-style: normal;
   line-height: 1.5;
   position: relative;
-  cursor: auto; }
+  cursor: auto;
+  }
 
 a:hover {
   cursor: pointer; }
@@ -2678,7 +2679,9 @@ meta.foundation-mq-topbar {
   margin-bottom: 1.25rem;
   padding: 1.25rem;
   background: #f2f2f2;
-  color: #333333; }
+  color: #333333;
+  stroke: black;
+  }
   .panel > :first-child {
     margin-top: 0; }
   .panel > :last-child {
@@ -4543,7 +4546,8 @@ blockquote p {
   padding: 0.25rem 0.5rem 0.25rem;
   font-size: 0.6875rem;
   background-color: #008CBA;
-  color: #FFFFFF; }
+  color: #FFFFFF;
+  }
   .label.radius {
     border-radius: 3px; }
   .label.round {
