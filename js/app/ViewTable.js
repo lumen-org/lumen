@@ -77,7 +77,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * @param offset Offset in pixel.
    * @returns {{paneD3: *, size: *}}
    */
-  function addAtomicPane(parentD3, size, offset) {
+  function addAtomicPane(parentD3, {width, height}, offset) {
     // note: d3 selection are arrays of arrays, hence it is a "four fold"-array. just so that you aren't confused.
     // create subpane
     let subPaneD3 = parentD3.append('g')
@@ -87,8 +87,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       .attr({
         x: 0,
         y: 0,
-        width: size.width,
-        height: size.height,
+        width: width,
+        height: height,
         stroke: Settings.appearance.pane.borderColor,
         'stroke-width': 2,
         'fill': Settings.appearance.pane.fill
@@ -97,7 +97,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     // the subpane is a collection of variables that make up a subpane, including its data marks
     return {
       paneD3: subPaneD3,
-      size: size
+      size: {width, height}
     };
   }
 

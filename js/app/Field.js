@@ -47,15 +47,15 @@ define(['./utils', './SplitSample'], function (utils, S) {
    * @alias module:Field.Field
    */
   var Field;
-  Field = function (nameOrField, dataSource, args) {
-    if (!args) args = {};
+  Field = function (nameOrField, dataSource, args = {}) {
+    //if (!args) args = {};
     var isF = nameOrField instanceof Field;
     console.assert(isF || (dataSource && (this.isDiscrete() ? typeof args.domain !== 'undefined' : true)));
 
     this.name = (isF ? nameOrField.name : nameOrField);
     this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
     this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
-    this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure);
+    this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure); //! the fields default role, when used as a FieldUsage
     this.kind = utils.selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
     this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);
   };

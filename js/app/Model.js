@@ -12,137 +12,155 @@ define(['./Field'], function (F) {
    * @alias module:Model
    * @constructor
    */
-  var Model; Model = function (name) {
-    this.name = name;
-    this.fields = []; // array of {@link F.Field}s
-  };
+  class Model {
 
-  /**
-   * Conditions variable v of this model on the given range and returns the resulting model.
-   * Does not change this model.
-   * @param v A variable of the model, specified by their index, name, or the field of the model itself.
-   * @param value
-   */
-  Model.prototype.condition = function (v, value) {
-    throw new Error("You have to implement this function in your subclass");
-  };
+    constructor(name) {
+      this.name = name
+      this.fields = [] // array of {@link F.Field}s
+    }
 
-  /**
-   * Marginalizes v out of this model and returns the resulting model.
-   * @param v A single variable or an array of variables of this model, specified by their index, name, or the field of the model itself.
-   */
-  Model.prototype.marginalize = function (v) {
-    throw new Error("You have to implement this function in your subclass");
-  };
+    /**
+     * Conditions variable v of this model on the given range and returns the resulting model.
+     * Does not change this model.
+     * @param v A variable of the model, specified by their index, name, or the field of the model itself.
+     * @param value
+     */
+    condition(v, value) {
+      throw new Error("You have to implement this function in your subclass")
+    }
 
-  /**
-   * Returns the density of this model for the given values, or 'undefined' if values does not specify all required variable values.
-   * @param values
-   */
-  Model.prototype.density = function (values) {
-    throw new Error("You have to implement this function in your subclass");
-  };
+    /**
+     * Marginalizes v out of this model and returns the resulting model.
+     * @param v A single variable or an array of variables of this model, specified by their index, name, or the field of the model itself.
+     */
+    marginalize(v) {
+      throw new Error("You have to implement this function in your subclass")
+    }
 
-  /**
-   * @returns Returns a copy of this model.
-   * @param {string} [name] - the new name of the model.
-   * @constructor
-   */
-  Model.prototype.copy = function (name) {
-    throw new Error("You have to implement this function in your subclass");
-  };
+    /**
+     * Returns the density of this model for the given values, or 'undefined' if values does not specify all required variable values.
+     * @param values
+     */
+    density(values) {
+      throw new Error("You have to implement this function in your subclass")
+    }
 
-  /**
-   * Returns the number of fields in the model.
-   * @returns {*}
-   */
-  Model.prototype.size = function () {
-    return this.fields.length;
-  };
+    /**
+     * Returns an aggregation of this model on the given target field. The remaining fields of the model are marginalized.
+     *
+     * what to aggregate: one or more fields
+     * how to aggregate: which aggregation do we want?
+     * conditionals/domains: restrict domains of fields
+     */
+    //Model.
 
-  /**
-   * Returns true iff idx is a valid index of a field of this model.
-   * @param idx
-   */
-  Model.prototype.isIndex = function(idx) {
-    return (_.isNumber(idx) && (idx < this.size()) && (idx >= 0));
-  };
 
-  /**
-   * Returns true iff name is a valid name of a field of this model.
-   * @param name
-   */
-  Model.prototype.isName = function(name) {
-    return (_.isString(name) && this.fields.some( function(f){return f.name === name;}) );
-  };
+    /**
+     * @returns Returns a copy of this model.
+     * @param {string} [name] - the new name of the model.
+     * @constructor
+     */
+    copy(name) {
+      throw new Error("You have to implement this function in your subclass")
+    }
 
-  /**
-   * Returns true iff field is a field of this model. Note that it returns false, if it is a FieldUsage that is based on a Field of this model.
-   * @param field
-   */
-  Model.prototype.isField = function (field) {
-    return field instanceof F.Field && (-1 !== this.fields.indexOf(field));
-  };
+    /**
+     * Returns the number of fields in the model.
+     * @returns {*}
+     */
+    size() {
+      return this.fields.length
+    }
 
-  /**
-   * Returns true iff fu is a {@link FieldUsage} that is based on a {@link Field} of this model.
-   * @param fu
-   */
-  Model.prototype.isFieldUsage = function (fu) {
-    return fu instanceof F.FieldUsage && (-1 !== this.fields.indexOf(fu.base));
-  };
+    /**
+     * Returns true iff idx is a valid index of a field of this model.
+     * @param idx
+     */
+    isIndex(idx) {
+      return (_.isNumber(idx) && (idx < this.size()) && (idx >= 0))
+    }
 
-  /**
-   * Returns the index that belongs to the given id in this model.
-   * @param id - Either a index, a name, or a field of this model.
-   * @private
-   */
-  Model.prototype._asIndex = function(id) {
-    if (this.isIndex(id))
-      return id;
-    if (this.isName(id))
-      return _.findIndex(this.fields, function(f){return f.name === id;});
-    if (this.isFieldUsage(id))
-      return this.fields.indexOf(id.base);
-    if (this.isField(id))
-      return this.fields.indexOf(id);
-    throw new Error("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");
-  };
+    /**
+     * Returns true iff name is a valid name of a field of this model.
+     * @param name
+     */
+    isName(name) {
+      return (_.isString(name) && this.fields.some(function (f) {
+        return f.name === name;
+      }) )
+    }
 
-  /**
-   * Returns the field of this model that belongs to the given id
-   * @param id - Either a index, a name, or a field of this model.
-   * @private
-   */
-  Model.prototype._asField = function (id) {
-    return this.fields[this._asIndex(id)];
-  };
+    /**
+     * Returns true iff field is a field of this model. Note that it returns false, if it is a FieldUsage that is based on a Field of this model.
+     * @param field
+     */
+    isField(field) {
+      return field instanceof F.Field && (-1 !== this.fields.indexOf(field))
+    }
 
-  /**
-   * Returns a textual description of the model.
-   * @returns {String}
-   */
-  Model.prototype.describe = function () {
-    var desc = "-- Model '" + this.name + "' --\n" +
-      "consists of " + this.size() + " fields, as follows\n";
-    return this.fields.reduce(
-      function(str, field) {
-        return str + field.toString() + "\n";
-      },
-      desc
-    );
-  };
+    /**
+     * Returns true iff fu is a {@link FieldUsage} that is based on a {@link Field} of this model.
+     * @param fu
+     */
+    isFieldUsage(fu) {
+      return fu instanceof F.FieldUsage && (-1 !== this.fields.indexOf(fu.base))
+    }
 
-  /**
-   * Returns an array of all {@link F.Field}s of this model, which are dimensions.
-   */
-  Model.prototype.dimensions = function () {
-    return this.fields.filter(F.isDimension);
-  };
+    /**
+     * Returns the index that belongs to the given id in this model.
+     * @param id - Either a index, a name, or a field of this model.
+     * @private
+     */
+    _asIndex(id) {
+      if (this.isIndex(id))
+        return id;
+      if (this.isName(id))
+        return _.findIndex(this.fields, function (f) {
+          return f.name === id;
+        });
+      if (this.isFieldUsage(id))
+        return this.fields.indexOf(id.base);
+      if (this.isField(id))
+        return this.fields.indexOf(id);
+      throw new RangeError("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");
+    }
 
-  Model.prototype.measures = function () {
-    return this.fields.filter(F.isMeasure);
-  };
+    /**
+     * Returns the field of this model that belongs to the given id
+     * @param id - Either a index, a name, or a field of this model.
+     * @private
+     */
+    _asField(id) {
+      return this.fields[this._asIndex(id)];
+    }
+
+    /**
+     * Returns a textual description of the model.
+     * @returns {String}
+     */
+    describe() {
+      var desc = "-- Model '" + this.name + "' --\n" +
+        "consists of " + this.size() + " fields, as follows\n";
+      return this.fields.reduce(
+        function (str, field) {
+          return str + field.toString() + "\n";
+        },
+        desc
+      );
+    }
+
+    /**
+     * Returns an array of all {@link F.Field}s of this model, which are dimensions.
+     */
+    dimensions() {
+      return this.fields.filter(F.isDimension);
+    }
+
+    measures() {
+      return this.fields.filter(F.isMeasure);
+    }
+
+  }
 
   return Model;
 });

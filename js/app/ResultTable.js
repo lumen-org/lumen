@@ -78,7 +78,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
   /**
    * Checks that dimensions based on the same field use the same split function. If not it issues a warning.
    * @param dimensions
-   */
+   *
   var checkDimensions = function (dimensions) {
     // sort by their name
     dimensions.sort( function(d1, d2) {
@@ -87,7 +87,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
     // sequentially check
     // todo implement later
-  };
+  };*/
 
 
   /**
@@ -114,9 +114,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     var dimensions = [];
     let idx = 0;
     fieldUsages.filter(F.isDimension).forEach( function (fu) {
-      let sameBase = dimensions.find( function (e) {
-        return (fu.base === e.base);
-      });
+      let sameBase = dimensions.find( e => (fu.base === e.base) );
       if (sameBase) {
         // fu is already there
         if (fu.splitter !== sameBase.splitter)
@@ -168,9 +166,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
       for (let tupleIdx = 0; tupleIdx < len; ++tupleIdx) {
 
         // condition on dimension values / collect dimension values
-        let dimValues = inputTable.map(
-          function (v) { return v[tupleIdx]; }
-        ); // jshint ignore:line
+        let dimValues = inputTable.map( v => v[tupleIdx] ); // jshint ignore:line
 
         // aggregate remaining model
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
