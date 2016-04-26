@@ -23,60 +23,45 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
     constructor(name) {
       super(name)
     }
+    
 
     /**
-     * Conditions variable v of this model on the given range and returns the modified model.
-     * @param v - A variable of the model, given by its index (a number) or its name (a string).
-     * @param value - The value to condition v on.
-     * @returns {DummyModel}
-     * todo: implement such that it works with arrays of variables and values too
-     */
-    condition(v, value) {
-      // dummy model: doesn't do anything with value, but remove the conditioned field
-      this.fields = _.without(this.fields, this.fields[this._asIndex(v)])
-      return this
-    }
-
-
-    /**
-     * Marginalizes v out of this model and returns the modified model.
-     * @param v A single variable or an array of variables of this model, each specified either by their name or their index.
+     * Marginalizes variables out of this model and returns the modified model.
+     * @param ids A single field or an array of variables of this model, each specified either by their name or their index.
+     * @param how If how === 'remove', the given variables are marginalized. If how === 'keep' the given variables are kept, and all other variables of the models are marginalized.
      * @returns {DummyModel}
      */
-    marginalize(v) {
-      if (!Array.isArray(v)) v = [v]
-      logger.info(v)
-      v.forEach(function (e) {
-        // dummy model: don't do anything with value, but remove the marginalized field
-        logger.info(e)
-        logger.info(this._asIndex(e))
-        this.fields = _.without(this.fields, this.fields[this._asIndex(e)]);
-      }, this)
-      /*
-       for (var i=0; i< v.length; ++i) {
-       this.fields = _.without(this.fields, this.fields[ this._asIndex(v[i])] );
-       }*/
-      return this
+    marginalize(ids, how = 'remove') {
+      if (!Array.isArray(ids)) ids = [ids];
+      if (how === 'remove')
+        ids.forEach( e => { this.fields = _.without(this.fields, this.fields[this._asIndex(e)]) } );
+      else if (how === 'keep')
+        this.fields = ids.map( id => this._asField(id) );
+      else
+        throw new RangeError("invalid value for parameter 'how' : ", how);
+      return this;
     }
 
 
     /**
-     * Returns the density of this model for the given values.
-     * @param {Array} values - The values to evaluate the model for.
-     * @returns {Number}
+     * Restricts the domain as given in the arguments and returns the modified model.
+     * @param fieldUsages One {@link FieldUsage} or an array of {@link FieldUsage}s based on Fields of this model. For each matching {@link Field} of this model, its new domain will be the intersection of its old domain and the given FieldUsages domain.
      */
-    density(values) {
-      if (!(Array.isArray(values) && this.size() <= values.length))
-        throw new Error("invalid number of arguments");
-      // todo: implement something smarter
-      return Math.random();
+    restrict (fieldUsages) {
+      if (!Array.isArray(fieldUsages)) fieldUsages = [fieldUsages];
+      for(let fu of fieldUsages) {
+        let field = this._asField(fu);
+        field.domain = field.domain.intersection(fu.domain);
+      }
+      return this;
     }
 
 
     /**
-     * Returns the requested aggregation on the model, using the given values as input.
+     * Returns the requested aggregation on the model, using the given values as input. The model itself is not modified.
      * @param values An array pairs of fields and value.
-     * @returns {Number}
+     * @param aggregation
+     * @returns {number}
      */
     aggregate(values, aggregation) {
 
@@ -100,6 +85,65 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       }
     }
 
+
+    /**
+     * Returns the aggregation of this model on the given target variables(s). The remaining variables of the model are marginalized. The model itself is not modified.
+     * @param ids An variable of an array of variables of this field.
+     * @param aggregation How to aggregate?
+     */
+    aggregate2(ids, aggregation) {
+      if (!Array.isArray(ids)) ids = [ids];
+      let fields = ids.map( id => this._asField(id));
+
+      // remove remaining variables
+      let model = this.copy.marginalize(fields, 'keep');
+
+      // calculate the aggregation
+      if (aggregation === F.FUsageT.Aggregation.avg) {
+        return Math.random() * 100;
+      } else if (aggregation === F.FUsageT.Aggregation.sum) {
+        return Math.random() * 100;
+      } else {
+        throw new Error("not supported aggregation type given: " + aggregation);
+      }
+    }
+
+
+    /**
+     * Returns the density of this model for the given values.
+     * @param {Array} A single value or an array of values. A value is an object that has at least two properties:
+     *  - id: a variable of this model.
+     *  - value: the value for the variable.
+     * @returns {Number}
+     */
+    density(values) {
+      if (!Array.isArray(values)) values = [values];
+      if (this.size() <= values.length)
+        throw new Error("invalid number of arguments");
+      return Math.random();
+    }
+    
+    /**
+     * Conditions one or more variables v of this model on the given range and returns the modified model.
+     * @param conditionals A single pair, or an array of pairs. A pair is an object with at least two properties:
+     *   - id: the variable of the model, and
+         - range: The range or value to condition the variable on.
+     * @returns {DummyModel}
+     *
+     * Note: conditioning is not 'atomic' as it is equal to
+     * (1) restricting a variable to the value to condition on, and
+     * (2) marginalizing that variable out of the model
+     */
+    condition (conditionals) {
+      if (!Array.isArray(conditionals)) conditionals = [conditionals];
+      for(let {id, range} of conditionals) {
+        // dummy model: doesn't do anything with value, but remove the conditioned field
+        this.fields = _.without(this.fields, this.fields[this._asIndex(id)]);
+      }
+      return this
+    }
+    
+    
     /**
      * @param {string} [name] - the new name of the model.
      * @returns Returns a copy of this model.

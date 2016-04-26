@@ -46,14 +46,23 @@ define(['./Field'], function (F) {
     }
 
     /**
-     * Returns an aggregation of this model on the given target field. The remaining fields of the model are marginalized.
+     * Returns the aggregation of this model on the given target field(s). The remaining fields of the model are marginalized.
      *
-     * what to aggregate: one or more fields
+     * if: what to aggregate: one or more fields
      * how to aggregate: which aggregation do we want?
      * conditionals/domains: restrict domains of fields
      */
-    //Model.
+    aggregate(id, aggregation) {
+      throw new Error("You have to implement this function in your subclass")
+    }
 
+    /**
+     * Restricts the domain as given in the arguments.
+     * @param v One or more domain restrictions as its parameters
+     */
+    restrict (...v) {
+      throw new Error("You have to implement this function in your subclass")
+    }
 
     /**
      * @returns Returns a copy of this model.
