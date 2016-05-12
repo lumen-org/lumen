@@ -170,7 +170,9 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
         // aggregate remaining model
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
-        column[tupleIdx] = m.model.aggregate(dimValues, m.aggr);
+        
+        //column[tupleIdx] = m.model.aggregate(dimValues, m.aggr);
+        column[tupleIdx] = m.model.aggregate(dimValues, m);
       }
 
       // attach extent and corresponding field usage

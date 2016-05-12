@@ -18,7 +18,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width:600,
+        width:800,
         height:600
       });
 
@@ -109,6 +109,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       console.log("viewTable: ");
       console.log(viewTable);
       console.log("...");
+
+//      console.log
     }
 
     inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
@@ -116,13 +118,13 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     // trigger intial query write out
     onUpdate();
 
-    $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
+    /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
       onUpdate();
       //console.log(modelTable.baseModel.describe());
       //console.log(modelTable.at[0][0].describe());
       //eval('console.log("");'); // prevents auto-optimization of the closure
-    });
+    });*/
 
     function myScript () {
     }

@@ -25,7 +25,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
    * @alias module:Field.FUsageT
    */
   var FUsageT = {
-    Aggregation: {sum: 'sum', avg: 'avg'},
+    Aggregation: {sum: 'max', avg: 'avg'},
     Scale: {
       linear: 'linear', log: 'log'
     },

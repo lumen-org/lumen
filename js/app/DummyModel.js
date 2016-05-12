@@ -63,7 +63,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @param aggregation
      * @returns {number}
      */
-    aggregate(values, aggregation) {
+    aggregate(values, fieldToAggregate) {
 
       // todo: in the future we might want to support aggregation on more than one variables
 
@@ -75,14 +75,14 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
         throw new Error("you gave too few values. For now only aggregations on 1 variable are allowed.");
       //logger.warn("for now only aggregations on 1 variable are allowed.");
 
-      // todo: implement something smarter that actually returns something within the domain
-      if (aggregation === F.FUsageT.Aggregation.avg) {
-        return Math.random() * 100;
-      } else if (aggregation === F.FUsageT.Aggregation.sum) {
-        return Math.random() * 100;
-      } else {
-        throw new Error("not supported aggregation type given: " + aggregation);
+      // TODO: this is just a fix for doctoral colloquium such that it returns something within the domain: I pass the measure to aggregate instead of the aggregation only
+      let aggr = fieldToAggregate.aggr;
+      if (aggr !== F.FUsageT.Aggregation.avg && aggr !== F.FUsageT.Aggregation.sum) {
+        throw new Error("not supported aggregation type given: " + aggr);
       }
+
+      let domain = fieldToAggregate.domain;
+      return domain.l + Math.random() * domain.h;
     }
 
 
@@ -183,7 +183,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.cont,
-          domain: new Domain.SimpleNumericContinuous(0, 150)
+          domain: new Domain.SimpleNumericContinuous(40, 90)
         });
       var incomeField = new F.Field(
         'income', myModel, {
@@ -197,28 +197,29 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
           kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete([0, 1, 2, 3, 4, 5])
+          domain: new Domain.Discrete([0, 1, 2, 3, 4])
         });
       var sexField = new F.Field(
         'sex', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete([0, 1])
+          domain: new Domain.Discrete(["F", "M"])
         });
       var nameField = new F.Field(
         'name', myModel, {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete(['John', 'Philipp', 'Maggie'])
+          domain: new Domain.Discrete(['Max', 'Philipp', 'Maggie'])
         });
       var cityField = new F.Field(
         'city', myModel, {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
           kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete(['Jena', 'Weimar', 'Berlin', 'Erfurt'])
+          domain: new Domain.Discrete(['Tokyo', 'Jena', 'Seoul', 'New York'])
+          //domain: new Domain.Discrete(['Tokyo', 'Jena', 'Seoul', 'Chicago'])
         });
 
       myModel.fields = [
