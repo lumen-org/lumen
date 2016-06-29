@@ -65,7 +65,7 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
   var Sampler = {
 
     /**
-     * Samples the domain to (at most) n samples that are equidistantly.
+     * Samples the domain to (at most) n samples that are equidistant.
      * @param {SimpleNumericContinuousDomain} domain The domain to sample.
      * @param n
      */

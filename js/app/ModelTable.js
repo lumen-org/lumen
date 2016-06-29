@@ -8,11 +8,11 @@ define(['./Field'], function(F) {
   'use strict';
 
   /**
-   * Attaches a model to each measure/aggregation of a query.
+   * Given a query and the corresponding base model, attach a model for each measure/aggregation of a query to that measure.
    * @param query
-   * @param base
+   * @param baseModel
    */
-  var attachModel = function (query, base) {
+  var attachModel = function (query, baseModel) {
     let measures = query.measureUsages();
 
     // marginalize all those measures out of the model, for which the base field isn't also used for a dimension or another measure
@@ -24,7 +24,7 @@ define(['./Field'], function(F) {
 
     measures.forEach(
       function (m) {
-        m.model = base.copy().marginalize(
+        m.model = baseModel.copy().marginalize(
           toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
         );
       }
@@ -32,6 +32,11 @@ define(['./Field'], function(F) {
   };
 
 
+  /**
+   * Returns the 'base model' for the provided query, i.e. a model of all fields used in the query.
+   * @param query
+   * @returns {DummyModel|*}
+   */
   var model = function (query) {
     // todo: extend: only 1 layer and 1 source is supported for now
     var base = query.sources[0];

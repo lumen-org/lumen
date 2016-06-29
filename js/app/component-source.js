@@ -4,8 +4,8 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable'],
-  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable) {
+define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModel'],
+  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, RemoteModel) {
     'use strict';
 
     var query = {},
@@ -127,6 +127,9 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     });*/
 
     function myScript () {
+      // testing the remote model!
+      var carCrashes = new RemoteModel('car_crashes', "http://127.0.0.1:5000/webservice");
+      carCrashes.describe();
     }
 
     return {
