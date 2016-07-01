@@ -14,18 +14,44 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
 
   var Query = {
+
+    queryPromise : function (remoteUrl, jsonContent) {
+      return new Promise( (resolve, reject) => {
+        d3.json(remoteUrl)
+          .header("Content-Type", "application/json")
+          //.post(JSON.stringify(jsonContent), jsonCallback);
+          .post(JSON.stringify(jsonContent), (err, json) => err ? reject(err) : resolve(json) );
+      });
+    },
+
+    showHeaderSimple: function (remoteUrl, modelName) {
+      //return new Promise( (resolve, reject) => {
+        var content = {
+          "SHOW": "HEADER",
+          "FROM": modelName
+        };
+        return Query.queryPromise(remoteUrl, content)
+          .then(resolve)
+          .catch(reject);
+      //});
+    },
+
+
     query : function (remoteUrl, jsonContent, callback) {
       d3.json(remoteUrl)
         .header("Content-Type", "application/json")
         .post(JSON.stringify(jsonContent), callback);
     },
 
-    showHeader: function (remoteUrl, modelName, callback) {
-      var content = {
-        "SHOW": "HEADER",
-        "FROM": modelName
-      };
-      Query.query(remoteUrl, content, callback);
+    showHeader: function (remoteUrl, modelName) {
+      return new Promise( (resolve, reject) => {
+        var content = {
+          "SHOW": "HEADER",
+          "FROM": modelName
+        };
+        Query.query(remoteUrl, content);
+      });
+
     }
   };
 
@@ -33,20 +59,37 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
   class RemoteModel extends Model {
 
     /**
-     * Loads the model with given name from a ModelBase server at the given url.
+     * Creates a model with given name based on a ModelBase server at the given url.
+     * Note that the fields are not populated yet after calling the constructor. Use the promise
+     * provided by {@link RemoteModel.populate} for that.
      * @param name Name for the model.
      * @param url The url that provides the model interface
      * @returns {RemoteModel}
      * @constructor
      * @alias module:RemoteModel
      */
-    constructor(name, url) {
+    constructor(name, url, resolve, reject) {
       super(name);
       this.url = url;
-      this.ready = false;
-      // get header of remote model and populate fields locally
-      // note: this call is asynchronous
-      Query.showHeader(this.url, this.name, this.populateFromHeader.bind(this));
+      //this.ready = false;
+    }
+
+    /**
+     * Returns a promise that fulfils if the model fields could be fetched from the modelbase server, and rejects otherwise
+     */
+    populate () {
+      return new Promise( function (resolve, reject) {
+        // get header of remote model and populate fields locally
+        // note: this call is asynchronous
+        //Query.showHeader(this.url, this.name, this.populateFromHeader.bind(this));
+
+        // get header as json
+        Query.showHeader(this.url, this.name)
+          .then(this.populateFromHeader)
+          .then(resolve)
+          .catch( (err) => { reject();} );
+            //if (error) throw new Error("Failed to fetch header of model.\n" + error);
+      });
     }
 
     /**
@@ -54,8 +97,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @param error Error information. If false there was no error.
      * @param json JSON object containing the field information.
      */
-    populateFromHeader (error, json) {
-      if (error) throw new Error("Failed to fetch header of model.\n" + error);
+    populateFromHeader (json) {
       for (let field of json.result) {
         this.fields.push(
           new F.Field( field.name, this, {
@@ -66,7 +108,6 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
           })
         );
       }
-      this.ready = true;
     }
 
     /**

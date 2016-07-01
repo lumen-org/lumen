@@ -26,8 +26,17 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var shelf = sh.construct();
 
     // get 'dummy' model
-    var model = dmodel.generator.census();
-    
+    // var model = dmodel.generator.census();
+    var model;
+    new Promise( function (resolve, reject) {
+      try {
+        model = new RemoteModel('car_crashes', "http://127.0.0.1:5000/webservice");
+      }
+      catch (e) {
+        reject(e);
+      }
+    }).then( )
+
     // populate shelves
     sh.populate(model, shelf.dim, shelf.meas);
 
@@ -137,7 +146,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
        * Starts the application.
        */
       start: function () {
-        myScript();
+        //myScript();
       }
     };
 
