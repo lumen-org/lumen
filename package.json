@@ -8,6 +8,7 @@
     "requirejs": "^2.1.15"
   },
   "devDependencies": {
+    "babel-cli": "^6.10.1",
     "jasmine-core": "^2.1.3",
     "karma": "^0.12.31",
     "karma-chrome-launcher": "^0.1.7",
@@ -35,5 +36,9 @@
     },
     "unused": "vars",
     "esnext": true
+  },
+  "babel":{
+    "presets": ["es2015", "stage-3"],
+    "plugins": ["syntax-async-functions", "transform-runtime"]
   }
 }

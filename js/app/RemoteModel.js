@@ -14,44 +14,21 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
 
   var Query = {
-
-    queryPromise : function (remoteUrl, jsonContent) {
-      return new Promise( (resolve, reject) => {
+    queryWithPromise: function (remoteUrl, jsonContent) {
+      return new Promise((resolve, reject) => {
         d3.json(remoteUrl)
           .header("Content-Type", "application/json")
-          //.post(JSON.stringify(jsonContent), jsonCallback);
-          .post(JSON.stringify(jsonContent), (err, json) => err ? reject(err) : resolve(json) );
+          .post(JSON.stringify(jsonContent), (err, json) => err ? reject(err) : resolve(json));
       });
-    },
-
-    showHeaderSimple: function (remoteUrl, modelName) {
-      //return new Promise( (resolve, reject) => {
-        var content = {
-          "SHOW": "HEADER",
-          "FROM": modelName
-        };
-        return Query.queryPromise(remoteUrl, content)
-          .then(resolve)
-          .catch(reject);
-      //});
-    },
-
-
-    query : function (remoteUrl, jsonContent, callback) {
-      d3.json(remoteUrl)
-        .header("Content-Type", "application/json")
-        .post(JSON.stringify(jsonContent), callback);
     },
 
     showHeader: function (remoteUrl, modelName) {
-      return new Promise( (resolve, reject) => {
-        var content = {
-          "SHOW": "HEADER",
-          "FROM": modelName
-        };
-        Query.query(remoteUrl, content);
-      });
-
+      var content = {
+        "SHOW": "HEADER",
+        "FROM": modelName
+      };
+      return Query.queryWithPromise(remoteUrl, content)
+        .then((json) => json.result); // extracts data only on success
     }
   };
 
@@ -68,28 +45,17 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @constructor
      * @alias module:RemoteModel
      */
-    constructor(name, url, resolve, reject) {
+    constructor(name, url) {
       super(name);
       this.url = url;
-      //this.ready = false;
     }
 
     /**
      * Returns a promise that fulfils if the model fields could be fetched from the modelbase server, and rejects otherwise
      */
     populate () {
-      return new Promise( function (resolve, reject) {
-        // get header of remote model and populate fields locally
-        // note: this call is asynchronous
-        //Query.showHeader(this.url, this.name, this.populateFromHeader.bind(this));
-
-        // get header as json
-        Query.showHeader(this.url, this.name)
-          .then(this.populateFromHeader)
-          .then(resolve)
-          .catch( (err) => { reject();} );
-            //if (error) throw new Error("Failed to fetch header of model.\n" + error);
-      });
+      return Query.showHeader(this.url, this.name)
+        .then( this.populateFromHeader.bind(this) )
     }
 
     /**
@@ -98,7 +64,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @param json JSON object containing the field information.
      */
     populateFromHeader (json) {
-      for (let field of json.result) {
+      for (let field of json) {
         this.fields.push(
           new F.Field( field.name, this, {
             dataType: field.dtype,
