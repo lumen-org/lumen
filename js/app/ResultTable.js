@@ -163,6 +163,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
       let column = new Array(len);
 
       // sample accordingly
+      let dimNames  = inputTable.map( v => v.fu.name);
       for (let tupleIdx = 0; tupleIdx < len; ++tupleIdx) {
 
         // condition on dimension values / collect dimension values
@@ -173,6 +174,8 @@ define(['lib/logger', './Field'], function (Logger, F) {
         
         //column[tupleIdx] = m.model.aggregate(dimValues, m.aggr);
         column[tupleIdx] = m.model.aggregate(dimValues, m);
+        // TODO 2016-07-04 - CONTINUE HERE:  
+        column[tupleIdx] = m.model.aggregateNew(dimNames, dimValues, m);
       }
 
       // attach extent and corresponding field usage

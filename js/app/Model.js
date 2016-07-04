@@ -115,32 +115,59 @@ define(['./Field'], function (F) {
       return fu instanceof F.FieldUsage && (-1 !== this.fields.indexOf(fu.base))
     }
 
+
     /**
-     * Returns the index that belongs to the given id in this model.
-     * @param id - Either a index, a name, or a field of this model.
+     * Returns the field(s) of this model that belongs to the given id(s).
+     * @param ids - An (mixed) array of the following, or a single value of index, name, or field of this model.
      * @private
      */
-    _asIndex(id) {
-      if (this.isIndex(id))
-        return id;
-      if (this.isName(id))
-        return _.findIndex(this.fields, function (f) {
-          return f.name === id;
-        });
-      if (this.isFieldUsage(id))
-        return this.fields.indexOf(id.base);
-      if (this.isField(id))
-        return this.fields.indexOf(id);
-      throw new RangeError("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");
+    _asField(ids) {
+      var isArray = Array.isArray(ids)
+      if (!isArray)
+        ids = [ids]
+      var fields = this._asIndex(ids)
+        .map( (id) => this.fields[id], this);
+      return isArray ? fields : fields[0]
     }
 
     /**
-     * Returns the field of this model that belongs to the given id
-     * @param id - Either a index, a name, or a field of this model.
+     * Returns the name(s) that belongs to the given id(s) in this model.
+     * @param ids - An (mixed) array of the following, or a single value of index, name, or field of this model.
      * @private
      */
-    _asField(id) {
-      return this.fields[this._asIndex(id)];
+    _asName(ids) {
+      var isArray = Array.isArray(ids)
+      if (!isArray)
+        ids = [ids]
+      var names = this._asIndex(ids)
+        .map( (id) => this.fields[id].name, this);
+      return isArray ? names : names[0]
+    }
+
+
+    /**
+     * Returns the index(es) that belongs to the given id(s) in this model.
+     * @param ids - An (mixed) array of the following, or a single value of index, name, or field of this model.
+     * @private
+     */
+    _asIndex(ids) {
+      var isArray = Array.isArray(ids)
+      if (!isArray)
+        ids = [ids]
+      var indexes = ids.map( (id) => {
+          if (this.isIndex(id))
+            return id;
+          if (this.isName(id))
+            return _.findIndex(this.fields, function (f) {
+              return f.name === id;
+            });
+          if (this.isFieldUsage(id))
+            return this.fields.indexOf(id.base);
+          if (this.isField(id))
+            return this.fields.indexOf(id);
+          throw new RangeError("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");
+      }, this);
+      return isArray ? indexes : indexes[0]
     }
 
     /**

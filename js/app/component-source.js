@@ -144,8 +144,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       .then(initialQuerySetup)
       .then(enableQuerying)
       .catch((err) => {
-        //console.error(err);
-        throw new Exception(err);
+        console.error(err);
+        throw "Not implemented"
       });
 
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
