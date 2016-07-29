@@ -17,6 +17,8 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
    * Collection of asynchronous query functions. They all return a Promise.
    */
   var Query = {
+
+    /** Utility function used by the other query functions in the collection to actually excecute a query */
     _queryWithPromise: function (remoteUrl, jsonContent) {
       return new Promise((resolve, reject) => {
         d3.json(remoteUrl)
@@ -36,7 +38,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
     marginalizeModel: function (remoteUrl, modelName, keep) {
       var content = {
-        "MODEL": keep,
+        "MODEL": keep.map( name => {return {"randVar": name}; }),
         "FROM": modelName,
         "AS": modelName
       };
@@ -53,7 +55,17 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
         "FROM": modelName,
         "WHERE": _.zip(names, values)
           .map( pair => {return {"randVar":pair[0], "operator":"EQUALS", "value":pair[1]}} )
-      }
+      };
+      return Query._queryWithPromise(remoteUrl, content)
+        .then((json) => json.result);
+    },
+
+    clone: function (remoteUrl, modelName, asName) {
+      var content = {
+        "MODEL": "*",
+        "FROM": modelName,
+        "AS": asName
+      };
       return Query._queryWithPromise(remoteUrl, content)
         .then((json) => json.result);
     }
@@ -63,9 +75,9 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
   class RemoteModel extends Model {
 
     /**
-     * Creates a model with given name based on a ModelBase server at the given url.
-     * Note that the fields are not populated yet after calling the constructor. Use the promise
-     * provided by {@link RemoteModel.populate} for that.
+     * Create a local proxy for a remote model with given name located on a ModelBase server at the given url.
+     * Note that the fields of this model are not populated yet after calling the constructor. Use the promise provided by {@link RemoteModel.populate} for that.
+     *
      * @param name Name for the model.
      * @param url The url that provides the model interface
      * @returns {RemoteModel}
@@ -74,15 +86,16 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      */
     constructor(name, url) {
       super(name);
+      if (!url) throw "url parameter missing";
       this.url = url;
     }
 
     /**
-     * Returns a promise that fulfils if the model fields could be fetched from the modelbase server, and rejects otherwise
+     * Returns a promise that fulfils if the model fields are fetched from the remote ModelBase server, and rejects otherwise
      */
     populate () {
       return Query.showHeader(this.url, this.name)
-        .then( this.populateFromHeader.bind(this) )
+        .then( this._populateFromHeader.bind(this) )
     }
 
     /**
@@ -90,7 +103,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @param error Error information. If false there was no error.
      * @param json JSON object containing the field information.
      */
-    populateFromHeader (json) {
+    _populateFromHeader (json) {
       for (let field of json) {
         this.fields.push(
           new F.Field( field.name, this, {
@@ -110,7 +123,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @returns {RemoteModel}
      */
     // TODO 2016-07-04 - test this!
-   /*marginalize(ids, how = 'remove') {
+   marginalize(ids, how = 'remove') {
       if (!Array.isArray(ids)) ids = [ids]
       ids = this._asName(ids);
 
@@ -118,17 +131,26 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       var keep = [];
       if (how === 'remove') {
         let all = this._asName(this.fields);
-        keep = _.without(all, ids);
+        keep = _.without(all, ...ids);
       } else if (how === 'keep') {
         keep = ids;
       } else
         throw new RangeError("invalid value for parameter 'how' : ", how)
 
       // query model base and return promise on it
-      return Query.marginalizeModel(this.url, this.name, keep);
-    }*/
+      return Query.marginalizeModel(this.url, this.name, keep)
+        .then( () => {
+          // TODO: I believe in the future a model request should return the header of the resulting model and that should be parsed on the client
+          // TODO: one problem is that the client interface to the model is sort of messed up... it is too different from the PQL interface, hence a lot of conversion has to be done on the client side
 
+          //LOOKS LIKE THIS DOESNt WORK?
+          //console.log(keep);
+          this.fields = keep.map( id => this._asField(id) );
+          return this;
+        });
+    }
 
+/*
     marginalize(ids, how = 'remove') {
       if (!Array.isArray(ids)) ids = [ids]
       if (how === 'remove')
@@ -138,7 +160,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       else
         throw new RangeError("invalid value for parameter 'how' : ", how)
       return this;
-    }
+    }*/
 
 
     /**
@@ -199,8 +221,6 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
       let domain = fieldToAggregate.domain;
       return domain.l + Math.random() * domain.h;
-
-
     }
 
 
@@ -258,7 +278,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       throw "not implemented for remote models"
       if (!Array.isArray(conditionals)) conditionals = [conditionals];
       for(let {id, range} of conditionals) {
-        // dummy model: doesn't do anything with value, but remove the conditioned field
+        // dummy model: doesn't do anything with value, but removes the conditioned field
         this.fields = _.without(this.fields, this.fields[this._asIndex(id)]);
       }
       return this
@@ -266,117 +286,23 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
 
     /**
-     * @param {string} [name] - the new name of the model.
-     * @returns Returns a copy of this model.
-     * @constructor
+     * @param {string} [name] - the name of the clone of this model.
+     * TODO: there is a strange dependency in the code: copied models are expected to share the same {@link Field} (identical in terms of the === operator). However, when the same model is loaded twice, e.g. by creating two instances of RemoteModel this will not (and can not easily) be the base. The problem is in Model.isField.
+     * @returns {Promise} A promise to a copy of this model.
      */
     // TODO 2016-07-04 - implement for remote models
     copy(name) {
-      throw "not implemented for remote models"
-      if (!name)
-        name = this.name;
-      var myCopy = new RemoteModel(name);
-      myCopy.fields = this.fields.slice();
-      return myCopy;
+      if (!name) throw "you must specify a name for the cloned model"
+      var myClone = [];
+      var that = this;
+      return Query.clone(this.url, this.name, name)
+        .then( () => {
+          myClone = new RemoteModel(name, that.url);
+          myClone.fields = this.fields.slice(); // TODO: see above todo.
+          return myClone;
+        });
     }
-
   }
 
-  /**
-   * Collection of generators of dummy models.
-   */
-  RemoteModel.generator = {
-
-    /**
-     * generates a dummy model about census data
-     * @returns {RemoteModel}
-     */
-    census: function () {
-      var myModel = new RemoteModel('census');
-
-      var ageField = new F.Field(
-        'age', myModel, {
-          dataType: F.FieldT.Type.num,
-          role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont,
-          domain: new Domain.SimpleNumericContinuous(0, 100)
-        });
-      var weightField = new F.Field(
-        'weight', myModel, {
-          dataType: F.FieldT.Type.num,
-          role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont,
-          domain: new Domain.SimpleNumericContinuous(40, 90)
-        });
-      var incomeField = new F.Field(
-        'income', myModel, {
-          dataType: F.FieldT.Type.num,
-          role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont,
-          domain: new Domain.SimpleNumericContinuous(500, 100000)
-        });
-      var childrenField = new F.Field(
-        'children', myModel, {
-          dataType: F.FieldT.Type.num,
-          role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete([0, 1, 2, 3, 4])
-        });
-      var sexField = new F.Field(
-        'sex', myModel, {
-          dataType: F.FieldT.Type.num,
-          role: F.FieldT.Role.dimension,
-          kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete(["F", "M"])
-        });
-      var nameField = new F.Field(
-        'name', myModel, {
-          dataType: F.FieldT.Type.string,
-          role: F.FieldT.Role.dimension,
-          kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete(['Max', 'Philipp', 'Maggie'])
-        });
-      var cityField = new F.Field(
-        'city', myModel, {
-          dataType: F.FieldT.Type.string,
-          role: F.FieldT.Role.dimension,
-          kind: F.FieldT.Kind.discrete,
-          domain: new Domain.Discrete(['Tokyo', 'Jena', 'Seoul', 'New York'])
-          //domain: new Domain.Discrete(['Tokyo', 'Jena', 'Seoul', 'Chicago'])
-        });
-
-      myModel.fields = [
-        ageField,
-        weightField,
-        incomeField,
-        childrenField,
-        sexField,
-        nameField,
-        cityField
-      ];
-
-      return myModel;
-    },
-
-    empty: function () {
-      return new RemoteModel('empty');
-    }
-  };
-
   return RemoteModel;
-
 });
-
-
-
-function saveToTheDb(value) {
-  return new Promise( function(resolve, reject) {
-    db.values.insert(value, function(err, user) { // remember error first ;)
-      if (err) {
-        return reject(err); // don't forget to return here
-      }
-      resolve(user);
-    })
-  } )
-}
-

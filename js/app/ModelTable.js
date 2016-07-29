@@ -8,11 +8,12 @@ define(['./Field'], function(F) {
   'use strict';
 
   /**
-   * Given a query and the corresponding base model, attach a model for each measure/aggregation of a query to that measure.
+   * Given a query and the corresponding base model, attaches a model for each measure/aggregation of a query to that measure.
    * @param query
    * @param baseModel
+   * @returns A promise to do the above.
    */
-  var attachModel = function (query, baseModel) {
+  var attachModel = function (query, baseModel, rIdx, cIdx) {
     let measures = query.measureUsages();
 
     // marginalize all those measures out of the model, for which the base field isn't also used for a dimension or another measure
@@ -22,22 +23,43 @@ define(['./Field'], function(F) {
       return (undefined === uniqueDimension.find( function(d) {return (d.name === m.name);} ) );
     });
 
+    console.log("attaching measure models");
+    let promises = new Set().add(Promise.resolve());
+
     measures.forEach(
       function (m) {
-        m.model = baseModel.copy().marginalize(
-          toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
-        );
+        //TODO: need a better naming convention. this fails for multiple measures based on the same field....
+        let promise = baseModel.copy(baseModel.name + "_" + m.name)
+          .then( (copy) => copy.marginalize(
+            toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
+          ) )
+          .then( (measureModel) => {
+            console.log("attached model : " + measureModel.describe());
+            m.model = measureModel;
+          });
+        promises.add(promise);
+        // sync version
+        // m.model = baseModel.copy().marginalize(
+        //   toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
+        // );
       }
     );
+
+    return Promise.all(promises);
   };
 
 
   /**
-   * Returns the 'base model' for the provided query, i.e. a model of all fields used in the query.
+   * Returns a promise to the 'base model' for the provided query, i.e. a model of all fields used in the query.
    * @param query
+   * @param rIdx Row index in the model table
+   * @param cIdx Column index in the model table
    * @returns {DummyModel|*}
    */
-  var model = function (query) {
+  var deriveBaseModel = function (query, rIdx, cIdx) {
+
+    var makeBaseModelName = (modelName, rIdx, cIdx) => "__" + modelName + "_" + rIdx + "_" + cIdx;
+
     // todo: extend: only 1 layer and 1 source is supported for now
     var base = query.sources[0];
 
@@ -50,7 +72,6 @@ define(['./Field'], function(F) {
     //var fieldUsages = query.fieldUsages();
     //var dimensions = fieldUsages.filter(F.isDimension);
     //var measures = fieldUsages.filter(F.isMeasure);
-
     // 3. merge (i.e. intersect) domains of FieldUsages based on the same Field
     // todo: implement
 
@@ -59,32 +80,57 @@ define(['./Field'], function(F) {
     // todo: don't forget to remove filters from sub query?
 
     // 5. derive model and return
-    return base.copy().marginalize( _.difference(base.fields, fields) );
+    return base.copy( makeBaseModelName(base.name, rIdx, cIdx) )
+      .then( (copy) => copy.marginalize(_.difference(base.fields, fields)) );
   };
 
 
   /**
-   * A {@link ModelTable} is table of submodels according to QueryTable.
+   * A {@link ModelTable} is a table of submodels according to QueryTable.
    * It contains one submodel for each cell of the table, and each submodel will be used
    * to generate samples/aggregations for that cell.
-   *
-   * This contstructor creates a {@link ModelTable} from given VisMEL query.
-   * @alias module:ModelTable
-   * @constructor
    */
-  var ModelTable = function (queryTable) {
-    this.size = queryTable.size;
-    this.at = new Array(this.size.rows);
-    for (let rIdx=0; rIdx<this.size.rows; ++rIdx) {
-      this.at[rIdx] = new Array(this.size.cols);
-      for (let cIdx=0; cIdx<this.size.cols; ++cIdx) {
-        let query = queryTable.at[rIdx][cIdx];
-        // derive base model for a single query, then:
-        // attach model for each measure to the measure of the query
-        attachModel(query, this.at[rIdx][cIdx] = model(query));
-      }
+  class ModelTable {
+
+    /**
+     * Creates a {@link ModelTable} from given VisMEL query.
+     * @alias module:ModelTable
+     * @constructor
+     */
+    constructor (queryTable) {
+      this.queryTable = queryTable;
+      this.size = queryTable.size;
+      this.at = new Array(this.size.rows);
     }
-  };
+
+    model () {
+      let modelPromises = new Set().add(Promise.resolve());
+      for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
+        this.at[rIdx] = new Array(this.size.cols);
+        for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+          let query = this.queryTable.at[rIdx][cIdx];
+
+          let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
+            .then( (baseModel) => {
+              console.log("base model = " + baseModel.describe());
+              this.at[rIdx][cIdx] = baseModel;              
+              return baseModel;
+            })
+            // attach model for each measure to the measure of that atomic query
+            .then( (baseModel) => {
+              return attachModel(query, baseModel, rIdx, cIdx)
+            });
+          modelPromises.add(promise);
+
+          // // derive base model for a single atomic query
+          // this.at[rIdx][cIdx] = model(query);
+          // // attach model for each measure to the measure of that atomic query
+          // attachModel(query, this.at[rIdx][cIdx]);
+        }
+      }
+      return Promise.all(modelPromises);
+    }
+  }
 
   /**
    * Public interface

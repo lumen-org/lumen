@@ -151,7 +151,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     // todo/note/check: there may be more than one field usages corresponding to this column. However, I believe we don't need more. otherwise we have to attach the full vector of corresponding FU in the code above (1.)
     inputTable.forEach(
       function (column, idx) {
-        let dim = column.fu = dimensions[idx]; // todo: is that every needed?
+        let dim = column.fu = dimensions[idx]; // todo: is that ever needed?
         column.extent = _domain(column, dim.isDiscrete());
       }
     );
@@ -159,8 +159,10 @@ define(['lib/logger', './Field'], function (Logger, F) {
     // 3. generate output tuple
     let outputTable = [];
     let len = (inputTable.length === 0 ? 0 : inputTable[0].length);
+    let measPromises = new Set().add(Promise.resolve()); // makes sure that the set of promises resolves, even if no further promises are added
     measures.forEach( function (m) {
       let column = new Array(len);
+      let tuplePromises = new Set;
 
       // sample accordingly
       let dimNames  = inputTable.map( v => v.fu.name);
@@ -173,23 +175,37 @@ define(['lib/logger', './Field'], function (Logger, F) {
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
         
         //column[tupleIdx] = m.model.aggregate(dimValues, m.aggr);
-        column[tupleIdx] = m.model.aggregate(dimValues, m);
-        // TODO 2016-07-04 - CONTINUE HERE:  
-        column[tupleIdx] = m.model.aggregateNew(dimNames, dimValues, m);
+        //column[tupleIdx] = m.model.aggregate(dimValues, m); // synchonous version
+
+        tuplePromises.add(
+          m.model.aggregateNew(dimNames, dimValues, m)
+            .then(result => {column[tupleIdx] = result;})
+        );
       }
 
-      // attach extent and corresponding field usage
-      column.fu = m;
-      column.extent = _domain(column, m.isDiscrete());
-
-      outputTable.push(column);
+      let tuplesFetchedPromise =
+        Promise.all(tuplePromises)
+          .then(()=>{
+            // attach extent and corresponding field usage
+            column.fu = m;
+            column.extent = _domain(column, m.isDiscrete());
+            outputTable.push(column);
+          });
+      measPromises.add(tuplesFetchedPromise);
     });
 
     // todo 4. apply aggregation filters
     // todo: domains must be calculcated _after_ applying filters.... fix it when you implement aggregation filters!
 
-    // 6. return aggregation table
-    return [...inputTable, ...outputTable];
+    // 6. return (promise for an) aggregation table
+    return Promise.all(measPromises)
+      .then(
+      function () {
+        console.log("@resulttable final promise solution");
+        return [...inputTable, ...outputTable];
+        }
+      //  ()=>[...inputTable, ...outputTable]
+      );
   };
 
 
@@ -201,16 +217,29 @@ define(['lib/logger', './Field'], function (Logger, F) {
    * @alias module:ResultTable
    * @constructor
    */
-  var ResultTable; ResultTable = function (models, queries) {
-    this.size = models.size;
-    this.at = new Array(this.size.rows);
-    for (let rIdx=0; rIdx<this.size.rows; ++rIdx) {
-      this.at[rIdx] = new Array(this.size.cols);
-      for (let cIdx=0; cIdx<this.size.cols; ++cIdx) {
-        this.at[rIdx][cIdx] = aggregate(models.at[rIdx][cIdx], queries.at[rIdx][cIdx]);
-      }
-    }
-  };
+  class ResultTable {
+
+     constructor(modelTable, queryTable) {
+       this._qt = queryTable;
+       this._mt = modelTable;
+       this.size = modelTable.size;
+       this.at = new Array(this.size.rows);
+     }
+
+     fetch () {
+       let fetchPromises = new Set().add(Promise.resolve());
+       for (let rIdx=0; rIdx<this.size.rows; ++rIdx) {
+         this.at[rIdx] = new Array(this.size.cols);
+         for (let cIdx=0; cIdx<this.size.cols; ++cIdx) {
+           let promise = aggregate(this._mt.at[rIdx][cIdx], this._qt.at[rIdx][cIdx])
+             .then( result => {this.at[rIdx][cIdx] = result});
+           console.log("added fetch promise");
+           fetchPromises.add(promise);
+         }
+       }
+       return Promise.all(fetchPromises);
+     }
+  }
 
   return ResultTable;
 });

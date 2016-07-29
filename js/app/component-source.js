@@ -76,34 +76,53 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     }
 
 
-    /**
-     * Trigger query execution when user implicitly specified (changed) a query
-     */
     function onUpdate () {
-      // templated query
-      query = new VisMEL(shelf, model);
-      // evaulate template and thus create atomic queries from it
-      queryTable = new QueryTable(query);
-      modelTable = new ModelTable(queryTable);
-      resultTable = new ResultTable(modelTable, queryTable);
-      viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-
-      /* $('#queryTextBox').text(
-       "layout:\n" + query.layout.toString() +
-       "\nlayers:\n" + query.layers.toString() );*/
-
-      console.log("query: ");
-      console.log(query);
-      console.log("ModelTabel: ");
-      console.log(modelTable);
-      console.log("resultTable: ");
-      console.log(resultTable);
-      console.log("viewTable: ");
-      console.log(viewTable);
-      console.log("...");
-
-//      console.log
+      query = new VisMEL(shelf, model); // synchronous
+      queryTable = new QueryTable(query); // synchronous
+      modelTable = new ModelTable(queryTable); // synchronous
+      modelTable.model() // async
+        .then( () => { resultTable = new ResultTable(modelTable, queryTable); })
+        .then( () => resultTable.fetch() )// async
+        .then( () => { viewTable = new ViewTable(visPaneD3, resultTable, queryTable); })
+        .then( () => {
+          console.log("query: ");
+          console.log(query);
+          console.log("QueryTable: ");
+          console.log(queryTable);
+          console.log("ModelTabel: ");
+          console.log(modelTable);
+          console.log("resultTable: ");
+          console.log(resultTable);
+          console.log("viewTable: ");
+          console.log(viewTable);
+          console.log("...");
+        });
     }
+    //
+    // /**
+    //  * Trigger query execution when user implicitly specified (changed) a query
+    //  */
+    // function onUpdate () {
+    //   // templated query
+    //   query = new VisMEL(shelf, model);
+    //   // evaluate template and thus create atomic queries from it
+    //   queryTable = new QueryTable(query);
+    //   modelTable = new ModelTable(queryTable);
+    //   resultTable = new ResultTable(modelTable, queryTable);
+    //   viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
+    //   /* $('#queryTextBox').text(
+    //    "layout:\n" + query.layout.toString() +
+    //    "\nlayers:\n" + query.layers.toString() );*/
+    //   console.log("query: ");
+    //   console.log(query);
+    //   console.log("ModelTabel: ");
+    //   console.log(modelTable);
+    //   console.log("resultTable: ");
+    //   console.log(resultTable);
+    //   console.log("viewTable: ");
+    //   console.log(viewTable);
+    //   console.log("...");
+    // }
 
 
     /**
@@ -145,7 +164,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       .then(enableQuerying)
       .catch((err) => {
         console.error(err);
-        throw "Not implemented"
+        throw "Could not load remote model from Server"
       });
 
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));

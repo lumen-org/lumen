@@ -25,7 +25,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
    * @alias module:Field.FUsageT
    */
   var FUsageT = {
-    Aggregation: {sum: 'max', avg: 'avg'},
+    Aggregation: {sum: 'maximum', avg: 'average'},
     Scale: {
       linear: 'linear', log: 'log'
     },
@@ -108,8 +108,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
     this.splitter = utils.selectValue(args.splitter,
       isFU, base.splitter,
       this.isDiscrete(), S.plitter.singleElements,
-      S.plitter.equiIntervals);
-      //S.ampler.equiDistance);
+      //S.plitter.equiIntervals);
+      S.ampler.equiDistance);
 
     // todo: this is kinda ugly and so far it doesn't even help...
     if (isFU && base.origin) this.origin = base.origin;

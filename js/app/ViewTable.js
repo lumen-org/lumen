@@ -464,6 +464,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
         );
 
+        console.log("@viewtable constructor");
+
         this.at[rIdx][cIdx] = drawAtomicPane(
           this.queries.at[rIdx][cIdx],
           this.results.at[rIdx][cIdx],
