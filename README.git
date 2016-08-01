@@ -1,10 +1,21 @@
-Development Setup
-  - install WebStorm from IntelliJ
-  - install node-js
-  - update npm: '''sudo npm install -g npm'''
-  - run '''npm install''' from project directory. this will resolve all development dependencies using the information from package.json   
+## Setup for Usage
 
-Now for the ugly part  
-  - download foundation 5.x, extract to correct path
-  - download foundation icons, extract to correct path
+  - clone the repository (apparently you did that already...)
+	- make sure to check out the correct branch
+  - open 'index.html' in chrome, then navigate to 'prototye'
+  - alternatively open 'html/prototype.html' directly
 
+Note that a ModelBase server is expected to run at 'localhost:5000/webservice'.
+
+## Setup for Development
+
+  - clone the repository
+  - (recommended) download and install WebStorm (IntelliJ)
+  - (recommended) install node-js
+  - update npm (part of node-js): '''sudo npm install -g npm'''
+  - install all npm-dependencies as provided by this projects package.json:
+	- run from project directory: '''npm install''
+
+## notes on project organization
+
+    * 'daphne' is a separate side project. you can safely ignore it entirely.
