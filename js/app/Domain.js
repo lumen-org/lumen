@@ -57,17 +57,29 @@ define([], function () {
   };
 
   SimpleNumericContinuousDomain.prototype.union = function (domain) {
-    _checkType(domain);
-    throw new Error("not implemented"); // todo: implement
+    this._checkType(domain);
+    var l = (this.low < domain.l ? this : domain);
+    var h = (this.high > domain.h ? this : domain);
+    // make sure the intersection is not empy
+    if (l.high < h.low)
+      throw "domain values cannot be unioned";
+    else
+      return new SimpleNumericContinuousDomain(l.low, h.high);
   };
 
   SimpleNumericContinuousDomain.prototype.intersection = function (domain) {
-    _checkType(domain);
-    throw new Error("not implemented"); // todo: implement
+    this._checkType(domain);
+    var l = (this.low < domain.l ? this : domain);
+    var h = (this.high > domain.h ? this : domain);
+    // make sure the intersection is not empy
+    if (l.high < h.low)
+      throw "domain values cannot be unioned";
+    else
+      return new SimpleNumericContinuousDomain(l.high, h.low);
   };
 
   SimpleNumericContinuousDomain.prototype.minus = function (domain) {
-    _checkType(domain);
+    this._checkType(domain);
     throw new Error("not implemented"); // todo: implement
   };
 

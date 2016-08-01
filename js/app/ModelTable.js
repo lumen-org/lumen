@@ -25,9 +25,8 @@ define(['./Field'], function(F) {
     let promises = new Set().add(Promise.resolve());
 
     measures.forEach(
-      function (m) {
-        //TODO: need a better naming convention. this fails for multiple measures based on the same field....
-        let promise = baseModel.copy(baseModel.name + "_" + m.name)
+      function (m, idx) {
+        let promise = baseModel.copy(baseModel.name + "_" + m.name + idx)
           .then( (copy) => copy.marginalize(
             toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
           ))

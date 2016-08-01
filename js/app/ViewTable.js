@@ -130,9 +130,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
           var len = data[0].length;
           var tupleData = new Array(len);
           for (let i = 0; i < len; ++i) {
-            tupleData[i] = data.map(function (dim) {
-              return dim[i];
-            }); // jshint ignore:line
+            tupleData[i] = data.map( dim => dim[i] ); // jshint ignore:line
           }
           return tupleData;
         }
@@ -142,7 +140,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     attachScales(query, pane.size);
 
     // attach mappers
-    attachMappers(query, pane.size);
+    attachMappers(query, pane.size, data);
 
     // add new svg elements for enter subselection
     let newPointsD3 = pointsD3
@@ -152,6 +150,11 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     newPointsD3
       .append("path")
       .classed("path", true);
+    
+    // add hover for data 
+    newPointsD3
+      .append("svg:title")
+      .text(aesthetics.hoverMapper);
 
     // the just appended elements are now part of the update selection!
     // -> now update all the same way
@@ -590,13 +593,14 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
 
 
   /**
-   * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path, color, size and others. Mappers are used in D3 to bind data to visuals.
+   * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path,
+   * color, size and others. Mappers are used in D3 to bind data to visuals.
    *
    * Before mappers can be set up, the scales need to be set up.
    *
    * todo: add mapper for hovering on marks
    */
-  var attachMappers = function (query, paneSize) {
+  var attachMappers = function (query, paneSize, data) {
     let aesthetics = query.layers[0].aesthetics;
 
     // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
@@ -624,6 +628,10 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         return shape.visScale(_valueOrAvg(d[shape.index]));
       } :
       Settings.maps.shape );
+
+    aesthetics.hoverMapper = (d) => d.reduce(
+      (prev,di,i) => prev + data[i].fu.name + ": " + di + "\n", // reduce fct
+      ""); // initial value
 
     let layout = query.layout;
     let colFU = layout.cols[0],
@@ -658,6 +666,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       // todo: jitter?
       layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
     }
+
   };
 
   return ViewTable;

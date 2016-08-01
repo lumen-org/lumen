@@ -112,14 +112,14 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var shelf = sh.construct();
 
     // get initial model
-    var model = new RemoteModel('car_crashes', "http://127.0.0.1:5000/webservice");
+    var model = new RemoteModel('iris', "http://127.0.0.1:5000/webservice");
     model.populate()
       .then(populateGUI)
       .then(initialQuerySetup)
       .then(enableQuerying)
       .catch((err) => {
         console.error(err);
-        throw "Could not load remote model from Server";
+        throw "Could not load remote model from Server - see above";
       });
 
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));

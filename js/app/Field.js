@@ -122,7 +122,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
    */
   FieldUsage.prototype.splitToValues = function () {
     // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
-    return this.splitter(this.domain, true, 5);
+    return this.splitter(this.domain, true, 10);
   };
 
   /**
@@ -131,7 +131,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
   FieldUsage.prototype.split = function () {
     // split domain
     // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
-    var domains = this.splitter(this.domain, false, 5);
+    var domains = this.splitter(this.domain, false, 10);
     // create copies of this field usage but use the just created 'split domains'
     return domains.map( function (domain) {
       var copy = new FieldUsage(this);
