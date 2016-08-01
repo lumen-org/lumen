@@ -5,7 +5,7 @@
  * @module
  */
 
-define(['app/app'], function(App) {
+define(['../playground/app'], function(App) {
   "use strict";
 
   describe('A simple Spec', function() {

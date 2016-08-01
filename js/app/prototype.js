@@ -119,7 +119,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       .then(enableQuerying)
       .catch((err) => {
         console.error(err);
-        throw "Could not load remote model from Server"
+        throw "Could not load remote model from Server";
       });
 
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));

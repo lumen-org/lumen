@@ -18,9 +18,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     // note (requirejs): only include (-> attribute 'include') those files that are NOT loaded by requires
     files: [
-      //'https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js',
-      //'../node_modules/js-logger/src/logger.min.js',
       {pattern: 'lib/**/*.js', included: false},
       {pattern: 'app/**/*.js', included: false},
       {pattern: 'test/**/*.spec.js', included: false},
@@ -30,7 +28,7 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
-      'run-entry.js'
+      'run-playground.js'
     ],
 
 

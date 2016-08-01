@@ -15,12 +15,11 @@ require.config({
   // rules to resolve module IDs
   paths: {
     d3: 'lib/d3.min'
-    //d3: 'http://d3js.org/d3.v3.min' // or: d3: 'd3.min
   }
 });
 
 // dynamic load of required libraries. When done, call callback
-require(['app/app'], function  (app) {
+require(['playground/app'], function  (app) {
     'use strict';
 
     // start the app!
