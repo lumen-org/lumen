@@ -78,7 +78,7 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
       // special case: domain contracts to single value
       if (domain.h === domain.l) 
         //values = Array(n).fill(domain.l);
-        values = [domain.l]; // I think no duplicating the single value makes more sense
+        values = [domain.l]; // I think not duplicating the single value makes more sense
       // general case
       else 
         values = d3.range(domain.l, domain.h, (domain.h - domain.l)/n);

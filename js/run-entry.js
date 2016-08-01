@@ -2,7 +2,7 @@
  * @author Philipp Lucas
  *
  * This file configures requirejs and serves as a single entry point for the javascript application.
- * This actual application if called after necessary libraries are loaded via a callback function. See below.
+ * The actual application is called after necessary libraries are loaded via a callback function. See below.
  */
 
 // configure require.js

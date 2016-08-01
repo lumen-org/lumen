@@ -8,19 +8,27 @@ define(['./Field'], function (F) {
 
   /**
    * This module describes the API to models and allows to train models from data.
-   * So far this module only describes the API for querying a model, which must be implemented by all actual model classes.
+   * It only describes the API for querying a model, which must be implemented by all actual model classes.
+   *
+   * This API is by design asynchronous and utilized Promises for this purpose. Hence, the majority of methods return
+   * not the actual result but a promise to it.
+   *
+   * Independent of the actual 'nature' of a particular model, an implementation of a model is expected to hold a local
+   * copy of the descriptions/ the fields (random variables) of the model. Therefore methods such as {@link describe)
+   * or {@link isName} are not asynchronous.
+   *
    * @alias module:Model
    * @constructor
    */
   class Model {
 
     constructor(name) {
-      this.name = name
-      this.fields = [] // array of {@link F.Field}s
+      this.name = name;
+      this.fields = []; // array of {@link F.Field}s
     }
 
     /**
-     * Conditions variable v of this model on the given range and returns the resulting model.
+     * Conditions variable v of this model on the given range and returns a promise to the resulting model.
      * Does not change this model.
      * @param v A variable of the model, specified by their index, name, or the field of the model itself.
      * @param value
@@ -30,7 +38,7 @@ define(['./Field'], function (F) {
     }
 
     /**
-     * Marginalizes v out of this model and returns the resulting model.
+     * Marginalizes v out of this model and returns a promise to the resulting model.
      * @param v A single variable or an array of variables of this model, specified by their index, name, or the field of the model itself.
      */
     marginalize(v) {
@@ -38,7 +46,7 @@ define(['./Field'], function (F) {
     }
 
     /**
-     * Returns the density of this model for the given values, or 'undefined' if values does not specify all required variable values.
+     * Returns a promise to the density of this model for the given values, or 'undefined' if values does not specify all required variable values.
      * @param values
      */
     density(values) {
@@ -46,7 +54,7 @@ define(['./Field'], function (F) {
     }
 
     /**
-     * Returns the aggregation of this model on the given target field(s). The remaining fields of the model are marginalized.
+     * Returns a promise to the aggregation of this model on the given target field(s). The remaining fields of the model are marginalized.
      *
      * if: what to aggregate: one or more fields
      * how to aggregate: which aggregation do we want?
@@ -65,7 +73,9 @@ define(['./Field'], function (F) {
     }
 
     /**
-     * @returns Returns a copy of this model.
+     * @returns Returns a promise to a copy of this model.
+     * NOTE: in order for the rest of the tool to work correctly, a copy of a model MUST reference to the same
+     * {@link Fields}s, but not (deep) copy them. This restriction is to be removed ...
      * @param {string} [name] - the new name of the model.
      * @constructor
      */

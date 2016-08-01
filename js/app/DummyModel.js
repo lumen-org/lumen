@@ -1,6 +1,10 @@
 /**
  * "Dummy Model" module.
  *
+ * NOTE: THIS MODEL DOES NOT WORK with the current tool. Reason is: it works synchronously, but the model API has
+ * changed to async. It should be sufficient to wrap the return values of the models functions into a resolved promise
+ * to make it work again.
+ *
  * @module DummyModel
  * @author Philipp Lucas
  */

@@ -1,4 +1,8 @@
 /**
+ * This is a small side-project with the sole purpose of learning d3 and related technologies.
+ */
+
+/**
  * meaning of css classes:
  *
  *  - .mark: super class of <g> elements that contain marks to represent data

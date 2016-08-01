@@ -1,4 +1,3 @@
-
 /**
  * Model Table module.
  * @module ModelTable
@@ -23,7 +22,6 @@ define(['./Field'], function(F) {
       return (undefined === uniqueDimension.find( function(d) {return (d.name === m.name);} ) );
     });
 
-    console.log("attaching measure models");
     let promises = new Set().add(Promise.resolve());
 
     measures.forEach(
@@ -32,16 +30,12 @@ define(['./Field'], function(F) {
         let promise = baseModel.copy(baseModel.name + "_" + m.name)
           .then( (copy) => copy.marginalize(
             toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
-          ) )
+          ))
           .then( (measureModel) => {
-            console.log("attached model : " + measureModel.describe());
+//            console.log("attached model : " + measureModel.describe());
             m.model = measureModel;
           });
         promises.add(promise);
-        // sync version
-        // m.model = baseModel.copy().marginalize(
-        //   toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
-        // );
       }
     );
 
@@ -69,9 +63,7 @@ define(['./Field'], function(F) {
 
     // 2. compile set of all Fields
     var fields = query.fields();
-    //var fieldUsages = query.fieldUsages();
-    //var dimensions = fieldUsages.filter(F.isDimension);
-    //var measures = fieldUsages.filter(F.isMeasure);
+
     // 3. merge (i.e. intersect) domains of FieldUsages based on the same Field
     // todo: implement
 
@@ -112,7 +104,7 @@ define(['./Field'], function(F) {
 
           let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
             .then( (baseModel) => {
-              console.log("base model = " + baseModel.describe());
+///              console.log("base model = " + baseModel.describe());
               this.at[rIdx][cIdx] = baseModel;              
               return baseModel;
             })
@@ -121,11 +113,6 @@ define(['./Field'], function(F) {
               return attachModel(query, baseModel, rIdx, cIdx)
             });
           modelPromises.add(promise);
-
-          // // derive base model for a single atomic query
-          // this.at[rIdx][cIdx] = model(query);
-          // // attach model for each measure to the measure of that atomic query
-          // attachModel(query, this.at[rIdx][cIdx]);
         }
       }
       return Promise.all(modelPromises);

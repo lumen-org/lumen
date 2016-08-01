@@ -407,7 +407,6 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
    * For this, it adds empty function stubs for that function that are called in onDrop for the visual/interactable part.
    * In order to activate this "hack", set onDrop.noVisualNoInteraction to true.
    * todo: make it nicer... looks like onDrop is mixing up things: logic of how fields on shelves can move around, and the actual interaction and visual part
-   * In oder
    * @param arg The record to fix
    * @returns {*} the modified record.
    * @private
@@ -435,7 +434,6 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
 
   return {
     onDrop : onDrop,
-    //onDropNVI: onDropNVI,
     asRemoveElem : asRemoveElem
   };
 });

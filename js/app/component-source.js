@@ -1,5 +1,5 @@
 /**
- * Main component that assembles and manages the actual GUI of the EMV tool.
+ * Main component that assembles and manages the actual GUI of the PMV web client.
  *
  * @module main
  * @author Philipp Lucas
@@ -44,27 +44,9 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     }
 
     /**
-     * do some drag and drops to start with some VisMEL query
+     * do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup () {
-      // basic setup 1
-      //inter.onDrop(shelf.row, shelf.dim.at(0));
-      //inter.onDrop(shelf.column, shelf.meas.at(1));
-      //inter.onDrop(shelf.color, shelf.dim.at(2));
-
-      // multi-mixed use of a continuous variable as both, dimension and measure
-      // inter.onDrop(shelf.column, shelf.dim.at(1));
-      // inter.onDrop(shelf.column, shelf.dim.at(0));
-      // inter.onDrop(shelf.column, shelf.meas.at(0));
-      // inter.onDrop(shelf.row, shelf.meas.at(1));
-      // inter.onDrop(shelf.dim, shelf.meas.at(0));
-      // inter.onDrop(shelf.color, shelf.dim.at(3));
-
-      // multi-mixed use of a continuous variable as both, dimension and measure
-      //inter.onDrop(shelf.row, shelf.dim.at(1));
-      //inter.onDrop(shelf.column, shelf.meas.at(2));
-      //inter.onDrop(shelf.color, shelf.dim.at(2));
-
       //inter.onDrop(shelf.filter, shelf.dim.at(2));
       //inter.onDrop(shelf.detail, shelf.dim.at(1));
       //inter.onDrop(shelf.shape, shelf.dim.at(0));
@@ -98,32 +80,6 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
           console.log("...");
         });
     }
-    //
-    // /**
-    //  * Trigger query execution when user implicitly specified (changed) a query
-    //  */
-    // function onUpdate () {
-    //   // templated query
-    //   query = new VisMEL(shelf, model);
-    //   // evaluate template and thus create atomic queries from it
-    //   queryTable = new QueryTable(query);
-    //   modelTable = new ModelTable(queryTable);
-    //   resultTable = new ResultTable(modelTable, queryTable);
-    //   viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-    //   /* $('#queryTextBox').text(
-    //    "layout:\n" + query.layout.toString() +
-    //    "\nlayers:\n" + query.layers.toString() );*/
-    //   console.log("query: ");
-    //   console.log(query);
-    //   console.log("ModelTabel: ");
-    //   console.log(modelTable);
-    //   console.log("resultTable: ");
-    //   console.log(resultTable);
-    //   console.log("viewTable: ");
-    //   console.log(viewTable);
-    //   console.log("...");
-    // }
-
 
     /**
      * Enables user querying.
@@ -155,8 +111,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     // define shelves
     var shelf = sh.construct();
 
-    // get 'dummy' model
-    // var model = dmodel.generator.census();
+    // get initial model
     var model = new RemoteModel('car_crashes', "http://127.0.0.1:5000/webservice");
     model.populate()
       .then(populateGUI)
@@ -176,9 +131,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     });*/
 
     function myScript () {
-      // testing the remote model!
-      var carCrashes = new RemoteModel('car_crashes', "http://127.0.0.1:5000/webservice");
-      carCrashes.describe();
+      // put some debug / testing stuff here to be executed on loading of the app
     }
 
     return {
@@ -186,7 +139,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
        * Starts the application.
        */
       start: function () {
-        //myScript();
+        myScript();
       }
     };
 

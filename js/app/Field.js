@@ -197,7 +197,6 @@ define(['./utils', './SplitSample'], function (utils, S) {
     isFieldUsage: isFieldUsage,
     isField: isField,
     nameMap: nameMap
-    //EmptyField :EmptyField
   };
 
 });

@@ -50,7 +50,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
               let mergedFU = new F.FieldUsage(details[idx]);
               mergedFU.domain = mergedFU.domain.intersection(fu.domain);
               details[idx] = mergedFU;
-              logger.log('merging domains...');
+              logger.debug('merging domains...');
             } else {
               details.push(fu);
             }

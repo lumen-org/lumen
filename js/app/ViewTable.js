@@ -6,10 +6,6 @@
  *   pane : the entire space take by a visualization
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
- * ToDo:
- *
- * http://jsbin.com/viqenirimu/edit?html,output
- *
  * @module ViewTable
  * @author Philipp Lucas
  */

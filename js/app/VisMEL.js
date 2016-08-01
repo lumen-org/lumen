@@ -3,7 +3,6 @@
  *
  * This module allows to construct VisMEL queries from shelves and sources, and defines utility functions on VisMEL queries.
  *
- *
  * @module VisMEL
  */
 
@@ -288,48 +287,3 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    */
   return VisMEL;
 });
-
-/*VisMEL.prototype.FieldUsageIterator = function () {
-
- var position = {};
-
- var stages = Object.freeze([
- 'layout.rows',
- 'layout.cols',
- 'layer.filter',
- 'layer.color',
- 'layer.shape',
- 'layer.size',
- 'layer.orientation',
- 'layer.details',
- 'layer.label',
- 'layer.hover'
- ]);
-
- var stageIdx = 0;
- var stage = stages[stageIdx];
-
- /!*
- sources: n/a
- layout:
- *!/
-
- return {
- next: function () {
-
- switch stage:
- case 'layout:
- break;
-
-
- // todo: go to next element
- var current
-
-
- return {
- value: current;
- };
- }
- };
- };
- */
