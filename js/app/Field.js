@@ -39,7 +39,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
    */
 
   /**
-   * A {Field} represents a certain dimension in a data source.
+   * A {Field} represents a dimension in a data source.
    * @param {string|Field} nameOrField - A unique identifier of a dimension in the data source, or the {@link Field} to copy.
    * @param {Model|null} dataSource - The data source this is a field of, or null (if a {@link Field} is provided for name).
    * @param [args] Additional optional arguments. They will override those of a given {@link Field}.

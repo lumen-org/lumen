@@ -91,17 +91,26 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
 
   /**
-   * Aggregate the given model.
-   * Note: the parameters dimensions and measures are {@link FieldUsage}s, not {@link Field}s. They contain the required information on how exactly the model is to be sampled.
+   * Aggregates the given model according to the given atomic query.
+   *
+   * In order to know which {@link FieldUsage} is represented by which column of the result table, an attribute 'index'
+   * is attached to all field usages in the query.
+   *
    * @param model The model to sample.
-   * @param {FieldUsage} dimensions The dimensions of the model to sample.
-   * @param {FieldUsage} measures The measures of the model to sample.
-   * @param rows The precomputed length of the result table.
-   * @param nsfe the nsf (normalized set form) element that belongs to this model. This is needed to get the pane specific measure (i.e. on rows or columns).
-   * @returns {*} The result table for this pane.
+   * @param query The atomic query to the model.
+   * @returns {*} A Promise to the result table.
    * @private
    */
   var aggregate = function (model, query) {
+
+    /*
+    At the moment the construction of the result table is entirely done on the client side. Only the actual querying
+    for scalar results is done on the model base side.
+    TODO: in the future the construction of the result table should be done entirely on the model base side. The client
+     only assembles the query accordingly, issues the query and parses its (async, i.e. hence promised) result.
+     It also has to set the .index attribute for each field usage in the query.
+     */
+
     // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
     // - multiple measures of the same field are possible and
@@ -114,6 +123,8 @@ define(['lib/logger', './Field'], function (Logger, F) {
     var dimensions = [];
     let idx = 0;
     fieldUsages.filter(F.isDimension).forEach( function (fu) {
+      // todo: this kind of comparison is ugly and slow for the case of many dimensions
+      // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
       let sameBase = dimensions.find( e => (fu.base === e.base) );
       if (sameBase) {
         // fu is already there
@@ -162,7 +173,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
     let measPromises = new Set().add(Promise.resolve()); // makes sure that the set of promises resolves, even if no further promises are added
     measures.forEach( function (m) {
       let column = new Array(len);
-      let tuplePromises = new Set;
+      let tuplePromises = new Set();
 
       // sample accordingly
       let dimNames  = inputTable.map( v => v.fu.name);
@@ -195,13 +206,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
     // 6. return (promise for an) aggregation table
     return Promise.all(measPromises)
-      .then(
-      function () {
-        console.log("@resulttable final promise solution");
-        return [...inputTable, ...outputTable];
-        }
-      //  ()=>[...inputTable, ...outputTable]
-      );
+      .then( () => [...inputTable, ...outputTable] );
   };
 
 
