@@ -17,9 +17,9 @@ define(['./Field'], function(F) {
 
     // marginalize all those measures out of the model, for which the base field isn't also used for a dimension or another measure
     let uniqueMeasures = _.unique(measures, F.nameMap);
-    let uniqueDimension = query.dimensionUsages();
+    let uniqueDimensions = query.dimensionUsages();
     let toBeRemoved = uniqueMeasures.filter( function (m) {
-      return (undefined === uniqueDimension.find( function(d) {return (d.name === m.name);} ) );
+      return (undefined === uniqueDimensions.find( function(d) {return (d.name === m.name);} ) );
     });
 
     let promises = new Set().add(Promise.resolve());
@@ -102,13 +102,13 @@ define(['./Field'], function(F) {
           let query = this.queryTable.at[rIdx][cIdx];
 
           let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
-            .then( (baseModel) => {
+            .then( baseModel => {
 ///              console.log("base model = " + baseModel.describe());
               this.at[rIdx][cIdx] = baseModel;              
               return baseModel;
             })
             // attach model for each measure to the measure of that atomic query
-            .then( (baseModel) => {
+            .then( baseModel => {
               return attachModel(query, baseModel, rIdx, cIdx)
             });
           modelPromises.add(promise);

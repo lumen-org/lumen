@@ -38,7 +38,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
 
     marginalizeModel: function (remoteUrl, modelName, keep) {
       var content = {
-        "MODEL": keep.map( name => {return {"randVar": name}; }),
+        "MODEL": keep.map( name => {return {"name": name}; }),
         "FROM": modelName,
         "AS": modelName
       };
@@ -49,12 +49,12 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
     aggregateModel: function (remoteUrl, modelName, fieldToAggregate, names, values) {
       var content = {
         "PREDICT": [{
-          "randVar": fieldToAggregate.name,
+          "name": fieldToAggregate.name,
           "aggregation": fieldToAggregate.aggr
         }],
         "FROM": modelName,
         "WHERE": _.zip(names, values)
-          .map( pair => {return {"randVar":pair[0], "operator":"EQUALS", "value":pair[1]}} )
+          .map( pair => {return {"name":pair[0], "operator":"EQUALS", "value":pair[1]};} )
       };
       return Query._queryWithPromise(remoteUrl, content)
         .then((json) => json.result);
@@ -95,7 +95,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      */
     populate () {
       return Query.showHeader(this.url, this.name)
-        .then( this._populateFromHeader.bind(this) )
+        .then( this._populateFromHeader.bind(this) );
     }
 
     /**
@@ -124,7 +124,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      */
     // TODO 2016-07-04 - test this!
    marginalize(ids, how = 'remove') {
-      if (!Array.isArray(ids)) ids = [ids]
+      if (!Array.isArray(ids)) ids = [ids];
       ids = this._asName(ids);
 
       // find random variables to keep
@@ -135,7 +135,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       } else if (how === 'keep') {
         keep = ids;
       } else
-        throw new RangeError("invalid value for parameter 'how' : ", how)
+        throw new RangeError("invalid value for parameter 'how' : ", how);
 
       // query model base and return promise on it
       return Query.marginalizeModel(this.url, this.name, keep)
@@ -177,7 +177,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
         let field = this._asField(fu);
         field.domain = field.domain.intersection(fu.domain);
       }
-      throw "not implemented for remote models"
+      throw "not implemented for remote models";
       //return this;
     }
 
@@ -228,9 +228,9 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * Returns the aggregation of this model on the given target variables(s). The remaining variables of the model are marginalized. The model itself is not modified.
      * @param ids An variable of an array of variables of this field.
      * @param aggregation How to aggregate?
-     */
+
     aggregate2(ids, aggregation) {
-      throw "not implemented for remote models"
+      throw "not implemented for remote models";
       if (!Array.isArray(ids)) ids = [ids];
       let fields = ids.map( id => this._asField(id));
 
@@ -245,7 +245,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       } else {
         throw new Error("not supported aggregation type given: " + aggregation);
       }
-    }
+    }*/
 
 
     /**
@@ -256,7 +256,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * @returns {Number}
      */
     density(values) {
-      throw "not implemented for remote models"
+      throw "not implemented for remote models";
       if (!Array.isArray(values)) values = [values];
       if (this.size() <= values.length)
         throw new Error("invalid number of arguments");
@@ -275,7 +275,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      * (2) marginalizing that variable out of the model
      */
     condition (conditionals) {
-      throw "not implemented for remote models"
+      throw "not implemented for remote models";
       if (!Array.isArray(conditionals)) conditionals = [conditionals];
       for(let {id, range} of conditionals) {
         // dummy model: doesn't do anything with value, but removes the conditioned field
@@ -292,7 +292,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      */
     // TODO 2016-07-04 - implement for remote models
     copy(name) {
-      if (!name) throw "you must specify a name for the cloned model"
+      if (!name) throw "you must specify a name for the cloned model";
       var myClone = [];
       var that = this;
       return Query.clone(this.url, this.name, name)
