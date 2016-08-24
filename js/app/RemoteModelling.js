@@ -80,6 +80,7 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
           })
         );
       }
+      return this;
     }
 
     /**
@@ -240,7 +241,11 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
         "WHERE": where,
         "SPLIT BY": splitBy
       };
-      return executeRemotely(this.url, jsonContent);
+      return executeRemotely(this.url, jsonContent)
+        .then( jsonDataFrame => {
+          // TODO: turn it into something useful again
+          return jsonDataFrame;
+        });
     }
 
 
@@ -251,7 +256,10 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
         "WHERE": where,
         "AS": name
       };
-      return executeRemotely(jsonContent, this.url);
+
+      var newModel = (name == this.name ? new RemoteModel(name, this.url) : this);
+      return executeRemotely(jsonContent, this.url)
+        .then( jsonHeader => newModel.updateHeader(jsonHeader));
     }
 
     /**
@@ -291,7 +299,7 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      * @returns {Promise}
      */
     execute(jsonContent) {
-      return executeRemotely(jsonConent, this.url);
+      return executeRemotely(jsonContent, this.url);
     }
 
     listModels() {

@@ -62,6 +62,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       query = new VisMEL(shelf, model); // synchronous
       queryTable = new QueryTable(query); // synchronous
       modelTable = new ModelTable(queryTable); // synchronous
+      /*
       modelTable.model() // async
         .then( () => { resultTable = new ResultTable(modelTable, queryTable); })
         .then( () => resultTable.fetch() )// async
@@ -79,6 +80,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
           console.log(viewTable);
           console.log("...");
         });
+       //*/
     }
 
     /**
@@ -133,9 +135,31 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     function myScript () {
       // put some debug / testing stuff here to be executed on loading of the app
 
-      var mb = Remote.ModelBase("http://127.0.0.1:5000/webservice");
-      
+      function onFetched (res) {
+          iris = res;
+          return iris;
+      }
 
+      function printResult(res) {
+        console.log(res);
+        return res;
+      }   
+
+      function onDone (res) {
+          return res;
+      }
+
+      var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
+      var iris;
+      mb.header('iris').then(printResult);
+      mb.get('iris')
+        .then(onFetched)
+        .then( model => {console.log(model.fields); return model;} )
+        .then( iris => {
+            var res = iris.model('sepal_length');
+            console.log(res);
+            return res;
+        });
     }
 
     return {
