@@ -34,8 +34,13 @@ define([], function() {
     return arguments[nr-1];
   };
 
+  function listify (listOrScalar) {
+    return Array.isArray(listOrScalar) ? listOrScalar : [listOrScalar];
+  }
+
 
   return {
-    selectValue: selectValue
+    selectValue: selectValue,
+    listify: listify
   };
 });

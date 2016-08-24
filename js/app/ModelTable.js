@@ -104,13 +104,11 @@ define(['./Field'], function(F) {
           let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
             .then( baseModel => {
 ///              console.log("base model = " + baseModel.describe());
-              this.at[rIdx][cIdx] = baseModel;              
+              this.at[rIdx][cIdx] = baseModel;
               return baseModel;
             })
             // attach model for each measure to the measure of that atomic query
-            .then( baseModel => {
-              return attachModel(query, baseModel, rIdx, cIdx)
-            });
+            .then( baseModel => attachModel(query, baseModel, rIdx, cIdx) );
           modelPromises.add(promise);
         }
       }

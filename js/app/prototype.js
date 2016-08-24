@@ -4,8 +4,8 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModel'],
-  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, RemoteModel) {
+define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
+  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
     'use strict';
 
     /**
@@ -112,7 +112,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var shelf = sh.construct();
 
     // get initial model
-    var model = new RemoteModel('iris', "http://127.0.0.1:5000/webservice");
+    var model = new Remote.Model('iris', "http://127.0.0.1:5000/webservice");
     model.populate()
       .then(populateGUI)
       .then(initialQuerySetup)
@@ -132,6 +132,10 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
 
     function myScript () {
       // put some debug / testing stuff here to be executed on loading of the app
+
+      var mb = Remote.ModelBase("http://127.0.0.1:5000/webservice");
+      
+
     }
 
     return {
