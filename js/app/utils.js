@@ -35,7 +35,11 @@ define([], function() {
   };
 
   function listify (listOrScalar) {
-    return Array.isArray(listOrScalar) ? listOrScalar : [listOrScalar];
+    if (arguments.length == 1)
+      return Array.isArray(listOrScalar) ? listOrScalar : [listOrScalar];
+    else
+      return Array.from(arguments)
+        .map( arg => Array.isArray(arg) ? arg : [arg] );
   }
 
 

@@ -135,18 +135,18 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     function myScript () {
       // put some debug / testing stuff here to be executed on loading of the app
 
-      function onFetched (res) {
-          iris = res;
-          return iris;
+      function onFetched(res) {
+        iris = res;
+        return iris;
       }
 
       function printResult(res) {
         console.log(res);
         return res;
-      }   
+      }
 
-      function onDone (res) {
-          return res;
+      function onDone(res) {
+        return res;
       }
 
       var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
@@ -154,12 +154,16 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       mb.header('iris').then(printResult);
       mb.get('iris')
         .then(onFetched)
-        .then( model => {console.log(model.fields); return model;} )
-        .then( iris => {
-            var res = iris.model('sepal_length');
-            console.log(res);
-            return res;
-        });
+        .then(printResult)
+        .then(iris => iris.copy("iris_copy"))
+        .then(iriscopy => iriscopy.model(['sepal_length', 'petal_length', 'sepal_width']))
+        .then(printResult)
+        .then(iriscopy => iriscopy.model("*", [{"name": "sepal_length", "operator": "equals", "value": 5}]))
+        .then(printResult)
+        .then(iriscopy => iriscopy.predict(
+          ["petal_length", {"name": "petal_length", "aggregation": "density"}], [],
+          {"name": "petal_length", "split": "equidist", "args": 5}))
+        .then(printResult);
     }
 
     return {

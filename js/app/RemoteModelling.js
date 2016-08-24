@@ -235,13 +235,17 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      * @param returnBasemodel
      */
     predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
+      [predict, where, splitBy] = utils.listify(predict, where, splitBy);
+      // where = utils.listify(where);
+      // splitBy = utils.listify(splitBy);
+
       var jsonContent = {
         "PREDICT": predict,
         "FROM": this.name,
         "WHERE": where,
         "SPLIT BY": splitBy
       };
-      return executeRemotely(this.url, jsonContent)
+      return executeRemotely(jsonContent, this.url)
         .then( jsonDataFrame => {
           // TODO: turn it into something useful again
           return jsonDataFrame;
@@ -250,6 +254,9 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
 
 
     model(model, where = [], name = this.name) {
+      where = utils.listify(where);
+      if (model != "*")
+        model = utils.listify(model);
       var jsonContent = {
         "MODEL": model,
         "FROM": this.name,
