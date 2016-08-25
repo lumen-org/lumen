@@ -88,7 +88,7 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      * @param ids A single field or an array of variables of this model, each specified either by their name or their index.
      * @param how If how === 'remove', the given variables are marginalized. If how === 'keep' the given variables are kept, and all other variables of the models are marginalized.
      * @returns {RemoteModel}
-     */
+     *
     // TODO 2016-07-04 - test this!
     marginalize(ids, how = 'remove') {
       ids =  utils.listify(ids);
@@ -118,25 +118,25 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
           this.fields = keep.map(id => this._asField(id));
           return this;
         });
-    }
+    } */
 
     /**
      * Restricts the domain as given in the arguments and returns the modified model.
      * @param fieldUsages One {@link FieldUsage} or an array of {@link FieldUsage}s based on Fields of this model. For each matching {@link Field} of this model, its new domain will be the intersection of its old domain and the given FieldUsages domain.
-     */
+
     restrict(fieldUsages) {
       fieldUsages =  utils.listify(fieldUsages);
 
       //var pairs = fieldUsage.map( fu => [fu.name, fu.domain] );
       // return Query.restrictModel(this.url, this.name, pairs) // restrict only, do not marginalize any field out
 
-      /*for (let fu of fieldUsages) {
+      for (let fu of fieldUsages) {
         let field = this._asField(fu);
         field.domain = field.domain.intersection(fu.domain);
-      }*/
+      }
       throw "not implemented for remote models";
       //return this;
-    }
+    }*/
 
 
     /**
@@ -200,14 +200,10 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      */
     density(values) {
       throw "not implemented for remote models";
-      /*if (!Array.isArray(values)) values = [values];
-       if (this.size() <= values.length)
-       throw new Error("invalid number of arguments");
-       return Math.random();*/
     }
 
     /**
-     * Conditions one or more variables v of this model on the given range and returns the modified model.
+     * Conditions one or more variables   v of this model on the given domain and returns a Promise to the modified model.
      * @param conditionals A single pair, or an array of pairs. A pair is an object with at least two properties:
      *   - id: the variable of the model, and
      - range: The range or value to condition the variable on.
@@ -217,14 +213,20 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      * (1) restricting a variable to the value to condition on, and
      * (2) marginalizing that variable out of the model
      */
-    condition(conditionals) {
-      throw "not implemented for remote models";
-      /*if (!Array.isArray(conditionals)) conditionals = [conditionals];
-       for(let {id, range} of conditionals) {
-       // dummy model: doesn't do anything with value, but removes the conditioned field
-       this.fields = _.without(this.fields, this.fields[this._asIndex(id)]);
-       }
-       return this */
+    condition(constraints, name = this.name) {
+      return this.model("*", constraints, name);
+    }
+
+
+    marginalize(keep=undefined, remove=undefined, name=this.name) {
+      if (keep === undefined) {
+        remove = this._asName(utils.listify(remove));
+        keep =  _.without(this._asName(this.fields), ...remove);
+      }
+      else {
+        keep = this._asName(utils.listify(keep));
+      }
+      return this.model(keep, [], name);
     }
 
     /**
@@ -236,9 +238,6 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      */
     predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
-      // where = utils.listify(where);
-      // splitBy = utils.listify(splitBy);
-
       var jsonContent = {
         "PREDICT": predict,
         "FROM": this.name,
@@ -263,7 +262,6 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
         "WHERE": where,
         "AS": name
       };
-
       var newModel = (name == this.name ? new RemoteModel(name, this.url) : this);
       return executeRemotely(jsonContent, this.url)
         .then( jsonHeader => newModel.updateHeader(jsonHeader));

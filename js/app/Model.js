@@ -73,11 +73,10 @@ define(['./Field'], function (F) {
     }
 
     /**
-     * @returns Returns a promise to a copy of this model.
+     * @returns {Promise} Returns a promise to a copy of this model.
      * NOTE: in order for the rest of the tool to work correctly, a copy of a model MUST reference to the same
-     * {@link Fields}s, but not (deep) copy them. This restriction is to be removed ...
+     * {@link Fields}s, but not (deep) copy them. This restriction is hopefully to be removed at some point.
      * @param {string} [name] - the new name of the model.
-     * @constructor
      */
     copy(name) {
       throw new Error("You have to implement this function in your subclass")

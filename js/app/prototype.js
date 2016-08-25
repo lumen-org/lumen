@@ -150,20 +150,25 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       }
 
       var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
-      var iris;
+      var iris_;
       mb.header('iris').then(printResult);
       mb.get('iris')
-        .then(onFetched)
         .then(printResult)
         .then(iris => iris.copy("iris_copy"))
         .then(iriscopy => iriscopy.model(['sepal_length', 'petal_length', 'sepal_width']))
         .then(printResult)
-        .then(iriscopy => iriscopy.model("*", [{"name": "sepal_length", "operator": "equals", "value": 5}]))
+        .then(iriscopy => {iris_ = iriscopy.model("*", [{"name": "sepal_length", "operator": "equals", "value": 5}]); return iris_;})
         .then(printResult)
         .then(iriscopy => iriscopy.predict(
           ["petal_length", {"name": "petal_length", "aggregation": "density"}], [],
-          {"name": "petal_length", "split": "equidist", "args": 5}))
-        .then(printResult);
+          {"name": "petal_length", "split": "equidist", "args": [5]}))
+        .then(printResult)
+        .then( _ => iris_)
+        .then(iriscopy => iriscopy.predict(
+          ["sepal_width", "petal_length", {"name": "petal_length", "aggregation": "density"}], [],
+          [{"name": "petal_length", "split": "equidist", "args": [5]}, {"name":"sepal_width", "split":"equidist", "args": [3]}]))
+        .then(printResult)
+        .then( _ => iris_);
     }
 
     return {
