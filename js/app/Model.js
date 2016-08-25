@@ -128,13 +128,12 @@ define(['./Field'], function (F) {
     /**
      * Returns the field(s) of this model that belongs to the given id(s).
      * @param ids - An (mixed) array of the following, or a single value of index, name, or field of this model.
-     * @private
      */
-    _asField(ids) {
+    asField(ids) {
       var isArray = Array.isArray(ids)
       if (!isArray)
         ids = [ids]
-      var fields = this._asIndex(ids)
+      var fields = this.asIndex(ids)
         .map( (id) => this.fields[id], this);
       return isArray ? fields : fields[0]
     }
@@ -142,13 +141,12 @@ define(['./Field'], function (F) {
     /**
      * Returns the name(s) that belongs to the given id(s) in this model.
      * @param ids - An (mixed) array of the following, or a single value of index, name, or field of this model.
-     * @private
      */
-    _asName(ids) {
+    asName(ids) {
       var isArray = Array.isArray(ids)
       if (!isArray)
         ids = [ids]
-      var names = this._asIndex(ids)
+      var names = this.asIndex(ids)
         .map( (id) => this.fields[id].name, this);
       return isArray ? names : names[0]
     }
@@ -157,9 +155,8 @@ define(['./Field'], function (F) {
     /**
      * Returns the index(es) that belongs to the given id(s) in this model.
      * @param ids - An (mixed) array of the following, or a single value of index, name, or field of this model.
-     * @private
      */
-    _asIndex(ids) {
+    asIndex(ids) {
       var isArray = Array.isArray(ids)
       if (!isArray)
         ids = [ids]
@@ -186,12 +183,7 @@ define(['./Field'], function (F) {
     describe() {
       var desc = "-- Model '" + this.name + "' --\n" +
         "consists of " + this.size() + " fields, as follows\n";
-      return this.fields.reduce(
-        function (str, field) {
-          return str + field.toString() + "\n";
-        },
-        desc
-      );
+      return this.fields.reduce((str, field) => str + field.toString() + "\n", desc);
     }
 
     /**

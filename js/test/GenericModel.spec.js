@@ -53,13 +53,13 @@ define(['app/Model', 'app/DummyModel'], function (Model, DummyModel) {
     });
 
     it('tests all the ways of converting field specifications into one another', function () {
-      expect(model1._asIndex(0)).toBe(0);
-      expect(model1._asIndex(model1.fields[6])).toBe(6);
-      expect(model1._asIndex(model1.fields[1].name)).toBe(1);
-      expect(function(){model1._asIndex(-1);}).toThrow();
-      expect(function(){model1._asIndex("not a field");}).toThrow();
-      expect(function(){model1._asIndex(undefined);}).toThrow();
-      expect(function(){model1._asIndex(100);}).toThrow();
+      expect(model1.asIndex(0)).toBe(0);
+      expect(model1.asIndex(model1.fields[6])).toBe(6);
+      expect(model1.asIndex(model1.fields[1].name)).toBe(1);
+      expect(function(){model1.asIndex(-1);}).toThrow();
+      expect(function(){model1.asIndex("not a field");}).toThrow();
+      expect(function(){model1.asIndex(undefined);}).toThrow();
+      expect(function(){model1.asIndex(100);}).toThrow();
     });
 
     it('tests the copying of a model', function () {

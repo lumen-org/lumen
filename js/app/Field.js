@@ -13,18 +13,18 @@ define(['./utils', './SplitSample'], function (utils, S) {
    * @type {{Type: {string: string, num: string}, Role: {measure: string, dimension: string}, Kind: {cont: string, discrete: string}}}
    * @alias module:Field.FieldT
    */
-  var FieldT = {
+  var FieldT = Object.freeze({
     Type: {string: 'string', num: 'numerical'},
     Role: {measure: 'measure', dimension: 'dimension'},
     Kind: {cont: 'continuous', discrete: 'discrete'}
-  };
+  });
 
   /**
    * Type definitions of a FieldUsage.
    * @type {{Aggregation: {sum: string, avg: string}, Scale: {linear: string, log: string}, Order: {ascending: string, descending: string}}}
    * @alias module:Field.FUsageT
    */
-  var FUsageT = {
+  var FUsageT = Object.freeze({
     Aggregation: {sum: 'maximum', avg: 'average'},
     Scale: {
       linear: 'linear', log: 'log'
@@ -32,7 +32,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
     Order: {
       ascending: 'asc', descending: 'desc'
     }
-  };
+  });
 
   /**
    * We call {@link Field} and {@link FieldUsage} both attributes.

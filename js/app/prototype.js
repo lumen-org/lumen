@@ -59,13 +59,12 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
 
 
     function onUpdate () {
-      query = new VisMEL(shelf, model); // synchronous
-      queryTable = new QueryTable(query); // synchronous
-      modelTable = new ModelTable(queryTable); // synchronous
-      /*
-      modelTable.model() // async
+      query = new VisMEL(shelf, model);
+      queryTable = new QueryTable(query);
+      modelTable = new ModelTable(queryTable);
+      modelTable.model()
         .then( () => { resultTable = new ResultTable(modelTable, queryTable); })
-        .then( () => resultTable.fetch() )// async
+        .then( () => resultTable.fetch() )
         .then( () => { viewTable = new ViewTable(visPaneD3, resultTable, queryTable); })
         .then( () => {
           console.log("query: ");
@@ -115,7 +114,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
 
     // get initial model
     var model = new Remote.Model('iris', "http://127.0.0.1:5000/webservice");
-    model.populate()
+    model.update()
       .then(populateGUI)
       .then(initialQuerySetup)
       .then(enableQuerying)
@@ -136,8 +135,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       // put some debug / testing stuff here to be executed on loading of the app
 
       function onFetched(res) {
-        iris = res;
-        return iris;
+        iris_ = res;
+        return iris_;
       }
 
       function printResult(res) {
@@ -160,13 +159,13 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
         .then(iriscopy => {iris_ = iriscopy.model("*", [{"name": "sepal_length", "operator": "equals", "value": 5}]); return iris_;})
         .then(printResult)
         .then(iriscopy => iriscopy.predict(
-          ["petal_length", {"name": "petal_length", "aggregation": "density"}], [],
-          {"name": "petal_length", "split": "equidist", "args": [5]}))
+          ["petal_length", {"name":"petal_length", "aggregation":"density"}], [],
+          {"name":"petal_length", "split":"equidist", "args":[5]}))
         .then(printResult)
         .then( _ => iris_)
         .then(iriscopy => iriscopy.predict(
-          ["sepal_width", "petal_length", {"name": "petal_length", "aggregation": "density"}], [],
-          [{"name": "petal_length", "split": "equidist", "args": [5]}, {"name":"sepal_width", "split":"equidist", "args": [3]}]))
+          ["sepal_width", "petal_length", {"name":"petal_length", "aggregation":"density"}], [],
+          [{"name":"petal_length", "split":"equidist", "args": [5]}, {"name":"sepal_width", "split":"equidist", "args": [3]}]))
         .then(printResult)
         .then( _ => iris_);
     }

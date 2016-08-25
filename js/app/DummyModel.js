@@ -38,9 +38,9 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
     marginalize(ids, how = 'remove') {
       if (!Array.isArray(ids)) ids = [ids];
       if (how === 'remove')
-        ids.forEach( e => { this.fields = _.without(this.fields, this.fields[this._asIndex(e)]) } );
+        ids.forEach( e => { this.fields = _.without(this.fields, this.fields[this.asIndex(e)]) } );
       else if (how === 'keep')
-        this.fields = ids.map( id => this._asField(id) );
+        this.fields = ids.map( id => this.asField(id) );
       else
         throw new RangeError("invalid value for parameter 'how' : ", how);
       return this;
@@ -54,7 +54,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
     restrict (fieldUsages) {
       if (!Array.isArray(fieldUsages)) fieldUsages = [fieldUsages];
       for(let fu of fieldUsages) {
-        let field = this._asField(fu);
+        let field = this.asField(fu);
         field.domain = field.domain.intersection(fu.domain);
       }
       return this;
@@ -97,7 +97,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
      */
     aggregate2(ids, aggregation) {
       if (!Array.isArray(ids)) ids = [ids];
-      let fields = ids.map( id => this._asField(id));
+      let fields = ids.map( id => this.asField(id));
 
       // remove remaining variables
       let model = this.copy.marginalize(fields, 'keep');
@@ -142,7 +142,7 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
       if (!Array.isArray(conditionals)) conditionals = [conditionals];
       for(let {id, range} of conditionals) {
         // dummy model: doesn't do anything with value, but remove the conditioned field
-        this.fields = _.without(this.fields, this.fields[this._asIndex(id)]);
+        this.fields = _.without(this.fields, this.fields[this.asIndex(id)]);
       }
       return this
     }

@@ -5,7 +5,7 @@
 * @module QueryTable
 */
 
-define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
+define(['lib/logger', './Field'], function (Logger, F) {
   "use strict";
 
   var logger = Logger.get('pl-QueryTable');
@@ -18,10 +18,10 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
    * @return {Array} Returns the array of template instantiations.
    * @private
    */
-  var _extendTemplate = function (query, what) {
+  var _expandTemplate = function (query, what) {
 
     if (what !== "rows" && what !== "cols")
-      throw new TypeError("the value of 'what' has to be 'rows' or 'cols' but it is : " + what);
+      throw "the value of 'what' has to be 'rows' or 'cols' but it is : " + what;
 
     let nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize()),
       len = nsf.length,
@@ -41,9 +41,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
         function (fu) {
           if (F.isDimension(fu)) {
             // find dimension usages on details shelf that are based on the same name
-            let idx = details.findIndex( function (o) {
-              return F.isDimension(o) && fu.name === o.name;
-            });
+            let idx = details.findIndex(o => F.isDimension(o) && fu.name === o.name);
             if (idx !== -1) {
               // merge the domains of the existing fieldUsage with fieldUsage of NSF
               // do NOT modify the existing fieldUsage since it is a shallow copy. Instead create a new FieldUsage.
@@ -57,7 +55,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
           }
           else {
             if (!layout.empty())
-              throw new Error("After template expansion there must be only one FU on a row/col shelf");
+              throw "After template expansion there must be only one FU on a row/col shelf";
             layout.push(fu);
           }
         }
@@ -77,11 +75,11 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
     // todo: apply filter on dimensions
 
     this.base = query;
-    let rowBase = _extendTemplate(query, 'rows');
+    let rowBase = _expandTemplate(query, 'rows');
 
     this.at = new Array(rowBase.length);
     for (let i = 0; i < this.at.length; ++i) {
-      this.at[i] = _extendTemplate(rowBase[i], 'cols');
+      this.at[i] = _expandTemplate(rowBase[i], 'cols');
     }
     this.size = {
       rows: this.at.length,
@@ -94,7 +92,7 @@ define(['lib/logger', './Field', './VisMEL'], function (Logger, F, VisMEL) {
       for(let c=0; c<this.size.cols; ++c)
         if(this.at[r][c].layout.rows.filter(F.isDimension).length !== 0 ||
            this.at[r][c].layout.cols.filter(F.isDimension).length !== 0)
-          throw new RangeError("templated expansion failed!")
+          throw "templated expansion failed!";
   };
 
   /**

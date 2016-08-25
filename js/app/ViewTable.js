@@ -122,7 +122,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     let pointsD3 = pane.pointsD3
       .selectAll(".point")
       // todo: fix: use tuple-storage in result table already
-      .data(
+      .data( data
+      /*
         // converts column based to tuple based!
         function () {
           if (data.length === 0)
@@ -133,7 +134,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
             tupleData[i] = data.map( dim => dim[i] ); // jshint ignore:line
           }
           return tupleData;
-        }
+        }*/
       ); // jshint ignore:line
 
     // add scales to field usages of this query
@@ -629,9 +630,10 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       } :
       Settings.maps.shape );
 
-    aesthetics.hoverMapper = (d) => d.reduce(
+    /*aesthetics.hoverMapper = (d) => d.reduce(
       (prev,di,i) => prev + data[i].fu.name + ": " + di + "\n", // reduce fct
-      ""); // initial value
+      ""); // initial value*/
+    aesthetics.hoverMapper = (d) => d;
 
     let layout = query.layout;
     let colFU = layout.cols[0],

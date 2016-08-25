@@ -71,7 +71,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
    * @private
    */
   var _domain = function (data, discreteFlag) {
-    return (discreteFlag? _.unique(data) : d3.extent(_.flatten(data)) );
+    return (discreteFlag ? _.unique(data) : d3.extent(_.flatten(data)) );
   };
 
 
@@ -79,7 +79,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
    * Checks that dimensions based on the same field use the same split function. If not it issues a warning.
    * @param dimensions
    *
-  var checkDimensions = function (dimensions) {
+   var checkDimensions = function (dimensions) {
     // sort by their name
     dimensions.sort( function(d1, d2) {
       return (d1.name < d2.name ? -1 : (d1.name > d2.name ? 1 : 0) );
@@ -91,41 +91,34 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
 
   /**
-   * Aggregates the given model according to the given atomic query.
+   * Aggregates the given model according to the given atomic query into a result table.
    *
-   * In order to know which {@link FieldUsage} is represented by which column of the result table, an attribute 'index'
-   * is attached to all field usages in the query.
+   * In order to know which {@link FieldUsage} of the query is represented by which column of the result table,
+   * an attribute 'index' is attached to all field usages of the query.
    *
-   * @param model The model to sample.
+   * @param model The model to aggregate.
    * @param query The atomic query to the model.
    * @returns {*} A Promise to the result table.
    * @private
    */
   var aggregate = function (model, query) {
-
-    /*
-    At the moment the construction of the result table is entirely done on the client side. Only the actual querying
-    for scalar results is done on the model base side.
-    TODO: in the future the construction of the result table should be done entirely on the model base side. The client
-     only assembles the query accordingly, issues the query and parses its (async, i.e. hence promised) result.
-     It also has to set the .index attribute for each field usage in the query.
-     */
-
     // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
     // - multiple measures of the same field are possible and
     // - multi-dimensional measures aren't supported yet
 
-    // 1. generate indices and empty result table
-    // attach index in aggregation table and build of the set of dimensions and measures of the aggregation table
-    // note: in the general case query.fieldUsage and [...dimensions, ...measures] do not contain the same set of field usages, as duplicate dimensions won't show up in dimensions
+    // 1. build list of split fields and aggregate fields, and attach indices to FieldUsages of query
+
+    // note: in the general case query.fieldUsages() and [...dimensions, ...measures] do not contain the same set of
+    //  field usages, as duplicate dimensions won't show up in dimensions
+
     var fieldUsages = query.fieldUsages();
     var dimensions = [];
     let idx = 0;
-    fieldUsages.filter(F.isDimension).forEach( function (fu) {
+    fieldUsages.filter(F.isDimension).forEach(function (fu) {
       // todo: this kind of comparison is ugly and slow for the case of many dimensions
       // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
-      let sameBase = dimensions.find( e => (fu.base === e.base) );
+      let sameBase = dimensions.find(e => (fu.base === e.base));
       if (sameBase) {
         // fu is already there
         if (fu.splitter !== sameBase.splitter)
@@ -141,15 +134,77 @@ define(['lib/logger', './Field'], function (Logger, F) {
     });
 
     var measures = [];
-    fieldUsages.filter(F.isMeasure).forEach( function (fu) {
+    fieldUsages.filter(F.isMeasure).forEach(function (fu) {
       fu.index = idx++;
       measures.push(fu);
     });
 
     // push index to ancestors
-    [...measures, ...dimensions].forEach( function(fu) {
+    [...dimensions, ...measures].forEach(function (fu) {
       if (fu.origin) fu.origin.index = fu.index;
-    } );
+    });
+
+    /// run PQL query
+    return model.predict(
+      [...model.asName(dimensions), ...measures.map( meas => ({"name":meas.name, "aggregation":meas.aggr, "args":[]}) )],
+      [],
+      dimensions.map( dim => ({"name":dim.name, "split":dim.split, "args":[]}) )
+    );
+  };
+
+  var aggregateold = function (model, query) {
+
+    /*
+     At the moment the construction of the result table is entirely done on the client side. Only the actual querying
+     for scalar results is done on the model base side.
+     TODO: in the future the construction of the result table should be done entirely on the model base side. The client
+     only assembles the query accordingly, issues the query and parses its (async, i.e. hence promised) result.
+     It also has to set the .index attribute for each field usage in the query.
+     */
+
+    // note:
+    // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
+    // - multiple measures of the same field are possible and
+    // - multi-dimensional measures aren't supported yet
+
+    // 1. generate indices and empty result table
+    // attach index in aggregation table and build of the set of dimensions and measures of the aggregation table
+    // note: in the general case query.fieldUsages() and [...dimensions, ...measures] do not contain the same set of
+    //  field usages, as duplicate dimensions won't show up in dimensions
+    var fieldUsages = query.fieldUsages();
+    var dimensions = [];
+    let idx = 0;
+    fieldUsages.filter(F.isDimension).forEach(function (fu) {
+      // todo: this kind of comparison is ugly and slow for the case of many dimensions
+      // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
+      let sameBase = dimensions.find(e => (fu.base === e.base));
+      if (sameBase) {
+        // fu is already there
+        if (fu.splitter !== sameBase.splitter)
+          throw new RangeError("If using multiple dimensions of the same field in an atomic query, their splitter functions must match!");
+        else
+          fu.index = sameBase.index;
+      }
+      else {
+        // fu is new
+        fu.index = idx++;
+        dimensions.push(fu);
+      }
+    });
+
+    var measures = [];
+    fieldUsages.filter(F.isMeasure).forEach(function (fu) {
+      fu.index = idx++;
+      measures.push(fu);
+    });
+
+    // push index to ancestors
+    [...measures, ...dimensions].forEach(function (fu) {
+      if (fu.origin) fu.origin.index = fu.index;
+    });
+
+
+
 
     // 2. setup input tuple, i.e. calculate the cross product of all dim.splitToValues()
     // pair-wise joins of dimension domains, i.e. create all combinations of dimension domain values
@@ -171,28 +226,30 @@ define(['lib/logger', './Field'], function (Logger, F) {
     let outputTable = [];
     let len = (inputTable.length === 0 ? 0 : inputTable[0].length);
     let measPromises = new Set().add(Promise.resolve()); // makes sure that the set of promises resolves, even if no further promises are added
-    measures.forEach( function (m) {
+    measures.forEach(function (m) {
       let column = new Array(len);
       let tuplePromises = new Set();
 
       // sample accordingly
-      let dimNames  = inputTable.map( v => v.fu.name);
+      let dimNames = inputTable.map(v => v.fu.name);
       for (let tupleIdx = 0; tupleIdx < len; ++tupleIdx) {
 
         // condition on dimension values / collect dimension values
-        let dimValues = inputTable.map( v => v[tupleIdx] ); // jshint ignore:line
+        let dimValues = inputTable.map(v => v[tupleIdx]); // jshint ignore:line
 
         // aggregate remaining model
         // need to pass: dimension values of this row of the result table. this will set all remaining variables of the model except for the one measure. Then calculate the aggregation on that measure
         tuplePromises.add(
           m.model.aggregateNew(dimNames, dimValues, m)
-            .then(result => {column[tupleIdx] = result;})
+            .then(result => {
+              column[tupleIdx] = result;
+            })
         );
       }
 
       let tuplesFetchedPromise =
         Promise.all(tuplePromises)
-          .then(()=>{
+          .then(()=> {
             // attach extent and corresponding field usage
             column.fu = m;
             column.extent = _domain(column, m.isDiscrete());
@@ -206,41 +263,46 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
     // 6. return (promise for an) aggregation table
     return Promise.all(measPromises)
-      .then( () => [...inputTable, ...outputTable] );
+      .then(() => [...inputTable, ...outputTable]);
   };
 
 
-   /**
-   * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s). Each cell of the result table holds its own data, and is accessed by its row and column index via the at property.
+  /**
+   * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s).
+   * Each cell of the result table holds its own data, and is accessed by its row and column index via the 'at' property.
    *
-   * The at propery contains no information about what FieldUsages are encoded in what index. Therefore, a {@link ResultTable} has the indexes property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
+   * Outdated: The 'at' property contains no information about what FieldUsages are encoded in what index. Therefore, a
+   * {@link ResultTable} has an 'indexes' property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
    *
    * @alias module:ResultTable
    * @constructor
    */
   class ResultTable {
 
-     constructor(modelTable, queryTable) {
-       this._qt = queryTable;
-       this._mt = modelTable;
-       this.size = modelTable.size;
-       this.at = new Array(this.size.rows);
-     }
+    constructor(modelTable, queryTable) {
+      this._qt = queryTable;
+      this._mt = modelTable;
+      this.size = modelTable.size;
+      this.at = new Array(this.size.rows);
+    }
 
-     fetch () {
-       let fetchPromises = new Set().add(Promise.resolve());
-       for (let rIdx=0; rIdx<this.size.rows; ++rIdx) {
-         this.at[rIdx] = new Array(this.size.cols);
-         for (let cIdx=0; cIdx<this.size.cols; ++cIdx) {
-           let promise = aggregate(this._mt.at[rIdx][cIdx], this._qt.at[rIdx][cIdx])
-             .then( result => {this.at[rIdx][cIdx] = result});
-           console.log("added fetch promise");
-           fetchPromises.add(promise);
-         }
-       }
-       return Promise.all(fetchPromises);
-     }
+    fetch() {
+      var that = this;
+      let fetchPromises = new Set().add(Promise.resolve());
+      for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
+        this.at[rIdx] = new Array(this.size.cols);
+        for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+          let promise = aggregate(this._mt.at[rIdx][cIdx], this._qt.at[rIdx][cIdx])
+            .then(result => {that.at[rIdx][cIdx] = result;});
+          fetchPromises.add(promise);
+          console.log("added fetch promise");
+        }
+      }
+      return Promise.all(fetchPromises);
+    }
   }
+
+
 
   return ResultTable;
 });

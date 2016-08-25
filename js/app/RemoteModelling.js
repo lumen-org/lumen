@@ -5,7 +5,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Logger, utils, Domain, F, Model) {
+define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], function (Logger, d3, utils, Domain, F, Model) {
   "use strict";
 
   /**
@@ -17,9 +17,14 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
    *  * "operator": operator to condition
    *  * "values": value(s) to condition on
    *
-   * SplitTuple and AggregationTuple:
+   * SplitTuple:
    *  * "name": name of field to split
-   *  * "method": method to split
+   *  * "split": method to split
+   *  * "args": arguments to the split, if any
+   *
+   *  AggregationTuple:
+   *  * "name": name of field to split
+   *  * "aggregation": method to split
    *  * "args": arguments to the split, if any
    */
 
@@ -39,7 +44,8 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
 
     /**
      * Create a local proxy for a remote model with given name located on a ModelBase server at the given url.
-     * Note that the fields of this model are not populated yet after calling the constructor. Use the promise provided by {@link RemoteModel.populate} for that.
+     * Note that the fields of this model are not synced with the model base yet after calling the constructor.
+     * Use the {@link RemoteModel.update} for that.
      *
      * @param name Name for the model.
      * @param url The url that provides the model interface
@@ -54,22 +60,10 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
     }
 
     /**
-     * Returns a promise that fulfils if the model fields are fetched from the remote ModelBase server, and rejects otherwise
-     */
-    populate() {
-      var content = {
-        "SHOW": "HEADER",
-        "FROM": this.name
-      };
-      return executeRemotely(content, this.url)
-        .then(this.updateHeader.bind(this));
-    }
-
-    /**
      * Updates the locally stored header (i.e. the fields) of the model according to the given json header data.
      * @param json JSON object containing the field information.
      */
-    updateHeader(json) {
+    _updateHeader(json) {
       for (let field of json) {
         this.fields.push(
           new F.Field(field.name, this, {
@@ -84,59 +78,17 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
     }
 
     /**
-     * Marginalizes variables out of this model and returns a promise of the modified model.
-     * @param ids A single field or an array of variables of this model, each specified either by their name or their index.
-     * @param how If how === 'remove', the given variables are marginalized. If how === 'keep' the given variables are kept, and all other variables of the models are marginalized.
-     * @returns {RemoteModel}
-     *
-    // TODO 2016-07-04 - test this!
-    marginalize(ids, how = 'remove') {
-      ids =  utils.listify(ids);
-      ids = this._asName(ids);
-
-      // find random variables to keep
-      var keep = [];
-      if (how === 'remove') {
-        let all = this._asName(this.fields);
-        keep = _.without(all, ...ids);
-      } else if (how === 'keep') {
-        keep = ids;
-      } else
-        throw new RangeError("invalid value for parameter 'how' : ", how);
-
+     * Syncs the local view on the model with the remote model base.
+     * @returns {*|Promise.<TResult>} A promise to operation.
+     */
+    update() {
       var content = {
-        "MODEL": keep,
-        "FROM": this.name,
-        "AS": this.name
+        "SHOW": "HEADER",
+        "FROM": this.name
       };
       return executeRemotely(content, this.url)
-        .then(() => {
-          // TODO: I believe in the future a model request should return the header of the resulting model and that should be parsed on the client
-          // TODO: one problem is that the client interface to the model is sort of messed up... it is too different from the PQL interface, hence a lot of conversion has to be done on the client side
-          //LOOKS LIKE THIS DOESNt WORK?
-          //console.log(keep);
-          this.fields = keep.map(id => this._asField(id));
-          return this;
-        });
-    } */
-
-    /**
-     * Restricts the domain as given in the arguments and returns the modified model.
-     * @param fieldUsages One {@link FieldUsage} or an array of {@link FieldUsage}s based on Fields of this model. For each matching {@link Field} of this model, its new domain will be the intersection of its old domain and the given FieldUsages domain.
-
-    restrict(fieldUsages) {
-      fieldUsages =  utils.listify(fieldUsages);
-
-      //var pairs = fieldUsage.map( fu => [fu.name, fu.domain] );
-      // return Query.restrictModel(this.url, this.name, pairs) // restrict only, do not marginalize any field out
-
-      for (let fu of fieldUsages) {
-        let field = this._asField(fu);
-        field.domain = field.domain.intersection(fu.domain);
-      }
-      throw "not implemented for remote models";
-      //return this;
-    }*/
+        .then(this._updateHeader.bind(this));
+    }
 
 
     /**
@@ -145,9 +97,8 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      * @param values
      * @param fieldToAggregate
      */
-    // TODO 2016-07-04 - use and test it
     aggregateNew(ids, values, fieldToAggregate) {
-      let names = this._asName(ids);
+      let names = this.asName(ids);
       var content = {
         "PREDICT": [{
           "name": fieldToAggregate.name,
@@ -160,46 +111,6 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
           })
       };
       return executeRemotely(content, this.url);
-    }
-
-
-    /**
-     * Returns the requested aggregation on the model, using the given values as input. The model itself is not modified.
-     * @param values An array pairs of fields and value.
-     * @param aggregation
-     * @returns {number}
-     */
-    aggregate(values, fieldToAggregate) {
-
-      // todo: in the future we might want to support aggregation on more than one variables
-
-      // todo: fix it ... problem occurs on multi-mixed-usage of a field.
-      //if (values.length > this.size()-1)
-      //  throw new Error("you gave too many values. For now only aggregations on 1 variable are allowed.");
-      //else
-      if (values.length < this.size() - 1)
-        throw new Error("you gave too few values. For now only aggregations on 1 variable are allowed.");
-      //logger.warn("for now only aggregations on 1 variable are allowed.");
-
-      // TODO: this is just a fix for doctoral colloquium such that it returns something within the domain: I pass the measure to aggregate instead of the aggregation only
-      let aggr = fieldToAggregate.aggr;
-      if (aggr !== F.FUsageT.Aggregation.avg && aggr !== F.FUsageT.Aggregation.sum) {
-        throw new Error("not supported aggregation type given: " + aggr);
-      }
-
-      let domain = fieldToAggregate.domain;
-      return domain.l + Math.random() * domain.h;
-    }
-
-    /**
-     * Returns the density of this model for the given values.
-     * @param {Array} A single value or an array of values. A value is an object that has at least two properties:
-     *  - id: a variable of this model.
-     *  - value: the value for the variable.
-     * @returns {Number}
-     */
-    density(values) {
-      throw "not implemented for remote models";
     }
 
     /**
@@ -217,14 +128,13 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
       return this.model("*", constraints, name);
     }
 
-
     marginalize(keep=undefined, remove=undefined, name=this.name) {
       if (keep === undefined) {
-        remove = this._asName(utils.listify(remove));
-        keep =  _.without(this._asName(this.fields), ...remove);
+        remove = this.asName(utils.listify(remove));
+        keep =  _.without(this.asName(this.fields), ...remove);
       }
       else {
-        keep = this._asName(utils.listify(keep));
+        keep = this.asName(utils.listify(keep));
       }
       return this.model(keep, [], name);
     }
@@ -234,7 +144,8 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
      * @param predict A list of 'predict-tuples'. See top for documentation.
      * @param where A list of 'condition-tuples'. See top for documentation.
      * @param splitBy A list of 'split-tuples'. See top for documentation.
-     * @param returnBasemodel
+     * @returns {Array} table containing the predicted values. The table is row based, hence the first index is for
+     *  the rows, the second for the columns.
      */
     predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
@@ -244,13 +155,34 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
         "WHERE": where,
         "SPLIT BY": splitBy
       };
+
+      // list of datatypes of fields to predict - needed to parse returned csv-string correctly
+      let len = predict.length;
+      let dtypes = [];
+      for (let p of predict)
+        if (typeof p === 'string')
+          dtypes.push(this.asField(p));
+        else
+          dtypes.push(...utils.listify(this.asField(p.name)));
+      dtypes = dtypes.map(field => field.dataType);
+
+      // function to parse a row according to expected data types
+      let parseRow = function (row) {
+        for (let i=0; i<len; ++i) {
+          if (dtypes[i] == F.FieldT.Type.num)
+            row[i] = +row[i];
+          //else if (dtypes[i] == F.FieldT.Type.string)
+          //  row[i] = row[i]
+        }
+        return row;
+      };
+
       return executeRemotely(jsonContent, this.url)
-        .then( jsonDataFrame => {
-          // TODO: turn it into something useful again
-          return jsonDataFrame;
+        .then( jsonData => {
+          let table = d3.csv.parseRows(jsonData.data, parseRow);
+          return table;
         });
     }
-
 
     model(model, where = [], name = this.name) {
       where = utils.listify(where);
@@ -264,7 +196,7 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
       };
       var newModel = (name == this.name ? new RemoteModel(name, this.url) : this);
       return executeRemotely(jsonContent, this.url)
-        .then( jsonHeader => newModel.updateHeader(jsonHeader));
+        .then( jsonHeader => newModel._updateHeader(jsonHeader));
     }
 
     /**
@@ -314,26 +246,26 @@ define(['lib/logger', './utils', './Domain', './Field', './Model'], function (Lo
       return this.execute(content);
     }
 
-    header(modelName) {
-      var content = {
-        "SHOW": "HEADER",
-        "FROM": modelName
-      };
-      return this.execute(content);
-    }
-
     /**
      * Returns a promise to a {@param RemoteModel} with given name that is fetched from the remote ModelBase.
      * @param modelName
      */
     get(modelName) {
       var model = new RemoteModel(modelName, this.url);
-      return model.populate();
+      return model.update();
     }
 
     drop(modelName) {
       var content = {
         "DROP": modelName
+      };
+      return this.execute(content);
+    }
+
+    header (modelName) {
+      var content = {
+        "SHOW": "HEADER",
+        "FROM": modelName
       };
       return this.execute(content);
     }
