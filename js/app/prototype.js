@@ -65,6 +65,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       modelTable.model()
         .then( () => { resultTable = new ResultTable(modelTable, queryTable); })
         .then( () => resultTable.fetch() )
+      //resultTable = new ResultTable(modelTable, queryTable);
+      //resultTable.fetch()
         .then( () => { viewTable = new ViewTable(visPaneD3, resultTable, queryTable); })
         .then( () => {
           console.log("query: ");
@@ -113,7 +115,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     var shelf = sh.construct();
 
     // get initial model
-    var model = new Remote.Model('iris', "http://127.0.0.1:5000/webservice");
+    var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
     model.update()
       .then(populateGUI)
       .then(initialQuerySetup)
@@ -175,7 +177,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
        * Starts the application.
        */
       start: function () {
-        myScript();
+       // myScript();
       }
     };
 

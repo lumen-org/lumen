@@ -29,14 +29,25 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
    */
 
   var logger = Logger.get('pl-RemoteModel');
-  logger.setLevel(Logger.WARN);
+  logger.setLevel(Logger.DEBUG);
 
   /** Utility function used by the other query functions to actually remotely execute a query */
   function executeRemotely(jsonContent, remoteUrl) {
+
+    function logit (json) {
+      logger.debug("RECEIVED:");
+      logger.debug(JSON.stringify(json));
+      logger.debug(json);
+      return json;
+    }
+
     return new Promise((resolve, reject) => {
+      logger.debug("SENT:");
+      logger.debug(JSON.stringify(jsonContent));
+      logger.debug(jsonContent);
       d3.json(remoteUrl)
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(jsonContent), (err, json) => err ? reject(err) : resolve(json));
+        .post(JSON.stringify(jsonContent), (err, json) => err ? reject(err) : resolve(logit(json)));
     });
   }
 
@@ -64,7 +75,8 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
      * @param json JSON object containing the field information.
      */
     _updateHeader(json) {
-      for (let field of json) {
+      this.fields.clear();
+      for (let field of json.fields) {
         this.fields.push(
           new F.Field(field.name, this, {
             dataType: field.dtype,
@@ -74,6 +86,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
           })
         );
       }
+      this.name = json.name;
       return this;
     }
 
@@ -97,7 +110,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
      * @param values
      * @param fieldToAggregate
      */
-    aggregateNew(ids, values, fieldToAggregate) {
+    aggregate(ids, values, fieldToAggregate) {
       let names = this.asName(ids);
       var content = {
         "PREDICT": [{
@@ -128,15 +141,11 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
       return this.model("*", constraints, name);
     }
 
-    marginalize(keep=undefined, remove=undefined, name=this.name) {
-      if (keep === undefined) {
-        remove = this.asName(utils.listify(remove));
-        keep =  _.without(this.asName(this.fields), ...remove);
-      }
-      else {
-        keep = this.asName(utils.listify(keep));
-      }
-      return this.model(keep, [], name);
+    marginalize(what, how="remove", name=this.name) {
+      what = this.asName(utils.listify(what));
+      if (how == "remove")
+        what =  _.without(this.asName(this.fields), ...what);
+      return this.model(what, [], name);
     }
 
     /**
@@ -144,8 +153,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
      * @param predict A list of 'predict-tuples'. See top for documentation.
      * @param where A list of 'condition-tuples'. See top for documentation.
      * @param splitBy A list of 'split-tuples'. See top for documentation.
-     * @returns {Array} table containing the predicted values. The table is row based, hence the first index is for
-     *  the rows, the second for the columns.
+     * @returns {Array} table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
     predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
@@ -155,6 +163,9 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
         "WHERE": where,
         "SPLIT BY": splitBy
       };
+
+      console.log("SPLITBY:\n");
+      console.log(splitBy);
 
       // list of datatypes of fields to predict - needed to parse returned csv-string correctly
       let len = predict.length;
@@ -171,6 +182,8 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
         for (let i=0; i<len; ++i) {
           if (dtypes[i] == F.FieldT.Type.num)
             row[i] = +row[i];
+          else if (dtypes[i] != F.FieldT.Type.string)
+              throw new RangeError("invalid dataType");
           //else if (dtypes[i] == F.FieldT.Type.string)
           //  row[i] = row[i]
         }
@@ -180,6 +193,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
           let table = d3.csv.parseRows(jsonData.data, parseRow);
+          table.header = jsonData.header;
           return table;
         });
     }

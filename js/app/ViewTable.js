@@ -69,7 +69,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   /**
    * Adds an atomic pane to parentD3 using the given size and offset. Returns a structure that contains the d3 selection of that and its size.
    * @param parentD3  Parent selection to append the new atomic pane.
-   * @param size Size of the new atomic pane in pixel
+   * @param width and height: Size of the new atomic pane in pixel
+   * @param height
    * @param offset Offset in pixel.
    * @returns {{paneD3: *, size: *}}
    */
@@ -304,7 +305,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * Attaches and draws an axis to the given atomic pane.
    * @param pane An atomic pane.
    * @param query The atomic query of the given pane
-   * @param canvas {height, width} The size of the canvas canvas object the pane belongs to.
+   * @param canvasSize {height, width} The size of the canvas canvas object the pane belongs to.
    * @param axisType {"x axis"|"y axis"}
    */
   function attachAtomicAxis(pane, query, canvasSize, axisType) {
@@ -316,8 +317,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     if (!F.isFieldUsage(axis.FU))
       return;
 
-    axis.axisD3 = pane.paneD3.append("g")
-      .classed(axisType, true)
+    axis.axisD3 = pane.paneD3.append("g").classed(axisType, true);
     if (axisType === "x axis")
       axis.axisD3.attr("transform", "translate(0," + pane.size.height + ")");
     axis.axis = d3.svg.axis()
@@ -359,7 +359,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     if (axisType === "x axis") pane.axis.x = axis;
     else if (axisType === "y axis") pane.axis.y = axis;
     else throw new RangeError("invalid value of axis:", axis);
-  };
+  }
 
   /*
    * Returns a mapping from the usages to the index in the result table. e.g. the usage 'color' maps to the index of the fieldUsage that encodes color.
@@ -396,9 +396,9 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
    * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
    *
-   * A ViewTable is a table of {@link ViewPane}s. Each {@link ViewPane} represents a single cell of the table.
+   * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
    *
-   * Note that the axis are part of the {@link ViewTable}, not the {@link ViewPane}s. Also note that axis' are based on scales. And scales are attached to (almost) each {@link F.FieldUsage} of this query, as they are reused accross many of the sub-{@link ViewPane}s.
+   * Note that the axis are part of the {@link ViewTable}, not the ViewPanes. Also note that axis' are based on scales. And scales are attached to (almost) each {@link FieldUsage} of this query, as they are reused accross many of the sub-viewPanes.
    *
    * @param paneD3 A <svg> element, wrapped in a D3 selection. This must already have a width and height.
    * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
@@ -481,21 +481,26 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   };
 
   /**
-   * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages are inherited by the atomic queries, extents are also available there.
+   * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
+   * inherited from templated query, extents are also available at the templated base query.
    *
-   * Note that results may consist of:
-   *  - single values (discrete FU)
-   *  - intervals (continuous FU), or
-   *  - sets of single values (discrete FU, where the splitting functions splits not into single values but sets of values).
+   * The point is that for visualization the extents over _all_ result tables are required, as we need uniform
+   * extents over all atomic panes for a visually uniform visualization.
+   *
+   * Note that extents may take different forms:
+   *  - single value (discrete FU)
+   *  - interval (continuous FU), or
+   *  - set of single values (discrete FU, where the splitting functions splits not into single values but sets of values).
    *
    * For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
    *
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
    *
+   * @param query
    * @param queries
    * @param results
    */
-  var attachExtents = function (query, queries, results, u2idx) {
+  var attachExtents = function (query, queries, results) {
 
     /**
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
@@ -511,7 +516,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       dim.extent = dim.splitToValues();
     });
 
-    // note: row and column extent means the extent of the single measure left on row / column for atomic queries. these are are common for across one row / column of the view table
+    // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
     let color = [],
       shape = [],
       size = [];
@@ -534,23 +539,23 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
         // aesthetics extents
         let qa = q.layers[0].aesthetics;
         if (F.isFieldUsage(qa.color))
-          color = _extentUnion(color, r[qa.color.index].extent, qa.color.isDiscrete());
+          color = _extentUnion(color, r.extent[qa.color.index], qa.color.isDiscrete());
         if (F.isFieldUsage(qa.shape))
-          shape = _extentUnion(shape, r[qa.shape.index].extent, qa.shape.isDiscrete());
+          shape = _extentUnion(shape, r.extent[qa.shape.index], qa.shape.isDiscrete());
         if (F.isFieldUsage(qa.size))
-          size = _extentUnion(size, r[qa.size.index].extent, qa.size.isDiscrete());
+          size = _extentUnion(size, r.extent[qa.size.index], qa.size.isDiscrete());
 
         // row / col extents
         let lr = q.layout.rows[0];
         if (F.isMeasure(lr))
-          lr.extent = _extentUnion(lr.extent, r[lr.index].extent, lr.isDiscrete());
+          lr.extent = _extentUnion(lr.extent, r.extent[lr.index], lr.isDiscrete());
         let lc = q.layout.cols[0];
         if (F.isMeasure(lc))
-          lc.extent = _extentUnion(lc.extent, r[lc.index].extent, lc.isDiscrete());
+          lc.extent = _extentUnion(lc.extent, r.extent[lc.index], lc.isDiscrete());
       }
     }
 
-    // attach extents to field usages of all queries. Note that all atomic queries use references to the field usuage of the base query
+    // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
     {
       let qa = query.layers[0].aesthetics;
       if (F.isFieldUsage(qa.color)) qa.color.extent = color;
@@ -562,6 +567,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
   /**
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
+   *
+   * Before scales can be set, extents needs to be set for each FieldUsage.
    *
    * @param query {VisMEL} A VisMEL query.
    * @param paneSize {{width, height}} Width and heights of the target pane in px.
@@ -631,7 +638,7 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       Settings.maps.shape );
 
     /*aesthetics.hoverMapper = (d) => d.reduce(
-      (prev,di,i) => prev + data[i].fu.name + ": " + di + "\n", // reduce fct
+      (prev,di,i) => prev + data.fu[i].name + ": " + di + "\n", // reduce fct
       ""); // initial value*/
     aesthetics.hoverMapper = (d) => d;
 

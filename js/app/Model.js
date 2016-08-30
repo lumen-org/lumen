@@ -171,7 +171,7 @@ define(['./Field'], function (F) {
             return this.fields.indexOf(id.base);
           if (this.isField(id))
             return this.fields.indexOf(id);
-          throw new RangeError("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model.");
+          throw new RangeError("argument is neither a valid field index, nor a valid field name, nor a valid Field of this model. Argument was: " + id);
       }, this);
       return isArray ? indexes : indexes[0]
     }

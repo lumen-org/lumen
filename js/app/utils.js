@@ -43,6 +43,60 @@ define([], function() {
   }
 
 
+  /**
+   * Joins the two tables a and b
+   * naive implementation
+   */
+  function _join(a, b) {
+    var aCols = a.length,
+      bCols = b.length,
+      cols = aCols + bCols;
+
+    if (aCols === 0) return b;
+    if (bCols === 0) return a;
+
+    var aRows = a[0].length,
+      bRows = b[0].length,
+      rows = aRows * bRows;
+
+    var rowIdx, column, aVal,
+      res = new Array(cols);
+
+    // iterate over columns of a
+    for (let colIdx = 0; colIdx < aCols; ++colIdx) {
+      rowIdx = 0;
+      column = new Array(rows);
+      // iterate over elements (of current column of a)
+      for (let aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
+        // write each element bRows many times
+        aVal = a[colIdx][aRowIdx];
+        for (let bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
+          column[rowIdx] = aVal;
+          ++rowIdx;
+        }
+      }
+      res[colIdx] = column;
+    }
+
+    // iterate of columns of b
+    // similar but instead of repeating the same element, repeat the sequence of all elements
+    for (let colIdx = 0; colIdx < bCols; ++colIdx) {
+      rowIdx = 0;
+      column = new Array(rows);
+      // repeat sequence of elements aRows many times
+      for (let aRowIdx = 0; aRowIdx < aRows; ++aRowIdx) {
+        // iterate over elements (of current column of b)
+        for (let bRowIdx = 0; bRowIdx < bRows; ++bRowIdx) {
+          column[rowIdx] = b[colIdx][bRowIdx];
+          ++rowIdx;
+        }
+      }
+      res[colIdx + aCols] = column;
+    }
+
+    return res;
+  }
+
   return {
     selectValue: selectValue,
     listify: listify

@@ -157,9 +157,10 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
 
   /**
    * Returns the set of (unique) variables (i.e. {@link Field} that are used in this VisMEL query.
+   *
+   * Note: this implementation assumes that fields of a model are always referenced, never copied!
    */
   VisMEL.prototype.fields = function () {
-    // note: this assumes that fields of a model are always referenced, never copied
     var fus = this.fieldUsages();
     return _.uniq( fus.map(
       function(fu){return fu.base;}

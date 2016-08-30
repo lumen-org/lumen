@@ -11,7 +11,7 @@ define(['./Field'], function(F) {
    * @param query
    * @param baseModel
    * @returns A promise to do the above.
-   */
+
   var attachModel = function (query, baseModel, rIdx, cIdx) {
     let measures = query.measureUsages();
 
@@ -39,7 +39,7 @@ define(['./Field'], function(F) {
     );
 
     return Promise.all(promises);
-  };
+  };*/
 
 
   /**
@@ -54,25 +54,26 @@ define(['./Field'], function(F) {
     var makeBaseModelName = (modelName, rIdx, cIdx) => "__" + modelName + "_" + rIdx + "_" + cIdx;
 
     // todo: extend: only 1 layer and 1 source is supported for now
-    var base = query.sources[0];
+    var model = query.sources[0];
 
-    // 1. assert that row/col only has at most 1 fieldUsage on it (as a result of the template expansion)
+    // assert that row/col only has at most 1 fieldUsage on it (as a result of the template expansion)
     if (query.layout.rows.length > 1 || query.layout.cols.length > 1)
       throw new RangeError ("query.layout.rows or query.layout.cols contains more than 1 FieldUsage");
 
-    // 2. compile set of all Fields
-    var fields = query.fields();
+    return model.model(
+      query.fields().map(F.nameMap),
+      query.layers[0].filters,
+      makeBaseModelName(model.name, rIdx, cIdx));
 
     // 3. merge (i.e. intersect) domains of FieldUsages based on the same Field
     // todo: implement
 
-    // 4. apply filters on independent variables
+    // 4. apply all remaining filters on independent variables
     // todo: implement
     // todo: don't forget to remove filters from sub query?
 
     // 5. derive model and return
-    return base.copy( makeBaseModelName(base.name, rIdx, cIdx) )
-      .then( (copy) => copy.marginalize(_.difference(base.fields, fields)) );
+    //return model.marginalize(fields, "keep", );
   };
 
 
@@ -100,15 +101,14 @@ define(['./Field'], function(F) {
         this.at[rIdx] = new Array(this.size.cols);
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
           let query = this.queryTable.at[rIdx][cIdx];
-
           let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
-            .then( baseModel => {
+            .then( baseModel => { // jshint ignore:line
 ///              console.log("base model = " + baseModel.describe());
               this.at[rIdx][cIdx] = baseModel;
               return baseModel;
-            })
+            });
             // attach model for each measure to the measure of that atomic query
-            .then( baseModel => attachModel(query, baseModel, rIdx, cIdx) );
+            //.then( baseModel => attachModel(query, baseModel, rIdx, cIdx) );
           modelPromises.add(promise);
         }
       }

@@ -15,12 +15,9 @@ define(['./Field', './shelves'], function (F, sh) {
   function _cross (a, b) {
     if( !(a instanceof Array && b instanceof Array) ) throw new TypeError();
     var ret = [];
-    a.forEach( function(ea) {
-      b.forEach( function(eb) {
-        ret.push(_.flatten([ea,eb]));
-        // todo alternative: ret.push([...ea, ...eb]) ?
-      });
-    });
+    a.forEach(
+      ea => b.forEach(
+        eb => ret.push([...ea, ...eb])));
     return ret;
   }
 
@@ -68,7 +65,7 @@ define(['./Field', './shelves'], function (F, sh) {
 
   TableAlgebraExpr.prototype.shallowCopy = function () {
     var copy = new TableAlgebraExpr();
-    this.forEach(function(e){copy.push(e);});
+    this.forEach(e => copy.push(e));
     return copy;
   };
 
@@ -77,7 +74,7 @@ define(['./Field', './shelves'], function (F, sh) {
    * Returns the set of (unique) {@link FieldUsage}s used this table algebra expression.
    */
   TableAlgebraExpr.prototype.fieldUsages = function () {
-    return _.uniq( _.filter(this, F.isFieldUsage));
+    return _.uniq(_.filter(this, F.isFieldUsage));
   };
 
 
@@ -86,7 +83,7 @@ define(['./Field', './shelves'], function (F, sh) {
    * Note that uniqueness is decided (and returned) on the level of Field not FieldUsages.
    */
   TableAlgebraExpr.prototype.fields = function () {
-    return _.uniq( _.map(this.fieldUsages(), function(e){return e.base;}) );
+    return _.uniq(_.map(this.fieldUsages(), e => e.base));
   };
 
 
@@ -171,7 +168,7 @@ define(['./Field', './shelves'], function (F, sh) {
       }
     }
 
-    // an array of arrays should be left
+    // a single array of arrays should be left
     if (domainExpr.length !== 1) {
       throw new Error("after normalization there must be only 1 element left at expression level.");
     }
