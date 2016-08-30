@@ -208,7 +208,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
         "WHERE": where,
         "AS": name
       };
-      var newModel = (name == this.name ? new RemoteModel(name, this.url) : this);
+      var newModel = (name !== this.name ? new RemoteModel(name, this.url) : this);
       return executeRemotely(jsonContent, this.url)
         .then( jsonHeader => newModel._updateHeader(jsonHeader));
     }

@@ -66,9 +66,6 @@ define(['lib/logger', './Field'], function (Logger, F) {
       /* iterate over all field usages of the current NSF element
       nsf[i].forEach( fu => {
         if (F.isDimension(fu)) {
-
-
-
           // find dimension usages on details shelf that are based on the same name
           let idx = details.findIndex(o => F.isDimension(o) && fu.name === o.name);
           if (idx !== -1) {

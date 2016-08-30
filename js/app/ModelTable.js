@@ -51,7 +51,9 @@ define(['./Field'], function(F) {
    */
   var deriveBaseModel = function (query, rIdx, cIdx) {
 
-    var makeBaseModelName = (modelName, rIdx, cIdx) => "__" + modelName + "_" + rIdx + "_" + cIdx;
+    function makeBaseModelName (modelName, rIdx, cIdx) {
+      return "__" + modelName + "_" + rIdx + "_" + cIdx;
+    }
 
     // todo: extend: only 1 layer and 1 source is supported for now
     var model = query.sources[0];
