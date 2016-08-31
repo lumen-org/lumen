@@ -65,8 +65,6 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       modelTable.model()
         .then( () => { resultTable = new ResultTable(modelTable, queryTable); })
         .then( () => resultTable.fetch() )
-      //resultTable = new ResultTable(modelTable, queryTable);
-      //resultTable.fetch()
         .then( () => { viewTable = new ViewTable(visPaneD3, resultTable, queryTable); })
         .then( () => {
           console.log("query: ");
@@ -94,7 +92,6 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       // trigger initial query execution
       onUpdate();
     }
-
 
     // locally 'global' variables
     var query = {},

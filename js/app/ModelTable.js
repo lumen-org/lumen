@@ -7,42 +7,6 @@ define(['./Field'], function(F) {
   'use strict';
 
   /**
-   * Given a query and the corresponding base model, attaches a model for each measure/aggregation of a query to that measure.
-   * @param query
-   * @param baseModel
-   * @returns A promise to do the above.
-
-  var attachModel = function (query, baseModel, rIdx, cIdx) {
-    let measures = query.measureUsages();
-
-    // marginalize all those measures out of the model, for which the base field isn't also used for a dimension or another measure
-    let uniqueMeasures = _.unique(measures, F.nameMap);
-    let uniqueDimensions = query.dimensionUsages();
-    let toBeRemoved = uniqueMeasures.filter( function (m) {
-      return (undefined === uniqueDimensions.find( function(d) {return (d.name === m.name);} ) );
-    });
-
-    let promises = new Set().add(Promise.resolve());
-
-    measures.forEach(
-      function (m, idx) {
-        let promise = baseModel.copy(baseModel.name + "_" + m.name + idx)
-          .then( (copy) => copy.marginalize(
-            toBeRemoved.filter(function (r) {return m.name !== r.name;}) // remove m from toeBeRemoved, based on .name
-          ))
-          .then( (measureModel) => {
-//            console.log("attached model : " + measureModel.describe());
-            m.model = measureModel;
-          });
-        promises.add(promise);
-      }
-    );
-
-    return Promise.all(promises);
-  };*/
-
-
-  /**
    * Returns a promise to the 'base model' for the provided query, i.e. a model of all fields used in the query.
    * @param query
    * @param rIdx Row index in the model table
@@ -67,15 +31,7 @@ define(['./Field'], function(F) {
       query.layers[0].filters,
       makeBaseModelName(model.name, rIdx, cIdx));
 
-    // 3. merge (i.e. intersect) domains of FieldUsages based on the same Field
-    // todo: implement
-
-    // 4. apply all remaining filters on independent variables
-    // todo: implement
-    // todo: don't forget to remove filters from sub query?
-
-    // 5. derive model and return
-    //return model.marginalize(fields, "keep", );
+    // TODO: apply all remaining filters on independent variables, todo: don't forget to remove filters from sub query(?)
   };
 
 
@@ -109,8 +65,6 @@ define(['./Field'], function(F) {
               this.at[rIdx][cIdx] = baseModel;
               return baseModel;
             });
-            // attach model for each measure to the measure of that atomic query
-            //.then( baseModel => attachModel(query, baseModel, rIdx, cIdx) );
           modelPromises.add(promise);
         }
       }

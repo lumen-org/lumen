@@ -10,17 +10,6 @@ define(['lib/logger', 'lib/d3', './Field'], function (Logger, d3, F) {
   logger.setLevel(Logger.DEBUG);
 
   /**
-   * Utility function that returns the domain of some given discrete or continuous data.
-   * @param data
-   * @param discreteFlag
-   * @returns {*}
-   * @private
-   */
-  var _domain = function (data, discreteFlag) {
-    return (discreteFlag ? _.unique(data) : d3.extent(_.flatten(data)) );
-  };
-
-  /**
    * Attaches the extent of each column of a (row-based) table under the attribute .extent and returns the modified table.
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
    * Note that the passed table is expected to have a .fu attribute, which describes the FU of each column.
@@ -109,11 +98,8 @@ define(['lib/logger', 'lib/d3', './Field'], function (Logger, d3, F) {
     // run PQL query
     return model.predict(
       [...dimensions, ...measures].map(F.asModelTuple),
-      //[...model.asName(dimensions), ...measures.map( meas => ({"name":meas.name, "aggregation":meas.aggr, "args":[]}) )],
       [],
-      //dimensions.map( dim => ({"name":dim.name, "split":dim.split, "args":[]}) )
       dimensions.map(F.asSplitTuple)
-      //dimensions.map( dim => ({"name":dim.name, "split":"equidist", "args":[10]}) )
     ).then( table => {
       table.fu = idx2fu;
       return _attachExtent(table);

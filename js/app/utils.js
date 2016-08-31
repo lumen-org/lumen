@@ -47,7 +47,7 @@ define([], function() {
    * Joins the two tables a and b
    * naive implementation
    */
-  function _join(a, b) {
+  function join(a, b) {
     var aCols = a.length,
       bCols = b.length,
       cols = aCols + bCols;
@@ -97,8 +97,21 @@ define([], function() {
     return res;
   }
 
+  /**
+   * Utility function that returns the domain of some given discrete or continuous data.
+   * @param data
+   * @param discreteFlag
+   * @returns {*}
+   * @private
+   */
+  var domain = function (data, discreteFlag) {
+    return (discreteFlag ? _.unique(data) : d3.extent(_.flatten(data)) );
+  };
+
   return {
     selectValue: selectValue,
-    listify: listify
+    listify: listify,
+    join: join,
+    domain: domain
   };
 });

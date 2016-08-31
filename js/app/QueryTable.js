@@ -61,31 +61,6 @@ define(['lib/logger', './Field'], function (Logger, F) {
           layout.push(fu);
         }
       });
-
-
-      /* iterate over all field usages of the current NSF element
-      nsf[i].forEach( fu => {
-        if (F.isDimension(fu)) {
-          // find dimension usages on details shelf that are based on the same name
-          let idx = details.findIndex(o => F.isDimension(o) && fu.name === o.name);
-          if (idx !== -1) {
-            // merge the domains of the existing fieldUsage with fieldUsage of NSF
-            // do NOT modify the existing fieldUsage since it is a shallow copy. Instead create a new FieldUsage.
-            let mergedFU = new F.FieldUsage(details[idx]);
-            mergedFU.domain = mergedFU.domain.intersection(fu.domain);
-            details[idx] = mergedFU;
-            logger.debug('merging domains...');
-          } else {
-            details.push(fu);
-          }
-
-        }
-        else {
-          if (!layout.empty())
-            throw "After template expansion there must be only one FU on a row/col shelf";
-          layout.push(fu);
-        }
-      });*/
       expansion[i] = instance;
     }
 

@@ -361,37 +361,6 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
     else throw new RangeError("invalid value of axis:", axis);
   }
 
-  /*
-   * Returns a mapping from the usages to the index in the result table. e.g. the usage 'color' maps to the index of the fieldUsage that encodes color.
-   * Note that this map is common for all atomic queries of a templated query.
-   * @param queries
-   * @returns {{}}
-   *
-  function usage2idx(queries) {
-    // this works because the same usage always has the same index, e.g. the values that are encoded to color are at the same index in the result table for all atomic queries of one templated query
-
-    let usage2idx = {};
-    let query = queries.at[0][0];//queries.base;
-
-    let aesthetics = query.layers[0].aesthetics;
-    ['color', 'shape', 'size'].forEach(
-      function (key) {
-        if (F.isFieldUsage(aesthetics[key]))
-          usage2idx[key] = aesthetics[key].index;
-      }
-    );
-
-    let layout = query.layout;
-    if (F.isFieldUsage(layout.cols[0]))
-      usage2idx['x'] = layout.cols[0].index;
-    if (F.isFieldUsage(layout.rows[0]))
-      usage2idx['y'] = layout.rows[0].index;
-
-    //let splitX
-
-    return usage2idx;
-  }*/
-
   /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
    * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
