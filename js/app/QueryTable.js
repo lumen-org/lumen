@@ -42,7 +42,7 @@ define(['lib/logger', './Field'], function (Logger, F) {
       // delete templated part (this does not affect the base query!)
       layout.clear();
 
-      nsf[i].forEach( fu => {
+      nsf[i].forEach( fu => { // jshint ignore:line
         if (F.isDimension(fu)) {
           // add the FU to details, since we need that field to be included in the result table alter. Do not change its domain, as the domain is readonly
           let idx = details.findIndex(o => F.isDimension(o) && fu.name === o.name);

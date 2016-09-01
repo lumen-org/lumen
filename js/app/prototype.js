@@ -130,10 +130,10 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       //eval('console.log("");'); // prevents auto-optimization of the closure
     });*/
 
-    function myScript () {
+    function myScript () { // jshint ignore:line
       // put some debug / testing stuff here to be executed on loading of the app
 
-      function onFetched(res) {
+      function onFetched(res) { // jshint ignore:line
         iris_ = res;
         return iris_;
       }
@@ -143,7 +143,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
         return res;
       }
 
-      function onDone(res) {
+      function onDone(res) { // jshint ignore:line
         return res;
       }
 

@@ -15,8 +15,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
    */
   var FieldT = Object.freeze({
     Type: {string: 'string', num: 'numerical'},
-    Role: {measure: 'measure', dimension: 'dimension'},
-    Kind: {cont: 'continuous', discrete: 'discrete'}
+    Role: {measure: 'measure', dimension: 'dimension'}
   });
 
   /**
@@ -55,7 +54,6 @@ define(['./utils', './SplitSample'], function (utils, S) {
     this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
     this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
     this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure); //! the fields default role, when used as a FieldUsage
-    this.kind = utils.selectValue(args.kind, isF, nameOrField.kind, FieldT.Kind.cont);
     this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);
   };
 
@@ -68,12 +66,8 @@ define(['./utils', './SplitSample'], function (utils, S) {
   };
 
   Field.prototype.isDiscrete = function () {
-    return this.kind === FieldT.Kind.discrete;
-  };
-
-  Field.prototype.isContinuous = function () {
-    return this.kind === FieldT.Kind.cont;
-  };
+    return this.dataType === FieldT.Type.string;
+  }
 
   /**
    * Returns a textual description of this field.
@@ -81,7 +75,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
    */
   Field.prototype.toString = function () {
     var desc = "'" + this.name + "': " + this.dataType + ", " + this.kind + " " + this.role;
-    if (this.isDiscrete())
+    if (this.dataType === FieldT.Type.num)
       desc += ". domain = [" + this.domain + "]";
     return desc;
   };

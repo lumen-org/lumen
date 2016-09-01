@@ -606,10 +606,8 @@ define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGene
       } :
       Settings.maps.shape );
 
-    /*aesthetics.hoverMapper = (d) => d.reduce(
-      (prev,di,i) => prev + data.fu[i].name + ": " + di + "\n", // reduce fct
-      ""); // initial value*/
-    aesthetics.hoverMapper = (d) => d;
+    aesthetics.hoverMapper = (d) => d.reduce(
+      (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
 
     let layout = query.layout;
     let colFU = layout.cols[0],

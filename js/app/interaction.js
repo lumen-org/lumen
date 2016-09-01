@@ -296,8 +296,6 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
    * @type {{}}
    * @alias module:interaction.onDrop
    */
-  //var onDrop = {};
-
   var onDrop = function (target, source, overlap) {
     // delegate to correct handler
     if (target instanceof sh.Record)

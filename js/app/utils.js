@@ -108,10 +108,17 @@ define([], function() {
     return (discreteFlag ? _.unique(data) : d3.extent(_.flatten(data)) );
   };
 
+  var hasProperty = function (obj, prop) {
+    var proto = obj.__proto__ || obj.constructor.prototype;
+    return (prop in obj) &&
+      (!(prop in proto) || proto[prop] !== obj[prop]);
+  };
+
   return {
     selectValue: selectValue,
     listify: listify,
     join: join,
-    domain: domain
+    domain: domain,
+    hasProperty: hasProperty
   };
 });

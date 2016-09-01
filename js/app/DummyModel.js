@@ -179,49 +179,42 @@ define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domai
         'age', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont,
           domain: new Domain.SimpleNumericContinuous(0, 100)
         });
       var weightField = new F.Field(
         'weight', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont,
           domain: new Domain.SimpleNumericContinuous(40, 90)
         });
       var incomeField = new F.Field(
         'income', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.cont,
           domain: new Domain.SimpleNumericContinuous(500, 100000)
         });
       var childrenField = new F.Field(
         'children', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          kind: F.FieldT.Kind.discrete,
           domain: new Domain.Discrete([0, 1, 2, 3, 4])
         });
       var sexField = new F.Field(
         'sex', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.dimension,
-          kind: F.FieldT.Kind.discrete,
           domain: new Domain.Discrete(["F", "M"])
         });
       var nameField = new F.Field(
         'name', myModel, {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
-          kind: F.FieldT.Kind.discrete,
           domain: new Domain.Discrete(['Max', 'Philipp', 'Maggie'])
         });
       var cityField = new F.Field(
         'city', myModel, {
           dataType: F.FieldT.Type.string,
           role: F.FieldT.Role.dimension,
-          kind: F.FieldT.Kind.discrete,
           domain: new Domain.Discrete(['Tokyo', 'Jena', 'Seoul', 'New York'])
           //domain: new Domain.Discrete(['Tokyo', 'Jena', 'Seoul', 'Chicago'])
         });

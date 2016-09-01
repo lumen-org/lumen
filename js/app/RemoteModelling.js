@@ -1,6 +1,8 @@
 /**
  * "Remote Model" module.
  *
+ * The interface expects JSON
+ *
  * @module RemoteModel
  * @author Philipp Lucas
  */
@@ -66,7 +68,8 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
      */
     constructor(name, url) {
       super(name);
-      if (!url) throw "url parameter missing";
+      if (!url || !_.isString(url))
+        throw RangeError("url parameter missing or not a string");
       this.url = url;
     }
 
@@ -81,7 +84,6 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
           new F.Field(field.name, this, {
             dataType: field.dtype,
             domain: (field.dtype === 'numerical' ? new Domain.SimpleNumericContinuous(...field.domain) : new Domain.Discrete(field.domain)),
-            kind: (field.dtype === 'numerical' ? F.FieldT.Kind.cont : F.FieldT.Kind.discrete),
             role: (field.dtype === 'numerical' ? F.FieldT.Role.measure : F.FieldT.Role.dimension)
           })
         );

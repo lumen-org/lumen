@@ -42,7 +42,8 @@ define([], function () {
    * Constructs a simple continuous numerical domain from the given interval.
    * A continuous numeric domain is just an interval, including its bounds.
    *
-   * @param interval an array with two elements, i.e. lower and upper bound of the interval.
+   * @param low lower bound of the interval.
+   * @param high lower bound of the interval.
    * @constructor
    */
   var SimpleNumericContinuousDomain = function (low, high) {
@@ -60,7 +61,7 @@ define([], function () {
     this._checkType(domain);
     var l = (this.low < domain.l ? this : domain);
     var h = (this.high > domain.h ? this : domain);
-    // make sure the intersection is not empy
+    // make sure the intersection is not empty
     if (l.high < h.low)
       throw "domain values cannot be unioned";
     else
@@ -71,7 +72,7 @@ define([], function () {
     this._checkType(domain);
     var l = (this.low < domain.l ? this : domain);
     var h = (this.high > domain.h ? this : domain);
-    // make sure the intersection is not empy
+    // make sure the intersection is not empty
     if (l.high < h.low)
       throw "domain values cannot be unioned";
     else

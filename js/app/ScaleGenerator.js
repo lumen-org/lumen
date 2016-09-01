@@ -28,14 +28,14 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
   scaleGenerator.color = function (fu, domain) {
     var colormap = [],
       scale = [];
-    switch (fu.kind) {
-      case F.FieldT.Kind.cont:
+    switch (fu.dataType) {
+      case F.FieldT.Type.num:
         scale = d3.scale.linear();
         // usa poly-linear scale for a good approximation of the implicit color gradient. for that we need to extend the domain to also have 9 values.
         colormap = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
         domain = d3.range(domain[0], domain[1], (domain[1]-domain[0])/(9-1) );
         break;
-      case F.FieldT.Kind.discrete:
+      case F.FieldT.Type.string:
         scale = d3.scale.ordinal();
         let l = domain.length;
         // colormap
@@ -51,9 +51,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
           colormap = cbrew.Paired[l];
         }
         break;
-      default: throw new TypeError("invalid Field.Kind" + fu.kind);
+      default: throw new RangeError("invalid Field.dataType" + fu.dataType);
     }
-    //return scale.range(colormap).domain(fu.extent);
     return scale.domain(domain).range(colormap);
   };
 
@@ -74,10 +73,10 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    */
   scaleGenerator.shape = function (fu, domain) {
     var scale = [];
-    switch (fu.kind) {
-      case F.FieldT.Kind.cont:
+    switch (fu.dataType) {
+      case F.FieldT.Type.num:
         throw new Error("continuous shapes not yet implemented.");
-      case F.FieldT.Kind.discrete:
+      case F.FieldT.Type.string:
         scale = d3.scale.ordinal()
           .range(d3.svg.symbolTypes)
           .domain(domain);
@@ -87,7 +86,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
             d3.svg.symbolTypes.length + " many. I will 'wrap around'..");
         }
         break;
-      default: throw new TypeError("invalid Field.Kind" + fu.kind);
+      default: throw new RangeError("invalid Field.dataType" + fu.dataType);
     }
     return scale;
   };
@@ -100,19 +99,18 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    */
   scaleGenerator.position = function (fu, domain, range) {
     var scale = [];
-    switch (fu.kind) {
-      case F.FieldT.Kind.cont:
+    switch (fu.dataType) {
+      case F.FieldT.Type.num:
         // continuous domain
         scale = d3.scale.linear()
           .range(range);
         break;
-      case F.FieldT.Kind.discrete:
+      case F.FieldT.Type.string:
         // discrete domain: map to center of equally sized bands
         scale = d3.scale.ordinal()
           .rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
-      default:
-        throw new TypeError("invalid Field.Kind: " + fu.kind);
+      default: throw new RangeError("invalid Field.dataType" + fu.dataType);
     }
     return scale.domain(domain);
   };
