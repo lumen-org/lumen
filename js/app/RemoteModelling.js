@@ -7,7 +7,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], function (Logger, d3, utils, Domain, F, Model) {
+define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'], function (Logger, d3, utils, Domain, F, Model) {
   "use strict";
 
   /**
@@ -68,8 +68,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
      */
     constructor(name, url) {
       super(name);
-      if (!url || !_.isString(url))
-        throw RangeError("url parameter missing or not a string");
+      if (!url || !_.isString(url)) throw RangeError("url parameter missing or not a string");
       this.url = url;
     }
 
@@ -78,15 +77,13 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
      * @param json JSON object containing the field information.
      */
     _updateHeader(json) {
-      this.fields.clear();
+      this.fields = {};
       for (let field of json.fields) {
-        this.fields.push(
-          new F.Field(field.name, this, {
-            dataType: field.dtype,
-            domain: (field.dtype === 'numerical' ? new Domain.SimpleNumericContinuous(...field.domain) : new Domain.Discrete(field.domain)),
-            role: (field.dtype === 'numerical' ? F.FieldT.Role.measure : F.FieldT.Role.dimension)
-          })
-        );
+        this.fields[field.name] = new F.Field(
+            field.name,
+            field.dtype,
+            (field.dtype === 'numerical' ? new Domain.SimpleNumericContinuous(...field.domain) : new Domain.Discrete(field.domain)),
+            this);
       }
       this.name = json.name;
       return this;
@@ -104,7 +101,6 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
       return executeRemotely(content, this.url)
         .then(this._updateHeader.bind(this));
     }
-
 
     /**
      * Returns an aggregation on the fieldToAggregate with the ids conditioned to their corresponding values. Does not modify the model.
@@ -129,7 +125,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
     }
 
     /**
-     * Conditions one or more variables   v of this model on the given domain and returns a Promise to the modified model.
+     * Conditions one or more variables v of this model on the given domain and returns a Promise to the modified model.
      * @param conditionals A single pair, or an array of pairs. A pair is an object with at least two properties:
      *   - id: the variable of the model, and
      - range: The range or value to condition the variable on.
@@ -145,25 +141,61 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
 
     marginalize(what, how="remove", name=this.name) {
       what = this.asName(utils.listify(what));
-      if (how == "remove")
-        what =  _.without(this.asName(this.fields), ...what);
+      if (how === "remove")
+        what =  _.without(this.names(), ...what);
+      else if (how !== "keep")
+        throw RangeError("invalid value for 'how': " + how);
       return this.model(what, [], name);
+    }
+
+    model(model, where = [], name = this.name) {
+      if (model !== "*") {
+        model = utils.listify(model);
+        if(!model.every(_.isString)) throw new TypeError("'model' must be strings");
+      }
+      where = utils.listify(where);
+      if(!where.every(F.isFilter)) throw new TypeError("'where' must be all filters.");
+      if(!_.isString(name)) throw new TypeError("'name' must be a string");
+
+      var jsonContent = {
+        "MODEL": model,
+        "FROM": this.name,
+        "WHERE": where.map(F.filterToPQL),
+        "AS": name
+      };
+      var newModel = (name !== this.name ? new RemoteModel(name, this.url) : this);
+      return executeRemotely(jsonContent, this.url)
+        .then(jsonHeader => newModel._updateHeader(jsonHeader));
     }
 
     /**
      *
-     * @param predict A list of 'predict-tuples'. See top for documentation.
-     * @param where A list of 'condition-tuples'. See top for documentation.
-     * @param splitBy A list of 'split-tuples'. See top for documentation.
-     * @returns {Array} table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
+     * @param predict {FieldUsage} A list or a single object of ({@link Aggregation}|{@link Density}|name-of-field|{@link Field})
+     * @param where {FieldUsage} A list or a single object of {@link Filter}
+     * @param splitBy {FieldUsage} A list or a single object of {@link Split}.
+     * @returns {Array} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
     predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
+      if(!where.every(F.isFilter)) throw new TypeError("'where' must be all of type Filter.");
+      if(!splitBy.every(F.isSplit)) throw new TypeError("'where' must be all of type Split.");
+
       var jsonContent = {
-        "PREDICT": predict,
+        "PREDICT": predict.map(p => {
+          if (_.isString(p))
+            return p;
+          if (p instanceof F.Field)
+            return p.name;
+          else if (F.isAggregation(p))
+            return F.aggregationToPQL(p);
+          else if (F.isDensity(p))
+            return F.densityToPQL(p);
+          else
+            throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
+        }),
         "FROM": this.name,
-        "WHERE": where,
-        "SPLIT BY": splitBy
+        "WHERE": where.map(F.filterToPQL),
+        "SPLIT BY": splitBy.map(F.splitToPQL)
       };
 
       console.log("SPLITBY:\n");
@@ -173,24 +205,27 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
       let len = predict.length;
       let dtypes = [];
       for (let p of predict)
-        if (typeof p === 'string')
-          dtypes.push(this.asField(p));
-        else
-          dtypes.push(...utils.listify(this.asField(p.name)));
-      dtypes = dtypes.map(field => field.dataType);
+        if (_.isString(p))
+          dtypes.push(this.fields[p].dataType);
+        else if (p instanceof F.Field)
+          dtypes.push(p.dataType);
+        else if (F.isAggregation(p))
+          dtypes.push(...p.yields.map(y => this.field[y].dataType));
+        else if (F.isDensity(p))
+          dtypes.push(F.FieldT.DataType.num);
 
       // function to parse a row according to expected data types
-      let parseRow = function (row) {
+      function parseRow (row) {
         for (let i=0; i<len; ++i) {
-          if (dtypes[i] == F.FieldT.Type.num)
+          if (dtypes[i] === F.FieldT.DataType.num)
             row[i] = +row[i];
-          else if (dtypes[i] != F.FieldT.Type.string)
-              throw new RangeError("invalid dataType");
-          //else if (dtypes[i] == F.FieldT.Type.string)
+          //else if (dtypes[i] == F.FieldT.DataType.string)
           //  row[i] = row[i]
+          else if (dtypes[i] !== F.FieldT.DataType.string)
+              throw new RangeError("invalid dataType");
         }
         return row;
-      };
+      }
 
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
@@ -198,21 +233,6 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
           table.header = jsonData.header;
           return table;
         });
-    }
-
-    model(model, where = [], name = this.name) {
-      where = utils.listify(where);
-      if (model != "*")
-        model = utils.listify(model);
-      var jsonContent = {
-        "MODEL": model,
-        "FROM": this.name,
-        "WHERE": where,
-        "AS": name
-      };
-      var newModel = (name !== this.name ? new RemoteModel(name, this.url) : this);
-      return executeRemotely(jsonContent, this.url)
-        .then( jsonHeader => newModel._updateHeader(jsonHeader));
     }
 
     /**
@@ -233,7 +253,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
       return executeRemotely(content, this.url)
         .then(() => {
           myClone = new RemoteModel(name, that.url);
-          myClone.fields = that.fields.slice();
+          myClone.fields = _.assign({}, that.fields);
           return myClone;
         });
     }
@@ -243,6 +263,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './Field', './Model'], fu
   class RemoteModelBase {
 
     constructor(url) {
+      if (!_.isString(url)) throw new RangeError("url ist not a String");
       this.url = url;
     }
 

@@ -4,7 +4,7 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
+define(['lib/emitter', 'd3', './init', './FieldUsage', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
   function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
     'use strict';
 
@@ -59,6 +59,8 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
 
 
     function onUpdate () {
+      if (runMyScript)
+        return;
       query = new VisMEL(shelf, model);
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
@@ -111,17 +113,21 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
     // define shelves
     var shelf = sh.construct();
 
-    // get initial model
-    var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
-    model.update()
-      .then(populateGUI)
-      .then(initialQuerySetup)
-      .then(enableQuerying)
-      .catch((err) => {
-        console.error(err);
-        throw "Could not load remote model from Server - see above";
-      });
+    var runMyScript = true;
 
+    if (!runMyScript) {
+        // get initial model
+        var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
+        model.update()
+          .then(populateGUI)
+          .then(initialQuerySetup)
+          .then(enableQuerying)
+          .catch((err) => {
+            console.error(err);
+            throw "Could not load remote model from Server - see above";
+          });
+
+      }
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
       onUpdate();
@@ -130,20 +136,12 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       //eval('console.log("");'); // prevents auto-optimization of the closure
     });*/
 
+    
     function myScript () { // jshint ignore:line
       // put some debug / testing stuff here to be executed on loading of the app
 
-      function onFetched(res) { // jshint ignore:line
-        iris_ = res;
-        return iris_;
-      }
-
       function printResult(res) {
         console.log(res);
-        return res;
-      }
-
-      function onDone(res) { // jshint ignore:line
         return res;
       }
 
@@ -153,18 +151,20 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
       mb.get('iris')
         .then(printResult)
         .then(iris => iris.copy("iris_copy"))
-        .then(iriscopy => iriscopy.model(['sepal_length', 'petal_length', 'sepal_width']))
+        .then(ic => ic.model(['sepal_length', 'petal_length', 'sepal_width']))
         .then(printResult)
-        .then(iriscopy => {iris_ = iriscopy.model("*", [{"name": "sepal_length", "operator": "equals", "value": 5}]); return iris_;})
+        .then(ic => {iris_ = ic.model("*", [F.Filter(ic.fields["sepal_length"], "equals", 5)]); return iris_;})
         .then(printResult)
-        .then(iriscopy => iriscopy.predict(
-          ["petal_length", {"name":"petal_length", "aggregation":"density"}], [],
-          {"name":"petal_length", "split":"equidist", "args":[5]}))
+        .then(ic => ic.predict(
+          ["petal_length", F.Density(ic.fields["petal_length"])], 
+          [],
+          F.Split(ic.fields["petal_length"], "equiDist", [5])))
         .then(printResult)
         .then( _ => iris_)
-        .then(iriscopy => iriscopy.predict(
-          ["sepal_width", "petal_length", {"name":"petal_length", "aggregation":"density"}], [],
-          [{"name":"petal_length", "split":"equidist", "args": [5]}, {"name":"sepal_width", "split":"equidist", "args": [3]}]))
+        .then(ic => ic.predict(
+          [ic.fields["sepal_width"], ic.fields["petal_length"], F.Density(ic.fields["petal_length"])],
+          [],
+          [F.Split(ic.fields["petal_length"], "equiDist", [5]), F.Split(ic.fields["sepal_width"], "equiDist", [3])] ))
         .then(printResult)
         .then( _ => iris_);
     }
@@ -174,7 +174,7 @@ define(['lib/emitter', 'd3', './init', './Field', './shelves','./DummyModel', '.
        * Starts the application.
        */
       start: function () {
-       // myScript();
+        if(runMyScript) myScript();
       }
     };
 

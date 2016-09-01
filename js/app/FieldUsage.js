@@ -14,10 +14,8 @@
  * @module Field
  */
 
-define(['./utils', './Model'], function (utils, gm) {
+define(['./utils'], function (utils) {
   "use strict";
-
-
 
   /**
    * Type definitions of a Field.
@@ -44,18 +42,11 @@ define(['./utils', './Model'], function (utils, gm) {
     constructor (name, dataType, domain, dataSource) {
       if (!_.isString(name)) throw TypeError("name must be a string, but is: " + name.toString());
       if (!_.contains(FieldT.DataType, dataType)) throw RangeError("invalid dataType: " + dataType.toString());
-      if (!(dataSource instanceof gm.Model)) throw TypeError("dataSource must be a Model.");
 
       this.name = name;
       this.dataType = dataType;
       this.domain = domain;
       this.dataSource = dataSource;
-
-      // this.name = (isF ? nameOrField.name : nameOrField);
-      // this.dataSource = utils.selectValue(dataSource, isF, nameOrField.dataSource, {});
-      // this.dataType = utils.selectValue(args.dataType, isF, nameOrField.dataType, FieldT.Type.num);
-      // this.role = utils.selectValue(args.role, isF, nameOrField.role, FieldT.Role.measure); //! the fields default role, when used as a FieldUsage
-      // this.domain = utils.selectValue(args.domain, isF, nameOrField.domain, []);
     }
   }
 
@@ -80,42 +71,54 @@ define(['./utils', './Model'], function (utils, gm) {
   //   return desc;
   // };
 
-
-  var SplitMethods = Object.freeze({
-    equiSplit: 'equiSplit'
+  var SplitMethod = Object.freeze({
+    equiDist: 'equiDist'
   });
+  var isSplitMethod = (m) => m === SplitMethod.equiDist;
 
   var AggregationMethods = Object.freeze({
     argmax: 'max',
     argavg: 'avg'
   });
+  var isAggregationMethod = (m) => m === AggregationMethods.argavg || m === AggregationMethods.argmax;    
 
-  var DensityMethods = Object.freeze({
+  var DensityMethod = Object.freeze({
     density: 'density'
   });
+  var isDensityMethod = (m) => m === DensityMethod.density;
 
-  var FilterMethods = Object.freeze({
+  var FilterMethod = Object.freeze({
     equals: 'equals'
   });
+  var isFilterMethod = (m) => m === FilterMethod.equals;
+
 
   function Filter (field, method, args={}) {
     if (!isField(field))
       throw TypeError("name must be string identifier of a field");
-    if (-1 === FilterMethods.keys.indexOf(method))
-      throw RangeError("invalid method for Filter: " + split.toString());
+    if (!isFilterMethod(method))
+      throw RangeError("invalid method for Filter: " + method.toString());
     return {
       field: field,
       get name() {return field.name;},
       method: method,
       args: args
+    };
+  }
+
+  function filterToPQL (f) {
+    return {
+      name: f.name,
+      operator: f.method,
+      value: f.args
     };
   }
 
   function Split (field, method, args={}) {
     if (!isField(field))
       throw TypeError("name must be string identifier of a field");
-    if (-1 === SplitMethods.keys.indexOf(method))
-      throw RangeError("invalid method for Split: " + split.toString());
+    if (!isSplitMethod(method))
+      throw RangeError("invalid method for Split: " + method.toString());
     return {
       field: field,
       get name() {return field.name;},
@@ -124,12 +127,20 @@ define(['./utils', './Model'], function (utils, gm) {
     };
   }
 
+  function splitToPQL (a) {
+    return {
+      name: a.name,
+      split: a.method,
+      args: a.args
+    };
+  }
+
   function Aggregation (fields, method, yields, args={}) {
     fields = utils.listify(fields);
-    if (!fields.all(isField(fields)))
+    if (!fields.every(isField))
       throw TypeError("all names must be string identifier of fields");
-    if (-1 === AggregationMethods.keys.indexOf(method))
-      throw RangeError("invalid method for Aggregation: " + split.toString());
+    if (isAggregationMethod(method))
+      throw RangeError("invalid method for Aggregation: " + method.toString());
     return {
       fields: fields,
       get names() {return this.fields.map(f=>f.name);},
@@ -139,35 +150,48 @@ define(['./utils', './Model'], function (utils, gm) {
     };
   }
 
+  function aggregationToPQL (a) {
+    return {
+      name: a.names,
+      aggregation: a.method,
+      yields: a.yields,
+      args: a.args
+    };
+  }
+
   function Density (fields) {
     fields = utils.listify(fields);
-    if (!fields.all(isField(fields)))
+    if (!fields.every(isField))
       throw TypeError("all names must be string identifier of fields");
     return {
       fields: fields,
       get names() {return this.fields.map(f=>f.name);},
-      method: DensityMethods.density
+      method: DensityMethod.density
     };
   }
 
-  function AggregationToPQL (aggr) {
-    throw "Not implemented";
+  function densityToPQL (d) {
+    return {
+      name: d.names,
+      aggregation: d.method,
+      args: d.args
+    };
   }
 
   function isAggregation (obj) {
-    return utils.hasProperty(obj, 'method') && -1 === AggregationMethods.keys.indexOf(obj.method);
+    return utils.hasProperty(obj, 'method') && isAggregationMethod(obj.method);
   }
 
   function isSplit (obj) {
-    return utils.hasProperty(obj, 'method') && -1 === SplitMethods.keys.indexOf(obj.method);
+    return utils.hasProperty(obj, 'method') && isSplitMethod(obj.method);
   }
 
   function isDensity (obj) {
-    return utils.hasProperty(obj, 'method') && -1 === DensityMethods.keys.indexOf(obj.method);
+    return utils.hasProperty(obj, 'method') && isDensityMethod(obj.method);
   }
 
   function isFilter (obj) {
-    return utils.hasProperty(obj, 'method') && -1 === FilterMethods.keys.indexOf(obj.method);
+    return utils.hasProperty(obj, 'method') && isFilterMethod(obj.method);
   }
 
   function isFieldUsage (fu) {
@@ -175,10 +199,16 @@ define(['./utils', './Model'], function (utils, gm) {
   }
 
   return {
+    Field: Field,
+    FieldT: FieldT,
     Aggregation: Aggregation,
     Density: Density,
     Split: Split,
     Filter: Filter,
+    aggregationToPQL: aggregationToPQL,
+    densityToPQL: densityToPQL,
+    splitToPQL: splitToPQL,
+    filterToPQL: filterToPQL,
     isAggregation: isAggregation,
     isDensity: isDensity,
     isSplit: isSplit,
