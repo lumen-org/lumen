@@ -10,7 +10,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'd3', './Field', './VisMEL', './ResultTable', './ScaleGenerator', './ViewSettings'], function (Logger, d3, F, VisMEL, ResultTable, ScaleGen, Settings) {
+define(['lib/logger', 'd3', './FieldUsage', './VisMEL', './ResultTable', './ScaleGenerator', './ViewSettings'], function (Logger, d3, F, VisMEL, ResultTable, ScaleGen, Settings) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');

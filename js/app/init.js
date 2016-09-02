@@ -10,8 +10,6 @@ define(['lib/logger','d3'], function (Logger, d3) {
   Logger.useDefaults();
 
   // extend d3
-  var _nameMap = obj => obj.name;
-
   /**
    * todo: only works on single element selections for now.
    * @returns {Number}
@@ -21,6 +19,7 @@ define(['lib/logger','d3'], function (Logger, d3) {
   };
 
   // extent array prototype
+  var _nameMap = obj => obj.name;
 
   Array.prototype.last = function() {
     return this[this.length-1];

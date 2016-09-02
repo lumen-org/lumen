@@ -67,7 +67,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
 
   Field.prototype.isDiscrete = function () {
     return this.dataType === FieldT.Type.string;
-  }
+  };
 
   /**
    * Returns a textual description of this field.
@@ -204,7 +204,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
     return obj instanceof Field;
   }
 
-  function nameMap (field) {
+  function _nameMap (field) {
     return field.name;
   }
 
@@ -218,8 +218,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
     isFieldUsage: isFieldUsage,
     isField: isField,
     asModelTuple: asModelTuple,
-    asSplitTuple: asSplitTuple,
-    nameMap: nameMap
+    asSplitTuple: asSplitTuple
   };
 
 });

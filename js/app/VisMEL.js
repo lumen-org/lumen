@@ -6,8 +6,36 @@
  * @module VisMEL
  */
 
-define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
+define(['./FieldUsage', './TableAlgebra'], function(F, TableAlgebra) {
   'use strict';
+
+  class BaseMap {
+    constructor (fieldUsage) {
+      this.fu = fieldUsage;
+    }
+  }
+
+  class ColorMap extends BaseMap {
+    constructor (fu, channel) {
+      super(fu);
+      this.channel = channel;
+      if (fu.yieldDataType === F.FieldT.DataType.num) {
+        this.scale = 'linear';
+        this.colormap = 'default';
+      } else if (fu.yieldDataType === F.FieldT.DataType.string) {
+        this.scale = 'ordinal';
+        this.colormap = 'default';
+      } else
+        throw new RangeError('invalid value for yieldDataType: ' + fu.yieldDataType);
+    }
+  }
+
+  var DetailMap = BaseMap;
+  var ShapeMap = BaseMap;
+  var SizeMap = BaseMap;
+  var FilterMap = BaseMap;
+  var LayoutMap = BaseMap;
+
 
   /**
    * Constructs the sources part of a VisMEL query from a given source.
@@ -93,9 +121,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
       size: shelf.size.contentAt(0),
       //orientation: FIELD_USAGE_NAME, //future feature
       // shelves that may hold multiple field usages
-      details: _.map(shelf.detail.records, function (r) {
-        return r.content;
-      })
+      details: _.map(shelf.detail.records, r => r.content)
       //label:   { FIELD_USAGE_NAME* },//future feature
       //hover:   { FIELD_USAGE_NAME* } //future feature
     };
@@ -162,9 +188,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    */
   VisMEL.prototype.fields = function () {
     var fus = this.fieldUsages();
-    return _.uniq( fus.map(
-      function(fu){return fu.base;}
-    ));
+    return _.uniq( fus.map( fu => fu.base ));
   };
 
   /**
@@ -185,23 +209,23 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
 
   /**
    * @returns Returns the set of {@link FieldUsage}s of this query which are measures.
-   */
+   *
   VisMEL.prototype.measureUsages = function () {
     return this.fieldUsages()
-      .filter(F.isMeasure);
+      .filter(fu => F.isAggregation(fu) || F.isDensity(fu));
   };
 
   /**
    * @returns Returns the set of {@link FieldUsage}s of this query which are dimensions.
-   */
+
   VisMEL.prototype.dimensionUsages = function () {
     return this.fieldUsages()
-      .filter(F.isDimension);
+      .filter(F.isSplit);
   };
 
   /**
    * @returns Returns the set of {@link FieldUsage}s of this query that are common among all implied submodels, i.e. all field usages except those of the layout part of the query.
-   */
+   *
   VisMEL.prototype.commonMeasureUsages = function () {
     return _.without( this.measureUsages(),
       ...this.layout.rows.fieldUsages(), ...this.layout.cols.fieldUsages() );
@@ -213,7 +237,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
    *  (2) marks per pane are split by
    * i.e.: all dimension usages on color, shape, size, orientation, details, ... but not on rows, columns, filters.
    * note: 'Unique' means only one FieldUsage per Field is kept, e.g. if there is several dimension usages of a field with name "age" only the first one is kept. This convention is applied, as multiple dimension usages of the same field do NOT lead to more splitting of marks.
-   */
+   *
   VisMEL.prototype.splittingDimensionUsages = function () {
     var layer = this.layers[0];
     return _.unique( _.filter(
@@ -224,6 +248,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
         F.isDimension),
       F.nameMap);
   };
+  // */
 
   // delimiter for JSON conversion
   var _delim = '\t';
@@ -245,7 +270,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     },
 
     source : function (key, value) {
-      if (this instanceof F.Field && key === "dataSource")
+      if (F.isField(this) && key === "dataSource")
         return undefined;
       return value;
     },
@@ -257,7 +282,7 @@ define(['./Field', './TableAlgebra'], function(F, TableAlgebra) {
     },
 
     layer : function (key, value) {
-      if (value instanceof F.Field)
+      if (F.isField(value))
         return value.name;
       return value;
     }};

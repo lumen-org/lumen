@@ -95,7 +95,7 @@ define(['./utils'], function (utils) {
 
   function Filter (field, method, args={}) {
     if (!isField(field))
-      throw TypeError("name must be string identifier of a field");
+      throw TypeError("'field' must be a field");
     if (!isFilterMethod(method))
       throw RangeError("invalid method for Filter: " + method.toString());
     return {
@@ -123,7 +123,9 @@ define(['./utils'], function (utils) {
       field: field,
       get name() {return field.name;},
       method: method,
-      args: args
+      args: args,
+      //get yieldName() {return field.name;},
+      get yieldDataType() {return field.dataType;}
     };
   }
 
@@ -138,15 +140,18 @@ define(['./utils'], function (utils) {
   function Aggregation (fields, method, yields, args={}) {
     fields = utils.listify(fields);
     if (!fields.every(isField))
-      throw TypeError("all names must be string identifier of fields");
+      throw TypeError("fields must be a single or an array of fields");
     if (isAggregationMethod(method))
-      throw RangeError("invalid method for Aggregation: " + method.toString());
+      throw RangeError("invalid method for Aggregation: " + method);
+    if (-1 == fields.map(f=>f.name).indexOf(yields))
+      throw RangeError("yields is not a name of any of aggregated fields: " + yields);
     return {
       fields: fields,
       get names() {return this.fields.map(f=>f.name);},
       method: method,
       yields: yields,
-      args: args
+      args: args,
+      get yieldDataType() {return _.find(fields, f => f.name === yields).dataType;}
     };
   }
 
@@ -162,11 +167,13 @@ define(['./utils'], function (utils) {
   function Density (fields) {
     fields = utils.listify(fields);
     if (!fields.every(isField))
-      throw TypeError("all names must be string identifier of fields");
+      throw TypeError("fields must be a single or an array of fields");
     return {
       fields: fields,
       get names() {return this.fields.map(f=>f.name);},
-      method: DensityMethod.density
+      method: DensityMethod.density,
+      //get yieldDataType() {return FieldT.DataType.num;}
+      yieldDataType: FieldT.DataType.num
     };
   }
 
@@ -198,9 +205,37 @@ define(['./utils'], function (utils) {
     return isAggregation(fu) || isSplit(fu) || isDensity(fu) || isFilter(fu);
   }
 
+  /*
+   TODO: separation of concerns:
+   * rename FieldUsages.js to PQL.js
+   * inteface that takes internal PQL an gives JSON PQL
+     * should be implemented here
+   * interface that takes JSON PQL and returns the answer in JSON
+     * should be implemented in remoteModelling.js
+     * maybe rename remoteModelling js as PQLModelBaseConnector
+   * interface that takes internal PQL and returns the answer in python stuff
+     * should be implemented in remoteModelling.js
+   */
+
+/*  var toJSON = {
+    predict : function (predict, from, where, as_) {
+      var pql = {
+        "PREDICT": predict,
+        "FROM": from,
+      };
+      if (where)
+        pql.where = where;
+      if (as_)
+        pql.as = as_
+      return pql;
+    },
+    show: ...
+  }; */
+
   return {
     Field: Field,
     FieldT: FieldT,
+    isField: isField,
     Aggregation: Aggregation,
     Density: Density,
     Split: Split,

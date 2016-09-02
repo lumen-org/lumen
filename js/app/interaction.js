@@ -383,7 +383,8 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals'], function (e, Log
   onDrop[sh.ShelfTypeT.color] = function (target, source, overlap) {
     target = (target instanceof sh.Record ? target.shelf : target);
     if (!target.empty()) _fix(target.at(0)).removeVisual().remove();
-    var newRecord = target.append(source);
+    var newRecord = target.append(new ColorUsage(source));
+    //var newRecord = target.append(source);
     _fix(newRecord).beVisual().beInteractable();
     if (!_isDimensionOrMeasureThingy(source)) _fix(source).removeVisual().remove();
   };

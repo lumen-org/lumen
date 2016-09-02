@@ -4,7 +4,7 @@
  * @module shelves
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger, utils, F) {
+define(['lib/emitter', 'lib/logger', './utils', './FieldUsage', ], function(E, Logger, utils, F) {
   'use strict';
 
   var logger = Logger.get('pl-shelves');
@@ -18,20 +18,14 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
    * @param {MeasureShelf} measShelf
    */
   function populate (model, dimShelf, measShelf) {
-    model.fields.forEach(
-      function(field) {
-        switch (field.role) {
-          case F.FieldT.Role.measure:
-            measShelf.append(field);
-            break;
-          case F.FieldT.Role.dimension:
-            dimShelf.append(field);
-            break;
-          default:
-            throw new Error('invalid value in field.role');
-        }
-      }
-    );
+    model.fields.forEach( field => {
+      if (field.dataType === F.FieldT.DataType.num)
+        measShelf.append(field);
+      else if (field.dataType === F.FieldT.DataType.string)
+        dimShelf.append(field);
+      else
+        throw new RangeError('invalid value in field.role');
+    });
   }
 
 
@@ -162,11 +156,16 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
   };
 
   /**
-   * An {@link Record} has an attribute (i.e. a {@link Field} or {@link FieldUsage}) and is bound to a certain {@link Shelf}.
+   * An {@link Record} has an attribute (e.g. a {@link Field} or a {@link FieldUsage}) and is bound to a certain {@link Shelf}.
    *
-   * @param {Field|FieldUsage} content - Note that content itself will be stored, not a copy of it.
-   * Note: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
+   * In particular a record 'knows' which shelf it belongs to by means of its '.shelf' attribute. The content can be
+   * accessed using the '.content' attribute.
+   *
    * Records do NOT emit any events.
+   *
+   * Note that Records can never store other records. Instead the first non-Record-content will be stored.
+   * TODO: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
+   * @param {Field|FieldUsage} content - Note that content itself will be stored, not a copy of it.
    * @param {Shelf} shelf - A shelf that this record belongs to.
    * @constructor
    * @alias module:shelves.Record
@@ -174,7 +173,9 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
   var Record; Record = function (content, shelf) {
     console.assert(typeof content !== 'undefined');
     console.assert(typeof shelf !== 'undefined');
-    console.assert(content instanceof F.Field || content instanceof F.FieldUsage);
+    //console.assert(content instanceof F.Field || content instanceof F.FieldUsage);
+    while (content instanceof Record)
+      content = content.content;
     this.content = content;
     this.shelf = shelf;
   };
@@ -208,28 +209,28 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
 
   /**
    * An {FieldRecord} is a {Record} that may only contain a {Field}.
-   * @param obj {Field|Record} Either a {Field} (will be stored as is), or a {Record} (used to construct a new {Field}).
+   * @param obj {Field|Record} Either a {Field} (will be stored as is), or a {Record} that contains a {@link Field}.
    * @param shelf The {Shelf} this record belongs to.
    * @constructor
    * @alias module:shelves.FieldRecord
-   */
+   *
   var FieldRecord; FieldRecord = function (obj, shelf) {
-    console.assert(obj instanceof Record || obj instanceof F.Field);
+    console.assert(obj instanceof Record && obj.content instanceof F.Field || obj instanceof F.Field);
     Record.call(this, (obj instanceof Record ? obj.content : obj), shelf);
   };
   FieldRecord.prototype = Object.create(Record.prototype);
-  FieldRecord.prototype.constructor = FieldRecord;
+  FieldRecord.prototype.constructor = FieldRecord; */
 
 
   /**
-   * An {FUsageRecord} is a {Record} that may only contain a {FieldUsage}.
+   * An {FUsageRecord} is a {Record} that may only contain {FieldUsage}s.
    * @param obj {FieldUsage|Field|Record} Either a {FieldUsage} (will be stored as is) or a {Field} or a {Record} (used to construct a new {FieldUsage}).
    * @param shelf The Shelf this record belongs to.
    * @constructor
    * @alias module:shelves.FUsageRecord
-   */
+   *
   var FUsageRecord; FUsageRecord = function (obj, shelf) {
-    console.assert(obj instanceof Record || obj instanceof F.Field || obj instanceof F.FieldUsage);
+    //console.assert(obj instanceof Record || obj instanceof F.Field || obj instanceof F.FieldUsage);
     var field;
     if (obj instanceof F.FieldUsage) {
       // if a FieldUsage is given, use that
@@ -248,7 +249,7 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
     Record.call(this, field, shelf);
   };
   FUsageRecord.prototype = Object.create(Record.prototype);
-  FUsageRecord.prototype.constructor = FUsageRecord;
+  FUsageRecord.prototype.constructor = FUsageRecord;*/
 
 
   /**
@@ -263,14 +264,19 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
    * @constructor
    * @alias module:shelves.ColorRecord
    */
-  var ColorRecord; ColorRecord = function (obj, shelf) {
+  class ColorRecord extends Record {
+    constructor (obj, shelf) {
+      super(obj, shelf);
+    }
+  }
+/*  var ColorRecord; ColorRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
     }
     FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
   };
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
-  ColorRecord.prototype.constructor = ColorRecord;
+  ColorRecord.prototype.constructor = ColorRecord;*/
 
   /**
    * A {DimensionRecord} is stored in a dimension shelf and is based on a field.
@@ -440,12 +446,12 @@ define(['lib/emitter', 'lib/logger', './utils', './Field', ], function(E, Logger
    * @constructor
    * @alias module:shelves.ColorShelf
    */
-  var ColorShelf; ColorShelf = function () {
-    Shelf.call(this, ColorRecord, {limit:1});
-    this.type = ShelfTypeT.color;
-  };
-  ColorShelf.prototype = Object.create(Shelf.prototype);
-  ColorShelf.prototype.constructor = ColorShelf;
+  class ColorShelf extends Shelf {
+    constructor () {
+      super(ColorRecord, {limit: 1});
+      this.type = ShelfTypeT.color;
+    }
+  }
 
   /**
    * @constructor
