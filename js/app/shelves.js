@@ -4,7 +4,7 @@
  * @module shelves
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'lib/logger', './utils', './FieldUsage', ], function(E, Logger, utils, F) {
+define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, utils, F) {
   'use strict';
 
   var logger = Logger.get('pl-shelves');

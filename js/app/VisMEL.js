@@ -6,7 +6,7 @@
  * @module VisMEL
  */
 
-define(['./FieldUsage', './TableAlgebra'], function(F, TableAlgebra) {
+define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
   'use strict';
 
   class BaseMap {

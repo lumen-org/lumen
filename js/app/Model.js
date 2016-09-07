@@ -3,11 +3,11 @@
  * @module Model
  * @author Philipp Lucas
  */
-define(['./FieldUsage'], function (F) {
+define(['./PQL'], function (PQL) {
   "use strict";
 
   /**
-   * This module describes the API to models and allows to train models from data.
+   * This module defines the API to models and allows to train models from data.
    * It only describes the API for querying a model, which must be implemented by all actual model classes.
    *
    * This API is by design asynchronous and utilizes Promises for this purpose. Hence, the majority of methods return
@@ -116,7 +116,7 @@ define(['./FieldUsage'], function (F) {
      * @param field
      */
     isField(field) {
-      return field instanceof F.Field && (this.fields[field.name] === field);
+      return field instanceof PQL.Field && (this.fields[field.name] === field);
     }
 
     /**

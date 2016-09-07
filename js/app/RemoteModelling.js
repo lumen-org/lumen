@@ -1,5 +1,6 @@
 /**
- * "Remote Model" module.
+ * "Remote Model" module. It allows to execute PQL queries against a remote model base and receive the response in terms
+ * of a Promise.
  *
  * The interface expects JSON
  *
@@ -7,7 +8,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'], function (Logger, d3, utils, Domain, F, Model) {
+define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], function (Logger, d3, utils, Domain, PQL, Model) {
   "use strict";
 
   /**
@@ -34,9 +35,9 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
   logger.setLevel(Logger.DEBUG);
 
   /** Utility function used by the other query functions to actually remotely execute a query */
-  function executeRemotely(jsonContent, remoteUrl) {
+  function executeRemotely(jsonPQL, remoteUrl) {
 
-    function logit (json) {
+    function logIt (json) {
       logger.debug("RECEIVED:");
       logger.debug(JSON.stringify(json));
       logger.debug(json);
@@ -45,14 +46,20 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
 
     return new Promise((resolve, reject) => {
       logger.debug("SENT:");
-      logger.debug(JSON.stringify(jsonContent));
-      logger.debug(jsonContent);
+      logger.debug(JSON.stringify(jsonPQL));
+      logger.debug(jsonPQL);
       d3.json(remoteUrl)
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(jsonContent), (err, json) => err ? reject(err) : resolve(logit(json)));
+        .post(JSON.stringify(jsonPQL), (err, json) => err ? reject(err) : resolve(logIt(json)));
     });
   }
 
+  /**
+   * A RemoteModel is a local representation of / proxy to a remote Probability Model. It holds a local copy of the header
+   * of the model, but any further data are fetched from the remote model. It provides an interface to run
+   * PQL queries on this model. Note that the interface is model centric, i.e. it implicitly sets the FROM-clause of
+   * the PQL query to this model.
+   */
   class RemoteModel extends Model {
 
     /**
@@ -79,7 +86,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
     _updateHeader(json) {
       this.fields = {};
       for (let field of json.fields) {
-        this.fields[field.name] = new F.Field(
+        this.fields[field.name] = new PQL.Field(
             field.name,
             field.dtype,
             (field.dtype === 'numerical' ? new Domain.SimpleNumericContinuous(...field.domain) : new Domain.Discrete(field.domain)),
@@ -94,20 +101,18 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
      * @returns {*|Promise.<TResult>} A promise to operation.
      */
     update() {
-      var content = {
-        "SHOW": "HEADER",
-        "FROM": this.name
-      };
-      return executeRemotely(content, this.url)
+      var jsonPQL = PQL.toJSON.header(this.name);
+      return executeRemotely(jsonPQL, this.url)
         .then(this._updateHeader.bind(this));
     }
 
     /**
      * Returns an aggregation on the fieldToAggregate with the ids conditioned to their corresponding values. Does not modify the model.
+     * TODO: remove this function!?
      * @param ids
      * @param values
      * @param fieldToAggregate
-     */
+
     aggregate(ids, values, fieldToAggregate) {
       let names = this.asName(ids);
       var content = {
@@ -122,7 +127,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
           })
       };
       return executeRemotely(content, this.url);
-    }
+    }*/
 
     /**
      * Conditions one or more variables v of this model on the given domain and returns a Promise to the modified model.
@@ -148,28 +153,14 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
       return this.model(what, [], name);
     }
 
-    model(model, where = [], name = this.name) {
-      if (model !== "*") {
-        model = utils.listify(model);
-        if(!model.every(_.isString)) throw new TypeError("'model' must be strings");
-      }
-      where = utils.listify(where);
-      if(!where.every(F.isFilter)) throw new TypeError("'where' must be all filters.");
-      if(!_.isString(name)) throw new TypeError("'name' must be a string");
-
-      var jsonContent = {
-        "MODEL": model,
-        "FROM": this.name,
-        "WHERE": where.map(F.filterToPQL),
-        "AS": name
-      };
-      var newModel = (name !== this.name ? new RemoteModel(name, this.url) : this);
-      return executeRemotely(jsonContent, this.url)
-        .then(jsonHeader => newModel._updateHeader(jsonHeader));
+    model(model, where = [], as_ = this.name) {
+      var jsonPQL = PQL.toJSON.model(this.name, model, as_, where);
+      var newModel = (as_ !== this.name ? new RemoteModel(as_, this.url) : this);
+      return executeRemotely(jsonPQL, this.url)
+        .then(jsonHeader => newModel._updateHeader(jsonPQL));
     }
 
     /**
-     *
      * @param predict {FieldUsage} A list or a single object of ({@link Aggregation}|{@link Density}|name-of-field|{@link Field})
      * @param where {FieldUsage} A list or a single object of {@link Filter}
      * @param splitBy {FieldUsage} A list or a single object of {@link Split}.
@@ -177,29 +168,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
      */
     predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
-      if(!where.every(F.isFilter)) throw new TypeError("'where' must be all of type Filter.");
-      if(!splitBy.every(F.isSplit)) throw new TypeError("'where' must be all of type Split.");
-
-      var jsonContent = {
-        "PREDICT": predict.map(p => {
-          if (_.isString(p))
-            return p;
-          if (p instanceof F.Field)
-            return p.name;
-          else if (F.isAggregation(p))
-            return F.aggregationToPQL(p);
-          else if (F.isDensity(p))
-            return F.densityToPQL(p);
-          else
-            throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
-        }),
-        "FROM": this.name,
-        "WHERE": where.map(F.filterToPQL),
-        "SPLIT BY": splitBy.map(F.splitToPQL)
-      };
-
-      console.log("SPLITBY:\n");
-      console.log(splitBy);
+      var jsonContent = PQL.toJSON.predict(this.name, predict, where, splitBy);
 
       // list of datatypes of fields to predict - needed to parse returned csv-string correctly
       let len = predict.length;
@@ -207,21 +176,19 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
       for (let p of predict)
         if (_.isString(p))
           dtypes.push(this.fields[p].dataType);
-        else if (p instanceof F.Field)
+        else if (p instanceof PQL.Field)
           dtypes.push(p.dataType);
-        else if (F.isAggregation(p))
-          dtypes.push(...p.yields.map(y => this.field[y].dataType));
-        else if (F.isDensity(p))
-          dtypes.push(F.FieldT.DataType.num);
+        else if (p instanceof PQL.Aggregation ||p instanceof PQL.Density)
+          dtype.push(p.yieldDataType);
 
       // function to parse a row according to expected data types
       function parseRow (row) {
         for (let i=0; i<len; ++i) {
-          if (dtypes[i] === F.FieldT.DataType.num)
+          if (dtypes[i] === PQL.FieldT.DataType.num)
             row[i] = +row[i];
           //else if (dtypes[i] == F.FieldT.DataType.string)
           //  row[i] = row[i]
-          else if (dtypes[i] !== F.FieldT.DataType.string)
+          else if (dtypes[i] !== PQL.FieldT.DataType.string)
               throw new RangeError("invalid dataType");
         }
         return row;
@@ -242,15 +209,10 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
      */
     // TODO 2016-07-04 - implement for remote models
     copy(name) {
-      if (!name) throw "you must specify a name for the cloned model";
       var myClone = [];
       var that = this;
-      var content = {
-        "MODEL": "*",
-        "FROM": this.name,
-        "AS": name
-      };
-      return executeRemotely(content, this.url)
+      var jsonPQL = PQL.toJSON.copy(this.name, name);
+      return executeRemotely(jsonPQL, this.url)
         .then(() => {
           myClone = new RemoteModel(name, that.url);
           myClone.fields = _.assign({}, that.fields);
@@ -260,6 +222,11 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
   }
 
 
+  /**
+   * A RemoteModelBase is a proxy to/ a local representation of a remote ModelBase. To run queries you can either use
+   * the specialized methods 'listModels', 'get', 'drop', ... or the generic 'execute'-method to sent arbitrary PQL
+   * queries.
+   */
   class RemoteModelBase {
 
     constructor(url) {
@@ -277,10 +244,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
     }
 
     listModels() {
-      var content = {
-        "SHOW": "MODELS"
-      };
-      return this.execute(content);
+      return this.execute(PQL.toJSON.models());
     }
 
     /**
@@ -293,18 +257,11 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './FieldUsage', './Model'
     }
 
     drop(modelName) {
-      var content = {
-        "DROP": modelName
-      };
-      return this.execute(content);
+      return this.execute(PQL.toJSON.drop(modelName));
     }
 
     header (modelName) {
-      var content = {
-        "SHOW": "HEADER",
-        "FROM": modelName
-      };
-      return this.execute(content);
+      return this.execute(PQL.toJSON.header(modelName));
     }
 
   }

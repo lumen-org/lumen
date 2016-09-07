@@ -3,6 +3,8 @@
  *
  * @author Philipp Lucas
  * @module Field
+ *
+ * TODO THIS MODULE IS ENTIRELY OUTDATED AND NOT IN USE ANYMORE / SHOULD NOT BE IN USE ANYMORE
  */
 
 define(['./utils', './SplitSample'], function (utils, S) {

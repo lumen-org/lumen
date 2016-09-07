@@ -8,8 +8,8 @@
  */
 
 // TODO :this should NOT depend on shelves!
-// TODO: make changes so it works with FieldUsage.js instead of Field.js
-define(['./FieldUsage', './shelves'], function (F, sh) {
+// TODO: make changes so it works with PQL.js instead of Field.js
+define(['./PQL', './shelves'], function (F, sh) {
   "use strict";
 
   /**
