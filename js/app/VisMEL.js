@@ -6,7 +6,7 @@
  * @module VisMEL
  */
 
-define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
+define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
   'use strict';
 
   class BaseMap {
@@ -19,10 +19,10 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
     constructor (fu, channel) {
       super(fu);
       this.channel = channel;
-      if (fu.yieldDataType === F.FieldT.DataType.num) {
+      if (fu.yieldDataType === PQL.FieldT.DataType.num) {
         this.scale = 'linear';
         this.colormap = 'default';
-      } else if (fu.yieldDataType === F.FieldT.DataType.string) {
+      } else if (fu.yieldDataType === PQL.FieldT.DataType.string) {
         this.scale = 'ordinal';
         this.colormap = 'default';
       } else
@@ -203,7 +203,7 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
       layer.filters,
       [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size ]
     );
-    return usedVars.filter(F.isField);
+    return usedVars.filter(PQL.isField);
   };
 
 
@@ -212,7 +212,7 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
    *
   VisMEL.prototype.measureUsages = function () {
     return this.fieldUsages()
-      .filter(fu => F.isAggregation(fu) || F.isDensity(fu));
+      .filter(fu => PQL.isAggregation(fu) || PQL.isDensity(fu));
   };
 
   /**
@@ -220,7 +220,7 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
 
   VisMEL.prototype.dimensionUsages = function () {
     return this.fieldUsages()
-      .filter(F.isSplit);
+      .filter(PQL.isSplit);
   };
 
   /**
@@ -245,8 +245,8 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
           layer.aesthetics.details,
           [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size]
         ),
-        F.isDimension),
-      F.nameMap);
+        PQL.isDimension),
+      PQL.nameMap);
   };
   // */
 
@@ -270,7 +270,7 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
     },
 
     source : function (key, value) {
-      if (F.isField(this) && key === "dataSource")
+      if (PQL.isField(this) && key === "dataSource")
         return undefined;
       return value;
     },
@@ -282,7 +282,7 @@ define(['./PQL', './TableAlgebra'], function(F, TableAlgebra) {
     },
 
     layer : function (key, value) {
-      if (F.isField(value))
+      if (PQL.isField(value))
         return value.name;
       return value;
     }};

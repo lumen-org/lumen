@@ -4,7 +4,7 @@
  * @module shelves
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, utils, F) {
+define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, utils, PQL) {
   'use strict';
 
   var logger = Logger.get('pl-shelves');
@@ -19,9 +19,9 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    */
   function populate (model, dimShelf, measShelf) {
     model.fields.forEach( field => {
-      if (field.dataType === F.FieldT.DataType.num)
+      if (field.dataType === PQL.FieldT.DataType.num)
         measShelf.append(field);
-      else if (field.dataType === F.FieldT.DataType.string)
+      else if (field.dataType === PQL.FieldT.DataType.string)
         dimShelf.append(field);
       else
         throw new RangeError('invalid value in field.role');
@@ -102,7 +102,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   };
 
   Shelf.prototype.remove = function (recordOrIdx) {
-    if (this.limit === 1) recordOrIdx = 0;
+    if (this.limit === 1 && recordOrIdx === undefined) recordOrIdx = 0;
     var records = this.records;
     var idx = (typeof recordOrIdx === 'number'? recordOrIdx : records.indexOf(recordOrIdx));
     records.splice(idx, 1);
@@ -156,7 +156,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   };
 
   /**
-   * An {@link Record} has an attribute (e.g. a {@link Field} or a {@link FieldUsage}) and is bound to a certain {@link Shelf}.
+   * An {@link Record} stores some content and is bound to a certain {@link Shelf}.
    *
    * In particular a record 'knows' which shelf it belongs to by means of its '.shelf' attribute. The content can be
    * accessed using the '.content' attribute.
@@ -165,15 +165,12 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    *
    * Note that Records can never store other records. Instead the first non-Record-content will be stored.
    * TODO: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
-   * @param {Field|FieldUsage} content - Note that content itself will be stored, not a copy of it.
-   * @param {Shelf} shelf - A shelf that this record belongs to.
+   * @param content - Note that content itself will be stored, not a copy of it.
+   * @param {Shelf} shelf - The shelf that this record belongs to.
    * @constructor
    * @alias module:shelves.Record
    */
   var Record; Record = function (content, shelf) {
-    console.assert(typeof content !== 'undefined');
-    console.assert(typeof shelf !== 'undefined');
-    //console.assert(content instanceof F.Field || content instanceof F.FieldUsage);
     while (content instanceof Record)
       content = content.content;
     this.content = content;
@@ -213,13 +210,13 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf The {Shelf} this record belongs to.
    * @constructor
    * @alias module:shelves.FieldRecord
-   *
+   */
   var FieldRecord; FieldRecord = function (obj, shelf) {
-    console.assert(obj instanceof Record && obj.content instanceof F.Field || obj instanceof F.Field);
+    console.assert(obj instanceof Record && obj.content instanceof PQL.Field || obj instanceof PQL.Field);
     Record.call(this, (obj instanceof Record ? obj.content : obj), shelf);
   };
   FieldRecord.prototype = Object.create(Record.prototype);
-  FieldRecord.prototype.constructor = FieldRecord; */
+  FieldRecord.prototype.constructor = FieldRecord;
 
 
   /**
@@ -230,9 +227,9 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @alias module:shelves.FUsageRecord
    *
   var FUsageRecord; FUsageRecord = function (obj, shelf) {
-    //console.assert(obj instanceof Record || obj instanceof F.Field || obj instanceof F.FieldUsage);
+    //console.assert(obj instanceof Record || obj instanceof PQL.Field || obj instanceof PQL.FieldUsage);
     var field;
-    if (obj instanceof F.FieldUsage) {
+    if (obj instanceof PQL.FieldUsage) {
       // if a FieldUsage is given, use that
       field = obj;
     } else {
@@ -241,10 +238,10 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
         obj = obj.content;
       }
       // no effect:
-      //else if (obj instanceof F.Field) {
+      //else if (obj instanceof PQL.Field) {
       //  obj = obj;
       //}
-      field = new F.FieldUsage(obj);
+      field = new PQL.FieldUsage(obj);
     }
     Record.call(this, field, shelf);
   };
@@ -273,7 +270,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
   };
   ColorRecord.prototype = Object.create(FUsageRecord.prototype);
   ColorRecord.prototype.constructor = ColorRecord;*/
@@ -290,8 +287,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
       obj = obj.content;
     }
     FieldRecord.call(this, obj, shelf);
-    if (this.content.role === F.FieldT.Role.measure) {
-      this.content.role = F.FieldT.Role.dimension;
+    if (this.content.role === PQL.FieldT.Role.measure) {
+      this.content.role = PQL.FieldT.Role.dimension;
     }
   };
   DimensionRecord.prototype = Object.create(FieldRecord.prototype);
@@ -308,8 +305,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
       obj = obj.content;
     }
     FieldRecord.call(this, obj, shelf);
-    if (this.content.role === F.FieldT.Role.dimension) {
-      this.content.role = F.FieldT.Role.measure;
+    if (this.content.role === PQL.FieldT.Role.dimension) {
+      this.content.role = PQL.FieldT.Role.measure;
     }
   };
   MeasureRecord.prototype = Object.create(FieldRecord.prototype);
@@ -325,7 +322,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
   };
   LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
   LayoutRecord.prototype.constructor = LayoutRecord;
@@ -341,7 +338,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
   };
   ShapeRecord.prototype = Object.create(FUsageRecord.prototype);
   ShapeRecord.prototype.constructor = ShapeRecord;
@@ -357,7 +354,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
   };
   SizeRecord.prototype = Object.create(FUsageRecord.prototype);
   SizeRecord.prototype.constructor = SizeRecord;
@@ -372,7 +369,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
   };
   FilterRecord.prototype = Object.create(FUsageRecord.prototype);
   FilterRecord.prototype.constructor = FilterRecord;
@@ -390,7 +387,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     if (obj instanceof Record) {
       obj = obj.content;
     }
-    FUsageRecord.call(this, new F.FieldUsage(obj), shelf);
+    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
   };
   DetailRecord.prototype = Object.create(FUsageRecord.prototype);
   DetailRecord.prototype.constructor = DetailRecord;

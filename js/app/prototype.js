@@ -4,8 +4,11 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
-  function (e, d3, init, F, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
+//define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
+//  function (e, d3, init, PQL, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
+
+    define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './RemoteModelling'],
+      function (e, d3, init, PQL, VisMEL, Remote) {
     'use strict';
 
     /**
@@ -110,12 +113,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './v
         height:600
       });
 
-    // define shelves
-    var shelf = sh.construct();
-
     var runMyScript = true;
 
     if (!runMyScript) {
+        // define shelves
+        var shelf = sh.construct();
+
         // get initial model
         var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
         model.update()
@@ -153,18 +156,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './v
         .then(iris => iris.copy("iris_copy"))
         .then(ic => ic.model(['sepal_length', 'petal_length', 'sepal_width']))
         .then(printResult)
-        .then(ic => {iris_ = ic.model("*", [F.Filter(ic.fields["sepal_length"], "equals", 5)]); return iris_;})
+        .then(ic => {iris_ = ic.model("*", [new PQL.Filter(ic.fields["sepal_length"], "equals", 5)]); return iris_;})
         .then(printResult)
         .then(ic => ic.predict(
-          ["petal_length", F.Density(ic.fields["petal_length"])], 
+          ["petal_length", new PQL.Density(ic.fields["petal_length"])],
           [],
-          F.Split(ic.fields["petal_length"], "equiDist", [5])))
+          new PQL.Split(ic.fields["petal_length"], "equiDist", [5])))
         .then(printResult)
         .then( _ => iris_)
         .then(ic => ic.predict(
-          [ic.fields["sepal_width"], ic.fields["petal_length"], F.Density(ic.fields["petal_length"])],
+          [ic.fields["sepal_width"], ic.fields["petal_length"], new PQL.Density(ic.fields["petal_length"])],
           [],
-          [F.Split(ic.fields["petal_length"], "equiDist", [5]), F.Split(ic.fields["sepal_width"], "equiDist", [3])] ))
+          [new PQL.Split(ic.fields["petal_length"], "equiDist", [5]), new PQL.Split(ic.fields["sepal_width"], "equiDist", [3])] ))
         .then(printResult)
         .then( _ => iris_);
     }

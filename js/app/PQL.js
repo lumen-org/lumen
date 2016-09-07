@@ -88,13 +88,12 @@ define(['./utils'], function (utils) {
         throw TypeError("'field' must be a field");
       if (!isFilterMethod(method))
         throw RangeError("invalid method for Filter: " + method.toString());
-      return {
-        field: field,
-        get name() {return field.name;},
-        method: method,
-        args: args
-      };
+      this.field = field;
+      this.method = method;
+      this.args = args;
     }
+
+    get name() {return this.field.name;}
 
     toJSON() {
       return Filter.toJSON(this);
@@ -111,19 +110,19 @@ define(['./utils'], function (utils) {
 
   class Split {
     constructor (field, method, args={}) {
-        if (!isField(field))
+      if (!isField(field))
         throw TypeError("name must be string identifier of a field");
-        if (!isSplitMethod(method))
+      if (!isSplitMethod(method))
         throw RangeError("invalid method for Split: " + method.toString());
-        return {
-        field: field,
-        get name() {return field.name;},
-        method: method,
-        args: args,
-        //get yieldName() {return field.name;},
-        get yieldDataType() {return field.dataType;}
-      };
+      this.field = field;
+      this.method = method;
+      this.args = args;
+      //get yieldName() {return field.name;},
     }
+
+    get name() {return this.field.name;}
+
+    get yieldDataType() {return this.field.dataType;}
 
     toJSON() {
       return Split.toJSON(this);
@@ -147,18 +146,18 @@ define(['./utils'], function (utils) {
         throw RangeError("invalid method for Aggregation: " + method);
       if (-1 == fields.map(f=>f.name).indexOf(yields))
         throw RangeError("yields is not a name of any of aggregated fields: " + yields);
-      return {
-        fields: fields,
-        get names() {
-          return this.fields.map(f=>f.name);
-        },
-        method: method,
-        yields: yields,
-        args: args,
-        get yieldDataType() {
-          return _.find(fields, f => f.name === yields).dataType;
-        }
-      };
+      this.fields = fields;
+      this.method = method;
+      this.yields = yields;
+      this.args = args;
+    }
+
+    get names() {
+      return this.fields.map(f=>f.name);
+    }
+
+    get yieldDataType() {
+      return _.find(this.fields, f => f.name === this.yields).dataType;
     }
 
     toJSON() {
@@ -180,15 +179,14 @@ define(['./utils'], function (utils) {
       fields = utils.listify(fields);
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
-      return {
-        fields: fields,
-        get names() {
-          return this.fields.map(f=>f.name);
-        },
-        method: DensityMethod.density,
-        //get yieldDataType() {return FieldT.DataType.num;}
-        yieldDataType: FieldT.DataType.num
-      };
+      this.fields = fields;
+      this.method = DensityMethod.density;
+      //get yieldDataType() {return FieldT.DataType.num;}
+      this.yieldDataType = FieldT.DataType.num;
+    }
+
+    get names() {
+      return this.fields.map(f=>f.name);
     }
 
     toJSON() {
@@ -327,9 +325,6 @@ define(['./utils'], function (utils) {
       if (!_.isString(name)) throw new TypeError("'name' must be of type String");
       return {"SHOW": name};
     }
-
-
-
   };
 
   return {
@@ -340,12 +335,12 @@ define(['./utils'], function (utils) {
     Density: Density,
     Split: Split,
     Filter: Filter,
-    toJSON: toJSON,
     isAggregation: isAggregation,
     isDensity: isDensity,
     isSplit: isSplit,
     isFilter: isFilter,
-    isFieldUsage: isFieldUsage
+    isFieldUsage: isFieldUsage,
+    toJSON: toJSON
   };
 
 });

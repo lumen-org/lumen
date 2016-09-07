@@ -9,7 +9,7 @@
 
 // TODO :this should NOT depend on shelves!
 // TODO: make changes so it works with PQL.js instead of Field.js
-define(['./PQL', './shelves'], function (F, sh) {
+define(['./PQL'], function (PQL) {
   "use strict";
 
   /**
@@ -36,9 +36,9 @@ define(['./PQL', './shelves'], function (F, sh) {
 
 
   /**
-   * Constructs a table algebra expression from a row or column shelf, or creates an empty expression.
-   * @param {ColumnShelf|RowShelf} [shelf] The shelf to build the expression from.
-   * @returns Returns the table algebra expression of shelf. It's simply an array of the {@link FieldUsage}s with proper operators in between.
+   * Constructs a table algebra expression from an array of FieldUsages, or creates an empty expression.
+   * @param {Array[FieldUsage]} [shelf] The array of FieldUsages to build the expression from.
+   * @returns Returns the table algebra expression. It's simply an array of the {@link FieldUsage}s with proper operators in between.
    * @constructor
    * @alias module:TableAlgebra
    */
@@ -46,9 +46,7 @@ define(['./PQL', './shelves'], function (F, sh) {
     Array.call(this);
     if (arguments.length === 0)
       return;
-
-    if( !(shelf instanceof sh.RowShelf || shelf instanceof sh.ColumnShelf)) throw new TypeError();
-    for( var idx = 0; idx < shelf.length(); ++idx ) {
+    for( var idx = 0; idx < shelf.length; ++idx ) {
       if (idx !== 0)
         /* todo: bug: fix this. this is not a proper way of deciding on the operators. see as follows:
           - dimensions have to be positioned before measures, as we split the axis in accordance of the order of symbols in a NSF entry.
@@ -58,9 +56,9 @@ define(['./PQL', './shelves'], function (F, sh) {
             right: dim1 * (meas1 + meas2)}
               because it leads to something like: {(d1 meas1 meas2), (d2 meas1 meas2), ..., (dn meas1, meas2)}
          */
-        this.push( (shelf.contentAt(idx).role === F.FieldT.Role.measure &&
-        shelf.contentAt(idx - 1).role === F.FieldT.Role.measure)? '+' : '*' );
-      this.push( shelf.contentAt(idx) );
+        this.push((shelf[idx].role === PQL.FieldT.Role.measure &&
+          shelf[idx-1].role === PQL.FieldT.Role.measure)? '+' : '*');
+      this.push(shelf[idx]);
     }
   };
   TableAlgebraExpr.prototype = Object.create(Array.prototype);
@@ -77,7 +75,7 @@ define(['./PQL', './shelves'], function (F, sh) {
    * Returns the set of (unique) {@link FieldUsage}s used this table algebra expression.
    */
   TableAlgebraExpr.prototype.fieldUsages = function () {
-    return _.uniq(_.filter(this, F.isFieldUsage));
+    return _.uniq(_.filter(this, PQL.isFieldUsage));
   };
 
 
@@ -125,8 +123,8 @@ define(['./PQL', './shelves'], function (F, sh) {
     }
 
     this.forEach( function(elem) {
-      if (elem instanceof F.FieldUsage) {
-        if (F.isDimension(elem)) {
+      if (elem instanceof PQL.FieldUsage) {
+        if (PQL.isDimension(elem)) {
           // splitted returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
           let splitted = elem.split();
           domainExpr.push(splitted.map (
@@ -187,7 +185,7 @@ define(['./PQL', './shelves'], function (F, sh) {
   TableAlgebraExpr.prototype.toString = function () {
     var str = "";
     this.forEach( function(elem) {
-      if (elem instanceof F.Field)
+      if (elem instanceof PQL.Field)
         str += elem.name;
       else
         str += " " + elem + " ";

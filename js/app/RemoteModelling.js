@@ -157,7 +157,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
       var jsonPQL = PQL.toJSON.model(this.name, model, as_, where);
       var newModel = (as_ !== this.name ? new RemoteModel(as_, this.url) : this);
       return executeRemotely(jsonPQL, this.url)
-        .then(jsonHeader => newModel._updateHeader(jsonPQL));
+        .then(jsonHeader => newModel._updateHeader(jsonHeader));
     }
 
     /**
@@ -179,7 +179,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
         else if (p instanceof PQL.Field)
           dtypes.push(p.dataType);
         else if (p instanceof PQL.Aggregation ||p instanceof PQL.Density)
-          dtype.push(p.yieldDataType);
+          dtypes.push(p.yieldDataType);
 
       // function to parse a row according to expected data types
       function parseRow (row) {
