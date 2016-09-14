@@ -21,9 +21,9 @@ define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
       let cols = table[0].length;
       let extent = new Array(cols);
       for (let i = 0; i < cols; ++i) {
-        if (table.fu[i].dataType == PQL.FieldT.Type.num)
+        if (table.fu[i].yieldDataType === PQL.FieldT.DataType.num)
           extent[i] = d3.extent(table, row => row[i]); // jshint ignore:line
-        else if (table.fu[i].dataType == PQL.FieldT.Type.num)
+        else if (table.fu[i].yieldDataType === PQL.FieldT.DataType.num)
           extent[i] = d3.set(table, row => row[i]); // jshint ignore:line
         else
           throw new RangeError("invalid data type.");

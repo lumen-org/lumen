@@ -178,10 +178,12 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
       for (let p of predict)
         if (_.isString(p))
           dtypes.push(this.fields[p].dataType);
-        else if (p instanceof PQL.Field)
+        else if (PQL.isField(p))
           dtypes.push(p.dataType);
-        else if (p instanceof PQL.Aggregation ||p instanceof PQL.Density)
+        else if (PQL.isAggregation(p) || PQL.isDensity(p) || PQL.isSplit(p))
           dtypes.push(p.yieldDataType);
+        else 
+          throw new RangeError("unhandled case");
 
       // function to parse a row according to expected data types
       function parseRow (row) {
@@ -191,7 +193,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
           //else if (dtypes[i] == F.FieldT.DataType.string)
           //  row[i] = row[i]
           else if (dtypes[i] !== PQL.FieldT.DataType.string)
-              throw new RangeError("invalid dataType");
+              throw new RangeError("invalid dataType: " + dtypes[i]);
         }
         return row;
       }

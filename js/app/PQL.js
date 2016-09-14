@@ -218,6 +218,10 @@ define(['./utils'], function (utils) {
     return obj instanceof Density;
   }
 
+  function isAggregationOrDensity (obj) {
+    return isAggregation(obj) || isDensity(obj);
+  }
+
   function isFilter (obj) {
     //return utils.hasProperty(obj, 'method') && isFilterMethod(obj.method);
     return obj instanceof Filter;
@@ -225,6 +229,10 @@ define(['./utils'], function (utils) {
 
   function isFieldUsage (fu) {
     return fu instanceof Aggregation || fu instanceof Split || fu instanceof Density ||fu instanceof Filter;
+  }
+
+  function hasDiscreteYield(fu) {
+    return fu.yieldDataType === FieldT.DataType.string;
   }
 
   /**
@@ -347,10 +355,12 @@ define(['./utils'], function (utils) {
     Filter: Filter,
     isAggregation: isAggregation,
     isDensity: isDensity,
+    isAggregationOrDensity: isAggregationOrDensity,
     isSplit: isSplit,
     isFilter: isFilter,
     isFieldUsage: isFieldUsage,
     fields: fields,
+    hasDiscreteYield: hasDiscreteYield,
     toJSON: toJSON
   };
 

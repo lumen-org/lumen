@@ -185,12 +185,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
         .then(iris_ => {
           iris = iris_;
 
-          let split_sw = new PQL.Split(iris.fields["sepal_width"], "equiDist", [5]);
-          let density_pl = new PQL.Density(iris.fields["petal_length"]);
+          let sw_split = new PQL.Split(iris.fields["sepal_width"], "equiDist", [2]);
+          let pl_split = new PQL.Split(iris.fields["petal_length"], "equiDist", [3]);
+          let pl_density = new PQL.Density(iris.fields["petal_length"]);
 
           query = new VisMEL.VisMEL(undefined, iris);
-          query.layout.rows = new TableAlgebraExpr(split_sw);
-          query.layers[0].aesthetics.color = new VisMEL.ColorMap(density_pl, 'rgb');
+          query.layout.rows = new TableAlgebraExpr(sw_split);
+          query.layers[0].aesthetics.color = new VisMEL.ColorMap(pl_density, 'rgb');
+          query.layers[0].aesthetics.details.push(pl_split);
           return query;
         })
         .then(query => {
@@ -207,12 +209,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
         .then(() => {
           console.log(modelTable);
           resultTable = new ResultTable(modelTable, queryTable);
-          debugger;
           return resultTable.fetch();
         })
         .then(() => {
+          console.log(resultTable);          
+          viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
           debugger;
-          //viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
         });
     } // function testVisMEL
 

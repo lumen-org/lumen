@@ -315,6 +315,8 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
     Layers: Layer,
     Layout: Layout,
     BaseMap: BaseMap,
-    ColorMap: ColorMap
+    ColorMap: ColorMap,
+    ShapeMap: ShapeMap,
+    SizeMap: SizeMap
   };
 });

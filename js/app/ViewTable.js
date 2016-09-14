@@ -10,7 +10,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenerator', './ViewSettings'], function (Logger, d3, PQL, VisMEL, ResultTable, ScaleGen, Settings) {
+define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
+  function (Logger, d3, PQL, VisMEL, ResultTable, S, ScaleGen, Settings) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');
@@ -411,6 +412,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     // extents
     attachExtents(query, queries, results);
 
+    debugger;
+
     // create scales
     // todo: move scales outside of atomic panes, like extents
 
@@ -451,7 +454,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
 
   /**
    * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
-   * inherited from templated query, extents are also available at the templated base query.
+   * inherited from templated query, extents are also available at the atomic query.
    *
    * The point is that for visualization the extents over _all_ result tables are required, as we need uniform
    * extents over all atomic panes for a visually uniform visualization.
@@ -479,10 +482,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
       return (discreteFlag ? _.union(extent, newData) : d3.extent([...extent, ...newData]) );
     }
 
-    // extents of splitting dimension usages in table algebra expression
-    [...query.layout.rows, ...query.layout.cols].filter(PQL.isDimension).forEach(function (dim) {
+    // extents of splits in table algebra expression
+    [...query.layout.rows, ...query.layout.cols].filter(PQL.isSplit).forEach( dim => {
       // it is ok to use "splitToValues()" since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
-      dim.extent = dim.splitToValues();
+      dim.extent = S.splitToValues(dim);
     });
 
     // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
@@ -491,10 +494,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
       size = [];
 
     // init empty extent for measure on ROWS/COLS
-    [...query.layout.cols, ...query.layout.rows].filter(PQL.isMeasure).forEach(
-      (m) => {
-        m.extent = [];
-      }
+    [...query.layout.cols, ...query.layout.rows].filter(PQL.isAggregationOrDensity).forEach(
+      m => m.extent = []
     );
 
     // iterate over results for each atomic query
@@ -507,29 +508,29 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
 
         // aesthetics extents
         let qa = q.layers[0].aesthetics;
-        if (PQL.isFieldUsage(qa.color))
-          color = _extentUnion(color, r.extent[qa.color.index], qa.color.isDiscrete());
-        if (PQL.isFieldUsage(qa.shape))
-          shape = _extentUnion(shape, r.extent[qa.shape.index], qa.shape.isDiscrete());
-        if (PQL.isFieldUsage(qa.size))
-          size = _extentUnion(size, r.extent[qa.size.index], qa.size.isDiscrete());
+        if (qa.color instanceof VisMEL.ColorMap) 
+          color = _extentUnion(color, r.extent[qa.color.fu.index], PQL.hasDiscreteYield(qa.color.fu));
+        if (qa.shape instanceof VisMEL.ShapeMap)
+          shape = _extentUnion(shape, r.extent[qa.shape.fu.index], PQL.hasDiscreteYield(qa.shape.fu));
+        if (qa.size instanceof VisMEL.SizeMap)
+          size = _extentUnion(size, r.extent[qa.size.fu.index], PQL.hasDiscreteYield(qa.size.fu));
 
         // row / col extents
         let lr = q.layout.rows[0];
-        if (PQL.isMeasure(lr))
-          lr.extent = _extentUnion(lr.extent, r.extent[lr.index], lr.isDiscrete());
+        if (PQL.isAggregationOrDensity(lr))
+          lr.extent = _extentUnion(lr.extent, r.extent[lr.fu.index], PQL.hasDiscreteYield(lr));
         let lc = q.layout.cols[0];
-        if (PQL.isMeasure(lc))
-          lc.extent = _extentUnion(lc.extent, r.extent[lc.index], lc.isDiscrete());
+        if (PQL.isAggregationOrDensity(lc))
+          lc.extent = _extentUnion(lc.extent, r.extent[lc.fu.index], PQL.hasDiscreteYield(lc));
       }
     }
 
     // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
     {
       let qa = query.layers[0].aesthetics;
-      if (PQL.isFieldUsage(qa.color)) qa.color.extent = color;
-      if (PQL.isFieldUsage(qa.shape)) qa.shape.extent = shape;
-      if (PQL.isFieldUsage(qa.size)) qa.size.extent = size;
+      if (qa.color instanceof VisMEL.ColorMap) qa.color.fu.extent = color;
+      if (qa.shape instanceof VisMEL.ShapeMap) qa.shape.fu.extent = shape;
+      if (qa.size instanceof VisMEL.SizeMap) qa.size.fu.extent = size;
     }
   };
 
