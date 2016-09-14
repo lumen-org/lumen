@@ -5,7 +5,7 @@
  * @module QueryTable
  */
 
-define(['lib/logger', './Field'], function (Logger, F) {
+define(['lib/logger', './PQL'], function (Logger, PQL) {
   "use strict";
 
   var logger = Logger.get('pl-QueryTable');
@@ -43,19 +43,19 @@ define(['lib/logger', './Field'], function (Logger, F) {
       layout.clear();
 
       nsf[i].forEach( fu => { // jshint ignore:line
-        if (F.isDimension(fu)) {
-          // add the FU to details, since we need that field to be included in the result table alter. Do not change its domain, as the domain is readonly
-          let idx = details.findIndex(o => F.isDimension(o) && fu.name === o.name);
-          if (idx === -1) {
-            details.push(fu.origin);
+        if (PQL.isFilter(fu)) {
+          // add this field to details, if not alrady there (since we need that field to be included in the result table later)
+          if (-1 === details.findIndex(o => PQL.isSplit(o) && o.name === fu.name)) {
             // TODO: change split function to prevent further splitting?
+            details.push(new PQL.Split(fu.field, 'identity'));
           }
-          // however, add a filer to restrict its domain accordingly at query time
-          filter.push({
+          // add the filer to restrict its domain accordingly at query time
+          filter.push(fu);
+          /*filter.push({
             name: fu.name,
             operator: 'in',
             value: [fu.domain.l, fu.domain.h]
-          });
+          });*/
         } else {
           console.assert(layout.empty(), "After template expansion there must be only one FU on a row/col shelf");
           layout.push(fu);
@@ -89,11 +89,11 @@ define(['lib/logger', './Field'], function (Logger, F) {
 
     // verify expansion
     // @debug
-    for (let r=0; r<this.size.rows; ++r)
+    /*for (let r=0; r<this.size.rows; ++r)
       for(let c=0; c<this.size.cols; ++c)
-        if(this.at[r][c].layout.rows.filter(F.isDimension).length !== 0 ||
-           this.at[r][c].layout.cols.filter(F.isDimension).length !== 0)
-          throw "templated expansion failed!";
+        if(this.at[r][c].layout.rows.filter( o => !PQL.isAggregation(o) ).length !== 0 ||
+           this.at[r][c].layout.cols.filter( o => !PQL.isAggregation(o) ).length !== 0)
+          throw "templated expansion failed!"; */
   };
 
   /**

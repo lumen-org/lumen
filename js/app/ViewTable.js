@@ -10,7 +10,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenerator', './ViewSettings'], function (Logger, d3, F, VisMEL, ResultTable, ScaleGen, Settings) {
+define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenerator', './ViewSettings'], function (Logger, d3, PQL, VisMEL, ResultTable, ScaleGen, Settings) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');
@@ -203,8 +203,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     /// build up axis stack
     function _buildAxis(fieldUsages, canvas, axisType) {
       let stackDepth = fieldUsages.stackDepth;
-      let splittingDims = fieldUsages.filter(F.isDimension);
-      let splittingStackDepth = fieldUsages.filter(F.isDimension).length;
+      let splittingDims = fieldUsages.filter(PQL.isDimension);
+      let splittingStackDepth = fieldUsages.filter(PQL.isDimension).length;
 
       let axisStack = new Array(splittingStackDepth); // axis stack
       let range = (axisType === "x axis" ? canvas.size.width : canvas.size.height); // the range in px of current axis stack level
@@ -314,7 +314,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     axis.FU = (axisType === "x axis" ? query.layout.cols[0] : query.layout.rows[0]);
 
     // is there really anything to draw?
-    if (!F.isFieldUsage(axis.FU))
+    if (!PQL.isFieldUsage(axis.FU))
       return;
 
     axis.axisD3 = pane.paneD3.append("g").classed(axisType, true);
@@ -388,7 +388,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     // axis stack depth
     [query.layout.rows, query.layout.cols].forEach(
       rc => {
-        rc.stackDepth = rc.filter(F.isDimension).length + !rc.filter(F.isMeasure).empty();
+        rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregation).empty();
       }
     );
 
@@ -480,7 +480,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     }
 
     // extents of splitting dimension usages in table algebra expression
-    [...query.layout.rows, ...query.layout.cols].filter(F.isDimension).forEach(function (dim) {
+    [...query.layout.rows, ...query.layout.cols].filter(PQL.isDimension).forEach(function (dim) {
       // it is ok to use "splitToValues()" since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
       dim.extent = dim.splitToValues();
     });
@@ -491,7 +491,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
       size = [];
 
     // init empty extent for measure on ROWS/COLS
-    [...query.layout.cols, ...query.layout.rows].filter(F.isMeasure).forEach(
+    [...query.layout.cols, ...query.layout.rows].filter(PQL.isMeasure).forEach(
       (m) => {
         m.extent = [];
       }
@@ -507,19 +507,19 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
 
         // aesthetics extents
         let qa = q.layers[0].aesthetics;
-        if (F.isFieldUsage(qa.color))
+        if (PQL.isFieldUsage(qa.color))
           color = _extentUnion(color, r.extent[qa.color.index], qa.color.isDiscrete());
-        if (F.isFieldUsage(qa.shape))
+        if (PQL.isFieldUsage(qa.shape))
           shape = _extentUnion(shape, r.extent[qa.shape.index], qa.shape.isDiscrete());
-        if (F.isFieldUsage(qa.size))
+        if (PQL.isFieldUsage(qa.size))
           size = _extentUnion(size, r.extent[qa.size.index], qa.size.isDiscrete());
 
         // row / col extents
         let lr = q.layout.rows[0];
-        if (F.isMeasure(lr))
+        if (PQL.isMeasure(lr))
           lr.extent = _extentUnion(lr.extent, r.extent[lr.index], lr.isDiscrete());
         let lc = q.layout.cols[0];
-        if (F.isMeasure(lc))
+        if (PQL.isMeasure(lc))
           lc.extent = _extentUnion(lc.extent, r.extent[lc.index], lc.isDiscrete());
       }
     }
@@ -527,9 +527,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
     {
       let qa = query.layers[0].aesthetics;
-      if (F.isFieldUsage(qa.color)) qa.color.extent = color;
-      if (F.isFieldUsage(qa.shape)) qa.shape.extent = shape;
-      if (F.isFieldUsage(qa.size)) qa.size.extent = size;
+      if (PQL.isFieldUsage(qa.color)) qa.color.extent = color;
+      if (PQL.isFieldUsage(qa.shape)) qa.shape.extent = shape;
+      if (PQL.isFieldUsage(qa.size)) qa.size.extent = size;
     }
   };
 
@@ -546,23 +546,23 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
 
     let aesthetics = query.layers[0].aesthetics;
 
-    if (F.isFieldUsage(aesthetics.color))
+    if (PQL.isFieldUsage(aesthetics.color))
       aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.extent);
 
-    if (F.isFieldUsage(aesthetics.size))
+    if (PQL.isFieldUsage(aesthetics.size))
       aesthetics.size.visScale = ScaleGen.position(aesthetics.size, aesthetics.size.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
 
-    if (F.isFieldUsage(aesthetics.shape))
+    if (PQL.isFieldUsage(aesthetics.shape))
       aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.extent);
 
     let row = query.layout.rows[0];
-    if (F.isFieldUsage(row) && row.isMeasure())
+    if (PQL.isFieldUsage(row) && row.isMeasure())
     // row.visScale = ScaleGen.position(row, row.extent, [0, paneSize.height]);
       row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height - Settings.geometry.axis.padding]);
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
-    if (F.isFieldUsage(col) && col.isMeasure())
+    if (PQL.isFieldUsage(col) && col.isMeasure())
       col.visScale = ScaleGen.position(col, col.extent, [paneSize.width - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
 
     // no need for scales of: filters, details
@@ -586,21 +586,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     }
 
     let color = aesthetics.color;
-    color.mapper = ( F.isFieldUsage(color) ?
+    color.mapper = ( PQL.isFieldUsage(color) ?
       function (d) {
         return color.visScale(_valueOrAvg(d[color.index]));
       } :
       Settings.maps.color );
 
     let size = aesthetics.size;
-    size.mapper = ( F.isFieldUsage(size) ?
+    size.mapper = ( PQL.isFieldUsage(size) ?
       function (d) {
         return size.visScale(_valueOrAvg(d[size.index]));
       } :
       Settings.maps.size );
 
     let shape = aesthetics.shape;
-    shape.mapper = ( F.isFieldUsage(shape) ?
+    shape.mapper = ( PQL.isFieldUsage(shape) ?
       function (d) {
         return shape.visScale(_valueOrAvg(d[shape.index]));
       } :
@@ -612,8 +612,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './ScaleGenera
     let layout = query.layout;
     let colFU = layout.cols[0],
       rowFU = layout.rows[0];
-    let isColMeas = F.isMeasure(colFU),
-      isRowMeas = F.isMeasure(rowFU);
+    let isColMeas = PQL.isMeasure(colFU),
+      isRowMeas = PQL.isMeasure(rowFU);
     let xPos = paneSize.width / 2,
       yPos = paneSize.height / 2;
 

@@ -35,7 +35,7 @@ define([], function() {
   };
 
   function listify (listOrScalar) {
-    if (arguments.length == 1)
+    if (arguments.length === 1)
       return Array.isArray(listOrScalar) ? listOrScalar : [listOrScalar];
     else
       return Array.from(arguments)

@@ -7,14 +7,14 @@
 //define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
 //  function (e, d3, init, PQL, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
 
-    define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './RemoteModelling'],
-      function (e, d3, init, PQL, VisMEL, Remote) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
+  function (e, d3, init, PQL, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     /**
      * Populates the shelves of the GUI with the fields of the model and makes them interactable.
      */
-    function populateGUI () {
+    function populateGUI() {
       // populate shelves
       sh.populate(model, shelf.dim, shelf.meas);
 
@@ -49,7 +49,7 @@
     /**
      * do some drag and drops to start with some non-empty VisMEL query
      */
-    function initialQuerySetup () {
+    function initialQuerySetup() {
       //inter.onDrop(shelf.filter, shelf.dim.at(2));
       //inter.onDrop(shelf.detail, shelf.dim.at(1));
       //inter.onDrop(shelf.shape, shelf.dim.at(0));
@@ -61,17 +61,21 @@
     }
 
 
-    function onUpdate () {
-      if (runMyScript)
+    function onUpdate() {
+      if (testPQLflag || testVisMELflag)
         return;
       query = new VisMEL(shelf, model);
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
       modelTable.model()
-        .then( () => { resultTable = new ResultTable(modelTable, queryTable); })
-        .then( () => resultTable.fetch() )
-        .then( () => { viewTable = new ViewTable(visPaneD3, resultTable, queryTable); })
-        .then( () => {
+        .then(() => {
+          resultTable = new ResultTable(modelTable, queryTable);
+        })
+        .then(() => resultTable.fetch())
+        .then(() => {
+          viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
+        })
+        .then(() => {
           console.log("query: ");
           console.log(query);
           console.log("QueryTable: ");
@@ -84,13 +88,13 @@
           console.log(viewTable);
           console.log("...");
         });
-       //*/
+      //*/
     }
 
     /**
      * Enables user querying.
      */
-    function enableQuerying () {
+    function enableQuerying() {
       // that seems important - what did it do again?
       inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
 
@@ -109,38 +113,36 @@
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width:800,
-        height:600
+        width: 800,
+        height: 600
       });
 
-    var runMyScript = true;
+    var testPQLflag = false,
+      testVisMELflag = true;
 
-    if (!runMyScript) {
-        // define shelves
-        var shelf = sh.construct();
-
-        // get initial model
-        var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
-        model.update()
-          .then(populateGUI)
-          .then(initialQuerySetup)
-          .then(enableQuerying)
-          .catch((err) => {
-            console.error(err);
-            throw "Could not load remote model from Server - see above";
-          });
-
-      }
+    if (!testPQLflag && !testVisMELflag) {
+      // define shelves
+      var shelf = sh.construct();
+      // get initial model
+      var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
+      model.update().then(populateGUI)
+        .then(initialQuerySetup)
+        .then(enableQuerying)
+        .catch((err) => {
+          console.error(err);
+          throw "Could not load remote model from Server - see above";
+        });
+    }
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
-    $('#update-button').click( function() {
-      onUpdate();
-      //console.log(modelTable.baseModel.describe());
-      //console.log(modelTable.at[0][0].describe());
-      //eval('console.log("");'); // prevents auto-optimization of the closure
-    });*/
+     $('#update-button').click( function() {
+     onUpdate();
+     //console.log(modelTable.baseModel.describe());
+     //console.log(modelTable.at[0][0].describe());
+     //eval('console.log("");'); // prevents auto-optimization of the closure
+     });*/
 
-    
-    function myScript () { // jshint ignore:line
+
+    function testPQL() { // jshint ignore:line
       // put some debug / testing stuff here to be executed on loading of the app
 
       function printResult(res) {
@@ -156,28 +158,71 @@
         .then(iris => iris.copy("iris_copy"))
         .then(ic => ic.model(['sepal_length', 'petal_length', 'sepal_width']))
         .then(printResult)
-        .then(ic => {iris_ = ic.model("*", [new PQL.Filter(ic.fields["sepal_length"], "equals", 5)]); return iris_;})
+        .then(ic => {
+          iris_ = ic.model("*", [new PQL.Filter(ic.fields["sepal_length"], "equals", 5)]);
+          return iris_;
+        })
         .then(printResult)
         .then(ic => ic.predict(
           ["petal_length", new PQL.Density(ic.fields["petal_length"])],
           [],
           new PQL.Split(ic.fields["petal_length"], "equiDist", [5])))
         .then(printResult)
-        .then( _ => iris_)
+        .then(_ => iris_)
         .then(ic => ic.predict(
           [ic.fields["sepal_width"], ic.fields["petal_length"], new PQL.Density(ic.fields["petal_length"])],
           [],
-          [new PQL.Split(ic.fields["petal_length"], "equiDist", [5]), new PQL.Split(ic.fields["sepal_width"], "equiDist", [3])] ))
+          [new PQL.Split(ic.fields["petal_length"], "equiDist", [5]), new PQL.Split(ic.fields["sepal_width"], "equiDist", [3])]))
         .then(printResult)
-        .then( _ => iris_);
+        .then(_ => iris_);
     }
+
+    function testVisMEL() {
+
+      var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
+      var query, iris;
+      mb.get('iris')
+        .then(iris_ => {
+          iris = iris_;
+
+          let split_sw = new PQL.Split(iris.fields["sepal_width"], "equiDist", [5]);
+          let density_pl = new PQL.Density(iris.fields["petal_length"]);
+
+          query = new VisMEL.VisMEL(undefined, iris);
+          query.layout.rows = new TableAlgebraExpr(split_sw);
+          query.layers[0].aesthetics.color = new VisMEL.ColorMap(density_pl, 'rgb');
+          return query;
+        })
+        .then(query => {
+          console.log(query.toString());
+          return query;
+        })
+        .then(query => {
+          //query = new VisMEL(shelf, model);
+          queryTable = new QueryTable(query);
+          console.log(queryTable);
+          modelTable = new ModelTable(queryTable);
+          return modelTable.model();
+        })
+        .then(() => {
+          console.log(modelTable);
+          resultTable = new ResultTable(modelTable, queryTable);
+          debugger;
+          return resultTable.fetch();
+        })
+        .then(() => {
+          debugger;
+          //viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
+        });
+    } // function testVisMEL
 
     return {
       /**
        * Starts the application.
        */
       start: function () {
-        if(runMyScript) myScript();
+        if (testPQLflag) testPQL();
+        if (testVisMELflag) testVisMEL();
       }
     };
 

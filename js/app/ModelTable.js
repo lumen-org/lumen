@@ -3,7 +3,7 @@
  * @module ModelTable
  * @author Philipp Lucas
  */
-define(['./Field'], function(F) {
+define(['./PQL'], function(PQL) {
   'use strict';
 
   /**
@@ -27,7 +27,7 @@ define(['./Field'], function(F) {
       throw new RangeError ("query.layout.rows or query.layout.cols contains more than 1 FieldUsage");
 
     return model.model(
-      query.fields().map(F.nameMap),
+      PQL.fields(query.fieldUsages()),
       query.layers[0].filters,
       makeBaseModelName(model.name, rIdx, cIdx));
 

@@ -6,8 +6,27 @@
  * @author Philipp Lucas
  * @module SplitSample
  */
-define(['lib/d3', './Domain'], function (d3, Domain) {
+define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
   "use strict";
+
+  /**
+   * @returns {*} Returns the actual split into single values / subdomains.
+   */
+  function splitToValues (split) {
+    // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
+    //return this.splitter(this.domain, true, 10);
+    return Splitter[split.method](split.field.domain, true /*valueflag*/, split.args);
+  }
+
+  /**
+   * @returns {Array|*} Applies the split on its field and returns an array of filters that represent the restriction
+   * of the domain of each split.
+   */
+  function splitToFilters (split) {
+    let values = splitToValues(split);
+    // create filter for each split value
+    return values.map( value => new PQL.Filter(split.field, 'equals', value) );
+  }
 
   /**
    * Collection of split and sample functions for domains.
@@ -40,7 +59,7 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
     /**
      * Splits a discrete domain into all its individual elements
      * @param {DiscreteDomain} domain The domain to split.
-     * @param {boolean} valueFlag If set, this function returns an array all values of the domain, otherwise, it returns an array of domains, each having only a single element as its domain.
+     * @param {boolean} valueFlag If set, this function returns an array of all values of the domain, otherwise, it returns an array of domains, each having only a single element as its domain.
      */
     singleElements: function (domain, valueFlag) {
       if (!(domain instanceof Domain.Discrete))
@@ -58,18 +77,14 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
     identity: function  (domain) {
       throw new TypeError(" not implemented ");
       //return [domain];
-    }
-  };
-
-
-  var Sampler = {
+    },
 
     /**
      * Samples the domain to (at most) n samples that are equidistant.
      * @param {SimpleNumericContinuousDomain} domain The domain to sample.
      * @param n
      */
-    equiDistance: function (domain, valueFlag, n) {
+    equiDist: function (domain, valueFlag, n) {
       if (!(domain instanceof Domain.SimpleNumericContinuous))
         throw new TypeError("domain must be of type Domain.SimpleNumericContinuousDomain");
 
@@ -103,7 +118,8 @@ define(['lib/d3', './Domain'], function (d3, Domain) {
   };
 
   return {
-    ampler: Sampler,
-    plitter: Splitter
+    Splitter: Splitter,
+    splitToValues: splitToValues,
+    splitToFilters: splitToFilters
   };
 });

@@ -3,7 +3,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'lib/d3', './Field'], function (Logger, d3, F) {
+define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
   "use strict";
 
   var logger = Logger.get('pl-ResultTable');
@@ -21,9 +21,9 @@ define(['lib/logger', 'lib/d3', './Field'], function (Logger, d3, F) {
       let cols = table[0].length;
       let extent = new Array(cols);
       for (let i = 0; i < cols; ++i) {
-        if (table.fu[i].dataType == F.FieldT.Type.num)
+        if (table.fu[i].dataType == PQL.FieldT.Type.num)
           extent[i] = d3.extent(table, row => row[i]); // jshint ignore:line
-        else if (table.fu[i].dataType == F.FieldT.Type.num)
+        else if (table.fu[i].dataType == PQL.FieldT.Type.num)
           extent[i] = d3.set(table, row => row[i]); // jshint ignore:line
         else
           throw new RangeError("invalid data type.");
@@ -64,14 +64,15 @@ define(['lib/logger', 'lib/d3', './Field'], function (Logger, d3, F) {
     var dimensions = [];
     var idx2fu = [];
     let idx = 0;
-    fieldUsages.filter(F.isDimension).forEach(function (fu) {
+    fieldUsages.filter(PQL.isSplit).forEach(function (fu) {
       // todo: this kind of comparison is ugly and slow for the case of many dimensions
       // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
-      let sameBase = dimensions.find(e => (fu.base === e.base));
+      //let sameBase = dimensions.find(e => (fu.base === e.base));
+      let sameBase = dimensions.find(elem => (fu.name === elem.name));
       if (sameBase) {
         // fu is already there
-        if (fu.splitter !== sameBase.splitter)
-          throw new RangeError("If using multiple dimensions of the same field in an atomic query, their splitter functions must match!");
+        if (fu.method !== sameBase.method)
+          throw new RangeError("If using multiple splits of the same field in an atomic query, their splitter methods must match!");
         else
           fu.index = sameBase.index;
       }
@@ -84,22 +85,23 @@ define(['lib/logger', 'lib/d3', './Field'], function (Logger, d3, F) {
     });
 
     var measures = [];
-    fieldUsages.filter(F.isMeasure).forEach(function (fu) {
+    fieldUsages.filter(fu => PQL.isAggregation(fu) || PQL.isDensity(fu)).forEach( fu => {
       fu.index = idx++;
       idx2fu.push(fu);
       measures.push(fu);
     });
 
     // push index to ancestors
-    [...dimensions, ...measures].forEach(function (fu) {
+    // TODO: I don't think I need that anymore
+    [...dimensions, ...measures].forEach( fu => {
       if (fu.origin) fu.origin.index = fu.index;
     });
 
     // run PQL query
     return model.predict(
-      [...dimensions, ...measures].map(F.asModelTuple),
+      [...dimensions, ...measures],
       [],
-      dimensions.map(F.asSplitTuple)
+      dimensions
     ).then( table => {
       table.fu = idx2fu;
       return _attachExtent(table);

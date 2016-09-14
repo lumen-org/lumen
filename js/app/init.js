@@ -38,7 +38,8 @@ define(['lib/logger','d3'], function (Logger, d3) {
    */
   Array.prototype.clear = function () {
     //this.length = 0;
-    this.splice(0,this.length);
+    //this.splice(0,this.length);
+    this.splice(0);
   };
 
 

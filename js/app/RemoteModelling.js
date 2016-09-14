@@ -34,7 +34,9 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
   var logger = Logger.get('pl-RemoteModel');
   logger.setLevel(Logger.DEBUG);
 
-  /** Utility function used by the other query functions to actually remotely execute a query */
+  /** Utility function used by the other query functions to actually remotely execute a given query on the remote
+   * modelbase.
+   */
   function executeRemotely(jsonPQL, remoteUrl) {
 
     function logIt (json) {

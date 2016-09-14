@@ -62,9 +62,10 @@ define(['./utils'], function (utils) {
   }
 
   var SplitMethod = Object.freeze({
-    equiDist: 'equiDist'
+    equiDist: 'equiDist',
+    identity: 'identity'
   });
-  var isSplitMethod = (m) => m === SplitMethod.equiDist;
+  var isSplitMethod = (m) => m === SplitMethod.equiDist || m === SplitMethod.identity;
 
   var AggregationMethods = Object.freeze({
     argmax: 'max',
@@ -226,16 +227,24 @@ define(['./utils'], function (utils) {
     return fu instanceof Aggregation || fu instanceof Split || fu instanceof Density ||fu instanceof Filter;
   }
 
-  /*
-   TODO: separation of concerns:
-   * inteface that takes internal PQL an gives JSON PQL
-     * should be implemented here
-   * interface that takes JSON PQL and returns the answer in JSON
-     * should be implemented in remoteModelling.js
-     * maybe rename remoteModelling js as PQLModelBaseConnector
-   * interface that takes internal PQL and returns the answer in python stuff
-     * should be implemented in remoteModelling.js
+  /**
+   * Returns the set of (unique) {@link Field}s implicitly contained in the given array of field usages.
+   * Note that uniqueness is decided (and returned) on the level of Field not FieldUsages.
    */
+  function fields (fieldUsages) {
+    return _.uniq(_.reduce(
+      fieldUsages,
+      (fields, fu) => {
+        if (isAggregation(fu) || isDensity(fu))
+          fields.push(...fu.fields);
+        else
+          fields.push(fu.field);
+        return fields;
+        },
+      []
+    ));
+  }
+
 
   /**
    * PQL: create JSON-formatted queries from internal-format
@@ -258,9 +267,9 @@ define(['./utils'], function (utils) {
         "PREDICT": predict.map(p => {
           if (_.isString(p)) // its just the name of a field then
             return p;
-          if (p instanceof Field)
+          if (isField(p) || isSplit(p))
             return p.name;
-          else if (p instanceof Aggregation || p instanceof Density)
+          else if (isAggregation(p) || isDensity(p))
             return p.toJSON();
           else
             throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
@@ -275,7 +284,8 @@ define(['./utils'], function (utils) {
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
       if (model !== "*") {
         model = utils.listify(model);
-        if(!model.every(_.isString)) throw new TypeError("'model' must be all strings");
+        if(!model.every( o => isField(o) || _.isString(o) )) throw new TypeError("'model' must be all strings or fields");
+        model = model.map( o => isField(o) ? o.name : o);
       }
       where = utils.listify(where);
       if(!where.every(isFilter)) throw new TypeError("'where' must be all filters.");
@@ -340,6 +350,7 @@ define(['./utils'], function (utils) {
     isSplit: isSplit,
     isFilter: isFilter,
     isFieldUsage: isFieldUsage,
+    fields: fields,
     toJSON: toJSON
   };
 

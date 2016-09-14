@@ -6,7 +6,7 @@
  * @module VisMEL
  */
 
-define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
+define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra) {
   'use strict';
 
   class BaseMap {
@@ -30,11 +30,11 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
     }
   }
 
-  var DetailMap = BaseMap;
+  //var DetailMap = BaseMap;
   var ShapeMap = BaseMap;
   var SizeMap = BaseMap;
   var FilterMap = BaseMap;
-  var LayoutMap = BaseMap;
+  //var LayoutMap = BaseMap;
 
 
   /**
@@ -45,8 +45,9 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
    */
   var Sources = function (source) {
     Array.call(this);
-    if (arguments.length !== 0)
-      this.push(source);
+    if (arguments.length === 0 || source === undefined)
+      return;
+    this.push(source);
   };
   Sources.prototype = Object.create(Array.prototype);
   Sources.prototype.constructor = Sources;
@@ -63,18 +64,12 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
 
 
   /**
-   * Constructs an empty Layout or creates a Layout from the given shelf.
-   * @param [shelf]
+   * Constructs an empty Layout, or creates a Layout from the given single or array of LayoutMappings for row and column.
    * @constructor
    */
-  var Layout = function (shelf) {
-    if (arguments.length === 0) {
-      this.rows = new TableAlgebra();
-      this.cols = new TableAlgebra();
-      return;
-    }
-    this.rows = new TableAlgebra(shelf.row);
-    this.cols =  new TableAlgebra(shelf.column);
+  var Layout = function (row, column) {
+    this.rows = new TableAlgebra(row);
+    this.cols =  new TableAlgebra(column);
   };
 
   Layout.prototype.shallowCopy = function () {
@@ -96,14 +91,14 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
    */
   var Layer = function (shelf) {
     // empty constructor
-    if (arguments.length === 0) {
+    if (arguments.length === 0 || shelf === undefined) {
       this.filters = [];
       this.aesthetics = {
         mark: "auto",
         color: {},
         shape: {},
         size: {},
-        details: {}
+        details: []
       };
       return;
     }
@@ -152,14 +147,6 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
    * @alias module:VisMEL
    */
   var VisMEL; VisMEL = function (shelves, source) {
-    // empty constructor
-    if (arguments.length === 0) {
-      this.sources = new Sources();
-      this.layout = new Layout();
-      this.layers = [new Layer()];
-      return;
-    }
-
     // construct from shelves and sources
     this.sources = new Sources(source);
     this.layout = new Layout(shelves);
@@ -175,37 +162,48 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
     var copy = new VisMEL();
     copy.sources = this.sources.shallowCopy();
     copy.layout = this.layout.shallowCopy();
-    copy.layers = this.layers.map( function(layer) {
-      return layer.shallowCopy();
-    } );
+    copy.layers = this.layers.map( layer => layer.shallowCopy() );
     return copy;
   };
 
-  /**
+  /*
    * Returns the set of (unique) variables (i.e. {@link Field} that are used in this VisMEL query.
    *
    * Note: this implementation assumes that fields of a model are always referenced, never copied!
-   */
+   *
   VisMEL.prototype.fields = function () {
     var fus = this.fieldUsages();
     return _.uniq( fus.map( fu => fu.base ));
-  };
+  };*/
 
   /**
    * @returns Returns the set of {@link FieldUsage}s of this query.
    */
   VisMEL.prototype.fieldUsages = function () {
-    var layer = this.layers[0];
-    var usedVars = _.union(
+    let layer = this.layers[0],
+      layout = this.layout,
+      aesthetics = layer.aesthetics;
+    /*let usedVars = _.union(
       this.layout.rows.fieldUsages(),
       this.layout.cols.fieldUsages(),
-      layer.aesthetics.details,
+      aesthetics.details,
       layer.filters,
-      [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size ]
-    );
-    return usedVars.filter(PQL.isField);
-  };
+      [ aesthetics.color, aesthetics.shape, aesthetics.size ]
+    );*/
 
+    // vismel expressions consist of fieldusages ... 
+    let usedVars = _.union(
+      layout.rows.fieldUsages(),
+      layout.cols.fieldUsages(),
+      aesthetics.details,
+      layer.filters);
+    // ... and fieldmaps
+    if (aesthetics.color && aesthetics.color instanceof ColorMap) usedVars.push(aesthetics.color.fu);
+    if (aesthetics.shape && aesthetics.shape instanceof ShapeMap) usedVars.push(aesthetics.shape.fu);
+    if (aesthetics.size && aesthetics.size instanceof SizeMap) usedVars.push(aesthetics.size.fu);
+
+    return usedVars.filter(PQL.isFieldUsage);
+  };
 
   /**
    * @returns Returns the set of {@link FieldUsage}s of this query which are measures.
@@ -311,5 +309,12 @@ define(['./PQL', './TableAlgebra'], function(PQL, TableAlgebra) {
   /**
     public interface
    */
-  return VisMEL;
+  return {
+    VisMEL: VisMEL,
+    Sources: Sources,
+    Layers: Layer,
+    Layout: Layout,
+    BaseMap: BaseMap,
+    ColorMap: ColorMap
+  };
 });

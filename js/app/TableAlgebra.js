@@ -9,7 +9,7 @@
 
 // TODO :this should NOT depend on shelves!
 // TODO: make changes so it works with PQL.js instead of Field.js
-define(['./PQL'], function (PQL) {
+define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
   "use strict";
 
   /**
@@ -37,16 +37,19 @@ define(['./PQL'], function (PQL) {
 
   /**
    * Constructs a table algebra expression from an array of FieldUsages, or creates an empty expression.
-   * @param {Array[FieldUsage]} [shelf] The array of FieldUsages to build the expression from.
+   * @param fus A single or an array of FieldUsags to build the expression from. Optional argument.
    * @returns Returns the table algebra expression. It's simply an array of the {@link FieldUsage}s with proper operators in between.
    * @constructor
    * @alias module:TableAlgebra
    */
-  var TableAlgebraExpr = function (shelf) {
+  var TableAlgebraExpr = function (fus) {
     Array.call(this);
-    if (arguments.length === 0)
+    if (fus === undefined) {
+      this.clear();
       return;
-    for( var idx = 0; idx < shelf.length; ++idx ) {
+    }
+    fus = utils.listify(fus);
+    for( var idx = 0; idx < fus.length; ++idx ) {
       if (idx !== 0)
         /* todo: bug: fix this. this is not a proper way of deciding on the operators. see as follows:
           - dimensions have to be positioned before measures, as we split the axis in accordance of the order of symbols in a NSF entry.
@@ -56,9 +59,9 @@ define(['./PQL'], function (PQL) {
             right: dim1 * (meas1 + meas2)}
               because it leads to something like: {(d1 meas1 meas2), (d2 meas1 meas2), ..., (dn meas1, meas2)}
          */
-        this.push((shelf[idx].role === PQL.FieldT.Role.measure &&
-          shelf[idx-1].role === PQL.FieldT.Role.measure)? '+' : '*');
-      this.push(shelf[idx]);
+        this.push((fus[idx].role === PQL.FieldT.Role.measure &&
+        fus[idx-1].role === PQL.FieldT.Role.measure)? '+' : '*');
+      this.push(fus[idx]);
     }
   };
   TableAlgebraExpr.prototype = Object.create(Array.prototype);
@@ -72,20 +75,24 @@ define(['./PQL'], function (PQL) {
 
 
   /**
-   * Returns the set of (unique) {@link FieldUsage}s used this table algebra expression.
+   * Returns the set of (unique) {@link FieldUsage}s used in this table algebra expression.
    */
   TableAlgebraExpr.prototype.fieldUsages = function () {
     return _.uniq(_.filter(this, PQL.isFieldUsage));
   };
 
 
-  /**
+  /*
    * Returns the set of (unique) {@link Field}s used this table algebra expression.
    * Note that uniqueness is decided (and returned) on the level of Field not FieldUsages.
-   */
+   *
   TableAlgebraExpr.prototype.fields = function () {
-    return _.uniq(_.map(this.fieldUsages(), e => e.base));
-  };
+    //return _.uniq(_.map(this.fieldUsages(), e => e.base));
+    return _.uniq(_.reduce(
+      this.fieldUsages(),
+      (fields, fu) => (PQL.isAggregation(fu) ? fields.push(...fu.fields) : fields.push(fu.field)),
+      [] ));
+  };*/
 
 
   /**
@@ -119,20 +126,23 @@ define(['./PQL'], function (PQL) {
 
     if (this.length === 0) {
       // return the "empty NSF element"
-      return [[this.emptyNsfElement]];
+      //return [[this.emptyNsfElement]];
+      return [[]];
     }
 
     this.forEach( function(elem) {
-      if (elem instanceof PQL.FieldUsage) {
-        if (PQL.isDimension(elem)) {
-          // splitted returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
-          let splitted = elem.split();
+      if (PQL.isFieldUsage(elem)) {
+        if (PQL.isSplit(elem)) {
+          let filters = S.splitToFilters(elem);
+          // "splitToFilters()" returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
+          domainExpr.push(filters.map( f => [f] ));
+          /*let splitted = S.splitToValues(elem);
           domainExpr.push(splitted.map (
             function (e) {
               // save the 'origin' of a FieldUsage that was created in the process of template expansion
               e.origin = (elem.origin ? elem.origin : elem);
               return [e];
-            }));
+            }));*/
         } else
           domainExpr.push([[elem]]);
       } else {
