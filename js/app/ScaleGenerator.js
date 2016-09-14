@@ -3,7 +3,7 @@
  * @module ScaleGenerator
  * @author Philipp Lucas
  */
-define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3, cbrew, F) {
+define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, cbrew, PQL) {
   "use strict";
 
   var logger = Logger.get('pl-ScaleGenerator');
@@ -25,35 +25,36 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * @returns the created color scale.
 
    */
-  scaleGenerator.color = function (fu, domain) {
-    var colormap = [],
-      scale = [];
-    switch (fu.dataType) {
-      case F.FieldT.Type.num:
+  scaleGenerator.color = function (colorMap, domain) {
+    var colorPalette = [],
+      scale = [],
+      fu = colorMap.fu;
+    switch (fu.yieldDataType) {
+      case PQL.FieldT.DataType.num:
         scale = d3.scale.linear();
         // usa poly-linear scale for a good approximation of the implicit color gradient. for that we need to extend the domain to also have 9 values.
-        colormap = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
+        colorPalette = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
         domain = d3.range(domain[0], domain[1], (domain[1]-domain[0])/(9-1) );
         break;
-      case F.FieldT.Type.string:
+      case PQL.FieldT.DataType.string:
         scale = d3.scale.ordinal();
         let l = domain.length;
         // colormap
         if (l <= 2) {
-          colormap = cbrew.Set1[3].slice(0, l);
+          colorPalette = cbrew.Set1[3].slice(0, l);
         } else if (l <= 9) {
-          colormap = cbrew.Set1[l];
+          colorPalette = cbrew.Set1[l];
         } else { //if (l <= 12) {
           if (l > 12) {
             logger.warn("the domain of the dimension " + fu.name + " has too many elements: " + l + "\n I'll just use 12, anyway.");
             l = 12;
           }
-          colormap = cbrew.Paired[l];
+          colorPalette = cbrew.Paired[l];
         }
         break;
-      default: throw new RangeError("invalid Field.dataType" + fu.dataType);
+      default: throw new RangeError("invalid Field.dataType: " + fu.dataType);
     }
-    return scale.domain(domain).range(colormap);
+    return scale.domain(domain).range(colorPalette);
   };
 
 
@@ -62,7 +63,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
    * @param fu {@link FieldUsage}.
    * @returns the created size scale.
    */
-  scaleGenerator.size = function (fu, domain) {
+  scaleGenerator.size = function (sizeMap, domain) {
     throw new Error("Use scaleGenerator.position for the moment. This one is not implemented yet.");
     // todo: implement this one!?
   };
@@ -71,16 +72,16 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
   /**
    * @param fu
    */
-  scaleGenerator.shape = function (fu, domain) {
-    var scale = [];
+  scaleGenerator.shape = function (shapeMap, domain) {
+    let scale = [],
+      fu = shapeMap.fu;
     switch (fu.dataType) {
-      case F.FieldT.Type.num:
+      case PQL.FieldT.DataType.num:
         throw new Error("continuous shapes not yet implemented.");
-      case F.FieldT.Type.string:
+      case PQL.FieldT.DataType.string:
         scale = d3.scale.ordinal()
           .range(d3.svg.symbolTypes)
           .domain(domain);
-          //.domain(fu.extent);
         if (domain.length > d3.svg.symbolTypes.length) {
           logger.warn("the domain/extend of '" + fu.name + "' has too many elements. I can only encode " +
             d3.svg.symbolTypes.length + " many. I will 'wrap around'..");
@@ -100,12 +101,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './Field'], function (Logger, d3,
   scaleGenerator.position = function (fu, domain, range) {
     var scale = [];
     switch (fu.dataType) {
-      case F.FieldT.Type.num:
+      case PQL.FieldT.DataType.num:
         // continuous domain
         scale = d3.scale.linear()
           .range(range);
         break;
-      case F.FieldT.Type.string:
+      case PQL.FieldT.DataType.string:
         // discrete domain: map to center of equally sized bands
         scale = d3.scale.ordinal()
           .rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band

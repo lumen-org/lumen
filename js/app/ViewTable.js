@@ -203,9 +203,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     /// build up axis stack
     function _buildAxis(fieldUsages, canvas, axisType) {
-      let stackDepth = fieldUsages.stackDepth;
-      let splittingDims = fieldUsages.filter(PQL.isDimension);
-      let splittingStackDepth = fieldUsages.filter(PQL.isDimension).length;
+      let stackDepth = fieldUsages.stackDepth,
+        splittingDims = fieldUsages.filter(PQL.isSplit),
+        splittingStackDepth = splittingDims.length; //fieldUsages.filter(PQL.isDimension).length;
 
       let axisStack = new Array(splittingStackDepth); // axis stack
       let range = (axisType === "x axis" ? canvas.size.width : canvas.size.height); // the range in px of current axis stack level
@@ -412,8 +412,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // extents
     attachExtents(query, queries, results);
 
-    debugger;
-
     // create scales
     // todo: move scales outside of atomic panes, like extents
 
@@ -515,7 +513,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         if (qa.size instanceof VisMEL.SizeMap)
           size = _extentUnion(size, r.extent[qa.size.fu.index], PQL.hasDiscreteYield(qa.size.fu));
 
-        // row / col extents
+        // row and column extents
         let lr = q.layout.rows[0];
         if (PQL.isAggregationOrDensity(lr))
           lr.extent = _extentUnion(lr.extent, r.extent[lr.fu.index], PQL.hasDiscreteYield(lr));
@@ -547,14 +545,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     let aesthetics = query.layers[0].aesthetics;
 
-    if (PQL.isFieldUsage(aesthetics.color))
-      aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.extent);
+    if (aesthetics.color instanceof VisMEL.ColorMap)
+      //PQL.isFieldUsage(aesthetics.color))
+      aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.fu.extent);
 
-    if (PQL.isFieldUsage(aesthetics.size))
-      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, aesthetics.size.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
+    if (aesthetics.size instanceof VisMEL.SizeMap)
+    //if (PQL.isFieldUsage(aesthetics.size))
+      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
 
-    if (PQL.isFieldUsage(aesthetics.shape))
-      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.extent);
+    //if (PQL.isFieldUsage(aesthetics.shape))
+    if (aesthetics.shape instanceof VisMEL.ShapeMap)
+      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
 
     let row = query.layout.rows[0];
     if (PQL.isFieldUsage(row) && row.isMeasure())
@@ -587,21 +588,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     }
 
     let color = aesthetics.color;
-    color.mapper = ( PQL.isFieldUsage(color) ?
+    color.mapper = ( color instanceof VisMEL.ColorMap ?
       function (d) {
         return color.visScale(_valueOrAvg(d[color.index]));
       } :
       Settings.maps.color );
 
     let size = aesthetics.size;
-    size.mapper = ( PQL.isFieldUsage(size) ?
+    size.mapper = ( size instanceof VisMEL.SizeMap ?
       function (d) {
         return size.visScale(_valueOrAvg(d[size.index]));
       } :
       Settings.maps.size );
 
     let shape = aesthetics.shape;
-    shape.mapper = ( PQL.isFieldUsage(shape) ?
+    shape.mapper = ( shape instanceof VisMEL.ShapeMap ?
       function (d) {
         return shape.visScale(_valueOrAvg(d[shape.index]));
       } :
@@ -613,8 +614,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     let layout = query.layout;
     let colFU = layout.cols[0],
       rowFU = layout.rows[0];
-    let isColMeas = PQL.isMeasure(colFU),
-      isRowMeas = PQL.isMeasure(rowFU);
+    let isColMeas = PQL.isAggregationOrDensity(colFU),
+      isRowMeas = PQL.isAggregationOrDensity(rowFU);
     let xPos = paneSize.width / 2,
       yPos = paneSize.height / 2;
 

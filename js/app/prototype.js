@@ -113,7 +113,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width: 800,
+        width: 600,
         height: 600
       });
 
