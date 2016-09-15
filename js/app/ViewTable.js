@@ -272,7 +272,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             let x = axisType === "x axis" ? canvas.size.width / repeat / 2 : -(Settings.geometry.axis.labelFontSizePx * 2 - 4),
               y = axisType === "y axis" ? canvas.size.height / repeat / 2 : Settings.geometry.axis.labelFontSizePx * 2 + 4;
             let labelD3 = axisG.append("text")
-              .text(elem.FU.name)
+              .text(elem.FU.yields)
               .classed("axis label", true)
               .style("text-anchor", "middle")
               .attr({
@@ -310,7 +310,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * @param axisType {"x axis"|"y axis"}
    */
   function attachAtomicAxis(pane, query, canvasSize, axisType) {
-
     let axis = {};
     axis.FU = (axisType === "x axis" ? query.layout.cols[0] : query.layout.rows[0]);
 
@@ -321,11 +320,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     axis.axisD3 = pane.paneD3.append("g").classed(axisType, true);
     if (axisType === "x axis")
       axis.axisD3.attr("transform", "translate(0," + pane.size.height + ")");
+    
     axis.axis = d3.svg.axis()
       .scale(axis.FU.visScale)
       .orient(axisType === "x axis" ? "bottom" : "left")
       .tickSize(-(axisType === "x axis" ? canvasSize.height : canvasSize.width), 1);
-
+    
     // draw axis
     axis.axis(axis.axisD3);
 
@@ -343,7 +343,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     let x = axisType === "x axis" ? pane.size.width / 2 : -(Settings.geometry.axis.labelFontSizePx * 2 + 4),
       y = axisType === "y axis" ? pane.size.height / 2 : Settings.geometry.axis.labelFontSizePx * 2 + 4;
     axis.labelD3 = axis.axisD3.append("text")
-      .text(axis.FU.name)
+      .text(axis.FU.yields)
       .classed("axis label", true)
       .style("text-anchor", "middle")
       .attr({
@@ -389,7 +389,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // axis stack depth
     [query.layout.rows, query.layout.cols].forEach(
       rc => {
-        rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregation).empty();
+        rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
       }
     );
 
@@ -480,6 +480,24 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       return (discreteFlag ? _.union(extent, newData) : d3.extent([...extent, ...newData]) );
     }
 
+    /**
+     * Tweaks for continuous extents.
+     * (1) non-singular extent: add 5% of extent to upper and lower bound of extent
+     * (2) singular extent: upper = singular+5%*singular, lower = singular-5%*singular
+     */
+    function _normalize (extent) {
+      if (extent.length === 2) { // iff continuous extent
+        if (extent[0] === extent[1]) {
+          let singular = extent[0];
+          extent = [singular - 0.05*singular, singular + 0.05*singular];
+        } else {
+          let relOff = 0.05*(extent[1]-extent[0]);
+          extent = [extent[0] - relOff, extent[1] + relOff];
+        }
+      }
+      return extent;
+    }
+
     // extents of splits in table algebra expression
     [...query.layout.rows, ...query.layout.cols].filter(PQL.isSplit).forEach( dim => {
       // it is ok to use "splitToValues()" since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
@@ -514,21 +532,34 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           size = _extentUnion(size, r.extent[qa.size.fu.index], PQL.hasDiscreteYield(qa.size.fu));
 
         // row and column extents
+        // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. thats why this works.
         let lr = q.layout.rows[0];
         if (PQL.isAggregationOrDensity(lr))
-          lr.extent = _extentUnion(lr.extent, r.extent[lr.fu.index], PQL.hasDiscreteYield(lr));
+          lr.extent = _extentUnion(lr.extent, r.extent[lr.index], PQL.hasDiscreteYield(lr));
         let lc = q.layout.cols[0];
         if (PQL.isAggregationOrDensity(lc))
-          lc.extent = _extentUnion(lc.extent, r.extent[lc.fu.index], PQL.hasDiscreteYield(lc));
+          lc.extent = _extentUnion(lc.extent, r.extent[lc.index], PQL.hasDiscreteYield(lc));
       }
+    }
+
+    // normalize row and column extents
+    for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
+      let lc = queries.at[0][cIdx].layout.cols[0];
+      if (PQL.isAggregationOrDensity(lc))
+        lc.extent = _normalize(lc.extent);
+    }
+    for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+      let lr = queries.at[rIdx][0].layout.rows[0];
+      if (PQL.isAggregationOrDensity(lr))
+        lr.extent = _normalize(lr.extent);
     }
 
     // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
     {
       let qa = query.layers[0].aesthetics;
-      if (qa.color instanceof VisMEL.ColorMap) qa.color.fu.extent = color;
-      if (qa.shape instanceof VisMEL.ShapeMap) qa.shape.fu.extent = shape;
-      if (qa.size instanceof VisMEL.SizeMap) qa.size.fu.extent = size;
+      if (qa.color instanceof VisMEL.ColorMap) qa.color.fu.extent = _normalize(color);
+      if (qa.shape instanceof VisMEL.ShapeMap) qa.shape.fu.extent = _normalize(shape);
+      if (qa.size instanceof VisMEL.SizeMap) qa.size.fu.extent = _normalize(size);
     }
   };
 
@@ -546,26 +577,23 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     let aesthetics = query.layers[0].aesthetics;
 
     if (aesthetics.color instanceof VisMEL.ColorMap)
-      //PQL.isFieldUsage(aesthetics.color))
       aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.fu.extent);
 
     if (aesthetics.size instanceof VisMEL.SizeMap)
-    //if (PQL.isFieldUsage(aesthetics.size))
-      aesthetics.size.visScale = ScaleGen.position(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
+      aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
 
-    //if (PQL.isFieldUsage(aesthetics.shape))
     if (aesthetics.shape instanceof VisMEL.ShapeMap)
       aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
 
     let row = query.layout.rows[0];
-    if (PQL.isFieldUsage(row) && row.isMeasure())
-    // row.visScale = ScaleGen.position(row, row.extent, [0, paneSize.height]);
+    if (PQL.isAggregationOrDensity(row)) 
       row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height - Settings.geometry.axis.padding]);
-    // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     let col = query.layout.cols[0];
-    if (PQL.isFieldUsage(col) && col.isMeasure())
+    if (PQL.isAggregationOrDensity(col))
       col.visScale = ScaleGen.position(col, col.extent, [paneSize.width - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
+
+    // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
     // no need for scales of: filters, details
   };
@@ -590,21 +618,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     let color = aesthetics.color;
     color.mapper = ( color instanceof VisMEL.ColorMap ?
       function (d) {
-        return color.visScale(_valueOrAvg(d[color.index]));
+        return color.visScale(_valueOrAvg(d[color.fu.index]));
       } :
       Settings.maps.color );
 
     let size = aesthetics.size;
     size.mapper = ( size instanceof VisMEL.SizeMap ?
       function (d) {
-        return size.visScale(_valueOrAvg(d[size.index]));
+        return size.visScale(_valueOrAvg(d[size.fu.index]));
       } :
       Settings.maps.size );
 
     let shape = aesthetics.shape;
     shape.mapper = ( shape instanceof VisMEL.ShapeMap ?
       function (d) {
-        return shape.visScale(_valueOrAvg(d[shape.index]));
+        return shape.visScale(_valueOrAvg(d[shape.fu.index]));
       } :
       Settings.maps.shape );
 

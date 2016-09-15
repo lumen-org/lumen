@@ -36,7 +36,7 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
 
 
   /**
-   * Constructs a table algebra expression from an array of FieldUsages, or creates an empty expression.
+   * Constructs a table algebra expression from FieldUsages, or creates an empty expression.
    * @param fus A single or an array of FieldUsags to build the expression from. Optional argument.
    * @returns Returns the table algebra expression. It's simply an array of the {@link FieldUsage}s with proper operators in between.
    * @constructor

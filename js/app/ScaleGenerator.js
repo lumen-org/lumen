@@ -29,12 +29,14 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
     var colorPalette = [],
       scale = [],
       fu = colorMap.fu;
+    //debugger;
     switch (fu.yieldDataType) {
       case PQL.FieldT.DataType.num:
         scale = d3.scale.linear();
         // usa poly-linear scale for a good approximation of the implicit color gradient. for that we need to extend the domain to also have 9 values.
         colorPalette = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
-        domain = d3.range(domain[0], domain[1], (domain[1]-domain[0])/(9-1) );
+        let step = (domain[1]-domain[0])/(9-1);
+        domain = d3.range(9).map(d => domain[0] + d*step);
         break;
       case PQL.FieldT.DataType.string:
         scale = d3.scale.ordinal();
@@ -63,9 +65,21 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
    * @param fu {@link FieldUsage}.
    * @returns the created size scale.
    */
-  scaleGenerator.size = function (sizeMap, domain) {
-    throw new Error("Use scaleGenerator.position for the moment. This one is not implemented yet.");
-    // todo: implement this one!?
+  scaleGenerator.size = function (sizeMap, domain, range) {
+    let scale = [],
+      fu = sizeMap.fu;
+    switch (fu.yieldDataType) {
+      case PQL.FieldT.DataType.num:
+        // continuous domain
+        scale = d3.scale.linear().range(range);
+        break;
+      case PQL.FieldT.DataType.string:
+        // discrete domain: map to center of equally sized bands
+        scale = d3.scale.ordinal().rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
+        break;
+      default: throw new RangeError("invalid yieldDataType: " + fu.yieldDataType);
+    }
+    return scale.domain(domain);
   };
 
 
@@ -75,7 +89,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
   scaleGenerator.shape = function (shapeMap, domain) {
     let scale = [],
       fu = shapeMap.fu;
-    switch (fu.dataType) {
+    switch (fu.yieldDataType) {
       case PQL.FieldT.DataType.num:
         throw new Error("continuous shapes not yet implemented.");
       case PQL.FieldT.DataType.string:
@@ -87,7 +101,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
             d3.svg.symbolTypes.length + " many. I will 'wrap around'..");
         }
         break;
-      default: throw new RangeError("invalid Field.dataType" + fu.dataType);
+      default: throw new RangeError("invalid Field.yieldDataType: " + fu.yieldDataType);
     }
     return scale;
   };
@@ -100,18 +114,16 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
    */
   scaleGenerator.position = function (fu, domain, range) {
     var scale = [];
-    switch (fu.dataType) {
+    switch (fu.yieldDataType) {
       case PQL.FieldT.DataType.num:
         // continuous domain
-        scale = d3.scale.linear()
-          .range(range);
+        scale = d3.scale.linear().rangeRound(range);
         break;
       case PQL.FieldT.DataType.string:
         // discrete domain: map to center of equally sized bands
-        scale = d3.scale.ordinal()
-          .rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
+        scale = d3.scale.ordinal().rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
-      default: throw new RangeError("invalid Field.dataType" + fu.dataType);
+      default: throw new RangeError("invalid Field.dataType: " + fu.yieldDataType);
     }
     return scale.domain(domain);
   };

@@ -113,8 +113,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
     var visPaneD3 = d3.select("#visDiv")
       .append("svg")
       .attr({
-        width: 600,
-        height: 600
+        width: 400,
+        height: 400
       });
 
     var testPQLflag = false,
@@ -182,19 +182,40 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
       var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
       var query, iris;
       mb.get('iris')
-        .then(iris_ => {
+        .then( iris_ => {
+          iris = iris_;
+        })
+        .then( () => {
+          let pw_split = new PQL.Split(iris.fields["petal_width"], "equiDist", [20]); 
+          let pw_aggr = new PQL.Aggregation(iris.fields["petal_width"], "maximum", "petal_width");
+          let pw_density = new PQL.Density(iris.fields["petal_width"]);
+        query = new VisMEL.VisMEL(undefined, iris);
+          query.layout.rows = new TableAlgebraExpr([pw_density]);
+          query.layout.cols = new TableAlgebraExpr([pw_aggr]);
+          query.layers[0].aesthetics.details.push(pw_split);         
+          return query;           
+        })
+/*        .then(iris_ => {
           iris = iris_;
 
-          let sw_split = new PQL.Split(iris.fields["sepal_width"], "equiDist", [2]);
-          let pl_split = new PQL.Split(iris.fields["petal_length"], "equiDist", [3]);
+          let sw_split = new PQL.Split(iris.fields["sepal_width"], "equiDist", [5]);
+          let pl_split = new PQL.Split(iris.fields["petal_length"], "equiDist", [10]);
           let pl_density = new PQL.Density(iris.fields["petal_length"]);
+          let pw_aggr = new PQL.Aggregation(iris.fields["petal_width"], "maximum", "petal_width");
+          let sw_aggr = new PQL.Aggregation(iris.fields["sepal_width"], "maximum", "sepal_width");
 
           query = new VisMEL.VisMEL(undefined, iris);
-          query.layout.rows = new TableAlgebraExpr(sw_split);
-          query.layers[0].aesthetics.color = new VisMEL.ColorMap(pl_density, 'rgb');
-          query.layers[0].aesthetics.details.push(pl_split);
+          query.layout.rows = new TableAlgebraExpr([sw_aggr]);
+          //query.layout.cols = new TableAlgebraExpr([pl_density, pw_aggr]);
+          query.layout.cols = new TableAlgebraExpr([pw_aggr]);
+
+          query.layers[0].aesthetics.color = new VisMEL.ColorMap(pw_aggr, 'rgb');
+          query.layers[0].aesthetics.size = new VisMEL.SizeMap(sw_split);
+          //query.layers[0].aesthetics.shape = new VisMEL.ShapeMap(sw_split);
+          query.layers[0].aesthetics.details.push(sw_split);
+          //query.layers[0].aesthetics.details.push(pl_split);
           return query;
-        })
+        })*/
         .then(query => {
           console.log(query.toString());
           return query;
@@ -214,7 +235,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
         .then(() => {
           console.log(resultTable);          
           viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-          debugger;
+          //debugger;
+          /**
+            something feels weird: I just want the value of a field on e.g. color
+            and also on shape. how do I do that if that field is split by? 
+            is it conceptuatlly wrong again?
+          **/
         });
     } // function testVisMEL
 

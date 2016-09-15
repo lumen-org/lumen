@@ -22,13 +22,13 @@ define([], function () {
         // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
         size: 40,
         // [px] font size of tick marks of axis
-        tickFontSizePx: 12,
+        tickFontSizePx: 10,
         // [px] font size of axis label (i.e. name of axis)
         labelFontSizePx: 10,
         // [px] padding at the beginning and end of an axis
-        padding: 15,
+        padding: 5,
         // [px] outer tick size of axis tick marks
-        outerTickSize: 0
+        outerTickSize: -5
       }
     }
 

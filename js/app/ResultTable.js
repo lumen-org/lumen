@@ -93,8 +93,11 @@ define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
 
     // push index to ancestors
     // TODO: I don't think I need that anymore
-    [...dimensions, ...measures].forEach( fu => {
-      if (fu.origin) fu.origin.index = fu.index;
+    [...dimensions, ...measures].forEach( fu => {      
+      if (fu.origin) {
+        debugger;
+        fu.origin.index = fu.index;
+      }
     });
 
     // run PQL query

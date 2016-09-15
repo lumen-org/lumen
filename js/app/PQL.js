@@ -68,10 +68,10 @@ define(['./utils'], function (utils) {
   var isSplitMethod = (m) => m === SplitMethod.equiDist || m === SplitMethod.identity;
 
   var AggregationMethods = Object.freeze({
-    argmax: 'max',
-    argavg: 'avg'
+    argmax: 'maximum',
+    argavg: 'average'
   });
-  var isAggregationMethod = (m) => m === AggregationMethods.argavg || m === AggregationMethods.argmax;    
+  var isAggregationMethod = (m) => (m === AggregationMethods.argavg || m === AggregationMethods.argmax);
 
   var DensityMethod = Object.freeze({
     density: 'density'
@@ -118,12 +118,13 @@ define(['./utils'], function (utils) {
       this.field = field;
       this.method = method;
       this.args = args;
-      //get yieldName() {return field.name;},
     }
 
     get name() {return this.field.name;}
 
     get yieldDataType() {return this.field.dataType;}
+
+    get yields() {return this.field.name;}
 
     toJSON() {
       return Split.toJSON(this);
@@ -143,7 +144,7 @@ define(['./utils'], function (utils) {
       fields = utils.listify(fields);
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
-      if (isAggregationMethod(method))
+      if (!isAggregationMethod(method))
         throw RangeError("invalid method for Aggregation: " + method);
       if (-1 == fields.map(f=>f.name).indexOf(yields))
         throw RangeError("yields is not a name of any of aggregated fields: " + yields);
@@ -182,12 +183,15 @@ define(['./utils'], function (utils) {
         throw TypeError("fields must be a single or an array of fields");
       this.fields = fields;
       this.method = DensityMethod.density;
-      //get yieldDataType() {return FieldT.DataType.num;}
       this.yieldDataType = FieldT.DataType.num;
     }
 
     get names() {
       return this.fields.map(f=>f.name);
+    }
+
+    get yields() {
+      return 'density(' + this.fields.names() + ')';
     }
 
     toJSON() {
