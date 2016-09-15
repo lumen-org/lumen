@@ -183,13 +183,6 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
     let layer = this.layers[0],
       layout = this.layout,
       aesthetics = layer.aesthetics;
-    /*let usedVars = _.union(
-      this.layout.rows.fieldUsages(),
-      this.layout.cols.fieldUsages(),
-      aesthetics.details,
-      layer.filters,
-      [ aesthetics.color, aesthetics.shape, aesthetics.size ]
-    );*/
 
     // vismel expressions consist of fieldusages ... 
     let usedVars = _.union(
@@ -205,48 +198,6 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
     return usedVars.filter(PQL.isFieldUsage);
   };
 
-  /**
-   * @returns Returns the set of {@link FieldUsage}s of this query which are measures.
-   *
-  VisMEL.prototype.measureUsages = function () {
-    return this.fieldUsages()
-      .filter(fu => PQL.isAggregation(fu) || PQL.isDensity(fu));
-  };
-
-  /**
-   * @returns Returns the set of {@link FieldUsage}s of this query which are dimensions.
-
-  VisMEL.prototype.dimensionUsages = function () {
-    return this.fieldUsages()
-      .filter(PQL.isSplit);
-  };
-
-  /**
-   * @returns Returns the set of {@link FieldUsage}s of this query that are common among all implied submodels, i.e. all field usages except those of the layout part of the query.
-   *
-  VisMEL.prototype.commonMeasureUsages = function () {
-    return _.without( this.measureUsages(),
-      ...this.layout.rows.fieldUsages(), ...this.layout.cols.fieldUsages() );
-  };
-
-  /**
-   * Returns the set of all unqiue {@link FieldUsage}s of this query that:
-   *  (1) are dimensions, and
-   *  (2) marks per pane are split by
-   * i.e.: all dimension usages on color, shape, size, orientation, details, ... but not on rows, columns, filters.
-   * note: 'Unique' means only one FieldUsage per Field is kept, e.g. if there is several dimension usages of a field with name "age" only the first one is kept. This convention is applied, as multiple dimension usages of the same field do NOT lead to more splitting of marks.
-   *
-  VisMEL.prototype.splittingDimensionUsages = function () {
-    var layer = this.layers[0];
-    return _.unique( _.filter(
-      _.union(
-          layer.aesthetics.details,
-          [ layer.aesthetics.color, layer.aesthetics.shape, layer.aesthetics.size]
-        ),
-        PQL.isDimension),
-      PQL.nameMap);
-  };
-  // */
 
   // delimiter for JSON conversion
   var _delim = '\t';
@@ -317,6 +268,7 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
     BaseMap: BaseMap,
     ColorMap: ColorMap,
     ShapeMap: ShapeMap,
-    SizeMap: SizeMap
+    SizeMap: SizeMap,
+    FilterMap: FilterMap
   };
 });

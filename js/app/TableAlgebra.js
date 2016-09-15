@@ -7,8 +7,6 @@
  * @author Philipp Lucas
  */
 
-// TODO :this should NOT depend on shelves!
-// TODO: make changes so it works with PQL.js instead of Field.js
 define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
   "use strict";
 
@@ -29,8 +27,6 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
    */
   function _plus (a, b) {
     if( !(a instanceof Array && b instanceof Array) ) throw new TypeError();
-    // todo test
-    // alternative: return a.concat(b);
     return [...a, ...b];
   }
 
@@ -81,20 +77,6 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
     return _.uniq(_.filter(this, PQL.isFieldUsage));
   };
 
-
-  /*
-   * Returns the set of (unique) {@link Field}s used this table algebra expression.
-   * Note that uniqueness is decided (and returned) on the level of Field not FieldUsages.
-   *
-  TableAlgebraExpr.prototype.fields = function () {
-    //return _.uniq(_.map(this.fieldUsages(), e => e.base));
-    return _.uniq(_.reduce(
-      this.fieldUsages(),
-      (fields, fu) => (PQL.isAggregation(fu) ? fields.push(...fu.fields) : fields.push(fu.field)),
-      [] ));
-  };*/
-
-
   /**
    * Returns the normalized set form (NSF) of this table algebra expression. It does not modify this table algebra expression.
    *
@@ -136,13 +118,6 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
           let filters = S.splitToFilters(elem);
           // "splitToFilters()" returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
           domainExpr.push(filters.map( f => [f] ));
-          /*let splitted = S.splitToValues(elem);
-          domainExpr.push(splitted.map (
-            function (e) {
-              // save the 'origin' of a FieldUsage that was created in the process of template expansion
-              e.origin = (elem.origin ? elem.origin : elem);
-              return [e];
-            }));*/
         } else
           domainExpr.push([[elem]]);
       } else {

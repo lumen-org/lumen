@@ -29,7 +29,6 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
     var colorPalette = [],
       scale = [],
       fu = colorMap.fu;
-    //debugger;
     switch (fu.yieldDataType) {
       case PQL.FieldT.DataType.num:
         scale = d3.scale.linear();

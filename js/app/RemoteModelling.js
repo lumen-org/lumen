@@ -109,29 +109,6 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
     }
 
     /**
-     * Returns an aggregation on the fieldToAggregate with the ids conditioned to their corresponding values. Does not modify the model.
-     * TODO: remove this function!?
-     * @param ids
-     * @param values
-     * @param fieldToAggregate
-
-    aggregate(ids, values, fieldToAggregate) {
-      let names = this.asName(ids);
-      var content = {
-        "PREDICT": [{
-          "name": fieldToAggregate.name,
-          "aggregation": fieldToAggregate.aggr
-        }],
-        "FROM": this.name,
-        "WHERE": _.zip(names, values)
-          .map(pair => {
-            return {"name": pair[0], "operator": "equals", "value": pair[1]};
-          })
-      };
-      return executeRemotely(content, this.url);
-    }*/
-
-    /**
      * Conditions one or more variables v of this model on the given domain and returns a Promise to the modified model.
      * @param conditionals A single pair, or an array of pairs. A pair is an object with at least two properties:
      *   - id: the variable of the model, and
@@ -211,7 +188,6 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
      * TODO: there is a strange dependency in the code: copied models are expected to share the same {@link Field} (identical in terms of the === operator). However, when the same model is loaded twice, e.g. by creating two instances of RemoteModel this will not (and can not easily) be the base. The problem is in Model.isField.
      * @returns {Promise} A promise to a copy of this model.
      */
-    // TODO 2016-07-04 - implement for remote models
     copy(name) {
       var myClone = [];
       var that = this;

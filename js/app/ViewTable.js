@@ -123,21 +123,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // @update
     let pointsD3 = pane.pointsD3
       .selectAll(".point")
-      // todo: fix: use tuple-storage in result table already
-      .data( data
-      /*
-        // converts column based to tuple based!
-        function () {
-          if (data.length === 0)
-            return [];
-          var len = data[0].length;
-          var tupleData = new Array(len);
-          for (let i = 0; i < len; ++i) {
-            tupleData[i] = data.map( dim => dim[i] ); // jshint ignore:line
-          }
-          return tupleData;
-        }*/
-      ); // jshint ignore:line
+      .data(data);
 
     // add scales to field usages of this query
     attachScales(query, pane.size);

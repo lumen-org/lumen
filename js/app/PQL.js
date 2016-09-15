@@ -209,16 +209,13 @@ define(['./utils'], function (utils) {
 
   function isAggregation (obj) {
     return obj instanceof Aggregation;
-    //return utils.hasProperty(obj, 'method') && isAggregationMethod(obj.method);
   }
 
   function isSplit (obj) {
-    //return utils.hasProperty(obj, 'method') && isSplitMethod(obj.method);
     return obj instanceof Split;
   }
 
   function isDensity (obj) {
-    //return utils.hasProperty(obj, 'method') && isDensityMethod(obj.method);
     return obj instanceof Density;
   }
 
@@ -227,7 +224,6 @@ define(['./utils'], function (utils) {
   }
 
   function isFilter (obj) {
-    //return utils.hasProperty(obj, 'method') && isFilterMethod(obj.method);
     return obj instanceof Filter;
   }
 
