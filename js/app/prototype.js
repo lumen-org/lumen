@@ -185,19 +185,35 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
         .then( iris_ => {
           iris = iris_;
         })
+//*
+        .then( () => {
+          let pw = iris.fields["petal_width"],
+           sw = iris.fields["sepal_width"],
+           pl = iris.fields["petal_length"];
+          let pw_split = new PQL.Split(pw, "equiDist", 20);
+          let sw_split = new PQL.Split(sw, "equiDist", 20);
+          //let pl_split = new PQL.Split(pl, "equiDist", 2);
+          let pw_density = new PQL.Density([pw,sw]);
+          let pw_aggr = new PQL.Aggregation(pw, "maximum", "petal_width");
+          query = new VisMEL.VisMEL(undefined, iris);
+          query.layout.rows = new TableAlgebraExpr([sw_split]);
+          query.layout.cols = new TableAlgebraExpr([pw_split]); 
+          query.layers[0].aesthetics.color = new VisMEL.ColorMap(pw_density, 'rgb');
+          //query.layers[0].aesthetics.size = new VisMEL.SizeMap(pw_aggr);
+          return query;
+        }) //*/
+/*
         .then( () => {
           let pw_split = new PQL.Split(iris.fields["petal_width"], "equiDist", [20]); 
           let pw_aggr = new PQL.Aggregation(iris.fields["petal_width"], "maximum", "petal_width");
           let pw_density = new PQL.Density(iris.fields["petal_width"]);
-        query = new VisMEL.VisMEL(undefined, iris);
+          query = new VisMEL.VisMEL(undefined, iris);
           query.layout.rows = new TableAlgebraExpr([pw_density]);
-          query.layout.cols = new TableAlgebraExpr([pw_aggr]);
-          query.layers[0].aesthetics.details.push(pw_split);         
+          query.layout.cols = new TableAlgebraExpr([pw_split]);
           return query;           
-        })
-/*        .then(iris_ => {
-          iris = iris_;
-
+        })//*/
+/*
+        .then( () => {
           let sw_split = new PQL.Split(iris.fields["sepal_width"], "equiDist", [5]);
           let pl_split = new PQL.Split(iris.fields["petal_length"], "equiDist", [10]);
           let pl_density = new PQL.Density(iris.fields["petal_length"]);
@@ -215,25 +231,25 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
           query.layers[0].aesthetics.details.push(sw_split);
           //query.layers[0].aesthetics.details.push(pl_split);
           return query;
-        })*/
+        })//*/
         .then(query => {
-          console.log(query.toString());
+          //console.log(query.toString());
           return query;
         })
         .then(query => {
           //query = new VisMEL(shelf, model);
           queryTable = new QueryTable(query);
-          console.log(queryTable);
+          //console.log(queryTable);
           modelTable = new ModelTable(queryTable);
           return modelTable.model();
         })
         .then(() => {
-          console.log(modelTable);
+          //console.log(modelTable);
           resultTable = new ResultTable(modelTable, queryTable);
           return resultTable.fetch();
         })
         .then(() => {
-          console.log(resultTable);          
+          //console.log(resultTable);        
           viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
           //debugger;
           /**

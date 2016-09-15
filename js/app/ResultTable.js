@@ -139,7 +139,6 @@ define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
           let promise = aggregate(this._mt.at[rIdx][cIdx], this._qt.at[rIdx][cIdx])
             .then(result => {that.at[rIdx][cIdx] = result;}); // jshint ignore:line
           fetchPromises.add(promise);
-          console.log("added fetch promise");
         }
       }
       return Promise.all(fetchPromises);
