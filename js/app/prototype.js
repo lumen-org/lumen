@@ -201,16 +201,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
           return query;
         }) //*/
 
+
         .then( () => {
           let pw_aggr = new PQL.Aggregation([pw,sw], "maximum", "petal_width");
           let sw_aggr = new PQL.Aggregation([pw,sw], "maximum", "sepal_width");
-          let pl_split = new PQL.Split(pl, "equiDist", [10]);
-          let sl_split = new PQL.Split(sl, "equiDist", [10]);
+          let pl_split = new PQL.Split(pl, "equiDist", [20]);
+          let sl_split = new PQL.Split(sl, "equiDist", [20]);
+          let plsl_density = new PQL.Density([pl,sl]);
           query = new VisMEL.VisMEL(undefined, iris);
           query.layout.rows = new TableAlgebraExpr([pw_aggr]);
           query.layout.cols = new TableAlgebraExpr([sw_aggr]);
-          query.layers[0].aesthetics.details.push(sl_split);
+          query.layers[0].aesthetics.details.push(sl_split);          
           query.layers[0].aesthetics.details.push(pl_split);
+          query.layers[0].aesthetics.color = new VisMEL.ColorMap(plsl_density, 'rgb');
           return query;
         }) //*/
 
@@ -239,8 +242,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
           query.layout.cols = new TableAlgebraExpr([pw_split]);
           return query;           
         })//*/
-/*
-        .then( () => {
+
+/*        .then( () => {
           let sw_split = new PQL.Split(iris.fields["sepal_width"], "equiDist", [5]);
           let pl_split = new PQL.Split(iris.fields["petal_length"], "equiDist", [10]);
           let pl_density = new PQL.Density(iris.fields["petal_length"]);
