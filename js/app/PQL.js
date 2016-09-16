@@ -110,14 +110,14 @@ define(['./utils'], function (utils) {
   }
 
   class Split {
-    constructor (field, method, args={}) {
+    constructor (field, method, args=[]) {
       if (!isField(field))
         throw TypeError("name must be string identifier of a field");
       if (!isSplitMethod(method))
         throw RangeError("invalid method for Split: " + method.toString());
       this.field = field;
       this.method = method;
-      this.args = args;
+      this.args = utils.listify(args);
     }
 
     get name() {return this.field.name;}

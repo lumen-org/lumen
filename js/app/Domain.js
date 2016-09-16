@@ -94,41 +94,6 @@ define(['./utils'], function (utils) {
     }
   }
 
-  /**
-   * Constructs a continuous numerical domain from the given interval.
-   * A continuous numeric domain is described by an array of intervals, and the union of all those intervals gives the actual domain.
-   // todo: implement
-   * @param interval An array of ranges defining the domain.
-   * @constructor
-   *
-   var NumericContinuousDomain = function (interval)
-    Array.call(this, interval);
-    // sort by start value of intervals
-    throw new Error("not implemented"); // todo: implement
-  };
-   NumericContinuousDomain.prototype = Object.create(Array.prototype);
-   NumericContinuousDomain.prototype.constructor = NumericContinuousDomain;
-
-   NumericContinuousDomain.prototype._checkType = function (d) {
-    if (!(d instanceof NumericContinuousDomain))
-      throw new TypeError("domain must also be of type NumericContinuousDomain");
-  };
-
-   NumericContinuousDomain.prototype.union = function (domain) {
-    _checkType(domain);
-   throw new Error("not implemented"); // todo: implement
-  };
-
-   NumericContinuousDomain.prototype.intersection = function (domain) {
-    _checkType(domain);
-    throw new Error("not implemented"); // todo: implement
-  };
-
-   NumericContinuousDomain.prototype.minus = function (domain) {
-    _checkType(domain);
-    throw new Error("not implemented"); // todo: implement
-  };*/
-
   return {
     Discrete: DiscreteDomain,
     SimpleNumericContinuous: SimpleNumericContinuousDomain
