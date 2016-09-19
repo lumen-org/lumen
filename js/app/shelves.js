@@ -10,6 +10,56 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   var logger = Logger.get('pl-shelves');
   logger.setLevel(Logger.DEBUG);
 
+   /**
+   * An {@link Record} stores some content and is bound to a certain {@link Shelf}.
+   *
+   * In particular a record 'knows' which shelf it belongs to by means of its '.shelf' attribute. The content can be
+   * accessed by the '.content' attribute.
+   *
+   * Records do NOT emit any events.
+   */
+  class Record {
+    /**
+     * Note that Records can never store other records. Instead the first non-Record-content will be stored.
+     * @param content - Note that content itself will be stored, not a copy of it.
+     * @param {Shelf} shelf - The shelf that this record belongs to.
+     * @constructor
+     * @alias module:shelves.Record
+     */
+    constructor (content, shelf) {
+      while (content instanceof Record)
+        content = content.content;
+      this.content = content;
+      this.shelf = shelf;
+    }
+
+    append (record) {
+      var shelf = this.shelf;
+      return shelf.insert(record, shelf.records.indexOf(this) + 1);
+    }
+
+    prepend(record) {
+      var shelf = this.shelf;
+      return shelf.insert(record, shelf.records.indexOf(this));
+    }
+
+    remove() {
+      return this.shelf.remove(this);
+    }
+
+    replaceBy(record) {
+      return this.shelf.replace(this, record);
+    }
+
+    index() {
+      return this.shelf.indexOf(this);
+    }
+
+    toString() {
+      return this.content.toString();
+    }
+  }
+
   /**
    * Populates the given dimension and measure shelf with the field from the given model. Note that references to the fields are added, not copies of them.
    * Note: it does not make added fields {@link beVisual} or {@link beInteractable}!
@@ -18,14 +68,14 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param {MeasureShelf} measShelf
    */
   function populate (model, dimShelf, measShelf) {
-    model.fields.forEach( field => {
+    for (let field of model.fields.values()) {
       if (field.dataType === PQL.FieldT.DataType.num)
         measShelf.append(field);
       else if (field.dataType === PQL.FieldT.DataType.string)
         dimShelf.append(field);
       else
-        throw new RangeError('invalid value in field.role');
-    });
+        throw new RangeError('invalid value in field.dataType: ' + field.dataType);
+    }
   }
 
 
@@ -44,165 +94,126 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     shape: 'shapeShelf',
     size: 'sizeShelf',
     aesthetic: 'aestheticShelf',
+    detail: 'detailShelf',
     remove: 'removeShelf'
   });
 
-
   /**
    * A Shelf is a container that holds records of type RecordConstructor.
-   * Note that records are never inserted as passed, but a new record is created on base on the passed record.
-   * Shelves also trigger an event Shelf.ChangedEvent, whenever its content changed. If you change the content of any records, you are responsible for triggering that event yourself.
-   * @param RecordConstructor A constructor for elements that the record stores.
-   * @param [opt] Other optional options.
-   * @param [opt.limit] The maximum number of elements allowed in the shelf.
-   * @constructor
-   * @alias module:shelves.Shelf
+   *
+   * Note that records are never inserted as passed, but a new record is created on base of the passed record.
+   * Shelves also trigger an event Shelf.ChangedEvent, whenever its content changed.
+   *
+   * If you change the content of any records, you are responsible for triggering that event!
    */
-  var Shelf; Shelf = function (RecordConstructor, opt) {
-    this.RecordConstructor = RecordConstructor;
-    this.records = [];
-    if (!opt) opt = {};
-    this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
-  };
+  class Shelf {
+
+    /**
+     * @param type - The type/name/id of this Shelf.
+     * @param [opt.limit] The maximum number of elements allowed in the shelf.
+     * @constructor
+     * @alias module:shelves.Shelf
+     */
+    constructor (type, opt) {   
+      //this.RecordConstructor = RecordConstructor;
+      this.records = [];
+      if (!type) throw new RangeError("parameter 'type' missing");
+      this.type = type;
+      if (!opt) opt = {};
+      this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
+    }
+
+    append (obj) {
+      if (this.length >= this.limit) return false;
+      var record = new Record(obj, this);
+      this.records.push(record);
+      this.emit(Shelf.ChangedEvent);
+      return record;
+    }
+
+    prepend (obj) {
+      if (this.length >= this.limit) return false;
+      var record = new Record(obj, this);
+      this.records.unshift(record);
+      this.emit(Shelf.ChangedEvent);
+      return record;
+    }
+
+    contains (record) {
+      return (-1 != this.records.indexOf(record));
+    }
+
+    clear () {
+      this.records = [];
+      this.emit(Shelf.ChangedEvent);
+    }
+
+    at (idx) {
+      return this.records[idx];
+    }
+
+    contentAt (idx) {
+      var record = this.records[idx];
+      return (record ? record.content : {});
+    }
+
+    remove (recordOrIdx) {
+      if (this.limit === 1 && recordOrIdx === undefined) recordOrIdx = 0;
+      var records = this.records;
+      var idx = (typeof recordOrIdx === 'number'? recordOrIdx : records.indexOf(recordOrIdx));
+      records.splice(idx, 1);
+      this.emit(Shelf.ChangedEvent);
+    }
+
+    indexOf (record) {
+      return this.records.indexOf(record);
+    }
+
+    insert (obj, idx) {
+      if (this.length >= this.limit) return false;
+      var records = this.records;
+      if (idx < 0 || idx > records.length) {
+        return false;
+      }
+      var record = new Record(obj, this);
+      records.splice(idx, 0, record);
+      this.emit(Shelf.ChangedEvent);
+      return record;
+    }
+
+    replace (oldRecordOrIdx, newRecord) {
+      var records = this.records;
+      var idx;
+      if (this.limit === 1 && !newRecord) {
+        newRecord = oldRecordOrIdx;
+        idx = 0;
+      } else {
+        console.assert(this.limit === 1 || this.contains(oldRecordOrIdx));
+        idx = (typeof oldRecordOrIdx === 'number'? oldRecordOrIdx : records.indexOf(oldRecordOrIdx));
+      }
+      var record = new Record(newRecord, this);
+      records.splice(idx, 1, record);
+      this.emit(Shelf.ChangedEvent);
+      return record;
+    }
+
+    length () {
+      return this.records.length;
+    }
+
+    empty () {
+      return(this.length() === 0);
+    }
+
+    toString () {
+      return this.records.reduce(function (val, elem) {
+        return val + elem.content.toString() + "\n";
+      }, "");
+    }
+  }
+
   Shelf.ChangedEvent = 'shelf.changed';
   E.Emitter(Shelf.prototype);
-
-  Shelf.prototype.append = function (obj) {
-    if (this.length >= this.limit) return false;
-    var record = new this.RecordConstructor(obj, this);
-    this.records.push(record);
-    this.emit(Shelf.ChangedEvent);
-    return record;
-  };
-
-  Shelf.prototype.prepend = function (obj) {
-    if (this.length >= this.limit) return false;
-    var record = new this.RecordConstructor(obj, this);
-    this.records.unshift(record);
-    this.emit(Shelf.ChangedEvent);
-    return record;
-  };
-
-  Shelf.prototype.contains = function (record) {
-    return (-1 != this.records.indexOf(record));
-  };
-
-  Shelf.prototype.clear = function () {
-    this.records = [];
-    this.emit(Shelf.ChangedEvent);
-  };
-
-  Shelf.prototype.at = function (idx) {
-    return this.records[idx];
-  };
-  
-  Shelf.prototype.contentAt = function (idx) {
-    var record = this.records[idx];
-    return (record ? record.content : {});
-  };
-
-  Shelf.prototype.remove = function (recordOrIdx) {
-    if (this.limit === 1 && recordOrIdx === undefined) recordOrIdx = 0;
-    var records = this.records;
-    var idx = (typeof recordOrIdx === 'number'? recordOrIdx : records.indexOf(recordOrIdx));
-    records.splice(idx, 1);
-    this.emit(Shelf.ChangedEvent);
-  };
-
-  Shelf.prototype.indexOf = function (record) {
-    return this.records.indexOf(record);
-  };
-
-  Shelf.prototype.insert = function (obj, idx) {
-    if (this.length >= this.limit) return false;
-    var records = this.records;
-    if (idx < 0 || idx > records.length) {
-      return false;
-    }
-    var record = new this.RecordConstructor(obj, this);
-    records.splice(idx, 0, record);
-    this.emit(Shelf.ChangedEvent);
-    return record;
-  };
-
-  Shelf.prototype.replace = function (oldRecordOrIdx, newRecord) {
-    var records = this.records;
-    var idx;
-    if (this.limit === 1 && !newRecord) {
-      newRecord = oldRecordOrIdx;
-      idx = 0;
-    } else {
-      console.assert(this.limit === 1 || this.contains(oldRecordOrIdx));
-      idx = (typeof oldRecordOrIdx === 'number'? oldRecordOrIdx : records.indexOf(oldRecordOrIdx));
-    }
-    var record = new this.RecordConstructor(newRecord, this);
-    records.splice(idx, 1, record);
-    this.emit(Shelf.ChangedEvent);
-    return record;
-  };
-
-  Shelf.prototype.length = function () {
-    return this.records.length;
-  };
-
-  Shelf.prototype.empty = function () {
-    return(this.length() === 0);
-  };
-
-  Shelf.prototype.toString = function () {
-    return this.records.reduce(function (val, elem) {
-      return val + elem.content.toString() + "\n";
-    }, "");
-  };
-
-  /**
-   * An {@link Record} stores some content and is bound to a certain {@link Shelf}.
-   *
-   * In particular a record 'knows' which shelf it belongs to by means of its '.shelf' attribute. The content can be
-   * accessed using the '.content' attribute.
-   *
-   * Records do NOT emit any events.
-   *
-   * Note that Records can never store other records. Instead the first non-Record-content will be stored.
-   * TODO: this restriction is actually unnecessary (edit: really?), but for debugging it might be useful.
-   * @param content - Note that content itself will be stored, not a copy of it.
-   * @param {Shelf} shelf - The shelf that this record belongs to.
-   * @constructor
-   * @alias module:shelves.Record
-   */
-  var Record; Record = function (content, shelf) {
-    while (content instanceof Record)
-      content = content.content;
-    this.content = content;
-    this.shelf = shelf;
-  };
-
-  Record.prototype.append = function (record) {
-    var shelf = this.shelf;
-    return shelf.insert(record, shelf.records.indexOf(this) + 1);
-  };
-
-  Record.prototype.prepend = function (record) {
-    var shelf = this.shelf;
-    return shelf.insert(record, shelf.records.indexOf(this));
-  };
-
-  Record.prototype.remove = function () {
-    return this.shelf.remove(this);
-  };
-
-  Record.prototype.replaceBy = function (record) {
-    return this.shelf.replace(this, record);
-  };
-
-  Record.prototype.index = function () {
-    return this.shelf.indexOf(this);
-  };
-
-  Record.prototype.toString = function () {
-    return this.content.toString();
-  };
-
 
   /**
    * An {FieldRecord} is a {Record} that may only contain a {Field}.
@@ -210,14 +221,14 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf The {Shelf} this record belongs to.
    * @constructor
    * @alias module:shelves.FieldRecord
-   */
+   *
   var FieldRecord; FieldRecord = function (obj, shelf) {
     console.assert(obj instanceof Record && obj.content instanceof PQL.Field || obj instanceof PQL.Field);
     Record.call(this, (obj instanceof Record ? obj.content : obj), shelf);
   };
   FieldRecord.prototype = Object.create(Record.prototype);
   FieldRecord.prototype.constructor = FieldRecord;
-
+*/
 
   /**
    * An {FUsageRecord} is a {Record} that may only contain {FieldUsage}s.
@@ -260,7 +271,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf The {Shelf} it belongs to.
    * @constructor
    * @alias module:shelves.ColorRecord
-   */
+   *
   class ColorRecord extends Record {
     constructor (obj, shelf) {
       super(obj, shelf);
@@ -281,7 +292,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.DimensionRecord
-   */
+   *
   var DimensionRecord; DimensionRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -299,7 +310,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.MeasureRecord
-   */
+   *
   var MeasureRecord; MeasureRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -317,7 +328,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.LayoutRecord
-   */
+   *
   var LayoutRecord; LayoutRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -333,7 +344,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.ShapeRecord
-   */
+   *
   var ShapeRecord; ShapeRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -349,7 +360,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.SizeRecord
-   */
+   *
   var SizeRecord; SizeRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -364,7 +375,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.FilterRecord
-   */
+   *
   var FilterRecord; FilterRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -382,7 +393,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * @param shelf
    * @constructor
    * @alias module:shelves.DetailRecord
-   */
+   *
   var DetailRecord; DetailRecord = function (obj, shelf) {
     if (obj instanceof Record) {
       obj = obj.content;
@@ -396,7 +407,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * A dimension shelf holds fields dimensions
    * @constructor
    * @alias module:shelves.DimensionShelf
-   */
+   *
   var DimensionShelf; DimensionShelf = function () {
     Shelf.call(this, DimensionRecord);
     this.type = ShelfTypeT.dimension;
@@ -408,7 +419,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.MeasureShelf
-   */
+   *
   var MeasureShelf; MeasureShelf = function () {
     Shelf.call(this, MeasureRecord);
     this.type = ShelfTypeT.measure;
@@ -419,7 +430,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.RowShelf
-   */
+   *
   var RowShelf; RowShelf = function () {
     Shelf.call(this, LayoutRecord);
     this.type = ShelfTypeT.row;
@@ -430,7 +441,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.ColumnShelf
-   */
+   *
   var ColumnShelf; ColumnShelf = function () {
     Shelf.call(this, LayoutRecord);
     this.type = ShelfTypeT.column;
@@ -442,7 +453,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
    * @constructor
    * @alias module:shelves.ColorShelf
-   */
+   *
   class ColorShelf extends Shelf {
     constructor () {
       super(ColorRecord, {limit: 1});
@@ -453,7 +464,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.ShapeShelf
-   */
+   *
   var ShapeShelf; ShapeShelf = function () {
     Shelf.call(this, ShapeRecord);
     this.type = ShelfTypeT.shape;
@@ -464,7 +475,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.SizeShelf
-   */
+   *
   var SizeShelf; SizeShelf = function () {
     Shelf.call(this, SizeRecord);
     this.type = ShelfTypeT.size;
@@ -475,7 +486,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.FilterShelf
-   */
+   *
   var FilterShelf; FilterShelf = function () {
     Shelf.call(this, FilterRecord);
     this.type = ShelfTypeT.filter;
@@ -486,7 +497,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.DetailShelf
-   */
+   *
   var DetailShelf; DetailShelf = function () {
     Shelf.call(this, DetailRecord);
     this.type = ShelfTypeT.detail;
@@ -497,7 +508,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   /**
    * @constructor
    * @alias module:shelves.RemoveShelf
-   */
+   *
   var RemoveShelf; RemoveShelf = function () {
     Shelf.call(this, Record);
     this.type = ShelfTypeT.remove;
@@ -511,16 +522,16 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
    */
   function construct () {
     return {
-      dim :  new DimensionShelf(),
-      meas : new MeasureShelf(),
-      detail : new DetailShelf(),
-      color : new ColorShelf(),
-      filter : new FilterShelf(),
-      shape : new ShapeShelf(),
-      size : new SizeShelf(),
-      row : new RowShelf(),
-      column : new ColumnShelf(),
-      remove : new RemoveShelf()
+      dim :  new Shelf(ShelfTypeT.dimension),
+      meas : new Shelf(ShelfTypeT.measure),
+      detail : new Shelf(ShelfTypeT.detail),
+      color : new Shelf(ShelfTypeT.color),
+      filter : new Shelf(ShelfTypeT.filter),
+      shape : new Shelf(ShelfTypeT.shape),
+      size : new Shelf(ShelfTypeT.size),
+      row : new Shelf(ShelfTypeT.row),
+      column : new Shelf(ShelfTypeT.column),
+      remove : new Shelf(ShelfTypeT.remove)
     };
   }
 
@@ -529,7 +540,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     ShelfTypeT: ShelfTypeT,
 
     Record: Record,
-    FieldRecord: FieldRecord,
+    /*FieldRecord: FieldRecord,
     FUsageRecord: FUsageRecord,
 
     DetailRecord: DetailRecord,
@@ -539,9 +550,9 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     FilterRecord: FilterRecord,
     DimensionRecord: DimensionRecord,
     MeasureRecord: MeasureRecord,
-    LayoutRecord: LayoutRecord,
+    LayoutRecord: LayoutRecord,*/
 
-    DetailShelf: DetailShelf,
+    /*DetailShelf: DetailShelf,
     ColorShelf: ColorShelf,
     ShapeShelf: ShapeShelf,
     SizeShelf: SizeShelf,
@@ -550,7 +561,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
     MeasureShelf: MeasureShelf,
     RowShelf: RowShelf,
     ColumnShelf: ColumnShelf,
-    RemoveShelf: RemoveShelf,
+    RemoveShelf: RemoveShelf,*/
 
     populate: populate,
     construct:  construct

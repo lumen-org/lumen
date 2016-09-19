@@ -7,28 +7,40 @@
 //define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
 //  function (e, d3, init, PQL, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
 
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (e, d3, init, PQL, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visuals', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
+  function (e, d3, init, PQL, VisMEL, sh, vis, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     /**
      * Populates the shelves of the GUI with the fields of the model and makes them interactable.
      */
     function populateGUI() {
+     
       // populate shelves
       sh.populate(model, shelf.dim, shelf.meas);
 
       // make all shelves visual and interactable
-      shelf.meas.beVisual({label: 'Measures'}).beInteractable();
-      shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
-      shelf.detail.beVisual({label: 'Details'}).beInteractable();
-      shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
-      shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-      shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelf.meas.beVisual({label: 'Measures'});
+      shelf.dim.beVisual({label: 'Dimensions'});
+      shelf.detail.beVisual({label: 'Details'});
+      shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal});
+      shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box});
+      shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal});
+      shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal});
+      shelf.remove.beVisual({label: 'Drag here to remove'});
+      shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal});
+      shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal});
+
+      // shelf.meas.beVisual({label: 'Measures'}).beInteractable();
+      // shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
+      // shelf.detail.beVisual({label: 'Details'}).beInteractable();
+      // shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      // shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
+      // shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      // shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      // shelf.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
+      // shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      // shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
       // add all shelves to the DOM
       var base = $('#shelves');
@@ -43,7 +55,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
       var layout = $('#layout');
       layout.append(shelf.row.$visual);
       layout.append(shelf.column.$visual);
-      inter.asRemoveElem($(document.body).find('main'));
+      //inter.asRemoveElem($(document.body).find('main'));
     }
 
     /**
@@ -118,7 +130,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
       });
 
     var testPQLflag = false,
-      testVisMELflag = true;
+      testVisMELflag = false;
 
     if (!testPQLflag && !testVisMELflag) {
       // define shelves
@@ -126,12 +138,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
       // get initial model
       var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
       model.update().then(populateGUI)
-        .then(initialQuerySetup)
-        .then(enableQuerying)
-        .catch((err) => {
-          console.error(err);
-          throw "Could not load remote model from Server - see above";
-        });
+        .then( () => {debugger;} )
+        // .then(initialQuerySetup)
+        // .then(enableQuerying)
+        // .catch((err) => {
+        //   console.error(err);
+        //   throw "Could not load remote model from Server - see above";
+        // });
     }
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
      $('#update-button').click( function() {
@@ -184,9 +197,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
       mb.get('iris')
         .then( iris_ => {
           iris = iris_;
-          pw = iris.fields["petal_width"],           
-          pl = iris.fields["petal_length"],
-          sw = iris.fields["sepal_width"],
+          pw = iris.fields["petal_width"];
+          pl = iris.fields["petal_length"];
+          sw = iris.fields["sepal_width"];
           sl = iris.fields["sepal_length"];
         })
 /*
@@ -214,6 +227,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
           query.layers[0].aesthetics.details.push(sl_split);          
           query.layers[0].aesthetics.details.push(pl_split);
           query.layers[0].aesthetics.color = new VisMEL.ColorMap(plsl_density, 'rgb');
+          query.layers[0].aesthetics.size = new VisMEL.SizeMap(plsl_density);
           return query;
         }) //*/
 
@@ -282,11 +296,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './QueryTable', './M
           //console.log(resultTable);        
           viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
           //debugger;
-          /**
-            something feels weird: I just want the value of a field on e.g. color
-            and also on shape. how do I do that if that field is split by? 
-            is it conceptuatlly wrong again?
-          **/
         });
     } // function testVisMEL
 

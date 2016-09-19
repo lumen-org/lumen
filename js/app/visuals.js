@@ -5,7 +5,7 @@
  * @module visuals
  * @author Philipp Lucas
  */
-define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, F, s) {
+define(['lib/logger','./utils', './shelves', './VisMEL'], function(Logger, util, s, VisMEL) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -33,53 +33,6 @@ define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, 
     record: Object.freeze('recordAttachment'),
     shelf : Object.freeze('shelfAttachment')
   };
-
-  /**
-   * Common things to start with when making a record visual.
-   * @param {module:shelves.Record} record
-   * @returns {module:shelves.Record} the modified record.
-   * @private
-   */
-  function _before4Record (record) {
-    var visual;
-    switch (record.shelf.$visual.direction) {
-      case DirectionTypeT.vertical:
-        visual = $('<div></div>');
-        break;
-      case DirectionTypeT.horizontal:
-      case DirectionTypeT.box:
-        visual = $('<span></span>');
-        break;
-    }
-    visual.addClass('shelf-list-item');
-    record.$visual = visual;
-    return visual;
-  }
-
-  /**
-   * Common things to end with when making a record visual.
-   * @param {module:shelves.Record} record
-   * @returns {module:shelves.Record} the modified record.
-   * @private
-   */
-  function _after4Record (record) {
-    var visual = record.$visual;
-
-    // add to visual of shelf
-    // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
-    var records = record.shelf.records;
-    for (var idx = record.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
-    if (idx === 0) {
-      visual.prependTo(record.shelf.$visual.container);
-    } else {
-      visual.insertAfter(records[idx-1].$visual);
-    }
-
-    // attach record to visual
-    visual.data(AttachStringT.record, record);
-
-    return record;
-  }
 
   /**
    * A mixin function that creates a visual representation (as HTML elements) of this shelf and all its records.
@@ -134,7 +87,7 @@ define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, 
     this.$visual.direction = opt.direction;
 
     // make all records visuals too
-    this.records.forEach(function(record){record.beVisual();});
+    this.records.forEach(record => record.beVisual());
     return this;
   };
 
@@ -150,6 +103,53 @@ define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, 
   };
 
   /**
+   * Common things to start with when making a record visual.
+   * @param {module:shelves.Record} record
+   * @returns {module:shelves.Record} The container element for the visual representation of this record.
+   * @private
+   */
+  function _before4Record (record) {
+    var visual;
+    switch (record.shelf.$visual.direction) {
+      case DirectionTypeT.vertical:
+        visual = $('<div></div>');
+        break;
+      case DirectionTypeT.horizontal:
+      case DirectionTypeT.box:
+        visual = $('<span></span>');
+        break;
+    }
+    visual.addClass('shelf-list-item');
+    record.$visual = visual;
+    return visual;
+  }
+
+  /**
+   * Common things to end with when making a record visual.
+   * @param {module:shelves.Record} record
+   * @returns {module:shelves.Record} the modified record.
+   * @private
+   */
+  function _after4Record (record) {
+    var visual = record.$visual;
+
+    // add to visual of shelf
+    // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
+    var records = record.shelf.records;
+    for (var idx = record.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
+    if (idx === 0) {
+      visual.prependTo(record.shelf.$visual.container);
+    } else {
+      visual.insertAfter(records[idx-1].$visual);
+    }
+
+    // attach record to visual
+    visual.data(AttachStringT.record, record);
+
+    return record;
+  }
+
+  /**
    * Creates a simple visual representation (as HTML elements) of this record. The root of representation is returned.
    * It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
    * Note: You may not make a record visible before making its shelf visible.
@@ -158,8 +158,12 @@ define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, 
    * @augments module:shelves.Record
    */
   s.Record.prototype.beVisual = function () {
-    var visual = _before4Record(this);
-    visual.text(this.toString());
+    var visual = _before4Record(this); // defines the $visual property on this
+    if (this.content.beVisual) {
+      this.content.beVisual(visual);
+    } else {
+      visual.text(this.toString());
+    }
     return _after4Record(this);
   };
 
@@ -180,20 +184,20 @@ define(['lib/logger','./utils', './Field', './shelves'], function(Logger, util, 
    * @alias module:shelves.ColorRecord.beVisual
    * @augments module:shelves.ColorRecord
    */
-  s.ColorRecord.prototype.beVisual = function () {
-    var visual = _before4Record(this);
+  VisMEL.ColorMap.prototype.beVisual = function (visual) {
     visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
     visual.append($('<span>'+ this.toString() +'</span>'));
-    return _after4Record(this);
   };
 
-  s.DimensionRecord.prototype.beVisual = function () {
-    var visual = _before4Record(this);
+  VisMEL.BaseMap.prototype.beVisual = function (visual) {
+    visual.text(this.fu.toString());
+  };
+
+  /*PQL.FieldUsage.beVisual s.DimensionRecord.prototype.beVisual = function () {
     visual.text(this.content.name);
-    return _after4Record(this);
   };
 
-  s.MeasureRecord.prototype.beVisual = s.DimensionRecord.prototype.beVisual;
+  s.MeasureRecord.prototype.beVisual = s.DimensionRecord.prototype.beVisual;*/
 
   return {
     AttachStringT: AttachStringT,

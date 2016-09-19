@@ -25,7 +25,7 @@ define(['./PQL'], function (PQL) {
     constructor(name) {
       if (!_.isString(name)) throw new TypeError("the name of a model must be a string");
       this.name = name;
-      this.fields = {}; // dict of {@link F.Fields}, name is the key
+      this.fields = new Map(); // dict of {@link F.Fields}, name is the key
     }
 
     get names () {
@@ -108,7 +108,7 @@ define(['./PQL'], function (PQL) {
      * @param name
      */
     isName(name) {
-      return this.fields.hasOwnProperty(name);
+      return this.fields.has(name);
     }
 
     /**
@@ -116,7 +116,7 @@ define(['./PQL'], function (PQL) {
      * @param field
      */
     isField(field) {
-      return field instanceof PQL.Field && (this.fields[field.name] === field);
+      return field instanceof PQL.Field && (this.fields.get(field.name) === field);
     }
 
     /**

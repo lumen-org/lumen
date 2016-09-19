@@ -86,13 +86,13 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
      * @param json JSON object containing the field information.
      */
     _updateHeader(json) {
-      this.fields = {};
+      this.fields.clear();
       for (let field of json.fields) {
-        this.fields[field.name] = new PQL.Field(
+        this.fields.set(field.name, new PQL.Field(
             field.name,
             field.dtype,
             (field.dtype === 'numerical' ? new Domain.SimpleNumericContinuous(field.domain) : new Domain.Discrete(field.domain)),
-            this);
+            this));
       }
       this.name = json.name;
       return this;
@@ -154,7 +154,7 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
       let dtypes = [];
       for (let p of predict)
         if (_.isString(p))
-          dtypes.push(this.fields[p].dataType);
+          dtypes.push(this.fields.get(p).dataType);
         else if (PQL.isField(p))
           dtypes.push(p.dataType);
         else if (PQL.isAggregation(p) || PQL.isDensity(p) || PQL.isSplit(p))
@@ -189,13 +189,13 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
      * @returns {Promise} A promise to a copy of this model.
      */
     copy(name) {
-      var myClone = [];
+      var myClone;
       var that = this;
       var jsonPQL = PQL.toJSON.copy(this.name, name);
       return executeRemotely(jsonPQL, this.url)
         .then(() => {
           myClone = new RemoteModel(name, that.url);
-          myClone.fields = _.assign({}, that.fields);
+          myClone.fields = new Map(that.fields);
           return myClone;
         });
     }
