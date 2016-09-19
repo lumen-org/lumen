@@ -78,7 +78,7 @@ define(['./utils', './SplitSample'], function (utils, S) {
   Field.prototype.toString = function () {
     var desc = "'" + this.name + "': " + this.dataType + ", " + this.kind + " " + this.role;
     if (this.dataType === FieldT.Type.num)
-      desc += ". domain = [" + this.domain + "]";
+      desc += ". domain = " + this.domain;
     return desc;
   };
 

@@ -5,7 +5,7 @@
  * @module visuals
  * @author Philipp Lucas
  */
-define(['lib/logger','./utils', './shelves', './VisMEL'], function(Logger, util, s, VisMEL) {
+define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logger, util, s, VisMEL, PQL) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -33,6 +33,8 @@ define(['lib/logger','./utils', './shelves', './VisMEL'], function(Logger, util,
     record: Object.freeze('recordAttachment'),
     shelf : Object.freeze('shelfAttachment')
   };
+
+  /// Mixins for Shelves
 
   /**
    * A mixin function that creates a visual representation (as HTML elements) of this shelf and all its records.
@@ -102,6 +104,8 @@ define(['lib/logger','./utils', './shelves', './VisMEL'], function(Logger, util,
     return this;
   };
 
+  /// Mixins for Records
+
   /**
    * Common things to start with when making a record visual.
    * @param {module:shelves.Record} record
@@ -159,10 +163,11 @@ define(['lib/logger','./utils', './shelves', './VisMEL'], function(Logger, util,
    */
   s.Record.prototype.beVisual = function () {
     var visual = _before4Record(this); // defines the $visual property on this
-    if (this.content.beVisual) {
-      this.content.beVisual(visual);
+    let content = this.content;
+    if (content.beVisual) {
+      content.beVisual(visual);
     } else {
-      visual.text(this.toString());
+      visual.text(content.toString());
     }
     return _after4Record(this);
   };
@@ -178,26 +183,53 @@ define(['lib/logger','./utils', './shelves', './VisMEL'], function(Logger, util,
     return this;
   };
 
+  /// Mixins for VisMEL Mappings
+
+  VisMEL.BaseMap.prototype.beVisual = function (container) {
+    this.fu.beVisual(container);
+    return this;
+  };
+
   /**
    * Creates a visual representation of this record, i.e. specialized for {@link s.ColorRecord}.
    * @returns {module:shelves.Record}
    * @alias module:shelves.ColorRecord.beVisual
    * @augments module:shelves.ColorRecord
    */
-  VisMEL.ColorMap.prototype.beVisual = function (visual) {
-    visual.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
-    visual.append($('<span>'+ this.toString() +'</span>'));
+  VisMEL.ColorMap.prototype.beVisual = function (container) {
+    container.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
+    container.append($('<span>'+ this.fu.yields +'</span>'));
+    return this;
   };
 
-  VisMEL.BaseMap.prototype.beVisual = function (visual) {
-    visual.text(this.fu.toString());
+  /// Mixins for PQL FieldUsages and Fields
+  
+  PQL.Field.prototype.beVisual = function (container) {
+    container.text(this.name);
+    return this;
+  }
+
+  PQL.Filter.prototype.beVisual = function (container) {
+    container.text(this.toString());
+    return this;
   };
 
-  /*PQL.FieldUsage.beVisual s.DimensionRecord.prototype.beVisual = function () {
-    visual.text(this.content.name);
-  };
+  PQL.Aggregation.prototype.beVisual = function (container) {
+    container.text( this.method + "(" + this.names + ")" );
+    return this;
+  }
 
-  s.MeasureRecord.prototype.beVisual = s.DimensionRecord.prototype.beVisual;*/
+  PQL.Density.prototype.beVisual = function (container) {
+    container.text( "p(" + this.names + ")" );
+    return this;
+  }
+
+  PQL.Split.prototype.beVisual = function (container) {
+    container.text( this.method + "(" + this.name + ")" );
+    return this;
+  }
+
+
 
   return {
     AttachStringT: AttachStringT,

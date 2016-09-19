@@ -39,6 +39,10 @@ define(['./utils'], function (utils) {
       this._checkType(domain);
       return new DiscreteDomain( _.difference(this.values, domain.values));
     }
+
+    toString () {
+      return "{" + this.values.toString() + "}";
+    }
   }
 
 
@@ -91,6 +95,10 @@ define(['./utils'], function (utils) {
     minus (domain) {
       this._checkType(domain);
       throw new Error("not implemented"); // todo: implement
+    }
+
+    toString () {
+      return "[" + this.l + "," + this.h + "]";
     }
   }
 

@@ -99,7 +99,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   });
 
   /**
-   * A Shelf is a container that holds records of type RecordConstructor.
+   * A Shelf is a container that holds Records.
    *
    * Note that records are never inserted as passed, but a new record is created on base of the passed record.
    * Shelves also trigger an event Shelf.ChangedEvent, whenever its content changed.
@@ -157,6 +157,10 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
       return (record ? record.content : {});
     }
 
+    content () {
+      return this.records.map( record => record.content );
+    }
+
     remove (recordOrIdx) {
       if (this.limit === 1 && recordOrIdx === undefined) recordOrIdx = 0;
       var records = this.records;
@@ -210,311 +214,11 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
         return val + elem.content.toString() + "\n";
       }, "");
     }
+
   }
 
   Shelf.ChangedEvent = 'shelf.changed';
   E.Emitter(Shelf.prototype);
-
-  /**
-   * An {FieldRecord} is a {Record} that may only contain a {Field}.
-   * @param obj {Field|Record} Either a {Field} (will be stored as is), or a {Record} that contains a {@link Field}.
-   * @param shelf The {Shelf} this record belongs to.
-   * @constructor
-   * @alias module:shelves.FieldRecord
-   *
-  var FieldRecord; FieldRecord = function (obj, shelf) {
-    console.assert(obj instanceof Record && obj.content instanceof PQL.Field || obj instanceof PQL.Field);
-    Record.call(this, (obj instanceof Record ? obj.content : obj), shelf);
-  };
-  FieldRecord.prototype = Object.create(Record.prototype);
-  FieldRecord.prototype.constructor = FieldRecord;
-*/
-
-  /**
-   * An {FUsageRecord} is a {Record} that may only contain {FieldUsage}s.
-   * @param obj {FieldUsage|Field|Record} Either a {FieldUsage} (will be stored as is) or a {Field} or a {Record} (used to construct a new {FieldUsage}).
-   * @param shelf The Shelf this record belongs to.
-   * @constructor
-   * @alias module:shelves.FUsageRecord
-   *
-  var FUsageRecord; FUsageRecord = function (obj, shelf) {
-    //console.assert(obj instanceof Record || obj instanceof PQL.Field || obj instanceof PQL.FieldUsage);
-    var field;
-    if (obj instanceof PQL.FieldUsage) {
-      // if a FieldUsage is given, use that
-      field = obj;
-    } else {
-      // otherwise create a new Field
-      if (obj instanceof Record) {
-        obj = obj.content;
-      }
-      // no effect:
-      //else if (obj instanceof PQL.Field) {
-      //  obj = obj;
-      //}
-      field = new PQL.FieldUsage(obj);
-    }
-    Record.call(this, field, shelf);
-  };
-  FUsageRecord.prototype = Object.create(Record.prototype);
-  FUsageRecord.prototype.constructor = FUsageRecord;*/
-
-
-  /**
-   * Constructors of XXXRecord should always construct new content to store and never use the object that is passed in to the constructor.
-   * They can, however, rely on the constructor of FieldRecord and FUsageRecord to create new instances if not passing a {Field} or {FieldUsage} to the constructor.
-   */
-
-  /**
-   * A {ColorRecord} is based on {FUsageRecord}. Constructs a {ColorRecord} based on the given obj and shelf. It maps the field usage to a color space in some way.
-   * @param obj {Field|FieldUsage|Record} The object to base the new record on. It will always create a new instance of FieldUsage to store witht his Record.
-   * @param shelf The {Shelf} it belongs to.
-   * @constructor
-   * @alias module:shelves.ColorRecord
-   *
-  class ColorRecord extends Record {
-    constructor (obj, shelf) {
-      super(obj, shelf);
-    }
-  }
-/*  var ColorRecord; ColorRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
-  };
-  ColorRecord.prototype = Object.create(FUsageRecord.prototype);
-  ColorRecord.prototype.constructor = ColorRecord;*/
-
-  /**
-   * A {DimensionRecord} is stored in a dimension shelf and is based on a field.
-   * @param obj The object the new dimension record is based on.
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.DimensionRecord
-   *
-  var DimensionRecord; DimensionRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FieldRecord.call(this, obj, shelf);
-    if (this.content.role === PQL.FieldT.Role.measure) {
-      this.content.role = PQL.FieldT.Role.dimension;
-    }
-  };
-  DimensionRecord.prototype = Object.create(FieldRecord.prototype);
-  DimensionRecord.prototype.constructor = DimensionRecord;
-
-  /**
-   * @param obj
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.MeasureRecord
-   *
-  var MeasureRecord; MeasureRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FieldRecord.call(this, obj, shelf);
-    if (this.content.role === PQL.FieldT.Role.dimension) {
-      this.content.role = PQL.FieldT.Role.measure;
-    }
-  };
-  MeasureRecord.prototype = Object.create(FieldRecord.prototype);
-  MeasureRecord.prototype.constructor = MeasureRecord;
-
-  /**
-   * @param obj
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.LayoutRecord
-   *
-  var LayoutRecord; LayoutRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
-  };
-  LayoutRecord.prototype = Object.create(FUsageRecord.prototype);
-  LayoutRecord.prototype.constructor = LayoutRecord;
-
-  /**
-   *
-   * @param obj
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.ShapeRecord
-   *
-  var ShapeRecord; ShapeRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
-  };
-  ShapeRecord.prototype = Object.create(FUsageRecord.prototype);
-  ShapeRecord.prototype.constructor = ShapeRecord;
-
-  /**
-   *
-   * @param obj
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.SizeRecord
-   *
-  var SizeRecord; SizeRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
-  };
-  SizeRecord.prototype = Object.create(FUsageRecord.prototype);
-  SizeRecord.prototype.constructor = SizeRecord;
-
-  /**
-   * @param obj
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.FilterRecord
-   *
-  var FilterRecord; FilterRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
-  };
-  FilterRecord.prototype = Object.create(FUsageRecord.prototype);
-  FilterRecord.prototype.constructor = FilterRecord;
-  FilterRecord.prototype.toString = function () {
-    return this.content.name + " IN ( ... )";
-  };
-
-  /**
-   * @param obj
-   * @param shelf
-   * @constructor
-   * @alias module:shelves.DetailRecord
-   *
-  var DetailRecord; DetailRecord = function (obj, shelf) {
-    if (obj instanceof Record) {
-      obj = obj.content;
-    }
-    FUsageRecord.call(this, new PQL.FieldUsage(obj), shelf);
-  };
-  DetailRecord.prototype = Object.create(FUsageRecord.prototype);
-  DetailRecord.prototype.constructor = DetailRecord;
-
-  /**
-   * A dimension shelf holds fields dimensions
-   * @constructor
-   * @alias module:shelves.DimensionShelf
-   *
-  var DimensionShelf; DimensionShelf = function () {
-    Shelf.call(this, DimensionRecord);
-    this.type = ShelfTypeT.dimension;
-  };
-  DimensionShelf.prototype = Object.create(Shelf.prototype);
-  DimensionShelf.prototype.constructor = DimensionShelf;
-
-
-  /**
-   * @constructor
-   * @alias module:shelves.MeasureShelf
-   *
-  var MeasureShelf; MeasureShelf = function () {
-    Shelf.call(this, MeasureRecord);
-    this.type = ShelfTypeT.measure;
-  };
-  MeasureShelf.prototype = Object.create(Shelf.prototype);
-  MeasureShelf.prototype.constructor = MeasureShelf;
-
-  /**
-   * @constructor
-   * @alias module:shelves.RowShelf
-   *
-  var RowShelf; RowShelf = function () {
-    Shelf.call(this, LayoutRecord);
-    this.type = ShelfTypeT.row;
-  };
-  RowShelf.prototype = Object.create(Shelf.prototype);
-  RowShelf.prototype.constructor = RowShelf;
-
-  /**
-   * @constructor
-   * @alias module:shelves.ColumnShelf
-   *
-  var ColumnShelf; ColumnShelf = function () {
-    Shelf.call(this, LayoutRecord);
-    this.type = ShelfTypeT.column;
-  };
-  ColumnShelf.prototype = Object.create(Shelf.prototype);
-  ColumnShelf.prototype.constructor = ColumnShelf;
-
-  /**
-   * A ColorShelf maps a {FieldUsage} to some color space. It can hold zero or one {ColorRecord}s.
-   * @constructor
-   * @alias module:shelves.ColorShelf
-   *
-  class ColorShelf extends Shelf {
-    constructor () {
-      super(ColorRecord, {limit: 1});
-      this.type = ShelfTypeT.color;
-    }
-  }
-
-  /**
-   * @constructor
-   * @alias module:shelves.ShapeShelf
-   *
-  var ShapeShelf; ShapeShelf = function () {
-    Shelf.call(this, ShapeRecord);
-    this.type = ShelfTypeT.shape;
-  };
-  ShapeShelf.prototype = Object.create(Shelf.prototype);
-  ShapeShelf.prototype.constructor = ShapeShelf;
-
-  /**
-   * @constructor
-   * @alias module:shelves.SizeShelf
-   *
-  var SizeShelf; SizeShelf = function () {
-    Shelf.call(this, SizeRecord);
-    this.type = ShelfTypeT.size;
-  };
-  SizeShelf.prototype = Object.create(Shelf.prototype);
-  SizeShelf.prototype.constructor = SizeShelf;
-
-  /**
-   * @constructor
-   * @alias module:shelves.FilterShelf
-   *
-  var FilterShelf; FilterShelf = function () {
-    Shelf.call(this, FilterRecord);
-    this.type = ShelfTypeT.filter;
-  };
-  FilterShelf.prototype = Object.create(Shelf.prototype);
-  FilterShelf.prototype.constructor = FilterShelf;
-
-  /**
-   * @constructor
-   * @alias module:shelves.DetailShelf
-   *
-  var DetailShelf; DetailShelf = function () {
-    Shelf.call(this, DetailRecord);
-    this.type = ShelfTypeT.detail;
-  };
-  DetailShelf.prototype = Object.create(Shelf.prototype);
-  DetailShelf.prototype.constructor = DetailShelf;
-
-  /**
-   * @constructor
-   * @alias module:shelves.RemoveShelf
-   *
-  var RemoveShelf; RemoveShelf = function () {
-    Shelf.call(this, Record);
-    this.type = ShelfTypeT.remove;
-  };
-  RemoveShelf.prototype = Object.create(Shelf.prototype);
-  RemoveShelf.prototype.constructor = RemoveShelf;
 
   /**
    * Returns a new set of types of shelves.
@@ -538,31 +242,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
   return {
     Shelf: Shelf,
     ShelfTypeT: ShelfTypeT,
-
     Record: Record,
-    /*FieldRecord: FieldRecord,
-    FUsageRecord: FUsageRecord,
-
-    DetailRecord: DetailRecord,
-    ColorRecord: ColorRecord,
-    ShapeRecord: ShapeRecord,
-    SizeRecord: SizeRecord,
-    FilterRecord: FilterRecord,
-    DimensionRecord: DimensionRecord,
-    MeasureRecord: MeasureRecord,
-    LayoutRecord: LayoutRecord,*/
-
-    /*DetailShelf: DetailShelf,
-    ColorShelf: ColorShelf,
-    ShapeShelf: ShapeShelf,
-    SizeShelf: SizeShelf,
-    FilterShelf: FilterShelf,
-    DimensionShelf: DimensionShelf,
-    MeasureShelf: MeasureShelf,
-    RowShelf: RowShelf,
-    ColumnShelf: ColumnShelf,
-    RemoveShelf: RemoveShelf,*/
-
     populate: populate,
     construct:  construct
   };

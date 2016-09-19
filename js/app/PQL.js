@@ -55,6 +55,17 @@ define(['./utils'], function (utils) {
       this.domain = domain;
       this.dataSource = dataSource;
     }
+
+    toString() {
+      var desc = "'" + this.name + "' (" + this.dataType + ') ';
+      if (this.dataType === FieldT.DataType.num)
+        desc += " domain = " + this.domain;
+      return desc;
+    }
+
+    isDiscrete() {
+      return (this.dataType === FieldT.DataType.string);
+    }
   }
 
   function isField (obj) {
@@ -79,12 +90,13 @@ define(['./utils'], function (utils) {
   var isDensityMethod = (m) => m === DensityMethod.density;
 
   var FilterMethod = Object.freeze({
-    equals: 'equals'
+    equals: 'equals',
+    in: 'in'
   });
-  var isFilterMethod = (m) => m === FilterMethod.equals;
+  var isFilterMethod = (m) => m === FilterMethod.equals || m === FilterMethod.in;
 
   class Filter {
-    constructor (field, method, args={}) {
+    constructor (field, method, args=[]) {
       if (!isField(field))
         throw TypeError("'field' must be a field");
       if (!isFilterMethod(method))
@@ -92,6 +104,10 @@ define(['./utils'], function (utils) {
       this.field = field;
       this.method = method;
       this.args = args;
+    }
+
+    static DefaultFilter (field) {
+      return new Filter(field, FilterMethod.in, field.domain);
     }
 
     get name() {return this.field.name;}
@@ -107,12 +123,16 @@ define(['./utils'], function (utils) {
         value: f.args
       };
     }
+
+    toString() {
+      return this.field.name + " " + this.method + " " + this.args;
+    }
   }
 
   class Split {
     constructor (field, method, args=[]) {
       if (!isField(field))
-        throw TypeError("name must be string identifier of a field");
+        throw TypeError("field must be a Field");
       if (!isSplitMethod(method))
         throw RangeError("invalid method for Split: " + method.toString());
       this.field = field;
@@ -130,6 +150,10 @@ define(['./utils'], function (utils) {
       return Split.toJSON(this);
     }
 
+    static DefaultSplit (field) {
+      return new Split(field, SplitMethod.equiDist, [10]);
+    }
+
     static toJSON (a) {
       return {
         name: a.name,
@@ -137,10 +161,14 @@ define(['./utils'], function (utils) {
         args: a.args
       };
     }
+
+    toString() {
+      return this.method  + " of " + this.field.name + " with args:" + " " + this.args;
+    }
   }
 
   class Aggregation {
-    constructor(fields, method, yields, args = {}) {
+    constructor(fields, method, yields, args = []) {
       fields = utils.listify(fields);
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
@@ -152,6 +180,11 @@ define(['./utils'], function (utils) {
       this.method = method;
       this.yields = yields;
       this.args = args;
+    }
+
+    static DefaultAggregation (fields) {
+      fields = utils.listify(fields);
+      return new Aggregation(fields, AggregationMethods.argmax, fields[0].name);
     }
 
     get names() {
@@ -174,6 +207,10 @@ define(['./utils'], function (utils) {
         args: a.args
       };
     }
+
+    toString () {
+      return this.method  + " of [" + this.names + "] with args: [" + this.args + "]";
+    }
   }
 
   class Density {
@@ -191,7 +228,7 @@ define(['./utils'], function (utils) {
     }
 
     get yields() {
-      return 'density(' + this.fields.names() + ')';
+      return 'density(' + this.names + ')';
     }
 
     toJSON() {
@@ -204,6 +241,10 @@ define(['./utils'], function (utils) {
         aggregation: d.method,
         args: d.args
       };
+    }
+
+    toString () {
+      return this.method  + " of [" + this.names + "]";
     }
   }
 
@@ -228,7 +269,7 @@ define(['./utils'], function (utils) {
   }
 
   function isFieldUsage (fu) {
-    return fu instanceof Aggregation || fu instanceof Split || fu instanceof Density ||fu instanceof Filter;
+    return fu instanceof Aggregation || fu instanceof Split || fu instanceof Density || fu instanceof Filter;
   }
 
   function hasDiscreteYield(fu) {
@@ -253,12 +294,10 @@ define(['./utils'], function (utils) {
     ));
   }
 
-
   /**
    * PQL: create JSON-formatted queries from internal-format
    */
   var toJSON = {
-
     /**
      * @param from {String} The name of the modle to predict from.
      * @param predict  A list or a single object of ({@link Aggregation}|{@link Density}|name-of-field|{@link Field})
@@ -315,18 +354,6 @@ define(['./utils'], function (utils) {
         "FROM": from,
         "AS": as_
       };
-    },
-
-    predict_: function (predict, from, where, as_) {
-      var pql = {
-        "PREDICT": predict,
-        "FROM": from,
-      };
-      if (where)
-        pql.where = where;
-      if (as_)
-        pql.as = as_;
-      return pql;
     },
 
     header : function (from) {

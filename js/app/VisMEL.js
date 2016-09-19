@@ -10,13 +10,17 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
   'use strict';
 
   class BaseMap {
-    constructor (fieldUsage) {
+    constructor(fieldUsage) {
       this.fu = fieldUsage;
+    }
+
+    static DefaultMap(fu) {
+      return new BaseMap(fu);
     }
   }
 
   class ColorMap extends BaseMap {
-    constructor (fu, channel) {
+    constructor(fu, channel) {
       super(fu);
       this.channel = channel;
       if (fu.yieldDataType === PQL.FieldT.DataType.num) {
@@ -27,6 +31,10 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
         this.colormap = 'default';
       } else
         throw new RangeError('invalid value for yieldDataType: ' + fu.yieldDataType);
+    }
+
+    static DefaultMap(fu) {
+      return new ColorMap(fu, 'rgb');
     }
   }
 
@@ -54,7 +62,9 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
 
   Sources.prototype.shallowCopy = function () {
     var copy = new Sources();
-    this.forEach(function(e){copy.push(e);});
+    this.forEach(function (e) {
+      copy.push(e);
+    });
     return copy;
   };
 
@@ -67,31 +77,32 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
    * Constructs an empty Layout, or creates a Layout from the given single or array of LayoutMappings for row and column.
    * @constructor
    */
-  var Layout = function (row, column) {
-    this.rows = new TableAlgebra(row);
-    this.cols =  new TableAlgebra(column);
-  };
+  class Layout {
+    constructor(row, column) {
+      this.rows = new TableAlgebra(row);
+      this.cols = new TableAlgebra(column);
+    }
 
-  Layout.prototype.shallowCopy = function () {
-    var copy = new Layout();
-    copy.rows = this.rows.shallowCopy();
-    copy.cols = this.cols.shallowCopy();
-    return copy;
-  };
+    shallowCopy() {
+      var copy = new Layout();
+      copy.rows = this.rows.shallowCopy();
+      copy.cols = this.cols.shallowCopy();
+      return copy;
+    }
 
-  Layout.prototype.toString = function () {
-    return JSON.stringify(this, _replacer.layout, _delim);
-  };
-
+    toString() {
+      return JSON.stringify(this, _replacer.layout, _delim);
+    }
+  }
 
   /**
    * Constructs an empty Layer or constructs a Layer from the given 'aesthetics shelf'.
    * @param shelf
    * @constructor
    */
-  var Layer = function (shelf) {
-    // empty constructor
-    if (arguments.length === 0 || shelf === undefined) {
+  class Layer {
+    constructor() {
+      // empty constructor
       this.filters = [];
       this.aesthetics = {
         mark: "auto",
@@ -100,104 +111,103 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
         size: {},
         details: []
       };
-      return;
     }
 
-    // construct from shelf
-    this.filters = _.map(shelf.filter.records, function (r) {
-      return r.content;
-    }); //todo: implement fully: what range do we condition on
+    static FromShelves(shelves) {
+      // construct from shelves
+      var layer = new Layer();
+      layer.filters = shelves.filter.content();
+      layer.aesthetics = {
+        mark: "auto",
+        // shelves that hold a single field usages
+        color: shelves.color.contentAt(0),
+        shape: shelves.shape.contentAt(0),
+        size: shelves.size.contentAt(0),
+        //orientation: FIELD_USAGE_NAME, //future feature
+        // shelves that may hold multiple field usages
+        details: shelves.filter.content()
+        //label:   { FIELD_USAGE_NAME* },//future feature
+        //hover:   { FIELD_USAGE_NAME* } //future feature
+      };
+      //specializations: [] // future feature
+      return layer;
+    }
 
-    this.aesthetics = {
-      mark: "auto",
-      // shelves that hold a single field usages
-      color: shelf.color.contentAt(0),
-      shape: shelf.shape.contentAt(0),
-      size: shelf.size.contentAt(0),
-      //orientation: FIELD_USAGE_NAME, //future feature
-      // shelves that may hold multiple field usages
-      details: _.map(shelf.detail.records, r => r.content)
-      //label:   { FIELD_USAGE_NAME* },//future feature
-      //hover:   { FIELD_USAGE_NAME* } //future feature
-    };
-    //specializations: [] // future feature
-  };
+    shallowCopy() {
+      var copy = new Layer();
+      copy.filters = this.filters.slice();
+      copy.aesthetics.mark = this.aesthetics.mark;
+      copy.aesthetics.color = this.aesthetics.color;
+      copy.aesthetics.shape = this.aesthetics.shape;
+      copy.aesthetics.size = this.aesthetics.size;
+      copy.aesthetics.details = this.aesthetics.details.slice();
+      return copy;
+    }
 
-  Layer.prototype.shallowCopy = function () {
-    var copy = new Layer();
-    copy.filters = this.filters.slice();
-    copy.aesthetics.mark = this.aesthetics.mark;
-    copy.aesthetics.color = this.aesthetics.color;
-    copy.aesthetics.shape = this.aesthetics.shape;
-    copy.aesthetics.size = this.aesthetics.size;
-    copy.aesthetics.details = this.aesthetics.details.slice();
-    return copy;
-  };
-
-  Layer.prototype.toString = function () {
-    return JSON.stringify(this, _replacer.layer, _delim);
-  };
+    toString() {
+      return JSON.stringify(this, _replacer.layer, _delim);
+    }
+  }
 
 
-  /**
-   * Constructs an empty VisMEL query, or construct a VisMEL query from the given shelves and (single) source.
-   * @param shelf
-   * @param source
-   * @constructor
-   * @alias module:VisMEL
-   */
-  var VisMEL; VisMEL = function (shelves, source) {
-    // construct from shelves and sources
-    this.sources = new Sources(source);
-    this.layout = new Layout(shelves);
-    this.layers = [new Layer(shelves)];
-  };
+  class VisMEL {
+    /**
+     * Constructs an empty VisMEL query, or construct a VisMEL query from the given shelves and (single) source.
+     * @param shelf
+     * @param source
+     * @constructor
+     * @alias module:VisMEL
+     */
+    constructor(source) {
+      this.sources = new Sources(source);
+      this.layout = new Layout();
+      this.layers = [new Layer()];
+    }
 
-  /**
-   * Creates and returns a shallow copy of this VisMEL query.
-   * 'Shallow' mean that it recreates the whole structure of the VisMEL query however it just references the {@link FieldUsage}s but doesn't deep copy them. In a sense, it copies everything of the VisMEL tree but only references its 'leaves'.
-   * @returns {VisMEL}
-   */
-  VisMEL.prototype.shallowCopy = function () {
-    var copy = new VisMEL();
-    copy.sources = this.sources.shallowCopy();
-    copy.layout = this.layout.shallowCopy();
-    copy.layers = this.layers.map( layer => layer.shallowCopy() );
-    return copy;
-  };
+    static FromShelves(shelves, source) {
+      // construct from shelves and sources
+      var vismel = new VisMEL();
+      vismel.sources = new Sources(source);
+      vismel.layout = new Layout(shelves.row.content(), shelves.column.content());
+      vismel.layers = [Layer.FromShelves(shelves)];
+      return vismel;
+    }
 
-  /*
-   * Returns the set of (unique) variables (i.e. {@link Field} that are used in this VisMEL query.
-   *
-   * Note: this implementation assumes that fields of a model are always referenced, never copied!
-   *
-  VisMEL.prototype.fields = function () {
-    var fus = this.fieldUsages();
-    return _.uniq( fus.map( fu => fu.base ));
-  };*/
+    /**
+     * Creates and returns a shallow copy of this VisMEL query.
+     * 'Shallow' mean that it recreates the whole structure of the VisMEL query however it just references the {@link FieldUsage}s but doesn't deep copy them. In a sense, it copies everything of the VisMEL tree but only references its 'leaves'.
+     * @returns {VisMEL}
+     */
+    shallowCopy() {
+      var copy = new VisMEL();
+      copy.sources = this.sources.shallowCopy();
+      copy.layout = this.layout.shallowCopy();
+      copy.layers = this.layers.map(layer => layer.shallowCopy());
+      return copy;
+    }
 
-  /**
-   * @returns Returns the set of {@link FieldUsage}s of this query.
-   */
-  VisMEL.prototype.fieldUsages = function () {
-    let layer = this.layers[0],
-      layout = this.layout,
-      aesthetics = layer.aesthetics;
+    /**
+     * @returns Returns the set of {@link FieldUsage}s of this query.
+     */
+    fieldUsages() {
+      let layer = this.layers[0],
+        layout = this.layout,
+        aesthetics = layer.aesthetics;
 
-    // vismel expressions consist of fieldusages ... 
-    let usedVars = _.union(
-      layout.rows.fieldUsages(),
-      layout.cols.fieldUsages(),
-      aesthetics.details,
-      layer.filters);
-    // ... and fieldmaps
-    if (aesthetics.color && aesthetics.color instanceof ColorMap) usedVars.push(aesthetics.color.fu);
-    if (aesthetics.shape && aesthetics.shape instanceof ShapeMap) usedVars.push(aesthetics.shape.fu);
-    if (aesthetics.size && aesthetics.size instanceof SizeMap) usedVars.push(aesthetics.size.fu);
+      // vismel expressions consist of fieldusages ...
+      let usedVars = _.union(
+        layout.rows.fieldUsages(),
+        layout.cols.fieldUsages(),
+        aesthetics.details,
+        layer.filters);
+      // ... and fieldmaps
+      if (aesthetics.color && aesthetics.color instanceof ColorMap) usedVars.push(aesthetics.color.fu);
+      if (aesthetics.shape && aesthetics.shape instanceof ShapeMap) usedVars.push(aesthetics.shape.fu);
+      if (aesthetics.size && aesthetics.size instanceof SizeMap) usedVars.push(aesthetics.size.fu);
 
-    return usedVars.filter(PQL.isFieldUsage);
-  };
-
+      return usedVars.filter(PQL.isFieldUsage);
+    }
+  }
 
   // delimiter for JSON conversion
   var _delim = '\t';

@@ -4,11 +4,8 @@
  * @module main
  * @author Philipp Lucas
  */
-//define(['lib/emitter', 'd3', './init', './PQL', './shelves','./DummyModel', './visuals', './interaction', './VisMEL', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
-//  function (e, d3, init, PQL, sh, dmodel, vis, inter, VisMEL, QueryTable, ModelTable, ResultTable, ViewTable, Remote) {
-
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visuals', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (e, d3, init, PQL, VisMEL, sh, vis, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visuals', './interaction', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
+  function (e, d3, init, PQL, VisMEL, sh, vis, inter, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     /**
@@ -20,27 +17,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       sh.populate(model, shelf.dim, shelf.meas);
 
       // make all shelves visual and interactable
-      shelf.meas.beVisual({label: 'Measures'});
-      shelf.dim.beVisual({label: 'Dimensions'});
-      shelf.detail.beVisual({label: 'Details'});
-      shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal});
-      shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box});
-      shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal});
-      shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal});
-      shelf.remove.beVisual({label: 'Drag here to remove'});
-      shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal});
-      shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal});
-
-      // shelf.meas.beVisual({label: 'Measures'}).beInteractable();
-      // shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
-      // shelf.detail.beVisual({label: 'Details'}).beInteractable();
-      // shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      // shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
-      // shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      // shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      // shelf.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-      // shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      // shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelf.meas.beVisual({label: 'Measures'}).beInteractable();
+      shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
+      shelf.detail.beVisual({label: 'Details'}).beInteractable();
+      shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
+      shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelf.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
+      shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
       // add all shelves to the DOM
       var base = $('#shelves');
@@ -55,7 +41,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       var layout = $('#layout');
       layout.append(shelf.row.$visual);
       layout.append(shelf.column.$visual);
-      //inter.asRemoveElem($(document.body).find('main'));
+      inter.asRemoveElem($(document.body).find('main'));
     }
 
     /**
@@ -76,7 +62,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
     function onUpdate() {
       if (testPQLflag || testVisMELflag)
         return;
-      query = new VisMEL(shelf, model);
+      query = VisMEL.VisMEL.FromShelves(shelf, model);      
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
       modelTable.model()
@@ -100,16 +86,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
           console.log(viewTable);
           console.log("...");
         });
-      //*/
     }
 
     /**
      * Enables user querying.
      */
     function enableQuerying() {
-      // that seems important - what did it do again?
       inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
-
       // trigger initial query execution
       onUpdate();
     }
@@ -138,13 +121,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       // get initial model
       var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
       model.update().then(populateGUI)
-        .then( () => {debugger;} )
-        // .then(initialQuerySetup)
-        // .then(enableQuerying)
-        // .catch((err) => {
-        //   console.error(err);
-        //   throw "Could not load remote model from Server - see above";
-        // });
+        //.then( () => {debugger;} )
+        .then(initialQuerySetup)
+        .then(enableQuerying)
+        .catch((err) => {
+           console.error(err);
+           throw "Could not load remote model from Server - see above";
+        });
     }
     /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
      $('#update-button').click( function() {
@@ -153,7 +136,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
      //console.log(modelTable.at[0][0].describe());
      //eval('console.log("");'); // prevents auto-optimization of the closure
      });*/
-
 
     function testPQL() { // jshint ignore:line
       // put some debug / testing stuff here to be executed on loading of the app
@@ -196,11 +178,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       var query, iris, pw, pl, sw, sl;
       mb.get('iris')
         .then( iris_ => {
-          iris = iris_;
-          pw = iris.fields["petal_width"];
-          pl = iris.fields["petal_length"];
-          sw = iris.fields["sepal_width"];
-          sl = iris.fields["sepal_length"];
+          iris = iris_;          
+          pw = iris.fields.get("petal_width");
+          pl = iris.fields.get("petal_length");
+          sw = iris.fields.get("sepal_width");
+          sl = iris.fields.get("sepal_length");
         })
 /*
         .then( () => {
@@ -221,7 +203,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
           let pl_split = new PQL.Split(pl, "equiDist", [20]);
           let sl_split = new PQL.Split(sl, "equiDist", [20]);
           let plsl_density = new PQL.Density([pl,sl]);
-          query = new VisMEL.VisMEL(undefined, iris);
+          query = new VisMEL.VisMEL(iris);
           query.layout.rows = new TableAlgebraExpr([pw_aggr]);
           query.layout.cols = new TableAlgebraExpr([sw_aggr]);
           query.layers[0].aesthetics.details.push(sl_split);          
@@ -276,10 +258,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
           //query.layers[0].aesthetics.details.push(pl_split);
           return query;
         })//*/
-        .then(query => {
-          //console.log(query.toString());
-          return query;
-        })
         .then(query => {
           //query = new VisMEL(shelf, model);
           queryTable = new QueryTable(query);

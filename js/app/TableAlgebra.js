@@ -46,17 +46,18 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
     }
     fus = utils.listify(fus);
     for( var idx = 0; idx < fus.length; ++idx ) {
+      let fu = fus[idx];
+      if(!(PQL.isAggregation(fu) || PQL.isDensity(fu) || PQL.isSplit(fu))) throw new TypeError("fus must be of a FieldUsage");
       if (idx !== 0)
         /* todo: bug: fix this. this is not a proper way of deciding on the operators. see as follows:
-          - dimensions have to be positioned before measures, as we split the axis in accordance of the order of symbols in a NSF entry.
-          - measures have to be added up, before the cross operator with dimensions is applied, i.e.
-            wrong: dim1 * meas1 + meas2
-              because it leads to something like: {(d1 meas1), (d2 meas1), ..., (dn meas1), meas2
-            right: dim1 * (meas1 + meas2)}
-              because it leads to something like: {(d1 meas1 meas2), (d2 meas1 meas2), ..., (dn meas1, meas2)}
+         - dimensions have to be positioned before measures, as we split the axis in accordance of the order of symbols in a NSF entry.
+         - measures have to be added up, before the cross operator with dimensions is applied, i.e.
+         wrong: dim1 * meas1 + meas2
+         because it leads to something like: {(d1 meas1), (d2 meas1), ..., (dn meas1), meas2
+         right: dim1 * (meas1 + meas2)}
+         because it leads to something like: {(d1 meas1 meas2), (d2 meas1 meas2), ..., (dn meas1, meas2)}
          */
-        this.push((fus[idx].role === PQL.FieldT.Role.measure &&
-        fus[idx-1].role === PQL.FieldT.Role.measure)? '+' : '*');
+        this.push( (PQL.isAggregationOrDensity(fu) && PQL.isAggregationOrDensity(fus[idx - 1])) ? '+' : '*');
       this.push(fus[idx]);
     }
   };
@@ -180,4 +181,3 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
 
   return TableAlgebraExpr;
 });
-

@@ -4109,7 +4109,7 @@ jQuery.event = {
 			events = elemData.events = {};
 		}
 		if ( !(eventHandle = elemData.handle) ) {
-			eventHandle = elemData.handle = function( e ) {
+			eventHandle = elemData.handle = function(e) {
 				// Discard the second event of a jQuery.event.trigger() and
 				// when an event is called after a page has unloaded
 				return typeof jQuery !== strundefined && jQuery.event.triggered !== e.type ?
