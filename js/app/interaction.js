@@ -314,7 +314,11 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
 
   function _fieldUsageFromRecord (record) {
     let shelf = record.shelf;
-    if (shelf.type === sh.ShelfTypeT.dimension || shelf.type === sh.ShelfTypeT.measure || shelf.type === sh.ShelfTypeT.filter) {
+    if (shelf.type === sh.ShelfTypeT.dimension) 
+      return PQL.Split.DefaultSplit(_getField(record));
+    else if (shelf.type === sh.ShelfTypeT.measure)
+      return PQL.Aggregation.DefaultAggregation(_getField(record));
+    else if (shelf.type === sh.ShelfTypeT.filter) {
       let field = _getField(record);
       return field.isDiscrete() ? PQL.Split.DefaultSplit(field) : PQL.Aggregation.DefaultAggregation(field);
     } else

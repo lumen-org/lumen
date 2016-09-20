@@ -62,7 +62,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
     function onUpdate() {
       if (testPQLflag || testVisMELflag)
         return;
-      query = VisMEL.VisMEL.FromShelves(shelf, model);      
+      //debugger;
+      query = VisMEL.VisMEL.FromShelves(shelf, model);  
+      //debugger;    
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
       modelTable.model()

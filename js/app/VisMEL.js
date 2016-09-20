@@ -125,7 +125,7 @@ define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra
         size: shelves.size.contentAt(0),
         //orientation: FIELD_USAGE_NAME, //future feature
         // shelves that may hold multiple field usages
-        details: shelves.filter.content()
+        details: shelves.detail.content()
         //label:   { FIELD_USAGE_NAME* },//future feature
         //hover:   { FIELD_USAGE_NAME* } //future feature
       };

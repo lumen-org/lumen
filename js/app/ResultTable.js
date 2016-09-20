@@ -52,13 +52,14 @@ define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
   var aggregate = function (model, query) {
     // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
-    // - multiple measures of the same field are possible and
-    // - multi-dimensional measures aren't supported yet
+    // - multiple measures of the same field are possible
 
     // 1. build list of split fields and aggregate fields, and attach indices to FieldUsages of query
 
     // note: in the general case query.fieldUsages() and [...dimensions, ...measures] do not contain the same set of
     //  field usages, as duplicate dimensions won't show up in dimensions
+    // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity
+    // (see "TODO-reference" in interfaction.js) no duplicate split should be allowed at all!
 
     var fieldUsages = query.fieldUsages();
     var dimensions = [];
@@ -67,7 +68,6 @@ define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
     fieldUsages.filter(PQL.isSplit).forEach(function (fu) {
       // todo: this kind of comparison is ugly and slow for the case of many dimensions
       // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
-      //let sameBase = dimensions.find(e => (fu.base === e.base));
       let sameBase = dimensions.find(elem => (fu.name === elem.name));
       if (sameBase) {
         // fu is already there
@@ -89,15 +89,6 @@ define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
       fu.index = idx++;
       idx2fu.push(fu);
       measures.push(fu);
-    });
-
-    // push index to ancestors
-    // TODO: I don't think I need that anymore
-    [...dimensions, ...measures].forEach( fu => {      
-      if (fu.origin) {
-        debugger;
-        fu.origin.index = fu.index;
-      }
     });
 
     // run PQL query

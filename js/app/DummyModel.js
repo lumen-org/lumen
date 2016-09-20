@@ -5,6 +5,9 @@
  * changed to async. It should be sufficient to wrap the return values of the models functions into a resolved promise
  * to make it work again.
  *
+ * NOTE2: actually quite a few more changes would be necessary, as I entirely refactored Field.js and this is still
+ * expecting the old Field.js...
+ *
  * @module DummyModel
  * @author Philipp Lucas
  */

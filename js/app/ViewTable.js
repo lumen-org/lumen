@@ -467,13 +467,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     /**
      * Tweaks for continuous extents.
      * (1) non-singular extent: add 5% of extent to upper and lower bound of extent
-     * (2) singular extent: upper = singular+5%*singular, lower = singular-5%*singular
+     * (2) singular extent and singular !== 0: upper = singular+5%*singular, lower = singular-5%*singular
+     * (3) singular extent and singular === 0: upper = 1 , lower = -1
      */
     function _normalize (extent) {
       if (extent.length === 2) { // iff continuous extent
-        if (extent[0] === extent[1]) {
+        if (extent[0] === extent[1]) { // if singular
           let singular = extent[0];
-          extent = [singular - 0.05*singular, singular + 0.05*singular];
+          if (singular === 0)
+            extent = [-1, 1];
+          else
+            extent = [singular - 0.05*singular, singular + 0.05*singular];
         } else {
           let relOff = 0.05*(extent[1]-extent[0]);
           extent = [extent[0] - relOff, extent[1] + relOff];
