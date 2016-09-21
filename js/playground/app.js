@@ -8,6 +8,7 @@
  */
 
 define(['d3', './common'], function(d3, common) {
+//define([], function() {
   'use strict';
 
   // setup code / closure stuff here
@@ -15,13 +16,16 @@ define(['d3', './common'], function(d3, common) {
 
   // definitions of modules functions here
   return {
-
     /**
      * Start the application.
      */
     start: function() {
-      d3.select('body').append('p')
-        .text('I can call two() : ' + common.two());
+      //d3.select('body').append('p').text('I can call two() : ' + common.two());
+      console.log("started!");
+    },
+
+    sumOf: function (a,b) {
+      return a+b;
     }
   };
 });

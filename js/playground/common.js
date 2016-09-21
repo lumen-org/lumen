@@ -1,7 +1,7 @@
 /**
  * @author Philipp Lucas
  */
-define( function () {
+define( [], function () {
   "use strict";
   // private method and variable definitions
 

@@ -5,7 +5,7 @@
  * @module QueryTable
  */
 
-define(['lib/logger', './PQL'], function (Logger, PQL) {
+define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
   "use strict";
 
   var logger = Logger.get('pl-QueryTable');

@@ -41,7 +41,7 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
   var TableAlgebraExpr = function (fus) {
     Array.call(this);
     if (fus === undefined) {
-      this.clear();
+      this.splice(0);
       return;
     }
     fus = utils.listify(fus);

@@ -8,7 +8,7 @@
 define(['app/utils'], function (utils) {
   "use strict";
 
-  describe('basic tests', function () {
+  describe('utils.js specifcations', function () {
     it('tests selectValue()', function () {
       expect (utils.selectValue(null, 1)).toBe(1);
       expect (utils.selectValue(undefined, 1)).toBe(1);

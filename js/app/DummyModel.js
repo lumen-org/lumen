@@ -12,7 +12,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', './Domain', './Field', './Model'], function (Logger, Domain, F, Model) {
+define(['lib/logger', './Domain', './PQL', './Model'], function (Logger, Domain, F, Model) {
   "use strict";
 
   var logger = Logger.get('pl-DummyModel');

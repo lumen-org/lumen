@@ -18,7 +18,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     // note (requirejs): only include (-> attribute 'include') those files that are NOT loaded by requires
     files: [
-      'https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js',
+      'lib/underscore_1.8.3.js',
       {pattern: 'lib/**/*.js', included: false},
       {pattern: 'app/**/*.js', included: false},
       {pattern: 'test/**/*.spec.js', included: false},
@@ -28,7 +28,8 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
-      'run-playground.js'
+      'run-playground.js',
+      'run-prototype.js'
     ],
 
 
