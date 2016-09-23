@@ -153,7 +153,7 @@ define(['./utils'], function (utils) {
     }
 
     static DefaultSplit (field) {
-      return new Split(field, SplitMethod.equiDist, [10]);
+      return new Split(field, SplitMethod.equiDist, [4]);
     }
 
     static toJSON (a) {

@@ -87,7 +87,6 @@ define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
      */
     equiDist: function (domain, valueFlag, n) {
       if (!(domain instanceof Domain.Numeric)) {
-        debugger;
         throw new TypeError("domain must be of type Domain.NumericDomain");
       }
 
