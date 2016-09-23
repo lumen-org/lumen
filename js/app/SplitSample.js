@@ -15,7 +15,8 @@ define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
   function splitToValues (split) {
     // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
     //return this.splitter(this.domain, true, 10);
-    return Splitter[split.method](split.field.domain, true /*valueflag*/, split.args);
+    let field = split.field;
+    return Splitter[split.method](field.domain.bounded(field.extent), true /*valueflag*/, split.args);
   }
 
   /**
@@ -33,13 +34,13 @@ define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
    */
   var Splitter = {
     /**
-     * Splits a {@link SimpleNumericContinuousDomain} into n equivalently sized subintervals.
-     * @param {SimpleNumericContinuousDomain} domain The domain to split
+     * Splits a {@link NumericDomain} into n equivalently sized subintervals.
+     * @param {NumericDomain} domain The domain to split
      * @param n Number of subintervals
      */
     equiIntervals: function (domain, valueFlag, n) {
-      if (!(domain instanceof Domain.SimpleNumericContinuous))
-        throw new TypeError("domain must be of type Domain.SimpleNumericContinuousDomain");
+      if (!(domain instanceof Domain.Numeric))
+        throw new TypeError("domain must be of type Domain.NumericDomain");
       // slice into n intervals of same length
       let len = (domain.h - domain.l)/n;
       let val = domain.l;
@@ -52,13 +53,13 @@ define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
         return pairs;
       else
         return pairs.map(function (range) {
-          return new Domain.SimpleNumericContinuous(...range);
+          return new Domain.Numeric(...range);
         });
     },
 
     /**
      * Splits a discrete domain into all its individual elements
-     * @param {DiscreteDomain} domain The domain to split.
+     * @param {Discrete} domain The domain to split.
      * @param {boolean} valueFlag If set, this function returns an array of all values of the domain, otherwise, it returns an array of domains, each having only a single element as its domain.
      */
     singleElements: function (domain, valueFlag) {
@@ -81,12 +82,14 @@ define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
 
     /**
      * Samples the domain to (at most) n samples that are equidistant.
-     * @param {SimpleNumericContinuousDomain} domain The domain to sample.
+     * @param {NumericDomain} domain The domain to sample.
      * @param n
      */
     equiDist: function (domain, valueFlag, n) {
-      if (!(domain instanceof Domain.SimpleNumericContinuous))
-        throw new TypeError("domain must be of type Domain.SimpleNumericContinuousDomain");
+      if (!(domain instanceof Domain.Numeric)) {
+        debugger;
+        throw new TypeError("domain must be of type Domain.NumericDomain");
+      }
 
       // slice into n values equally distanced      
       let values;
@@ -102,8 +105,8 @@ define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
         return values;
       else
         return values.map(function (val) {
-          return new Domain.SimpleNumericContinuous(val, val);
-          //return new Domain.DiscreteDomain([val]);
+          return new Domain.Numeric(val, val);
+          //return new Domain.Discrete([val]);
         });
     },
 

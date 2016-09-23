@@ -8,51 +8,62 @@ define(['./utils'], function (utils) {
   "use strict";
 
   class DiscreteDomain {
-
     /**
      * Constructs a discrete domain.
-     * @param values A single of or an array of values for the domain.
+     * @param values A single of or an array of values for the domain. Pass null or [null] to create an unbounded Domain.
      * @constructor
      */
-    constructor (values) {
+    constructor(values) {
       values = utils.listify(values);
-      this.values = [];
-      values.forEach( v => this.values.push(v), this);
+      this.values = values.slice();
     }
 
-    _checkType (d) {
+    _checkType(d) {
       if (!(d instanceof DiscreteDomain))
-        throw new TypeError("domain must also be of type DiscreteDomain");
+        throw new TypeError("domain must also be of type Discrete");
     }
 
-    union (domain) {
+    union(domain) {
       this._checkType(domain);
-      return new DiscreteDomain( _.union(this.values, domain.values));
+      return new DiscreteDomain(_.union(this.values, domain.values));
     }
 
-    intersection (domain) {
+    intersection(domain) {
       this._checkType(domain);
-      return new DiscreteDomain( _.intersection(this.values, domain.values));
+      return new DiscreteDomain(_.intersection(this.values, domain.values));
     }
 
-    minus (domain) {
+    minus(domain) {
       this._checkType(domain);
-      return new DiscreteDomain( _.difference(this.values, domain.values));
+      return new DiscreteDomain(_.difference(this.values, domain.values));
     }
 
-    toString () {
-      return "{" + this.values.toString() + "}";
+    isUnbounded() {
+      return this.values[0] === null;
     }
+
+    bounded(extent) {
+      this._checkType(extent);
+      if(this.isUnbounded())
+        return extent;
+      else
+        return this;
+    }
+
+    get value() {
+      return this.values;
+    }
+
   }
 
-
-  class SimpleNumericContinuousDomain {
+  class NumericDomain {
 
     /**
      * Constructs a simple continuous numerical domain from the given interval.
      * A continuous numeric domain is just an interval, including its bounds.
      *
-     * @param arg Either the interval of the domain as a 2-element list, or a single value
+     * @param arg Either the interval of the domain as a 2-element list, or a single value. Pass null or [null, null]
+     *  to construct an unbounded domain.
      * @constructor
      */
     constructor(arg) {
@@ -66,35 +77,60 @@ define(['./utils'], function (utils) {
     }
 
     _checkType (d) {
-      if (!(d instanceof SimpleNumericContinuousDomain))
-        throw new TypeError("domain must also be of type SimpleNumericContinuousDomain");
+      if (!(d instanceof NumericDomain))
+        throw new TypeError("domain must also be of type NumericDomain");
     }
 
     union (domain) {
       this._checkType(domain);
-      var l = (this.low < domain.l ? this : domain);
-      var h = (this.high > domain.h ? this : domain);
+      var low = (this.l < domain.l ? this : domain);
+      var high = (this.h > domain.h ? this : domain);
       // make sure the intersection is not empty
-      if (l.high < h.low)
-        throw "domain values cannot be unioned";
+      if (low.h < high.l)
+        throw "intersection of domains is empty";
       else
-        return new SimpleNumericContinuousDomain([l.low, h.high]);
+        return new NumericDomain([low.l, high.h]);
     }
 
     intersection (domain) {
       this._checkType(domain);
-      var l = (this.low < domain.l ? this : domain);
-      var h = (this.high > domain.h ? this : domain);
+      var low = (this.l < domain.l ? this : domain);
+      var high = (this.h > domain.h ? this : domain);
       // make sure the intersection is not empty
-      if (l.high < h.low)
+      if (low.h < high.l)
         throw "domain values cannot be unioned";
       else
-        return new SimpleNumericContinuousDomain([l.high, h.low]);
+        return new NumericDomain([low.h, high.l]);
     }
 
     minus (domain) {
-      this._checkType(domain);
       throw new Error("not implemented"); // todo: implement
+    }
+
+    isSingular() {
+      return this.l !== null && this.l === this.h;
+    }
+
+    isUnbounded() {
+      return this.l === null || this.h === null;
+    }
+
+    isBounded() {
+      return !this.isSingular() && !this.isUnbounded();
+    }
+
+    get value() {
+      if(this.isSingular())
+        return this.l;
+      else
+        return [this.l, this.h];
+    }
+
+    bounded(extent) {
+      if(this.isUnbounded())
+        return new NumericDomain([this.l === null ? extent.l : this.l, this.h === null ? extent.h : this.h]);
+      else
+        return this;
     }
 
     toString () {
@@ -104,7 +140,7 @@ define(['./utils'], function (utils) {
 
   return {
     Discrete: DiscreteDomain,
-    SimpleNumericContinuous: SimpleNumericContinuousDomain
+    Numeric: NumericDomain
   };
 
 });

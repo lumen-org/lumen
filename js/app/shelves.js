@@ -115,7 +115,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', ], function(E, Logger, 
      * @alias module:shelves.Shelf
      */
     constructor (type, opt) {   
-      //this.RecordConstructor = RecordConstructor;
       this.records = [];
       if (!type) throw new RangeError("parameter 'type' missing");
       this.type = type;

@@ -256,7 +256,7 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
   function asRemoveElem ($elem) {
     $elem.get(0).addEventListener('dragover', event => event.preventDefault());
     $elem.get(0).addEventListener('drop', event => {
-      onDrop(new sh.RemoveShelf(), $(_draggedElem).data(vis.AttachStringT.record), {});
+      onDrop(new sh.Shelf(sh.ShelfTypeT.remove), $(_draggedElem).data(vis.AttachStringT.record), {});
       _draggedElem = null;
       event.stopPropagation();
     });

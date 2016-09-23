@@ -91,7 +91,8 @@ define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], func
         this.fields.set(field.name, new PQL.Field(
             field.name,
             field.dtype,
-            (field.dtype === 'numerical' ? new Domain.SimpleNumericContinuous(field.domain) : new Domain.Discrete(field.domain)),
+            (field.dtype === 'numerical' ? new Domain.Numeric(field.domain) : new Domain.Discrete(field.domain)),
+            (field.dtype === 'numerical' ? new Domain.Numeric(field.extent) : new Domain.Discrete(field.extent)),
             this));
       }
       this.name = json.name;

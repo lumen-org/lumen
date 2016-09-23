@@ -182,19 +182,19 @@ define(['lib/logger', './Domain', './PQL', './Model'], function (Logger, Domain,
         'age', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          domain: new Domain.SimpleNumericContinuous(0, 100)
+          domain: new Domain.Numeric(0, 100)
         });
       var weightField = new F.Field(
         'weight', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          domain: new Domain.SimpleNumericContinuous(40, 90)
+          domain: new Domain.Numeric(40, 90)
         });
       var incomeField = new F.Field(
         'income', myModel, {
           dataType: F.FieldT.Type.num,
           role: F.FieldT.Role.measure,
-          domain: new Domain.SimpleNumericContinuous(500, 100000)
+          domain: new Domain.Numeric(500, 100000)
         });
       var childrenField = new F.Field(
         'children', myModel, {

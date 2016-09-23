@@ -46,13 +46,15 @@ define(['./utils'], function (utils) {
    * @alias module:Field.Field
    */
   class Field {
-    constructor (name, dataType, domain, dataSource) {
+    constructor (name, dataType, domain, extent, dataSource) {
       if (!_.isString(name)) throw TypeError("name must be a string, but is: " + name.toString());
       if (!_.contains(FieldT.DataType, dataType)) throw RangeError("invalid dataType: " + dataType.toString());
+      if (extent.isUnbounded()) throw RangeError("extent may not be unbounded.");
 
       this.name = name;
       this.dataType = dataType;
       this.domain = domain;
+      this.extent = extent;
       this.dataSource = dataSource;
     }
 
@@ -107,7 +109,7 @@ define(['./utils'], function (utils) {
     }
 
     static DefaultFilter (field) {
-      return new Filter(field, FilterMethod.in, field.domain);
+      return new Filter(field, FilterMethod.in, field.extent);
     }
 
     get name() {return this.field.name;}
