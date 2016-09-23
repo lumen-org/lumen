@@ -30,7 +30,7 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
 
     let nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize()),
       len = nsf.length,
-      expansion = new Array(len);
+      expansion = [];
 
     for (let i=0; i<len; ++i) {
       // shallow copy query. shallow means that all {@link FieldUsage}s in the copy are references to those in query.
@@ -44,24 +44,20 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
 
       nsf[i].forEach( fu => { // jshint ignore:line
         if (PQL.isFilter(fu)) {
-          // add this field to details, if not alrady there (since we need that field to be included in the result table later)
+          // add this field to details, if not already there (since we need that field to be included in the result table later)
           if (-1 === details.findIndex(o => PQL.isSplit(o) && o.name === fu.name)) {
-            // TODO: change split function to prevent further splitting?
+            // this split is necessary to generate any input from that field at all
             details.push(new PQL.Split(fu.field, 'identity'));
           }
           // add the filer to restrict its domain accordingly at query time
           filter.push(fu);
-          /*filter.push({
-            name: fu.name,
-            operator: 'in',
-            value: [fu.domain.l, fu.domain.h]
-          });*/
         } else {
+          // push remaining field usage to layout
           console.assert(layout.empty(), "After template expansion there must be only one FU on a row/col shelf");
           layout.push(fu);
         }
       });
-      expansion[i] = instance;
+      expansion.push(instance);
     }
 
     return expansion;

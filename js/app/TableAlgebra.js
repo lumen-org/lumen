@@ -92,7 +92,89 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
     // 1. turn FieldUsages into their domain representation
     // the domain representation of a FieldUsage is:
     // (i) in case of a measure: an array containing a single element: the measure itself
-    // (ii) in case of a dimension: an array containing the split/sampling of the dimension, according to its split/sampling function
+    // (ii) in case of a dimension: an array containing the result of the split of the dimension
+
+    // also note the way its encapsulated in three array levels:
+    // level 1: expression level: each element is an operand / operator
+    // level 2: element level: each element is a combination of domain values / symbols
+    // level 3: value level: each element is a certain domain value / symbol of a fieldUsage
+    // note: at the end of the normalization, there is naturally only one element at the expression level left
+
+    // example 1: [sex]
+    // -> [[ [sex (domain: 0)], [sex (domain: 1)] ]]
+    // example 2: [sex, *, avg(age)]
+    // -> [[ [sex (domain: 0)], [sex (domain: 1)] ], *, [[age]] ]
+
+    var domainExpr = [];
+
+    let len = this.length;
+    if (len === 0) {
+      return [[]];
+    }
+
+    this.forEach( function(elem, idx) {
+      if (PQL.isFieldUsage(elem)) {
+        // keep split if its the last element. This leads to drastically improved performance
+        if (PQL.isSplit(elem) && idx !== len-1) {
+          let filters = S.splitToFilters(elem);
+          // "splitToFilters()" returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
+          domainExpr.push(filters.map( f => [f] ));
+        } else
+          domainExpr.push([[elem]]);
+      } else {
+        // elem is an operator
+        domainExpr.push(elem);
+      }
+    });
+
+    // 2. evaluate expression. that results in a single ordered set of arrays
+    // example 1 cont'd: [[ [sex (domain: 0)], [sex (domain: 1)] ]]
+    //  -> stays the same
+    // example 2 cont'd: [ [ [sex with domain=[0]], [sex with domain=[1]] ], *, [[age]] ]
+    // -> [[ [sex with domain=[0], age], [sex with domain=[1], age] ]]
+
+    //   2a) evaluate all "+"
+    for (let idx=0; idx<domainExpr.length; ++idx) {
+      let elem = domainExpr[idx];
+      if (elem === "+") {
+        // replace that element by the result of "domainExpr[idx-1] + domainExpr[idx+1]"
+        domainExpr.splice(idx-1, 3, _plus(domainExpr[idx-1], domainExpr[idx+1]) );
+        // decrease idx, since we merged three elements of domainExpr into one. Otherwise we would skip elements.
+        --idx;
+      }
+    }
+
+    //   2b) evaluate all "*"
+    for (let idx=0; idx<domainExpr.length; ++idx) {
+      let elem = domainExpr[idx];
+      if (elem === "*") {
+        // replace that element by the result of "domainExpr[idx-1] * domainExpr[idx+1]"
+        domainExpr.splice(idx-1, 3, _cross(domainExpr[idx-1], domainExpr[idx+1]) );
+        // decrease idx, since we merged three elements of domainExpr into one. Otherwise we would skip elements.
+        --idx;
+      }
+    }
+
+    // a single array of arrays should be left
+    if (domainExpr.length !== 1) {
+      throw new Error("after normalization there must be only 1 element left at expression level.");
+    }
+
+    return domainExpr[0];
+  };
+
+
+
+  TableAlgebraExpr.prototype.normalizeOLD = function () {
+
+    // todo: implement check: each NSF element may not contain more than 1 measure usage
+    // todo: implement check: if a NSF element contains a measure usage, this must be the last piece of that NSF element.
+    // todo: in the previous version we distinguished by ordinal vs discrete, not dimension vs measure. what is correct?
+
+    // 1. turn FieldUsages into their domain representation
+    // the domain representation of a FieldUsage is:
+    // (i) in case of a measure: an array containing a single element: the measure itself
+    // (ii) in case of a dimension: an array containing the result of the split of the dimension
 
     // also note the way its encapsulated in three array levels:
     // level 1: expression level: each element is an operand / operator
@@ -108,8 +190,6 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
     var domainExpr = [];
 
     if (this.length === 0) {
-      // return the "empty NSF element"
-      //return [[this.emptyNsfElement]];
       return [[]];
     }
 

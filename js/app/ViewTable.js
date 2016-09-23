@@ -126,6 +126,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       .data(data);
 
     // add scales to field usages of this query
+    debugger;
     attachScales(query, pane.size);
 
     // attach mappers
@@ -190,16 +191,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     /// build up axis stack
     function _buildAxis(fieldUsages, canvas, axisType) {
       let stackDepth = fieldUsages.stackDepth,
-        splittingDims = fieldUsages.filter(PQL.isSplit),
-        splittingStackDepth = splittingDims.length; //fieldUsages.filter(PQL.isDimension).length;
+        templSplitDims = (()=>{let foo=fieldUsages.filter(PQL.isSplit); foo.pop(); return foo;})(), // in any case do not consider the last element
+        templSplitStackDepth = templSplitDims.length;
 
-      let axisStack = new Array(splittingStackDepth); // axis stack
+      let axisStack = new Array(templSplitStackDepth); // axis stack
       let range = (axisType === "x axis" ? canvas.size.width : canvas.size.height); // the range in px of current axis stack level
       let repeat = 1; // number of times the axis of the current level has to be repeated
 
-      for (let d = 0; d < splittingStackDepth; ++d) {
+      for (let d = 0; d < templSplitStackDepth; ++d) {
         let stackOffset = Settings.geometry.axis.size * (stackDepth - d - 1);
-        let dimUsage = splittingDims[d];
+        let dimUsage = templSplitDims[d];
         let elem = {};
         elem.FU = dimUsage;
         elem.scale = d3.scale.ordinal()
@@ -296,6 +297,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * @param axisType {"x axis"|"y axis"}
    */
   function attachAtomicAxis(pane, query, canvasSize, axisType) {
+    debugger;
     let axis = {};
     axis.FU = (axisType === "x axis" ? query.layout.cols[0] : query.layout.rows[0]);
 
@@ -312,7 +314,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       .orient(axisType === "x axis" ? "bottom" : "left")
       .tickSize(-(axisType === "x axis" ? canvasSize.height : canvasSize.width), 1);
     
-    // draw axis
+    // draw axis    
     axis.axis(axis.axisD3);
 
     axis.axisD3.selectAll("text")
@@ -396,6 +398,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     };
 
     // extents
+    debugger;
     attachExtents(query, queries, results);
 
     // create scales
@@ -488,8 +491,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // extents of splits in table algebra expression
     [...query.layout.rows, ...query.layout.cols].filter(PQL.isSplit).forEach( dim => {
-      // it is ok to use "splitToValues()" since dimension filters are applied before templating is done, and since there is no way that atomic queries/panes disappear (as opposed to aggregation values, which may be removed due to filters on aggregations)
-      dim.extent = S.splitToValues(dim);
+      // we get the actuall value of the bounded domain of this field
+      let field = dim.field;
+      dim.extent = field.domain.bounded(field.extent).value;
     });
 
     // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
@@ -533,12 +537,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // normalize row and column extents
     for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
       let lc = queries.at[0][cIdx].layout.cols[0];
-      if (PQL.isAggregationOrDensity(lc))
+      if (PQL.isFieldUsage(lc))
         lc.extent = _normalize(lc.extent);
     }
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       let lr = queries.at[rIdx][0].layout.rows[0];
-      if (PQL.isAggregationOrDensity(lr))
+      if (PQL.isFieldUsage(lr))
         lr.extent = _normalize(lr.extent);
     }
 
@@ -574,11 +578,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
 
     let row = query.layout.rows[0];
-    if (PQL.isAggregationOrDensity(row)) 
+    if (PQL.isFieldUsage(row))
       row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height - Settings.geometry.axis.padding]);
 
     let col = query.layout.cols[0];
-    if (PQL.isAggregationOrDensity(col))
+    if (PQL.isFieldUsage(col))
       col.visScale = ScaleGen.position(col, col.extent, [paneSize.width - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
 
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
@@ -605,9 +609,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     let color = aesthetics.color;
     color.mapper = ( color instanceof VisMEL.ColorMap ?
-      function (d) {
-        return color.visScale(_valueOrAvg(d[color.fu.index]));
-      } :
+      d => color.visScale(_valueOrAvg(d[color.fu.index])) :
       Settings.maps.color );
 
     let size = aesthetics.size;
@@ -630,26 +632,26 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     let layout = query.layout;
     let colFU = layout.cols[0],
       rowFU = layout.rows[0];
-    let isColMeas = PQL.isAggregationOrDensity(colFU),
-      isRowMeas = PQL.isAggregationOrDensity(rowFU);
+    let isColFU = PQL.isFieldUsage(colFU),
+      isRowFU = PQL.isFieldUsage(rowFU);
     let xPos = paneSize.width / 2,
       yPos = paneSize.height / 2;
 
-    if (isColMeas && isRowMeas) {
+    if (isColFU && isRowFU) {
       layout.transformMapper = function (d) {
         return 'translate(' +
           colFU.visScale(d[colFU.index]) + ',' +
           rowFU.visScale(d[rowFU.index]) + ')';
       };
     }
-    else if (isColMeas && !isRowMeas) {
+    else if (isColFU && !isRowFU) {
       layout.transformMapper = function (d) {
         return 'translate(' +
           colFU.visScale(d[colFU.index]) + ',' +
           yPos + ')';
       };
     }
-    else if (!isColMeas && isRowMeas) {
+    else if (!isColFU && isRowFU) {
       layout.transformMapper = function (d) {
         return 'translate(' +
           xPos + ',' +
