@@ -50,6 +50,7 @@
     padding: 0.1em;
     /*border: solid 5px transparent;*/
     border: solid 2px #d4d4d4;
+    position: relative;
 }
 
 .shelf {

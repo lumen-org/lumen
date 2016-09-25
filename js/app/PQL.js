@@ -152,6 +152,19 @@ define(['./utils'], function (utils) {
       return Split.toJSON(this);
     }
 
+    toString() {
+      return this.method  + " of " + this.field.name + " with args:" + " " + this.args;
+    }
+
+    static FromFieldUsage (fu) {
+      if (isSplit(fu) || isFilter(fu))
+        return Split.DefaultSplit(fu.field);
+      else if (isAggregation(fu) || isDensity(fu))
+        return Split.DefaultSplit(fu.fields[0]);
+      else
+        throw new TypeError("fu is not a FieldUsage");
+    }
+
     static DefaultSplit (field) {
       return new Split(field, SplitMethod.equiDist, [4]);
     }
@@ -162,10 +175,6 @@ define(['./utils'], function (utils) {
         split: a.method,
         args: a.args
       };
-    }
-
-    toString() {
-      return this.method  + " of " + this.field.name + " with args:" + " " + this.args;
     }
   }
 
@@ -187,6 +196,15 @@ define(['./utils'], function (utils) {
     static DefaultAggregation (fields) {
       fields = utils.listify(fields);
       return new Aggregation(fields, AggregationMethods.argmax, fields[0].name);
+    }
+
+    static FromFieldUsage (fu) {
+      if (isSplit(fu) || isFilter(fu))
+        return Aggregation.DefaultAggregation(fu.field);
+      else if (isAggregation(fu) || isDensity(fu))
+        return Aggregation.DefaultAggregation(fu.fields);
+      else
+        throw new TypeError("fu is not a FieldUsage");
     }
 
     get names() {
@@ -243,6 +261,15 @@ define(['./utils'], function (utils) {
         aggregation: d.method,
         args: d.args
       };
+    }
+
+    static FromFieldUsage (fu) {
+      if (isSplit(fu) || isFilter(fu))
+        return new Density(fu.field);
+      else if (isAggregation(fu) || isDensity(fu))
+        return new Density(fu.fields);
+      else
+        throw new TypeError("fu is not a FieldUsage");
     }
 
     toString () {

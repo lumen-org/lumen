@@ -95,6 +95,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
      */
     function enableQuerying() {
       inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
+      //inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
       // trigger initial query execution
       onUpdate();
     }
@@ -131,13 +132,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
            throw "Could not load remote model from Server - see above";
         });
     }
-    /*$('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
+    $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
      $('#update-button').click( function() {
      onUpdate();
-     //console.log(modelTable.baseModel.describe());
-     //console.log(modelTable.at[0][0].describe());
      //eval('console.log("");'); // prevents auto-optimization of the closure
-     });*/
+     });
 
     function testPQL() { // jshint ignore:line
       // put some debug / testing stuff here to be executed on loading of the app

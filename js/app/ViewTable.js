@@ -126,7 +126,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       .data(data);
 
     // add scales to field usages of this query
-    debugger;
     attachScales(query, pane.size);
 
     // attach mappers
@@ -297,7 +296,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * @param axisType {"x axis"|"y axis"}
    */
   function attachAtomicAxis(pane, query, canvasSize, axisType) {
-    debugger;
     let axis = {};
     axis.FU = (axisType === "x axis" ? query.layout.cols[0] : query.layout.rows[0]);
 
@@ -398,7 +396,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     };
 
     // extents
-    debugger;
     attachExtents(query, queries, results);
 
     // create scales

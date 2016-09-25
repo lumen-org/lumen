@@ -1,0 +1,108 @@
+@font-face {
+    font-family: Comfortaa;
+    src: url(../fonts/Comfortaa_Regular.ttf);
+}
+@font-face {
+    font-family: Quicksand;
+    src: url(../fonts/Quicksand-Regular.otf);
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Chrome/Safari/Opera */
+    -khtml-user-select: none;    /* Konqueror */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently not supported by any browser */
+}
+
+body {
+    font-family: Quicksand, Verdana, Sans-serif;
+    font-size: 100%;
+}
+.pl-fu {
+    __border: 1px solid black;
+    width:200px;
+    height:50px;
+    display: flex;
+    position: relative;
+    /*top: 75px;*/
+    /*left: 50px;*/
+    justify-content: center;
+    padding: 0.1em;
+    border-radius: 0.3em;
+    background-color: #F2E6D8;
+}
+.pl-method {
+    position: absolute;
+    top: 3px;
+    font-size: 0.7em;
+}
+.pl-field {
+    position: absolute;
+    top: 15px;
+    max-width: 170px;
+    font-family: Quicksand;
+    font-size: .9em;
+}
+.pl-button-container {
+    position: absolute;
+    right: 3px;
+    width: 15px;
+    height: 50px;
+    text-align: center;
+    font-size: 0.8em;
+    font-weight: normal;
+    __border: 1px solid black;
+    font-family: Verdana, Serif;
+    line-height: 1.1;
+    color: #33302E;
+}
+.my-remove-button {
+    position: absolute;
+    left: 6px;
+    top: 3px;
+    font-size: .8em;
+    width: .8em;
+    height: .8em;
+}
+
+.pl-fu:hover > .pl-hidden {
+    visibility:visible;
+    opacity: 1;
+    transition: visibility 150ms, opacity 150ms;
+}
+
+.pl-hidden {
+    visibility:hidden;
+    opacity: 0;
+    transition: visibility 150ms, opacity 150ms;
+}
+
+._pl-active {
+    font-weight: bold;
+    color: black;
+}
+
+.pl-fu-density {
+    background-color: #9DBBB7;
+}
+
+.pl-fu-density .pl-density-button,
+.pl-fu-aggregation .pl-aggregation-button,
+.pl-fu-split .pl-split-button {
+    font-weight: bold;
+    color: black;
+}
+
+.pl-fu-aggregation {
+    background-color: #F2B950;
+}
+
+.pl-fu-split {
+    background-color: #F25D50;
+}
+
+.pl-fu-filter {
+    background-color: #F2E6D8;
+}

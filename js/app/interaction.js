@@ -341,13 +341,19 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
    */
   var onDrop = function (target, source, overlap) {
     // delegate to correct handler
-    if (target instanceof sh.Record)
-      //onDrop[target.shelf.type](target, source, overlap);
-      onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
-      //onDrop[target.shelf.type](targetRecord, targetShelf, sourceRecord, overlap);
-    else if (target instanceof sh.Shelf)
+    if (target instanceof sh.Record) {
+      let fu = _getFieldUsage(target);
+      if (PQL.isAggregationOrDensity(fu) && _isDimOrMeasureShelf(source.shelf)) {
+          // add field to list of fields for that field usage
+          let field = source.content;
+          fu.fields.push(field);
+          // update visual
+          // todo...
+      } else {
+        onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
+      }
+    } else if (target instanceof sh.Shelf)
       onDrop[target.type](undefined, target, source, source.shelf, overlap);
-      //onDrop[target.type](target, source, overlap);
     else
       throw new TypeError('wrong type for parameter target');
     onDrop.emit(onDrop.dropDoneEvent); // emit dropped event for outside world
@@ -368,16 +374,16 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
     // general rule: measures always come after dimensions
     let newRecord,
       content;
-    // construct aggregation or split usage
-    let sField = _getField(sRecord);
+    // reuse existing or construct new aggregation or split usage
     if (sShelf.type === sh.ShelfTypeT.dimension)
-      content = PQL.Split.DefaultSplit(sField);
+      content = PQL.Split.DefaultSplit(_getField(sRecord));
     else if (sShelf.type === sh.ShelfTypeT.measure)
-      content = PQL.Aggregation.DefaultAggregation(sField);
-    else if (sField.isDiscrete())
-      content = PQL.Split.DefaultSplit(sField);
-    else
-      content = PQL.Aggregation.DefaultAggregation(sField);
+      content = PQL.Aggregation.DefaultAggregation(_getField(sRecord));
+    else if (sShelf.type === sh.ShelfTypeT.filter) {
+      let field = _getField(sRecord);
+      content = field.isDiscrete() ? PQL.Split.DefaultSplit(field) : PQL.Aggregation.DefaultAggregation(field);
+    } else
+      content = _getFieldUsage(sRecord);
 
     // todo: fix for invalid drop positions,i.e.: dropping dimensions _after_ measures, or measures _before_ dimensions
     // alternative: do reorder after the element has been dropped

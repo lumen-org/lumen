@@ -116,7 +116,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
     var visual;
     switch (record.shelf.$visual.direction) {
       case DirectionTypeT.vertical:
-        visual = $('<div></div>');
+        visual = $('<div class="foo"></div>');
         break;
       case DirectionTypeT.horizontal:
       case DirectionTypeT.box:
@@ -165,7 +165,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
     var visual = _before4Record(this); // defines the $visual property on this
     let content = this.content;
     if (content.beVisual) {
-      content.beVisual(visual);
+      content.beVisual(visual, this);
     } else {
       visual.text(content.toString());
     }
@@ -207,29 +207,108 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
   PQL.Field.prototype.beVisual = function (container) {
     container.text(this.name);
     return this;
-  }
+  };
 
   PQL.Filter.prototype.beVisual = function (container) {
     container.text(this.toString());
     return this;
   };
 
-  PQL.Aggregation.prototype.beVisual = function (container) {
+  PQL.Aggregation.prototype._beVisual = function (container) {
     container.text( this.method + "(" + this.names + ")" );
     return this;
-  }
+  };
 
-  PQL.Density.prototype.beVisual = function (container) {
+  PQL.Density.prototype._beVisual = function (container) {
     container.text( "p(" + this.names + ")" );
     return this;
-  }
+  };
 
-  PQL.Split.prototype.beVisual = function (container) {
+  PQL.Split.prototype._beVisual = function (container) {
     container.text( this.method + "(" + this.name + ")" );
     return this;
+  };
+
+  PQL.Aggregation.prototype.beVisual = function (container, record) {
+    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
+    container.addClass("pl-fu pl-fu-aggregation")
+      .append(methodSelector(this))   // method div
+      .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
+      .append(conversionButtons(record))
+      .append(removeButton(record));
+    return container;
+  };
+
+  PQL.Density.prototype.beVisual = function (container, record) {
+    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
+    container.addClass("pl-fu pl-fu-density")
+      .append(methodSelector(this))   // method div
+      .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
+      .append(conversionButtons(record))
+      .append(removeButton(record));
+    return container;
+  };
+
+  PQL.Split.prototype.beVisual = function (container, record) {
+    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
+    container.addClass("pl-fu pl-fu-split")
+      .append(methodSelector(this))   // method div
+      .append($('<div class="pl-field noselect">' + this.name +  '</div>'))
+      .append(conversionButtons(record))
+      .append(removeButton(record));
+    return container;
+  };
+
+  PQL.Filter.prototype.beVisual = function (container, record) {
+    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
+    container.addClass("pl-fu pl-fu-filter")
+      .append(methodSelector(this))   // method div
+      .append($('<div class="pl-field noselect">' + this.toString() +  '</div>'))
+      //.append(conversionButtons(record))
+      .append(removeButton(record));
+    return container;
+  };
+
+  function methodSelector (fu) {
+    return($('<div class="pl-method noselect pl-hidden">' + fu.method + '</div>'));   // method div
   }
 
+  function removeButton (record) {
+    var removeButton = $('<div class="my-remove-button noselect pl-hidden"> <span>x</span> </div>');
+    removeButton.click( () => {
+      record.removeVisual().shelf.remove(record);
+    });
+    return removeButton;
+  }
 
+  function conversionButtons (record) {
+
+    function translate (record, TargetType) {
+      // construct new FU/Map
+      let newFU = TargetType.FromFieldUsage(record.content);
+      // and replace the old one
+      record.removeVisual();
+      let newRecord = record.replaceBy(newFU);
+      newRecord.beVisual().beInteractable();
+    }
+
+    var button = $(/*jshint multistr: true */
+            '<div class="pl-button-container pl-hidden">\
+             <span class="pl-aggregation-button">A</span>\
+             <span class="pl-density-button">D</span>\
+             <span class="pl-split-button pl-active">S</span>\
+             </div>');
+    button.find('.pl-aggregation-button').click(()=>{
+      translate(record, PQL.Aggregation);
+    });
+    button.find('.pl-density-button').click(()=>{
+      translate(record, PQL.Density);
+    });
+    button.find('.pl-split-button').click(()=>{
+      translate(record, PQL.Split);
+    });
+    return button;
+  }
 
   return {
     AttachStringT: AttachStringT,
