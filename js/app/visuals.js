@@ -111,53 +111,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
   /// Mixins for Records
 
-  /**
-   * Common things to start with when making a record visual.
-   * @param {module:shelves.Record} record
-   * @returns {module:shelves.Record} The container element for the visual representation of this record.
-   * @private
-   */
-  function _before4Record (record) {
-    var visual;
-    switch (record.shelf.$visual.direction) {
-      case DirectionTypeT.vertical:
-        visual = $('<div class="foo"></div>');
-        break;
-      case DirectionTypeT.horizontal:
-      case DirectionTypeT.box:
-        visual = $('<span></span>');
-        break;
-    }
-    visual.addClass('shelf-list-item');
-    record.$visual = visual;
-    return visual;
-  }
-
-  /**
-   * Common things to end with when making a record visual.
-   * @param {module:shelves.Record} record
-   * @returns {module:shelves.Record} the modified record.
-   * @private
-   */
-  function _after4Record (record) {
-    var visual = record.$visual;
-
-    // add to visual of shelf
-    // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
-    var records = record.shelf.records;
-    for (var idx = record.index(); idx > 0 && !records[idx-1].$visual; idx--) {}
-    if (idx === 0) {
-      visual.prependTo(record.shelf.$visual.container);
-    } else {
-      visual.insertAfter(records[idx-1].$visual);
-    }
-
-    // attach record to visual
-    visual.data(AttachStringT.record, record);
-
-    return record;
-  }
-
   function _createVisualRecordContainer (record) {
     var $visual;
     switch (record.shelf.$visual.direction) {
@@ -177,7 +130,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     return $visual;
   }
 
-
   function _insertVisualInShelf (record) {
     var visual = record.$visual;
 
@@ -192,7 +144,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     }
     return record;
   }
-
 
   /**
    * Creates a simple visual representation (as HTML elements) of this record. The root of representation is returned.
@@ -219,17 +170,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
     // add visual of record to correct position in shelf
     _insertVisualInShelf(this);
-
-    // var visual = _before4Record(this); // defines the $visual property on this
-    // var content = this.content;
-    // // redraw view on content change
-    // content.on("changed", content => {
-    //   content.removeVisual(visual, this);
-    //   content.beVisual(visual, this);
-    // });
-    // // initial draw
-    // content.beVisual(visual)
-    // return _after4Record(this);
     return this;
   };
 
@@ -246,13 +186,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
   /// Mixins for VisMEL Mappings
 
-  VisMEL.BaseMap.prototype.beVisual = function (container) {
-    this.fu.beVisual(container);
-    return this;
-  };
-
-  VisMEL.BaseMap.prototype.makeVisual = function () {
-    return this.fu.makeVisual();
+  VisMEL.BaseMap.prototype.makeVisual = function (record) {
+    return this.fu.makeVisual(record);
   };
 
   /**
@@ -261,136 +196,87 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
    * @alias module:shelves.ColorRecord.beVisual
    * @augments module:shelves.ColorRecord
    */
-  VisMEL.ColorMap.prototype.beVisual = function (container) {
-    container.append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">');
-    container.append($('<span>'+ this.fu.yields +'</span>'));
-    return this;
-  };
-
   VisMEL.ColorMap.prototype.makeVisual = function () {
-    var $visual = $('<div></div>')
-      .append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">')
-      .append($('<span>'+ this.fu.yields +'</span>'));
+    function _updateVisual () {
+      $visual.html('')
+        .append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">')
+        .append($('<span>'+ that.fu.yields +'</span>'));
+    }
+    let that = this;
+    let $visual = $('<div></div>');
+    _updateVisual();
+    //this.on("changed", _updateVisual);
     return $visual;
   };
 
-  /// Mixins for PQL FieldUsages and Fields
-  
-  PQL.Field.prototype.beVisual = function (container) {
-    container.text(this.name);
-    return this;
-  };
+  /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    return this.name;
-  };
-
-  PQL.Filter.prototype.beVisual = function (container) {
-    container.text(this.toString());
-    return this;
-  };
-
-  PQL.Filter.prototype.beVisual = function (container) {
-    container.text(this.toString());
-    return this;
-  };
-
-  PQL.Aggregation.prototype._beVisual = function (container) {
-    container.text( this.method + "(" + this.names + ")" );
-    return this;
-  };
-
-  PQL.Density.prototype._beVisual = function (container) {
-    container.text( "p(" + this.names + ")" );
-    return this;
-  };
-
-  PQL.Split.prototype._beVisual = function (container) {
-    container.text( this.method + "(" + this.name + ")" );
-    return this;
-  };
-
-  PQL.Aggregation.prototype.beVisual = function (container, record) {
-    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
-    container.addClass("pl-fu pl-fu-aggregation")
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
-      .append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
-    return container;
+    let $visual = $('<div>this.name</div>');
+    return $visual;
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record) {
-    var $visual = $('<div class="pl-fu pl-fu-aggregation"> </div>')
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
-      .append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
+    function _updateVisual () {
+      $visual.html('')
+        .append(methodSelector(that))   // method div
+        .append($('<div class="pl-field noselect">' + that.names +  '</div>'))
+        .append(conversionButtons(record))
+        .append(argumentsEditField(that))
+        .append(removeButton(record));
+    }
+    let that = this;
+    let $visual = $('<div class="pl-fu pl-fu-aggregation"> </div>');
+    _updateVisual();
+    //this.on("changed", _updateVisual);
     return $visual;
-  };
-
-  PQL.Density.prototype.beVisual = function (container, record) {
-    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
-    container.addClass("pl-fu pl-fu-density")
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
-      .append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
-    return container;
   };
 
   PQL.Density.prototype.makeVisual = function (record) {
-    var $visual = $('<div class="pl-fu pl-fu-density"> </div>')
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
-      .append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
+   function _updateVisual () {
+      $visual.html('')
+        .append(methodSelector(that))   // method div
+        .append($('<div class="pl-field noselect">' + that.names +  '</div>'))
+        .append(conversionButtons(record))
+        .append(argumentsEditField(that))
+        .append(removeButton(record));
+    }
+    let that = this;
+    let $visual = $('<div class="pl-fu pl-fu-density"> </div>');
+    _updateVisual();
+    //this.on("changed", _updateVisual);
     return $visual;
-  };
-
-  PQL.Split.prototype.beVisual = function (container, record) {
-    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
-    container.addClass("pl-fu pl-fu-split")
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.name +  '</div>'))
-      .append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
-    return container;
   };
 
   PQL.Split.prototype.makeVisual = function (record) {
-    var $visual = $('<div class="pl-fu pl-fu-split"> </div>')
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.name +  '</div>'))
-      .append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
+    function _updateVisual () {
+      $visual.html('')
+        .append(methodSelector(that))   // method div
+        .append($('<div class="pl-field noselect">' + that.name +  '</div>'))
+        .append(conversionButtons(record))
+        .append(argumentsEditField(that))
+        .append(removeButton(record));
+    }
+    let that = this;
+    let $visual = $('<div class="pl-fu pl-fu-split"> </div>');
+    _updateVisual();
+    //this.on("changed", _updateVisual);
     return $visual;
   };
 
-  PQL.Filter.prototype.beVisual = function (container, record) {
-    //container.append($('<div class="pl-fu pl-fu-aggregation"> </div>'))
-    container.addClass("pl-fu pl-fu-filter")
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.toString() +  '</div>'))
-      //.append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
-    return container;
-  };
-
   PQL.Filter.prototype.makeVisual = function (record) {
-    var $visual = $('<div class="pl-fu pl-fu-filter"> </div>')
-      .append(methodSelector(this))   // method div
-      .append($('<div class="pl-field noselect">' + this.toString() +  '</div>'))
-      //.append(conversionButtons(record))
-      .append(argumentsEditField(this))
-      .append(removeButton(record));
+    function _updateVisual () {
+      $visual.html('')
+        .append(methodSelector(that))   // method div
+        .append($('<div class="pl-field noselect">' + that.toString() +  '</div>'))
+        //.append(conversionButtons(record))
+        .append(argumentsEditField(that))
+        .append(removeButton(record));
+    }
+    let that = this;
+    let $visual = $('<div class="pl-fu pl-fu-filter"> </div>');
+    _updateVisual();
+    //this.on("changed", _updateVisual);
     return $visual;
   };
 
@@ -401,7 +287,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   function removeButton (record) {
     var removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
     removeButton.click( () => {
-      record.removeVisual().shelf.remove(record);
+      record.shelf.remove(record);
     });
     return removeButton;
   }
@@ -409,12 +295,12 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   function conversionButtons (record) {
 
     function translate (record, TargetType) {
+      let content = record.content;
+      let oldFU =  (content instanceof VisMEL.BaseMap ? content.fu : content);
       // construct new FU/Map
-      let newFU = TargetType.FromFieldUsage(record.content);
+      let newFU = TargetType.FromFieldUsage(oldFU);
       // and replace the old one
-      record.removeVisual();
-      let newRecord = record.replaceBy(newFU);
-      newRecord.beVisual().beInteractable();
+      record.replaceBy(newFU);
     }
 
     var button = $(/*jshint multistr: true */
@@ -447,10 +333,10 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       }
     }
 
-    let textedit = $('<input type="text" class="pl-arg-text pl-hidden"' 
-      + "value='" + JSON.stringify(fu.args) + "'"
-      + ">");
-    textedit.keydown(submitOnEnter)
+    let textedit = $('<input type="text" class="pl-arg-text pl-hidden"' +
+      "value='" + JSON.stringify(fu.args) + "'" +
+      ">");
+    textedit.keydown(submitOnEnter);
     return textedit;
   }
 

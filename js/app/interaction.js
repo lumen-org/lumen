@@ -363,9 +363,9 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
     if (sShelf.type === sh.ShelfTypeT.dimension || sShelf.type === sh.ShelfTypeT.measure) {
       // move to target shelf
       let newRecord =  (tRecord !== undefined ? tRecord.append(sRecord) : tShelf.append(sRecord));
-      _fix(newRecord).beVisual().beInteractable();
+      _fix(newRecord).beInteractable();
     }
-    _fix(sRecord).removeVisual().remove();
+    _fix(sRecord).remove();
   };
 
   onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
@@ -401,7 +401,7 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
           break;
         case _OverlapEnum.center:
           // replace
-          _fix(tRecord).removeVisual().remove();
+          _fix(tRecord).remove();
           newRecord = tRecord.replaceBy(content);
           break;
         default:
@@ -410,8 +410,8 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
     } else {
       newRecord = tShelf.append(content);
     }
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
-    _fix(newRecord).beVisual().beInteractable();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
+    _fix(newRecord).beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.column] = onDrop[sh.ShelfTypeT.row];
@@ -419,8 +419,8 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
   onDrop[sh.ShelfTypeT.detail] = function (tRecord, tShelf, sRecord, sShelf, overlap) {    
     let content = PQL.Split.DefaultSplit(_getField(sRecord));
     let newRecord =  (tRecord !== undefined ? tRecord : tShelf).append(content);
-    _fix(newRecord).beVisual().beInteractable();
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
+    _fix(newRecord).beInteractable();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
   };
 
   onDrop[sh.ShelfTypeT.filter] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
@@ -433,56 +433,55 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
     let filter = PQL.Filter.DefaultFilter(_getField(sRecord));
     let newRecord;
     if (tRecord !== undefined) { // replace
-      _fix(tRecord).removeVisual();
       newRecord = tRecord.replaceBy(filter);
     } else  // append
       newRecord = tShelf.append(filter);
 
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
-    _fix(newRecord).beVisual().beInteractable();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
+    _fix(newRecord).beInteractable();
   };
 
   onDrop[sh.ShelfTypeT.color] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
     // remove any existing record in this shelf
-    if (!tShelf.empty()) _fix(tShelf.at(0)).removeVisual().remove();
+    if (!tShelf.empty()) _fix(tShelf.at(0)).remove();
     // build new color map
     let fu = _fieldUsageFromRecord(sRecord);
     let content = VisMEL.ColorMap.DefaultMap(fu);
     // add new color map
     let newRecord = tShelf.append(content);
-    _fix(newRecord).beVisual().beInteractable();
+    _fix(newRecord).beInteractable();
     // remove source record
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
   };
 
   onDrop[sh.ShelfTypeT.shape] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
     // remove any existing record in this shelf
-    if (!tShelf.empty()) _fix(tShelf.at(0)).removeVisual().remove();
+    if (!tShelf.empty()) _fix(tShelf.at(0)).remove();
     // build new color map
     let fu = _fieldUsageFromRecord(sRecord);
     let content = VisMEL.ShapeMap.DefaultMap(fu);
     // add new color map
     let newRecord = tShelf.append(content);
-    _fix(newRecord).beVisual().beInteractable();
+    _fix(newRecord).beInteractable();
     // remove source record
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
   };
 
   onDrop[sh.ShelfTypeT.size] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
     // remove any existing record in this shelf
-    if (!tShelf.empty()) _fix(tShelf.at(0)).removeVisual().remove();
+    if (!tShelf.empty()) _fix(tShelf.at(0)).remove();
     // build new color map
     let fu = _fieldUsageFromRecord(sRecord);
     let content = VisMEL.SizeMap.DefaultMap(fu);
     // add new color map
     let newRecord = tShelf.append(content);
-    _fix(newRecord).beVisual().beInteractable();
+    _fix(newRecord).beInteractable();
     // remove source record
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
   };
 
   onDrop[sh.ShelfTypeT.remove] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).removeVisual().remove();
+    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
   };
 
   onDrop.noVisualNoInteraction = false;
@@ -498,8 +497,6 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
   function _fix (arg) {
     function returnsItself () { return this; } //jshint ignore: line
     if(onDrop.noVisualNoInteraction) {
-      arg.removeVisual = returnsItself;
-      arg.beVisual = returnsItself;
       arg.beInteractable = returnsItself;
     }
     return arg;

@@ -4,7 +4,8 @@
  * @module shelves
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, utils, PQL) {
+//define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, utils, PQL) {
+define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function (E, Logger, utils, PQL, VisMEL) {
   'use strict';
 
   var logger = Logger.get('pl-shelves');
@@ -29,26 +30,30 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
     constructor(content, shelf) {
       while (content instanceof Record)
         content = content.content;
+
+      if (! (content instanceof PQL.Field || PQL.isFieldUsage(content) || content instanceof VisMEL.BaseMap ))
+        throw TypeError("content must be Field, FieldUsage or a BaseMap");
+
       this.content = content;
       this.shelf = shelf;
     }
 
-    append(record) {
+    append(obj) {
       var shelf = this.shelf;
-      return shelf.insert(record, shelf.records.indexOf(this) + 1);
+      return shelf.insert(obj, shelf.indexOf(this) + 1);
     }
 
-    prepend(record) {
+    prepend(obj) {
       var shelf = this.shelf;
-      return shelf.insert(record, shelf.records.indexOf(this));
+      return shelf.insert(obj, shelf.indexOf(this));
     }
 
     remove() {
       return this.shelf.remove(this);
     }
 
-    replaceBy(record) {
-      return this.shelf.replace(this, record);
+    replaceBy(obj) {
+      return this.shelf.replace(this, obj);
     }
 
     index() {
@@ -122,6 +127,10 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
       this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
     }
 
+    static _isRecordOrIdx (obj) {
+      return typeof obj === 'number' || obj instanceof Record;
+    }
+
     append(obj) {
       if (this.length >= this.limit) return false;
       var record = new Record(obj, this);
@@ -164,6 +173,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
     }
 
     remove(recordOrIdx) {
+      if(!Shelf._isRecordOrIdx(recordOrIdx)) throw TypeError("argument must be a Record or an index");
       if (this.limit === 1 && recordOrIdx === undefined) recordOrIdx = 0;
       var records = this.records;
       var idx = (typeof recordOrIdx === 'number' ? recordOrIdx : records.indexOf(recordOrIdx));
@@ -180,9 +190,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
     insert(obj, idx) {
       if (this.length >= this.limit) return false;
       var records = this.records;
-      if (idx < 0 || idx > records.length) {
-        return false;
-      }
+      if (idx < 0 || idx > records.length)
+        throw RangeError("invalid value for idx");
       var record = new Record(obj, this);
       records.splice(idx, 0, record);
       //this.emit(Shelf.ChangedEvent);
@@ -190,7 +199,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
       return record;
     }
 
-    replace(oldRecordOrIdx, newRecord) {
+    replace(oldRecordOrIdx, obj) {
       // var records = this.records;
       // var idx;
       // if (this.limit === 1 && !newRecord) {
@@ -204,9 +213,10 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
       // records.splice(idx, 1, record);
       // this.emit(Shelf.ChangedEvent);
       // return record;
+      if(!Shelf._isRecordOrIdx(oldRecordOrIdx)) throw TypeError("argument must be a Record or an index");
       let idx = (typeof oldRecordOrIdx === 'number' ? oldRecordOrIdx : this.indexOf(oldRecordOrIdx));
       this.remove(idx);
-      return this.insert(idx, newRecord);
+      return this.insert(obj, idx);
     }
 
     length() {
@@ -222,7 +232,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, 
         return val + elem.content.toString() + "\n";
       }, "");
     }
-
   }
 
   Shelf.ChangedEvent = 'shelf.changed';

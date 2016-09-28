@@ -125,9 +125,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       // get initial model
       var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
       model.update().then(populateGUI)
-        //.then( () => {debugger;} )
         .then(initialQuerySetup)
         .then(enableQuerying)
+        //.then( () => {debugger; console.log(shelf);})
         .catch((err) => {
            console.error(err);
            throw "Could not load remote model from Server - see above";
