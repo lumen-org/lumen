@@ -5,7 +5,7 @@
  * @module visuals
  * @author Philipp Lucas
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL'], function(Logger, util, E, s, VisMEL, PQL) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL'], function(Logger, util, Emitter, s, VisMEL, PQL) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -146,9 +146,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   }
 
   /**
-   * Creates a simple visual representation (as HTML elements) of this record. The root of representation is returned.
-   * It is also attaches as the attribute 'visual' to the record and added to the parent shelf.
-   * Note: You may not make a record visible before making its shelf visible.
+   * Records take care of finding their correct position and add themselves to the shelf
+   * hence, records cannot be visual without a visual parent shelf.
    * @return {module:shelves.Record} The instance it was called on.
    * @alias module:shelves.Record.beVisual
    * @augments module:shelves.Record
@@ -162,11 +161,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     // add visual of content in that container
     var content = this.content;
     $visual.append(content.makeVisual(this));
-    // redraw visual of content on content change
-    // todo: this should be done in beVisual of content itself.
-    // content.on("changed", content => {
-    //   $visual.html(content.makeVisual(this));
-    // });
 
     // add visual of record to correct position in shelf
     _insertVisualInShelf(this);
@@ -205,14 +199,14 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     let that = this;
     let $visual = $('<div></div>');
     _updateVisual();
-    //this.on("changed", _updateVisual);
+    this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
   };
 
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    let $visual = $('<div>this.name</div>');
+    let $visual = $('<div>'+this.name+'</div>');
     return $visual;
   };
 
@@ -228,7 +222,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     let that = this;
     let $visual = $('<div class="pl-fu pl-fu-aggregation"> </div>');
     _updateVisual();
-    //this.on("changed", _updateVisual);
+    this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
   };
 
@@ -244,7 +238,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     let that = this;
     let $visual = $('<div class="pl-fu pl-fu-density"> </div>');
     _updateVisual();
-    //this.on("changed", _updateVisual);
+    this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
   };
 
@@ -260,7 +254,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     let that = this;
     let $visual = $('<div class="pl-fu pl-fu-split"> </div>');
     _updateVisual();
-    //this.on("changed", _updateVisual);
+    this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
   };
 
@@ -276,7 +270,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     let that = this;
     let $visual = $('<div class="pl-fu pl-fu-filter"> </div>');
     _updateVisual();
-    //this.on("changed", _updateVisual);
+    this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
   };
 
@@ -328,6 +322,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
         //console.log(elem.target.value);
         try{
           fu.args = JSON.parse(elem.target.value);
+          fu.emit(Emitter.InternalChangedEvent);
         } catch (e) { }
         console.log(fu);
       }

@@ -21,7 +21,7 @@
  * @module PQL
  */
 
-define(['./utils'], function (utils) {
+define(['lib/emitter','./utils'], function (Emitter, utils) {
   "use strict";
 
   /**
@@ -56,6 +56,7 @@ define(['./utils'], function (utils) {
       this.domain = domain;
       this.extent = extent;
       this.dataSource = dataSource;
+      Emitter(this);
     }
 
     toString() {
@@ -97,8 +98,19 @@ define(['./utils'], function (utils) {
   });
   var isFilterMethod = (m) => m === FilterMethod.equals || m === FilterMethod.in;
 
-  class Filter {
+
+  class FieldUsage {
+    constructor () {
+      Emitter(this);
+      this.bubbleEventUp(this, Emitter.InternalChangedEvent, Emitter.ChangedEvent);
+    }
+  }
+
+  class Filter extends FieldUsage {
+    // TODO: Filter, Density, Aggregation Split: need to emit some internal changed event for visualization synchronization
+
     constructor (field, method, args=[]) {
+      super();
       if (!isField(field))
         throw TypeError("'field' must be a field");
       if (!isFilterMethod(method))
@@ -131,8 +143,9 @@ define(['./utils'], function (utils) {
     }
   }
 
-  class Split {
+  class Split extends FieldUsage {
     constructor (field, method, args=[]) {
+      super();
       if (!isField(field))
         throw TypeError("field must be a Field");
       if (!isSplitMethod(method))
@@ -178,8 +191,9 @@ define(['./utils'], function (utils) {
     }
   }
 
-  class Aggregation {
+  class Aggregation extends FieldUsage {
     constructor(fields, method, yields, args = []) {
+      super();
       fields = utils.listify(fields);
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
@@ -233,8 +247,9 @@ define(['./utils'], function (utils) {
     }
   }
 
-  class Density {
+  class Density extends FieldUsage {
     constructor(fields) {
+      super();
       fields = utils.listify(fields);
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");

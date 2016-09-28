@@ -162,7 +162,17 @@ define([], function () {
     return !!this.listeners(event).length;
   };
 
-  return {
-    Emitter: Emitter
+  Emitter.prototype.bubbleEventUp = function(child, what, as_=what) {
+    var that = this;
+    child.on(what, () => that.emit(as_));
   };
+
+  Emitter.prototype.bubbleChangedEventUp = function(child) {
+    this.bubbleEventUp(child, Emitter.ChangedEvent);
+  };
+
+  Emitter.ChangedEvent = 'changedEvent';
+  Emitter.InternalChangedEvent = 'internalChangedEvent';
+
+  return Emitter;
 });

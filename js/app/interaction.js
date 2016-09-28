@@ -4,7 +4,7 @@
  * @module interaction
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (e, Logger, sh, vis, PQL, VisMEL) {
+define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (Logger, sh, vis, PQL, VisMEL) {
   'use strict';
 
   var logger = Logger.get('pl-interaction');
@@ -356,7 +356,6 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
       onDrop[target.type](undefined, target, source, source.shelf, overlap);
     else
       throw new TypeError('wrong type for parameter target');
-    onDrop.emit(onDrop.dropDoneEvent); // emit dropped event for outside world
   };
 
   onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
@@ -501,17 +500,6 @@ define(['lib/emitter', 'lib/logger', './shelves', './visuals', './PQL', './VisME
     }
     return arg;
   }
-
-  /**
-   * the dropDoneEvent is fired after completing a drop in onDrop
-   * @name module:interaction.onDrop.dropDoneEvent
-   */
-  Object.defineProperty(onDrop, 'dropDoneEvent', {
-    value: 'interaction.dropDoneEvent',
-    enumerable: false
-  });
-
-  e.Emitter(onDrop);
 
   return {
     onDrop : onDrop,

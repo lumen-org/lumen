@@ -5,7 +5,7 @@
  * @author Philipp Lucas
  */
 //define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, utils, PQL) {
-define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function (E, Logger, utils, PQL, VisMEL) {
+define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function (Emitter, Logger, utils, PQL, VisMEL) {
   'use strict';
 
   var logger = Logger.get('pl-shelves');
@@ -125,6 +125,12 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       this.type = type;
       if (!opt) opt = {};
       this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
+      Emitter(this);
+      this.on(Shelf.Event.Add, child => {
+        this.bubbleChangedEventUp(child.content);  // bubble on content, not record!
+      });
+      this.bubbleEventUp(this, Shelf.Event.Add, Emitter.ChangedEvent);
+      this.bubbleEventUp(this, Shelf.Event.Remove, Emitter.ChangedEvent);
     }
 
     static _isRecordOrIdx (obj) {
@@ -135,7 +141,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       if (this.length >= this.limit) return false;
       var record = new Record(obj, this);
       this.records.push(record);
-      //this.emit(Shelf.ChangedEvent);
       this.emit(Shelf.Event.Add, record);
       return record;
     }
@@ -144,7 +149,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       if (this.length >= this.limit) return false;
       var record = new Record(obj, this);
       this.records.unshift(record);
-      //this.emit(Shelf.ChangedEvent);
       this.emit(Shelf.Event.Add, record);
       return record;
     }
@@ -156,7 +160,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
     clear() {
       for (let idx = this.records.length; idx > 0; --idx)
         this.remove(idx);
-      //this.records = [];
     }
 
     at(idx) {
@@ -179,8 +182,9 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       var idx = (typeof recordOrIdx === 'number' ? recordOrIdx : records.indexOf(recordOrIdx));
       var record = records[idx];
       records.splice(idx, 1);
+      console.log(record);
+      debugger;
       this.emit(Shelf.Event.Remove, record);
-      //this.emit(Shelf.ChangedEvent);
     }
 
     indexOf(record) {
@@ -194,25 +198,11 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
         throw RangeError("invalid value for idx");
       var record = new Record(obj, this);
       records.splice(idx, 0, record);
-      //this.emit(Shelf.ChangedEvent);
       this.emit(Shelf.Event.Add, record);
       return record;
     }
 
     replace(oldRecordOrIdx, obj) {
-      // var records = this.records;
-      // var idx;
-      // if (this.limit === 1 && !newRecord) {
-      //   newRecord = oldRecordOrIdx;
-      //   idx = 0;
-      // } else {
-      //   console.assert(this.limit === 1 || this.contains(oldRecordOrIdx));
-      //   idx = (typeof oldRecordOrIdx === 'number'? oldRecordOrIdx : records.indexOf(oldRecordOrIdx));
-      // }
-      // var record = new Record(newRecord, this);
-      // records.splice(idx, 1, record);
-      // this.emit(Shelf.ChangedEvent);
-      // return record;
       if(!Shelf._isRecordOrIdx(oldRecordOrIdx)) throw TypeError("argument must be a Record or an index");
       let idx = (typeof oldRecordOrIdx === 'number' ? oldRecordOrIdx : this.indexOf(oldRecordOrIdx));
       this.remove(idx);
@@ -234,13 +224,12 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
     }
   }
 
-  Shelf.ChangedEvent = 'shelf.changed';
+  // for internal usage
   Shelf.Event = Object.freeze({
     Add: 'shelf.add',
     Remove: 'shelf.remove',
     Changed: 'shelf.changed'
   });
-  E.Emitter(Shelf.prototype);
 
   /**
    * Returns a new set of types of shelves.

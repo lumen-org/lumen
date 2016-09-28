@@ -6,12 +6,17 @@
  * @module VisMEL
  */
 
-define(['./utils', './PQL', './TableAlgebra'], function(utils, PQL, TableAlgebra) {
+define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, utils, PQL, TableAlgebra) {
   'use strict';
+
+  // TODO: need to emit some internal changed event for visualization synchronization
 
   class BaseMap {
     constructor(fieldUsage) {
       this.fu = fieldUsage;
+      Emitter(this);
+      this.bubbleChangedEventUp(this.fu);
+      this.bubbleEventUp(this, Emitter.InternalChangedEvent, Emitter.ChangedEvent);
     }
 
     static DefaultMap(fu) {

@@ -5,7 +5,7 @@
  * @author Philipp Lucas
  */
 define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visuals', './interaction', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (e, d3, init, PQL, VisMEL, sh, vis, inter, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
+  function (Emitter, d3, init, PQL, VisMEL, sh, vis, inter, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     /**
@@ -14,33 +14,33 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
     function populateGUI() {
      
       // populate shelves
-      sh.populate(model, shelf.dim, shelf.meas);
+      sh.populate(model, shelves.dim, shelves.meas);
 
       // make all shelves visual and interactable
-      shelf.meas.beVisual({label: 'Measures'}).beInteractable();
-      shelf.dim.beVisual({label: 'Dimensions'}).beInteractable();
-      shelf.detail.beVisual({label: 'Details'}).beInteractable();
-      shelf.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
-      shelf.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-      shelf.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelf.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.meas.beVisual({label: 'Measures'}).beInteractable();
+      shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
+      shelves.detail.beVisual({label: 'Details'}).beInteractable();
+      shelves.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
+      shelves.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
+      shelves.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
       // add all shelves to the DOM
       var base = $('#shelves');
-      base.append(shelf.meas.$visual);
-      base.append(shelf.dim.$visual);
-      base.append(shelf.filter.$visual);
-      base.append(shelf.detail.$visual);
-      base.append(shelf.color.$visual);
-      base.append(shelf.shape.$visual);
-      base.append(shelf.size.$visual);
-      base.append(shelf.remove.$visual);
+      base.append(shelves.meas.$visual);
+      base.append(shelves.dim.$visual);
+      base.append(shelves.filter.$visual);
+      base.append(shelves.detail.$visual);
+      base.append(shelves.color.$visual);
+      base.append(shelves.shape.$visual);
+      base.append(shelves.size.$visual);
+      base.append(shelves.remove.$visual);
       var layout = $('#layout');
-      layout.append(shelf.row.$visual);
-      layout.append(shelf.column.$visual);
+      layout.append(shelves.row.$visual);
+      layout.append(shelves.column.$visual);
       inter.asRemoveElem($(document.body).find('main'));
     }
 
@@ -48,15 +48,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
      * do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup() {
-      inter.onDrop(shelf.dim, shelf.meas.at(0));
-      inter.onDrop(shelf.filter, shelf.meas.at(1));
-      inter.onDrop(shelf.detail, shelf.dim.at(0));
-      //inter.onDrop(shelf.shape, shelf.dim.at(0));
-      //inter.onDrop(shelf.size, shelf.meas.at(2));
-      inter.onDrop(shelf.row, shelf.dim.at(0));
-      //inter.onDrop(shelf.row, shelf.meas.at(1));
-      inter.onDrop(shelf.color, shelf.meas.at(2));
-      inter.onDrop(shelf.column, shelf.meas.at(1));
+      inter.onDrop(shelves.dim, shelves.meas.at(0));
+      inter.onDrop(shelves.filter, shelves.meas.at(1));
+      inter.onDrop(shelves.detail, shelves.dim.at(0));
+      //inter.onDrop(shelves.shape, shelves.dim.at(0));
+      //inter.onDrop(shelves.size, shelves.meas.at(2));
+      inter.onDrop(shelves.row, shelves.dim.at(0));
+      //inter.onDrop(shelves.row, shelves.meas.at(1));
+      inter.onDrop(shelves.color, shelves.meas.at(2));
+      inter.onDrop(shelves.column, shelves.meas.at(1));
     }
 
 
@@ -64,7 +64,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       if (testPQLflag || testVisMELflag)
         return;
       //debugger;
-      query = VisMEL.VisMEL.FromShelves(shelf, model);  
+      query = VisMEL.VisMEL.FromShelves(shelves, model);
       //debugger;    
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
@@ -95,8 +95,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
      * Enables user querying.
      */
     function enableQuerying() {
-      inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
-      //inter.onDrop.on(inter.onDrop.dropDoneEvent, onUpdate);
+      for (const key of Object.keys(shelves))
+        shelves[key].on(Emitter.ChangedEvent, onUpdate);
       // trigger initial query execution
       onUpdate();
     }
@@ -121,13 +121,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
 
     if (!testPQLflag && !testVisMELflag) {
       // define shelves
-      var shelf = sh.construct();
+      var shelves = sh.construct();
       // get initial model
       var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
       model.update().then(populateGUI)
         .then(initialQuerySetup)
         .then(enableQuerying)
-        //.then( () => {debugger; console.log(shelf);})
+        //.then( () => {debugger; console.log(shelves);})
         .catch((err) => {
            console.error(err);
            throw "Could not load remote model from Server - see above";
@@ -211,7 +211,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
           return query;
         }) //*/
         .then(query => {
-          //query = new VisMEL(shelf, model);
+          //query = new VisMEL(shelves, model);
           queryTable = new QueryTable(query);
           //console.log(queryTable);
           modelTable = new ModelTable(queryTable);
