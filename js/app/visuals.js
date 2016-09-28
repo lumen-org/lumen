@@ -235,6 +235,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
       .append(methodSelector(this))   // method div
       .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
       .append(conversionButtons(record))
+      .append(argumentsEditField(this))
       .append(removeButton(record));
     return container;
   };
@@ -245,6 +246,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
       .append(methodSelector(this))   // method div
       .append($('<div class="pl-field noselect">' + this.names +  '</div>'))
       .append(conversionButtons(record))
+      .append(argumentsEditField(this))
       .append(removeButton(record));
     return container;
   };
@@ -255,6 +257,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
       .append(methodSelector(this))   // method div
       .append($('<div class="pl-field noselect">' + this.name +  '</div>'))
       .append(conversionButtons(record))
+      .append(argumentsEditField(this))
       .append(removeButton(record));
     return container;
   };
@@ -265,6 +268,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
       .append(methodSelector(this))   // method div
       .append($('<div class="pl-field noselect">' + this.toString() +  '</div>'))
       //.append(conversionButtons(record))
+      .append(argumentsEditField(this))
       .append(removeButton(record));
     return container;
   };
@@ -274,7 +278,7 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
   }
 
   function removeButton (record) {
-    var removeButton = $('<div class="my-remove-button noselect pl-hidden"> <span>x</span> </div>');
+    var removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
     removeButton.click( () => {
       record.removeVisual().shelf.remove(record);
     });
@@ -308,6 +312,25 @@ define(['lib/logger','./utils', './shelves', './VisMEL', './PQL'], function(Logg
       translate(record, PQL.Split);
     });
     return button;
+  }
+
+  function argumentsEditField (fu) {
+    //debugger;
+    function submitOnEnter(elem) {
+      if (event.keyCode == 13) {
+        //console.log(elem.target.value);
+        try{
+          fu.args = JSON.parse(elem.target.value);
+        } catch (e) { }
+        console.log(fu);
+      }
+    }
+
+    let textedit = $('<input type="text" class="pl-arg-text pl-hidden"' 
+      + "value='" + JSON.stringify(fu.args) + "'"
+      + ">");
+    textedit.keydown(submitOnEnter)
+    return textedit;
   }
 
   return {

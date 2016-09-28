@@ -23,7 +23,7 @@ body {
 .pl-fu {
     __border: 1px solid black;
     width:200px;
-    height:50px;
+    height:30px;
     display: flex;
     position: relative;
     /*top: 75px;*/
@@ -40,13 +40,14 @@ body {
 }
 .pl-field {
     position: absolute;
-    top: 15px;
+    top: 3px;
     max-width: 170px;
     font-family: Quicksand;
     font-size: .9em;
 }
 .pl-button-container {
     position: absolute;
+    top: 3px;
     right: 3px;
     width: 15px;
     height: 50px;
@@ -55,10 +56,15 @@ body {
     font-weight: normal;
     __border: 1px solid black;
     font-family: Verdana, Serif;
-    line-height: 1.1;
+    line-height: 1.5;
     color: #33302E;
 }
-.my-remove-button {
+.pl-button-container>span,
+.pl-remove-button {
+    cursor: pointer;
+}
+
+.pl-remove-button {
     position: absolute;
     left: 6px;
     top: 3px;
@@ -67,10 +73,16 @@ body {
     height: .8em;
 }
 
-.pl-fu:hover > .pl-hidden {
-    visibility:visible;
-    opacity: 1;
-    transition: visibility 150ms, opacity 150ms;
+.pl-arg-text {
+    position: absolute;
+    left: 40px;
+    right: 6px;
+    top: 37px;
+    font-size: .8em;
+    height: 1.4em;
+    width: 130px;
+    margin: 0;
+    padding: 0;
 }
 
 .pl-hidden {
@@ -84,16 +96,27 @@ body {
     color: black;
 }
 
+
+.pl-fu:hover > .pl-hidden {
+    visibility:visible;
+    opacity: 1;
+    transition: visibility 150ms, opacity 150ms;
+}
+
+.pl-fu:hover {
+    height: 67px;
+    transition: height 200ms;
+}
+
+.pl-fu:hover > .pl-field {
+    top: 15px;
+    transition: top 200ms;
+}
+
 .pl-fu-density {
     background-color: #9DBBB7;
 }
 
-.pl-fu-density .pl-density-button,
-.pl-fu-aggregation .pl-aggregation-button,
-.pl-fu-split .pl-split-button {
-    font-weight: bold;
-    color: black;
-}
 
 .pl-fu-aggregation {
     background-color: #F2B950;
@@ -105,4 +128,11 @@ body {
 
 .pl-fu-filter {
     background-color: #F2E6D8;
+}
+
+.pl-fu-density .pl-density-button,
+.pl-fu-aggregation .pl-aggregation-button,
+.pl-fu-split .pl-split-button {
+    font-weight: bold;
+    color: black;
 }

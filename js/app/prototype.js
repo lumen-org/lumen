@@ -48,14 +48,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
      * do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup() {
-      //inter.onDrop(shelf.filter, shelf.dim.at(2));
-      //inter.onDrop(shelf.detail, shelf.dim.at(1));
+      inter.onDrop(shelf.dim, shelf.meas.at(0));
+      inter.onDrop(shelf.filter, shelf.meas.at(1));
+      inter.onDrop(shelf.detail, shelf.dim.at(0));
       //inter.onDrop(shelf.shape, shelf.dim.at(0));
       //inter.onDrop(shelf.size, shelf.meas.at(2));
-      //inter.onDrop(shelf.row, shelf.dim.at(0));
-      //inter.onDrop(shelf.row, shelf.meas.at(0));
-      //inter.onDrop(shelf.column, shelf.dim.at(1));
-      //inter.onDrop(shelf.column, shelf.meas.at(1));
+      inter.onDrop(shelf.row, shelf.dim.at(0));
+      //inter.onDrop(shelf.row, shelf.meas.at(1));
+      inter.onDrop(shelf.color, shelf.meas.at(2));
+      inter.onDrop(shelf.column, shelf.meas.at(1));
     }
 
 
