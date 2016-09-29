@@ -104,6 +104,11 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
       Emitter(this);
       this.bubbleEventUp(this, Emitter.InternalChangedEvent, Emitter.ChangedEvent);
     }
+
+    emitInternalChanged() {
+      this.emit(Emitter.InternalChangedEvent);
+    }
+
   }
 
   class Filter extends FieldUsage {

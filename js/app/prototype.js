@@ -50,12 +50,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
     function initialQuerySetup() {
       inter.onDrop(shelves.dim, shelves.meas.at(0));
       inter.onDrop(shelves.filter, shelves.meas.at(1));
-      inter.onDrop(shelves.detail, shelves.dim.at(0));
+      //inter.onDrop(shelves.detail, shelves.dim.at(0));
       //inter.onDrop(shelves.shape, shelves.dim.at(0));
       //inter.onDrop(shelves.size, shelves.meas.at(2));
-      inter.onDrop(shelves.row, shelves.dim.at(0));
+      //inter.onDrop(shelves.row, shelves.dim.at(0));
       //inter.onDrop(shelves.row, shelves.meas.at(1));
-      inter.onDrop(shelves.color, shelves.meas.at(2));
+      //inter.onDrop(shelves.color, shelves.meas.at(2));
       inter.onDrop(shelves.column, shelves.meas.at(1));
     }
 

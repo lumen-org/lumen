@@ -182,8 +182,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       var idx = (typeof recordOrIdx === 'number' ? recordOrIdx : records.indexOf(recordOrIdx));
       var record = records[idx];
       records.splice(idx, 1);
-      console.log(record);
-      debugger;
       this.emit(Shelf.Event.Remove, record);
     }
 

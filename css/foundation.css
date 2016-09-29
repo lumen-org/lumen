@@ -48,7 +48,8 @@ html, body {
 *:after {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  }
 
 html,
 body {
@@ -3623,7 +3624,8 @@ blockquote,
 th,
 td {
   margin: 0;
-  padding: 0; }
+  padding: 0;
+  }
 
 /* Default Link Styles */
 a {

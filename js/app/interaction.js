@@ -206,7 +206,10 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
     if ($curTarget.hasClass('shelf')) {
       logger.debug('dropping on'); logger.debug($curTarget); logger.debug($target);
       var targetShelf = $curTarget.data(vis.AttachStringT.shelf);
-      var target = ( $target.hasClass('shelf-list-item') ? $target.data(vis.AttachStringT.record) : targetShelf );
+      // find closest ancestor that is a shelf-list-item 
+      var target = $target.parentsUntil('.shelf','.shelf-list-item');
+      target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
+      //var target = ( $target.hasClass('shelf-list-item') ? $target.data(vis.AttachStringT.record) : targetShelf );
       var source= $(_draggedElem).data(vis.AttachStringT.record);
       var overlap = _geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
       onDrop(target, source, overlap);
@@ -339,7 +342,7 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
    * @type {{}}
    * @alias module:interaction.onDrop
    */
-  var onDrop = function (target, source, overlap) {
+  var onDrop = function (target, source, overlap=_OverlapEnum.center) {
     // delegate to correct handler
     if (target instanceof sh.Record) {
       let fu = _getFieldUsage(target);
@@ -347,8 +350,7 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
           // add field to list of fields for that field usage
           let field = source.content;
           fu.fields.push(field);
-          // update visual
-          // todo...
+          fu.emitInternalChanged();
       } else {
         onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
       }
