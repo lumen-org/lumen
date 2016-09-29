@@ -1,9 +1,9 @@
 /**
  * This module defines the components of PQL and provides functionality to construct PQL queries.
  *
- * There is two representations of a PQL query: an 'internal' Python-Object based one, and a 'external' JSON-formatted one.
- * While the latter is meant for use with the Python compute environment, it can be turned into the JSON-format calling
- * appropiate methods. The JSON-format is for cross-compute-environment usage.
+ * There is two representations of a PQL query: an 'internal' JS-Object based one, and a 'external' JSON-formatted one.
+ * While the latter is meant for use with the JS compute environment, it can be turned into the JSON-format by calling
+ * appropriate methods. The JSON-format is for cross-compute-environment usage.
  *
  * This module defines FieldUsages and associated method. FieldUsages can be:
  *   * a split of a Field of a Model

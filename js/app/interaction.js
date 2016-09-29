@@ -1,5 +1,5 @@
 /**
- * Adds interactivity to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
+ * Adds Drag and Drop capability the visuals of to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
  *
  * @module interaction
  * @author Philipp Lucas
@@ -217,6 +217,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
 
   /**
    * @param $record The visual of a record.
+   * @param flag true makes it draggable, false removes that
    */
   function _setRecordDraggable($record, flag=true) {
     $record.attr('draggable', flag);
@@ -227,6 +228,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
 
   /**
    * @param $record The visual of a record.
+   * @param flag true makes it droppable, false removes that
    */
   function _setRecordDroppable($record, flag=true) {
     var domRecord = $record.get(0);
@@ -237,6 +239,10 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
     fct('drop', onDropHandler);
   }
 
+  /**
+   * @param $shelf The visual of a shelf.
+   * @param flag true makes it droppable, false removes that
+   */
   function _setShelfDroppable($shelf, flag=true) {
     var domShelf = $shelf.get(0);
     let fct = (flag ? domShelf.addEventListener : domShelf.removeEventListener).bind(domShelf);
@@ -258,7 +264,8 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
 
   /**
    * Mixin to make make a shelf interactable. i.e. its records can be dragged and be dropped on and the shelf itself can be dropped on.
-   * Note that it also makes all current records of that shelf interactable.
+   * Note that it also makes all current records of that shelf interactable. Any records added to the shelf later are
+   * automatically also made interactable.
    * @returns {sh.Records}
    */
   sh.Shelf.prototype.beInteractable = function () {

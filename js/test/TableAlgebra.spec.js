@@ -4,7 +4,7 @@
  * @author Philipp Lucas
  * @module
  */
-define(['lib/logger','app/DummyModel', 'app/PQL', 'app/shelves', 'app/TableAlgebra', 'app/interaction'], function (Logger, DummyModel, F, sh, TableAlgebraExpr, inter) {
+define(['lib/logger', 'app/PQL', 'app/shelves', 'app/TableAlgebra', 'app/interaction'], function (Logger, F, sh, TableAlgebraExpr, inter) {
   "use strict";
   // TODO: maybe adapt these tests for the current code base later again...
   /*

@@ -5,7 +5,7 @@
  * @module
  */
 
-define(['app/shelves', 'app/PQL', 'app/DummyModel'], function (sh, f, dummyModel) {
+define(['app/shelves', 'app/PQL'], function (sh, f) {
   "use strict";
   // TODO: maybe adapt these tests for the current code base later again..
   /*  describe('Specifications for Shelves', function () {

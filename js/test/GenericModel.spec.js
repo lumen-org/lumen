@@ -8,7 +8,7 @@
  * @module
  */
 
-define(['app/Model', 'app/DummyModel'], function (Model, DummyModel) {
+define(['app/Model'], function (Model) {
   "use strict";
 
   // TODO: maybe adapt these tests for the current code base later again... this should also just test basic functions of the Model class

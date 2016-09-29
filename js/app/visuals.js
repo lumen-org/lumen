@@ -1,6 +1,6 @@
 /**
- * Visuals module. This adds a visual layer on top of shelves and records by mixin appropriate functions into the
- * prototype of {@link module:shelves.Shelf} and {@link module:shelves.Record}.
+ * Visuals module. It provides self-contained views for shelves, records, Fields, FieldUsages, and Maps. They are
+ * self-contained in the sense that are automatically synchronized with their model, if that changes.
  *
  * @module visuals
  * @author Philipp Lucas
@@ -38,7 +38,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
   /**
    * A mixin function that creates a visual representation (as HTML elements) of this shelf and all its records.
-   * That representation is stored in an attribute $visual of the shelf.
+   * That representation is stored in the attribute $visual of the shelf.
    * @return {module:shelves.Shelf} The instance it was called on.
    * @alias module:shelves.Shelf.beVisual
    * @augments module:shelves.Shelf
@@ -99,8 +99,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   };
 
   /**
-   * Remove the visual representation of this shelf.
-   * @returns {module:shelves.Shelf} The instance it was called on.
+   * Removes the visual representation of this shelf.
+   * @returns The instance it was called on.
    * @alias module:shelves.Shelf.removeVisual
    * @augments module:shelves.Shelf
    */
@@ -146,8 +146,11 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   }
 
   /**
+   * Creates a visual representation of the record and attaches it to the visual of its shelf.
    * Records take care of finding their correct position and add themselves to the shelf
    * hence, records cannot be visual without a visual parent shelf.
+   * Since records are simply containers for arbitrary content, that content it expected to provide a 'makeVisual'-
+   * method, which must return a visual representation of it.
    * @return {module:shelves.Record} The instance it was called on.
    * @alias module:shelves.Record.beVisual
    * @augments module:shelves.Record
@@ -185,10 +188,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   };
 
   /**
-   * Creates a visual representation of this record, i.e. specialized for {@link s.ColorRecord}.
-   * @returns {module:shelves.Record}
-   * @alias module:shelves.ColorRecord.beVisual
-   * @augments module:shelves.ColorRecord
+   * Creates a visual representation of this record, i.e. specialized for ColorMaps
    */
   VisMEL.ColorMap.prototype.makeVisual = function () {
     function _updateVisual () {

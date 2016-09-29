@@ -1,5 +1,9 @@
 /**
- * Adds interactivity to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
+ * This module allows dragging and dropping of VisMEL and PQL objects on shelves. However, this does not mean a visual,
+ * mouse-style dragging and dropping, but an abstract one:
+ *
+ * drop(target, source, overlap=_OverlapEnum.center): drop source (a Record of another shelf)
+ *   d
  *
  * @module interaction
  * @author Philipp Lucas
@@ -65,20 +69,29 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
   }
 
   /**
-   * Primary interaction handler. There is one handler for each value in {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
+   * Drag source record to target. The effect depends on ... many things but in particular the shelf type of the source and target.
+   * This function encapsulates the logic of how Fields, FieldUsages and FieldUsageMaps can be converted to each other.
    *
-   * Drops emit an {@link module:interaction.onDrop.dropDoneEvent} after a drop has been processed.
+   * TODO: I guess I should document this logic at some point...
    *
-   * abbreviations are as follows:
-   *  * tRecord: target record
-   *  * sRecord: source record
-   *  * tShelf: target shelf
-   *  * sShelf: source shelf
-   *
-   * @type {{}}
-   * @alias module:interaction.onDrop
+   * @param target A Record or a Shelf.
+   * @param source A Record
+   * @param overlap How they overlap, on of 'left', 'right', 'center', 'top', 'bottom', 'none'.
    */
   var onDrop = function (target, source, overlap=_OverlapEnum.center) {
+    /*
+     * Primary onDrop function. It will forward to appropriate subhandlers, there is one handler for each value in
+     * {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
+     *
+     * abbreviations are as follows:
+     *  * tRecord: target record
+     *  * sRecord: source record
+     *  * tShelf: target shelf
+     *  * sShelf: source shelf
+     */
+    if (!(source instanceof sh.Record)) {
+      throw new TypeError('source must be a Record');
+    }
     // delegate to correct handler
     if (target instanceof sh.Record) {
       let fu = _getFieldUsage(target);
@@ -93,7 +106,7 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
     } else if (target instanceof sh.Shelf)
       onDrop[target.type](undefined, target, source, source.shelf, overlap);
     else
-      throw new TypeError('wrong type for parameter target');
+      throw new TypeError('target must be a Record or a Shelf');
   };
 
   onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {

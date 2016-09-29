@@ -10,7 +10,7 @@ define(['./utils'], function (utils) {
   class DiscreteDomain {
     /**
      * Constructs a discrete domain.
-     * @param values A single of or an array of values for the domain. Pass null or [null] to create an unbounded Domain.
+     * @param values A single value or an array of values for the domain. Pass null or [null] to create an unbounded Domain.
      * @constructor
      */
     constructor(values) {
@@ -42,6 +42,9 @@ define(['./utils'], function (utils) {
       return this.values[0] === null;
     }
 
+    /**
+     * Returns a bounded version of this domain, where bounding is done by means of the given extent.
+     */
     bounded(extent) {
       this._checkType(extent);
       if(this.isUnbounded())
@@ -126,6 +129,9 @@ define(['./utils'], function (utils) {
         return [this.l, this.h];
     }
 
+    /**
+     * Returns a bounded version of this domain, where bounding is done by means of the given extent.
+     */
     bounded(extent) {
       if(this.isUnbounded())
         return new NumericDomain([this.l === null ? extent.l : this.l, this.h === null ? extent.h : this.h]);
