@@ -206,14 +206,13 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    let $visual = $('<div>'+this.name+'</div>');
-    return $visual;
+    return $('<div>'+this.name+'</div>');
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))   // method div
+        .append(methodSelector(that))
         .append($('<div class="pl-field noselect">' + that.names +  '</div>'))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
@@ -229,7 +228,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Density.prototype.makeVisual = function (record) {
    function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))   // method div
+        .append(methodSelector(that))
         .append($('<div class="pl-field noselect">' + that.names +  '</div>'))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
@@ -245,7 +244,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Split.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))   // method div
+        .append(methodSelector(that))
         .append($('<div class="pl-field noselect">' + that.name +  '</div>'))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
@@ -261,7 +260,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Filter.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))   // method div
+        .append(methodSelector(that))
         .append($('<div class="pl-field noselect">' + that.toString() +  '</div>'))
         //.append(conversionButtons(record))
         .append(argumentsEditField(that))
@@ -275,7 +274,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   };
 
   function methodSelector (fu) {
-    return($('<div class="pl-method noselect pl-hidden">' + fu.method + '</div>'));   // method div
+    return($('<div class="pl-method noselect pl-hidden">' + fu.method + '</div>'));
   }
 
   function removeButton (record) {
@@ -328,11 +327,11 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       }
     }
 
-    let textedit = $('<input type="text" class="pl-arg-text pl-hidden"' +
-      "value='" + JSON.stringify(fu.args) + "'" +
+    let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
+      " value='" + JSON.stringify(fu.args) + "'" +
       ">");
-    textedit.keydown(submitOnEnter);
-    return textedit;
+    textEdit.keydown(submitOnEnter);
+    return textEdit;
   }
 
   return {

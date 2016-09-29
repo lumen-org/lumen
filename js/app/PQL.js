@@ -318,7 +318,7 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
   }
 
   function isFieldUsage (fu) {
-    return fu instanceof Aggregation || fu instanceof Split || fu instanceof Density || fu instanceof Filter;
+    return fu instanceof FieldUsage;
   }
 
   function hasDiscreteYield(fu) {

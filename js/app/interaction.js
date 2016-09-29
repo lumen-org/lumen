@@ -4,11 +4,11 @@
  * @module interaction
  * @author Philipp Lucas
  */
-define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (Logger, sh, vis, PQL, VisMEL) {
+define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], function (Logger, sh, drop, vis) {
   'use strict';
 
   var logger = Logger.get('pl-interaction');
-  logger.setLevel(Logger.WARN);
+  logger.setLevel(Logger.DEBUG);
 
   var _OverlapEnum = Object.freeze({
     left: 'left',
@@ -24,10 +24,6 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
     top: 0.3, left: 0.3,
     bottom: 0.3, right: 0.3
   });
-
-  function _isDimOrMeasureShelf (shelf) {
-    return (shelf.type === sh.ShelfTypeT.dimension || shelf.type === sh.ShelfTypeT.measure);
-  }
 
   /**
    * Functions for calculating positions and overlaps of DOM elements.
@@ -202,17 +198,16 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
   function onDropHandler (event) {
     var $curTarget = $(event.currentTarget); // is shelf-visual
     var $target = $(event.target); // is shelf-visual or record-visual
-    // a drop may also occur on the record-visuals - however, we 'delegate' it to the shelf
+    // a drop may also occur on the record-visuals - however, we 'delegate' it to the shelf. i.e. it will be bubble up
     if ($curTarget.hasClass('shelf')) {
       logger.debug('dropping on'); logger.debug($curTarget); logger.debug($target);
       var targetShelf = $curTarget.data(vis.AttachStringT.shelf);
       // find closest ancestor that is a shelf-list-item 
       var target = $target.parentsUntil('.shelf','.shelf-list-item');
       target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
-      //var target = ( $target.hasClass('shelf-list-item') ? $target.data(vis.AttachStringT.record) : targetShelf );
       var source= $(_draggedElem).data(vis.AttachStringT.record);
       var overlap = _geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
-      onDrop(target, source, overlap);
+      drop(target, source, overlap);
       _draggedElem = null;
       event.stopPropagation();
       event.preventDefault();
@@ -223,55 +218,41 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
   /**
    * @param $record The visual of a record.
    */
-  function _makeRecordDraggable($record) {
-    $record.attr('draggable', true);
+  function _setRecordDraggable($record, flag=true) {
+    $record.attr('draggable', flag);
     var domRecord = $record.get(0);
-    domRecord.addEventListener('dragstart', onDragStartHandler);
+    let fct = (flag ? domRecord.addEventListener : domRecord.removeEventListener).bind(domRecord);
+    fct('dragstart', onDragStartHandler);
   }
 
   /**
    * @param $record The visual of a record.
    */
-  function _makeRecordDroppable($record) {
+  function _setRecordDroppable($record, flag=true) {
     var domRecord = $record.get(0);
-    domRecord.addEventListener('dragenter',  onDragEnterHandler);
-    domRecord.addEventListener('dragover',  onDragOverHandler);
-    domRecord.addEventListener('dragleave', onDragLeaveHandler);
-    domRecord.addEventListener('drop', onDropHandler);
+    let fct = (flag ? domRecord.addEventListener : domRecord.removeEventListener).bind(domRecord);
+    fct('dragenter',  onDragEnterHandler);
+    fct('dragover',  onDragOverHandler);
+    fct('dragleave', onDragLeaveHandler);
+    fct('drop', onDropHandler);
   }
 
-  /**
-   * @param $shelf The visual of a shelf.
-   */
-  function _makeShelfDroppable($shelf) {
+  function _setShelfDroppable($shelf, flag=true) {
     var domShelf = $shelf.get(0);
-    domShelf.addEventListener('dragenter', onDragEnterHandler);
-    domShelf.addEventListener('dragover',  onDragOverHandler);
-    domShelf.addEventListener('dragleave', onDragLeaveHandler);
-    domShelf.addEventListener('drop',      onDropHandler);
-  }
-
-  /**
-   * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
-   * @param {jQuery} $elem
-   * @alias module:interaction.asRemoveElem
-   */
-  function asRemoveElem ($elem) {
-    $elem.get(0).addEventListener('dragover', event => event.preventDefault());
-    $elem.get(0).addEventListener('drop', event => {
-      onDrop(new sh.Shelf(sh.ShelfTypeT.remove), $(_draggedElem).data(vis.AttachStringT.record), {});
-      _draggedElem = null;
-      event.stopPropagation();
-    });
+    let fct = (flag ? domShelf.addEventListener : domShelf.removeEventListener).bind(domShelf);
+    fct('dragenter', onDragEnterHandler);
+    fct('dragover',  onDragOverHandler);
+    fct('dragleave', onDragLeaveHandler);
+    fct('drop',      onDropHandler);
   }
 
   /**
    * Mixin to make a Record interactable, i.e. it can be dragged and dropped on.
    * @returns {Record}
    */
-  sh.Record.prototype.beInteractable = function () {
-    _makeRecordDroppable(this.$visual);
-    _makeRecordDraggable(this.$visual);
+  sh.Record.prototype.setInteractable = function (flag) {
+    _setRecordDroppable(this.$visual, flag);
+    _setRecordDraggable(this.$visual, flag);
     return this;
   };
 
@@ -281,230 +262,29 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
    * @returns {sh.Records}
    */
   sh.Shelf.prototype.beInteractable = function () {
-    _makeShelfDroppable(this.$visual);
-    this.records.forEach(function (record) {
-      record.beInteractable();
+    _setShelfDroppable(this.$visual);
+    this.records.forEach(record => record.setInteractable(true));
+    this.on(sh.Shelf.Event.Add, record => record.setInteractable(true));
+    this.on(sh.Shelf.Event.Remove, record => record.setInteractable(false));
+    return this;
+  };
+
+
+  /**
+   * Makes elem droppable such that any FUsageRecord dropped there is removed from its source.
+   * @param {jQuery} $elem
+   * @alias module:interaction.asRemoveElem
+   */
+  function asRemoveElem ($elem) {
+    $elem.get(0).addEventListener('dragover', event => event.preventDefault());
+    $elem.get(0).addEventListener('drop', event => {
+      drop(new sh.Shelf(sh.ShelfTypeT.remove), $(_draggedElem).data(vis.AttachStringT.record), {});
+      _draggedElem = null;
+      event.stopPropagation();
     });
-  };
-
-  /**
-   * Helper function that extracts a Field from a record that contains either a Field, a BaseMap or a FieldUsage
-   */
-  function _getFieldUsage (record) {
-    let content = record.content;
-    if (content instanceof VisMEL.BaseMap)
-      return content.fu;
-    else if (PQL.isFieldUsage(content))
-      return content;
-    else
-      throw new RangeError("unsupported type of content of record: " + content);
-  }
-
-  function _getField (record) {
-    let content = record.content;
-    if (PQL.isField(content))
-      return content;
-    else {
-      if (content instanceof VisMEL.BaseMap)
-        content = content.fu;
-      if (PQL.isSplit(content) || PQL.isFilter(content))
-        return content.field;
-      else if (PQL.isAggregationOrDensity(content))
-        return content.fields[0];
-    }
-    throw new RangeError('invalid record content: ' + content);
-  }
-
-  function _fieldUsageFromRecord (record) {
-    let shelf = record.shelf;
-    if (shelf.type === sh.ShelfTypeT.dimension) 
-      return PQL.Split.DefaultSplit(_getField(record));
-    else if (shelf.type === sh.ShelfTypeT.measure)
-      return PQL.Aggregation.DefaultAggregation(_getField(record));
-    else if (shelf.type === sh.ShelfTypeT.filter) {
-      let field = _getField(record);
-      return field.isDiscrete() ? PQL.Split.DefaultSplit(field) : PQL.Aggregation.DefaultAggregation(field);
-    } else
-      return _getFieldUsage(record);
-  }
-
-  /**
-   * Primary interaction handler. There is one handler for each value in {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
-   *
-   * Drops emit an {@link module:interaction.onDrop.dropDoneEvent} after a drop has been processed.
-   *
-   * abbreviations are as follows:
-   *  * tRecord: target record
-   *  * sRecord: source record
-   *  * tShelf: target shelf
-   *  * sShelf: source shelf
-   *
-   * @type {{}}
-   * @alias module:interaction.onDrop
-   */
-  var onDrop = function (target, source, overlap=_OverlapEnum.center) {
-    // delegate to correct handler
-    if (target instanceof sh.Record) {
-      let fu = _getFieldUsage(target);
-      if (PQL.isAggregationOrDensity(fu) && _isDimOrMeasureShelf(source.shelf)) {
-          // add field to list of fields for that field usage
-          let field = source.content;
-          fu.fields.push(field);
-          fu.emitInternalChanged();
-      } else {
-        onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
-      }
-    } else if (target instanceof sh.Shelf)
-      onDrop[target.type](undefined, target, source, source.shelf, overlap);
-    else
-      throw new TypeError('wrong type for parameter target');
-  };
-
-  onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    if (sShelf.type === sh.ShelfTypeT.dimension || sShelf.type === sh.ShelfTypeT.measure) {
-      // move to target shelf
-      let newRecord =  (tRecord !== undefined ? tRecord.append(sRecord) : tShelf.append(sRecord));
-      _fix(newRecord).beInteractable();
-    }
-    _fix(sRecord).remove();
-  };
-
-  onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
-
-  onDrop[sh.ShelfTypeT.row] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    // general rule: measures always come after dimensions
-    let newRecord,
-      content;
-    // reuse existing or construct new aggregation or split usage
-    if (sShelf.type === sh.ShelfTypeT.dimension)
-      content = PQL.Split.DefaultSplit(_getField(sRecord));
-    else if (sShelf.type === sh.ShelfTypeT.measure)
-      content = PQL.Aggregation.DefaultAggregation(_getField(sRecord));
-    else if (sShelf.type === sh.ShelfTypeT.filter) {
-      let field = _getField(sRecord);
-      content = field.isDiscrete() ? PQL.Split.DefaultSplit(field) : PQL.Aggregation.DefaultAggregation(field);
-    } else
-      content = _getFieldUsage(sRecord);
-
-    // todo: fix for invalid drop positions,i.e.: dropping dimensions _after_ measures, or measures _before_ dimensions
-    // alternative: do reorder after the element has been dropped
-    if (tRecord !== undefined) {
-      switch (overlap) {
-        case _OverlapEnum.left:
-        case _OverlapEnum.top:
-          // insert before element
-          newRecord = tRecord.prepend(content);
-          break;
-        case _OverlapEnum.right:
-        case _OverlapEnum.bottom:
-          // insert after target element
-          newRecord = tRecord.append(content);
-          break;
-        case _OverlapEnum.center:
-          // replace
-          _fix(tRecord).remove();
-          newRecord = tRecord.replaceBy(content);
-          break;
-        default:
-          console.error("Dropping on item, but overlap = " + overlap);
-      }
-    } else {
-      newRecord = tShelf.append(content);
-    }
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-    _fix(newRecord).beInteractable();
-  };
-
-  onDrop[sh.ShelfTypeT.column] = onDrop[sh.ShelfTypeT.row];
-
-  onDrop[sh.ShelfTypeT.detail] = function (tRecord, tShelf, sRecord, sShelf, overlap) {    
-    let content = PQL.Split.DefaultSplit(_getField(sRecord));
-    let newRecord =  (tRecord !== undefined ? tRecord : tShelf).append(content);
-    _fix(newRecord).beInteractable();
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-  };
-
-  onDrop[sh.ShelfTypeT.filter] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    if (sShelf === sh.ShelfTypeT.filter) {
-      // do nothing if just moving filters
-      // todo: allow reordering
-      return;
-    }
-
-    let filter = PQL.Filter.DefaultFilter(_getField(sRecord));
-    let newRecord;
-    if (tRecord !== undefined) { // replace
-      newRecord = tRecord.replaceBy(filter);
-    } else  // append
-      newRecord = tShelf.append(filter);
-
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-    _fix(newRecord).beInteractable();
-  };
-
-  onDrop[sh.ShelfTypeT.color] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    // remove any existing record in this shelf
-    if (!tShelf.empty()) _fix(tShelf.at(0)).remove();
-    // build new color map
-    let fu = _fieldUsageFromRecord(sRecord);
-    let content = VisMEL.ColorMap.DefaultMap(fu);
-    // add new color map
-    let newRecord = tShelf.append(content);
-    _fix(newRecord).beInteractable();
-    // remove source record
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-  };
-
-  onDrop[sh.ShelfTypeT.shape] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    // remove any existing record in this shelf
-    if (!tShelf.empty()) _fix(tShelf.at(0)).remove();
-    // build new color map
-    let fu = _fieldUsageFromRecord(sRecord);
-    let content = VisMEL.ShapeMap.DefaultMap(fu);
-    // add new color map
-    let newRecord = tShelf.append(content);
-    _fix(newRecord).beInteractable();
-    // remove source record
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-  };
-
-  onDrop[sh.ShelfTypeT.size] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    // remove any existing record in this shelf
-    if (!tShelf.empty()) _fix(tShelf.at(0)).remove();
-    // build new color map
-    let fu = _fieldUsageFromRecord(sRecord);
-    let content = VisMEL.SizeMap.DefaultMap(fu);
-    // add new color map
-    let newRecord = tShelf.append(content);
-    _fix(newRecord).beInteractable();
-    // remove source record
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-  };
-
-  onDrop[sh.ShelfTypeT.remove] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    if (!_isDimOrMeasureShelf(sShelf)) _fix(sRecord).remove();
-  };
-
-  onDrop.noVisualNoInteraction = false;
-  /**
-   * This is a hack to make it possible to use onDrop without the visual or interactable part, but just as a set of commands to add/move/remove fields from shelves.
-   * For this, it adds empty function stubs for that function that are called in onDrop for the visual/interactable part.
-   * In order to activate this "hack", set onDrop.noVisualNoInteraction to true.
-   * todo: make it nicer... looks like onDrop is mixing up things: logic of how fields on shelves can move around, and the actual interaction and visual part
-   * @param arg The record to fix
-   * @returns {*} the modified record.
-   * @private
-   */
-  function _fix (arg) {
-    function returnsItself () { return this; } //jshint ignore: line
-    if(onDrop.noVisualNoInteraction) {
-      arg.beInteractable = returnsItself;
-    }
-    return arg;
   }
 
   return {
-    onDrop : onDrop,
     asRemoveElem : asRemoveElem
   };
 });

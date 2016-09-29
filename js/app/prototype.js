@@ -4,8 +4,8 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visuals', './interaction', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (Emitter, d3, init, PQL, VisMEL, sh, vis, inter, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     /**
@@ -29,18 +29,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
       shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
       // add all shelves to the DOM
-      var base = $('#shelves');
-      base.append(shelves.meas.$visual);
-      base.append(shelves.dim.$visual);
-      base.append(shelves.filter.$visual);
-      base.append(shelves.detail.$visual);
-      base.append(shelves.color.$visual);
-      base.append(shelves.shape.$visual);
-      base.append(shelves.size.$visual);
-      base.append(shelves.remove.$visual);
-      var layout = $('#layout');
-      layout.append(shelves.row.$visual);
-      layout.append(shelves.column.$visual);
+      $('#shelves').append(shelves.meas.$visual, shelves.dim.$visual, shelves.filter.$visual, shelves.detail.$visual,
+        shelves.color.$visual, shelves.shape.$visual, shelves.size.$visual, shelves.remove.$visual);
+      $('#layout').append(shelves.row.$visual, shelves.column.$visual);
       inter.asRemoveElem($(document.body).find('main'));
     }
 
@@ -48,15 +39,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './shelves', './visu
      * do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup() {
-      inter.onDrop(shelves.dim, shelves.meas.at(0));
-      inter.onDrop(shelves.filter, shelves.meas.at(1));
-      //inter.onDrop(shelves.detail, shelves.dim.at(0));
-      //inter.onDrop(shelves.shape, shelves.dim.at(0));
-      //inter.onDrop(shelves.size, shelves.meas.at(2));
-      //inter.onDrop(shelves.row, shelves.dim.at(0));
-      //inter.onDrop(shelves.row, shelves.meas.at(1));
-      //inter.onDrop(shelves.color, shelves.meas.at(2));
-      inter.onDrop(shelves.column, shelves.meas.at(1));
+      drop(shelves.dim, shelves.meas.at(0));
+      //drop(shelves.filter, shelves.meas.at(1));
+      //drop(shelves.detail, shelves.dim.at(0));
+      //drop(shelves.shape, shelves.dim.at(0));
+      //drop(shelves.size, shelves.meas.at(2));
+      //drop(shelves.row, shelves.dim.at(0));
+      //drop(shelves.row, shelves.meas.at(1));
+      //drop(shelves.color, shelves.meas.at(2));
+      drop(shelves.column, shelves.meas.at(1));
     }
 
 
