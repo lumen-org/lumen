@@ -13,8 +13,8 @@ Clone this repository into a folder of your choice. Let's call it `root`. If you
 2. I recommend using [WebStorm](https://www.jetbrains.com/webstorm/download/) as an IDE. 
 3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
 4. Update npm (part of node-js): `sudo npm install -g npm`
-5  Install all npm-dependencies as provided by the projects `package.json`:
- * run from `root` directory: `npm install`
+5. Install all npm-dependencies as provided by the projects `package.json`:
+    * run from `root` directory: `npm install`
 6. make sure you have the following packages installed (preferably) globally: TODO !?
 
 ### Running it ###
