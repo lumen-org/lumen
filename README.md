@@ -11,15 +11,21 @@ Clone this repository into a folder of your choice. Let's call it `root`. If you
 ### Development Setup ###
 1. Do the steps as described in the Setup section above.
 2. I recommend using [WebStorm](https://www.jetbrains.com/webstorm/download/) as an IDE. 
-3. Install [node.js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
-4. On a system shell change into the `root` directory
-5. install required node.js packages (some locally, some globally) using the command: `npm install`
-6. make sure you have the following packages installed (preferably) globally: TODO
+3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
+4. Update npm (part of node-js): `sudo npm install -g npm`
+5. Install all npm-dependencies as provided by the projects `package.json`:
+    * run from `root` directory: `npm install`
+6. make sure you have the following packages installed (preferably) globally: TODO !?
 
 ### Running it ###
 
 Open `index.html` in your browser (preferably Chrome) and navigate to `prototype` or directly open `html/prototype.html`.
 
+Note that a ModelBase server is expected to run at 'localhost:5000/webservice'. You can get it from [here](https://bitbucket.org/phlpp/modelbase).
+
+### Other Notes ###
+
+* 'daphne' is a separate side project. you can safely ignore it entirely.
 
 ### Contact ###
 
