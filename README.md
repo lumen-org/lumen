@@ -23,7 +23,7 @@ Open `index.html` in your browser (preferably Chrome) and navigate to `prototype
 
 Note that a ModelBase server is expected to run at 'localhost:5000/webservice'. You can get it from [here](https://bitbucket.org/phlpp/modelbase).
 
-## Other Notes
+### Other Notes ###
 
 * 'daphne' is a separate side project. you can safely ignore it entirely.
 
