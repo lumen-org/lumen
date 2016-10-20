@@ -1,7 +1,16 @@
 {
   "name": "PMV",
-  "version": "0.0.1",
-  "description": "A tool for exploratory visualization of probabilistic models",
+  "version": "0.2",  
+  "description": "a webinterface for exploratory visualization of probability models",
+  "author": {
+    "name" : "Philipp Lucas",
+	"email" : "philipp.lucas@uni-jena.de"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "git@bitbucket.org:phlpp/pmv.git"
+  },
+  "private": true,
   "dependencies": {
     "js-logger": "^1.2.0",
     "modernizr": "^3.3.1",
@@ -24,8 +33,7 @@
     "type": "git",
     "url": "."
   },
-  "author": "Philipp Lucas",
-  "license": "non given yet",
+  "license": "(c) Philipp Lucas, All Rights Reserved",
   "jshintConfig": {
     "globals": {
       "interact": false,
