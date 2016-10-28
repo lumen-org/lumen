@@ -19,8 +19,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
    */
   var DirectionTypeT = Object.freeze({
     vertical: 'vertical',
-    horizontal: 'horizontal',
-    box: 'box'
+    horizontal: 'horizontal'
   });
 
   /**
@@ -49,34 +48,18 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     opt.direction = util.selectValue(opt.direction, DirectionTypeT.vertical);
 
     // create visual container
-    var visual = $('<div></div>').addClass('shelf');
+    var visual = $('<div></div>')
+      .addClass('shelf')
+      .addClass(opt.direction);
 
     // create label
-    var label;
-    switch (opt.direction) {
-      case DirectionTypeT.vertical:
-      case DirectionTypeT.box:
-        label = $('<div></div>');
-        break;
-      case DirectionTypeT.horizontal:
-        label = $('<span></span>');
-        break;
-    }
+    var label = $('<div></div>');
     label.addClass('shelf-title')
       .text(opt.label)
       .appendTo(visual);
 
     // create element container
-    var container;
-    switch (opt.direction) {
-      case DirectionTypeT.vertical:
-      case DirectionTypeT.box:
-        container = $('<div></div>');
-        break;
-      case DirectionTypeT.horizontal:
-        container = $('<span></span>');
-        break;
-    }
+    var container = $('<div></div>');
     container.addClass('shelf-list')
       .appendTo(visual);
 

@@ -12,7 +12,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Populates the shelves of the GUI with the fields of the model and makes them interactable.
      */
     function populateGUI() {
-     
+
+      console.log("populating gui...");
+
       // populate shelves
       sh.populate(model, shelves.dim, shelves.meas);
 
@@ -20,18 +22,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       shelves.meas.beVisual({label: 'Measures'}).beInteractable();
       shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
       shelves.detail.beVisual({label: 'Details'}).beInteractable();
-      shelves.color.beVisual({label: 'Color', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelves.filter.beVisual({label: 'Filter', direction: vis.DirectionTypeT.box}).beInteractable();
-      shelves.shape.beVisual({label: 'Shape', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelves.size.beVisual({label: 'Size', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.color.beVisual({label: 'Color'}).beInteractable();
+      shelves.filter.beVisual({label: 'Filter'}).beInteractable();
+      shelves.shape.beVisual({label: 'Shape'}).beInteractable();
+      shelves.size.beVisual({label: 'Size'}).beInteractable();
       shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
       shelves.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
       shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
       // add all shelves to the DOM
-      $('#shelves').append(shelves.meas.$visual, shelves.dim.$visual, shelves.filter.$visual, shelves.detail.$visual,
-        shelves.color.$visual, shelves.shape.$visual, shelves.size.$visual, shelves.remove.$visual);
-      $('#layout').append(shelves.row.$visual, shelves.column.$visual);
+      $('#shelves').append(shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.filter.$visual,
+        $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual, $('<hr>'), shelves.shape.$visual,
+        $('<hr>'), shelves.size.$visual, $('<hr>'), shelves.remove.$visual);
+      $('#layout').append(shelves.row.$visual, $('<hr>'), shelves.column.$visual);
       inter.asRemoveElem($(document.body).find('main'));
     }
 
@@ -52,11 +55,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
 
     function onUpdate() {
-      if (testPQLflag || testVisMELflag)
-        return;
-      //debugger;
       query = VisMEL.VisMEL.FromShelves(shelves, model);
-      //debugger;    
       queryTable = new QueryTable(query);
       modelTable = new ModelTable(queryTable);
       modelTable.model()
@@ -93,11 +92,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     }
 
     // locally 'global' variables
-    var query = {},
+    var model = {},
+      query = {},
       queryTable = {},
       modelTable = {},
       resultTable = {},
       viewTable = {};
+
+    // define shelves
+    var shelves = sh.construct();
 
     // visualization base element
     var visPaneD3 = d3.select("#visDiv")
@@ -107,37 +110,17 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         height: 400
       });
 
-    var testPQLflag = false,
-      testVisMELflag = false;
-
-    if (!testPQLflag && !testVisMELflag) {
-      // define shelves
-      var shelves = sh.construct();
-      // get initial model
-      var model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
-      model.update().then(populateGUI)
-        .then(initialQuerySetup)
-        .then(enableQuerying)
-        //.then( () => {debugger; console.log(shelves);})
-        .catch((err) => {
-           console.error(err);
-           throw "Could not load remote model from Server - see above";
-        });
-    }
     $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
-     $('#update-button').click( function() {
-     onUpdate();
-     //eval('console.log("");'); // prevents auto-optimization of the closure
-     });
+    $('#update-button').click( function() {
+      onUpdate();
+      //eval('console.log("");'); // prevents auto-optimization of the closure
+    });
 
     function testPQL() { // jshint ignore:line
-      // put some debug / testing stuff here to be executed on loading of the app
-
       function printResult(res) {
         console.log(res);
         return res;
       }
-
       var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
       var iris, pw, pl, sw, sl;
       mb.get('iris')
@@ -175,7 +158,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     }
 
     function testVisMEL() {
-
       var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
       var query, iris, pw, pl, sw, sl;
       mb.get('iris')
@@ -200,23 +182,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           query.layers[0].aesthetics.color = new VisMEL.ColorMap(plsl_density, 'rgb');
           query.layers[0].aesthetics.size = new VisMEL.SizeMap(plsl_density);
           return query;
-        }) //*/
+        })
         .then(query => {
-          //query = new VisMEL(shelves, model);
           queryTable = new QueryTable(query);
-          //console.log(queryTable);
           modelTable = new ModelTable(queryTable);
           return modelTable.model();
         })
         .then(() => {
-          //console.log(modelTable);
           resultTable = new ResultTable(modelTable, queryTable);
           return resultTable.fetch();
         })
         .then(() => {
-          //console.log(resultTable);
           viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-          //debugger;
         });
     } // function testVisMEL
 
@@ -225,8 +202,27 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Starts the application.
        */
       start: function () {
-        if (testPQLflag) testPQL();
-        if (testVisMELflag) testVisMEL();
+
+        var testPQLflag = false,
+          testVisMELflag = false;
+
+        if (testPQLflag)
+          testPQL();
+        else if (testVisMELflag)
+          testVisMEL();
+        else {
+
+          // get initial model
+          model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
+          model.update().then(populateGUI)
+            .then(initialQuerySetup)
+            .then(enableQuerying)
+            //.then( () => {debugger; console.log(shelves);})
+            .catch((err) => {
+              console.error(err);
+              throw "Could not load remote model from Server - see above";
+            });
+        }
       }
     };
 

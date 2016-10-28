@@ -21,15 +21,16 @@ body {
     font-size: 100%;
 }
 .pl-fu {
-    __border: 1px solid black;
+    /*border: 1px solid black;*/
     width:200px;
     height:30px;
     display: flex;
+    justify-content: center;
     position: relative;
     /*top: 75px;*/
     /*left: 50px;*/
-    justify-content: center;
     padding: 0.1em;
+    /*margin: 0.2em;*/
     border-radius: 0.3em;
     background-color: #F2E6D8;
 }
@@ -43,7 +44,8 @@ body {
     top: 3px;
     max-width: 170px;
     font-family: Quicksand;
-    font-size: .9em;
+    font-size: 1.0em;
+    font-weight: bold;
 }
 .pl-button-container {
     position: absolute;
@@ -85,17 +87,17 @@ body {
     padding: 0;
 }
 
-.pl-hidden {
-    visibility:hidden;
-    opacity: 0;
-    transition: visibility 150ms, opacity 150ms;
-}
-
 ._pl-active {
     font-weight: bold;
     color: black;
 }
 
+
+.pl-hidden {
+    visibility:hidden;
+    opacity: 0;
+    transition: visibility 150ms, opacity 150ms;
+}
 
 .pl-fu:hover > .pl-hidden {
     visibility:visible;
@@ -103,6 +105,8 @@ body {
     transition: visibility 150ms, opacity 150ms;
 }
 
+/* resizing / rearranging on hover */
+/*
 .pl-fu:hover {
     height: 67px;
     transition: height 200ms;
@@ -112,6 +116,19 @@ body {
     top: 15px;
     transition: top 200ms;
 }
+*/
+
+.pl-fu {
+    height: 67px;
+    transition: height 200ms;
+}
+
+.pl-fu > .pl-field {
+    top: 15px;
+    transition: top 200ms;
+}
+
+
 
 .pl-fu-density {
     background-color: #9DBBB7;

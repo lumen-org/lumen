@@ -12,7 +12,7 @@
 }
 
 .shelf-title {
-    text-align: center;
+    /*text-align: center;*/
     font-size: small;
     font-weight: bold;
 }
@@ -44,18 +44,24 @@
     border-radius: 5px
 }
 
-.shelf, .shelf-list-item {
-    /* margin: 0.2em; */
-    margin: 0.5em;
-    padding: 0.1em;
-    /* border: solid 5px transparent; */
-    border: solid 2px #d4d4d4;
-    position: relative;
-}
 
 .shelf {
-    background-color: #f5f5f5;
-    margin-bottom: 0.4em;
+    /*background-color: #f5f5f5;*/
+    /*margin-bottom: 0.4em;*/
+    margin: 0.5rem;
+    padding: 0.2rem;
+    display: flex;
+}
+
+.shelf.horizontal {
+    flex-direction: row;
+    align-items: center;
+    min-height: 70px;
+}
+
+.shelf.vertical {
+    flex-direction: column;
+    min-width: 240px;
 }
 
 .shelf-list {
@@ -63,8 +69,17 @@
 }
 
 .shelf-list-item {
-    border-radius: 5px;
-    background-color: #fbfbfb;
+}
+
+/* a (even just transparent) border is required to make highlighting possible without flickering */
+.shelf, .shelf-list-item {
+    border: solid 2px transparent;
+    border-radius: 0.3em;
+    position: relative;
+}
+
+.shelf > hr {
+    margin: 0.5rem 0 0.5rem;
 }
 
 #queryTextBox {
@@ -73,23 +88,23 @@
 
 .overlap-center {
     /*background-color: #4c55dd;*/
-    border-color: #4c55dd
+    border-color: #38acdd
 }
 
 .overlap-left {
-    border-left-color: #4c55dd
+    border-left-color: #38ACDD
 }
 
 .overlap-right {
-    border-right-color: #4c55dd
+    border-right-color: #38ACDD
 }
 
 .overlap-top {
-    border-top-color: #4c55dd
+    border-top-color: #38ACDD
 }
 
 .overlap-bottom {
-    border-bottom-color: #4c55dd
+    border-bottom-color: #38ACDD
 }
 
 #d3box {

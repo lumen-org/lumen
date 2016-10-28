@@ -8,7 +8,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'lib/d3', './utils', './Domain', './PQL', './Model'], function (Logger, d3, utils, Domain, PQL, Model) {
+define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function (Logger, d3, utils, Domain, PQL, Model) {
   "use strict";
 
   /**

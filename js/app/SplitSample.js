@@ -6,7 +6,7 @@
  * @author Philipp Lucas
  * @module SplitSample
  */
-define(['lib/d3', './Domain', './PQL'], function (d3, Domain, PQL) {
+define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
   "use strict";
 
   /**

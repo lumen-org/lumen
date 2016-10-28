@@ -3,7 +3,7 @@
  * @author Philipp Lucas
  */
 
-define(['lib/logger', 'lib/d3', './PQL'], function (Logger, d3, PQL) {
+define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   "use strict";
 
   var logger = Logger.get('pl-ResultTable');
