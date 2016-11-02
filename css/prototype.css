@@ -78,8 +78,12 @@
     position: relative;
 }
 
-.shelf > hr {
-    margin: 0.5rem 0 0.5rem;
+.shelf + hr {
+    margin: 0.5rem;
+}
+
+.shelf-title {
+    width: 4rem;
 }
 
 #queryTextBox {
@@ -131,4 +135,19 @@
     shape-rendering: crispEdges;
     stroke-dasharray: 2,6;
     stroke-opacity: 0.3;
+}
+
+.pl-error-box {
+    position: fixed;
+    bottom: 1rem;
+    width: 90%;
+    min-height: 1rem;
+    margin-left: 5%;
+    margin-right: 5%;
+    padding: 0.3rem;
+    border: solid 1.5px rgb(255, 54, 3);
+    border-radius: 0.3rem;
+    color: rgb(255, 54, 3);
+    font-weight: bold;
+    display: none;
 }

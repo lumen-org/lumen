@@ -38,6 +38,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       inter.asRemoveElem($(document.body).find('main'));
     }
 
+    function makeErrorBox (id) {
+      var $errorBox = $('<div class="pl-error-box" id="' + id + '"></div>').appendTo($(document.body));
+      $errorBox.click( () => {
+        $errorBox.hide();
+      });
+      return $errorBox;
+    }
+
     /**
      * do some drag and drops to start with some non-empty VisMEL query
      */
@@ -60,6 +68,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       modelTable = new ModelTable(queryTable);
       modelTable.model()
         .then(() => {
+          $errorBox.hide();
+        })
+        .then(() => {
           resultTable = new ResultTable(modelTable, queryTable);
         })
         .then(() => resultTable.fetch())
@@ -78,7 +89,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           console.log("viewTable: ");
           console.log(viewTable);
           console.log("...");
-        });
+        })
+       .catch((reason) => {
+          //debugger;
+          $errorBox.text(reason.responseText);
+          $errorBox.show();
+       })
     }
 
     /**
@@ -109,6 +125,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         width: 400,
         height: 400
       });
+
+    // error box
+    var $errorBox = makeErrorBox("error-box");
 
     $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
@@ -202,7 +221,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Starts the application.
        */
       start: function () {
-
+        console.log("starting the app!");
         var testPQLflag = false,
           testVisMELflag = false;
 
