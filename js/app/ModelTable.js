@@ -62,7 +62,7 @@ define(['./PQL'], function(PQL) {
           let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
             .then( baseModel => { // jshint ignore:line
               this.at[rIdx][cIdx] = baseModel;
-              return baseModel;
+              //return baseModel;
             });
           modelPromises.add(promise);
         }

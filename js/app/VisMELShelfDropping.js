@@ -8,7 +8,7 @@
  * @module interaction
  * @author Philipp Lucas
  */
-define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (Logger, sh, vis, PQL, VisMEL) {
+define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'], function (Logger, util, sh, vis, PQL, VisMEL) {
   'use strict';
 
   var logger = Logger.get('pl-vismelShelfDropping');
@@ -40,6 +40,12 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
       throw new RangeError("unsupported type of content of record: " + content);
   }
 
+  /**
+   * Returns the field(s) referred to in the given record.
+   * @param record A Field, a Split, a Filter, a Density or an Aggregation
+   * @returns {*}
+   * @private
+   */
   function _getField (record) {
     let content = record.content;
     if (PQL.isField(content))
@@ -78,7 +84,7 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
    * @param source A Record
    * @param overlap How they overlap, on of 'left', 'right', 'center', 'top', 'bottom', 'none'.
    */
-  var onDrop = function (target, source, overlap=_OverlapEnum.center) {
+  function drop (target, source, overlap=_OverlapEnum.center) {
     /*
      * Primary onDrop function. It will forward to appropriate subhandlers, there is one handler for each value in
      * {@link module:shelves.ShelfTypeT}, hence one for each type of shelf.
@@ -95,10 +101,10 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
     // delegate to correct handler
     if (target instanceof sh.Record) {
       let fu = _getFieldUsage(target);
-      if (PQL.isAggregationOrDensity(fu) && _isDimOrMeasureShelf(source.shelf)) {
+      if (PQL.isAggregationOrDensity(fu) && overlap === _OverlapEnum.center) {
         // add field to list of fields for that field usage
-        let field = source.content;
-        fu.fields.push(field);
+        let newFields = util.listify(_getField(source));
+        fu.fields = _.union(fu.fields, newFields);
         fu.emitInternalChanged();
       } else {
         onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
@@ -109,6 +115,7 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
       throw new TypeError('target must be a Record or a Shelf');
   };
 
+  var onDrop = {};
   onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
     if (sShelf.type === sh.ShelfTypeT.dimension || sShelf.type === sh.ShelfTypeT.measure) {
       // move to target shelf
@@ -156,7 +163,21 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
           console.error("Dropping on item, but overlap = " + overlap);
       }
     } else {
-      tShelf.append(content);
+      switch (overlap) {
+        case _OverlapEnum.left:
+        case _OverlapEnum.top:
+          // insert in the beginning
+          tShelf.prepend(content);
+          break;
+        case _OverlapEnum.right:
+        case _OverlapEnum.bottom:
+        case _OverlapEnum.center:
+          // insert at the end
+          tShelf.append(content);
+          break;
+        default:
+          console.error("Dropping on item, but overlap = " + overlap);
+      }
     }
     if (!_isDimOrMeasureShelf(sShelf)) sRecord.remove();
   };
@@ -225,5 +246,5 @@ define(['lib/logger', './shelves', './visuals', './PQL', './VisMEL'], function (
     if (!_isDimOrMeasureShelf(sShelf)) sRecord.remove();
   };
 
-  return onDrop;
+  return drop;
 });

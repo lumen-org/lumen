@@ -137,6 +137,8 @@ define([], function () {
     return this;
   };
 
+  Emitter.prototype._emit = _.debounce(Emitter.prototype.emit, 100);
+
   /**
    * Return array of callbacks for `event`.
    *

@@ -21,8 +21,8 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
 
   var _OverlapMargins = Object.freeze({
     type: 'rel',
-    top: 0.3, left: 0.3,
-    bottom: 0.3, right: 0.3
+    top: 0.35, left: 0.3,
+    bottom: 0.35, right: 0.3
   });
 
   /**

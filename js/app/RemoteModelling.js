@@ -32,7 +32,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
    */
 
   var logger = Logger.get('pl-RemoteModel');
-  logger.setLevel(Logger.DEBUG);
+  logger.setLevel(Logger.INFO);
 
   /** Utility function used by the other query functions to actually remotely execute a given query on the remote
    * modelbase.

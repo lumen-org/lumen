@@ -172,7 +172,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
   /**
    * Creates a visual representation of this record, i.e. specialized for ColorMaps
-   */
+   *
   VisMEL.ColorMap.prototype.makeVisual = function () {
     function _updateVisual () {
       $visual.html('')
@@ -184,19 +184,19 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     _updateVisual();
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
-  };
+  };*/
 
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    return $('<div>'+this.name+'</div>');
+    return $('<div class="pl-field pl-field-name">'+this.name+'</div>');
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append($('<div class="pl-field noselect">' + that.names +  '</div>'))
+        .append(fieldNamesDiv(that.names))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
         .append(removeButton(record));
@@ -212,9 +212,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
    function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append($('<div class="pl-field noselect">' + that.names +  '</div>'))
+        .append(fieldNamesDiv(that.names))
         .append(conversionButtons(record))
-        .append(argumentsEditField(that))
         .append(removeButton(record));
     }
     let that = this;
@@ -228,7 +227,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append($('<div class="pl-field noselect">' + that.name +  '</div>'))
+        .append(fieldNamesDiv(that.name))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
         .append(removeButton(record));
@@ -244,8 +243,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append($('<div class="pl-field noselect">' + that.toString() +  '</div>'))
-        //.append(conversionButtons(record))
+        .append(fieldNamesDiv(that))
         .append(argumentsEditField(that))
         .append(removeButton(record));
     }
@@ -298,15 +296,12 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   }
 
   function argumentsEditField (fu) {
-    //debugger;
     function submitOnEnter(elem) {
       if (event.keyCode == 13) {
-        //console.log(elem.target.value);
         try{
           fu.args = JSON.parse(elem.target.value);
           fu.emit(Emitter.InternalChangedEvent);
         } catch (e) { }
-        console.log(fu);
       }
     }
 
@@ -315,6 +310,10 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       ">");
     textEdit.keydown(submitOnEnter);
     return textEdit;
+  }
+
+  function fieldNamesDiv (fieldNames) {
+    return $('<div class="pl-field-name pl-field-in-fu noselect">' + fieldNames.toString() +  '</div>');
   }
 
   return {

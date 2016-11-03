@@ -12,9 +12,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Populates the shelves of the GUI with the fields of the model and makes them interactable.
      */
     function populateGUI() {
-
-      console.log("populating gui...");
-
       // populate shelves
       sh.populate(model, shelves.dim, shelves.meas);
 
@@ -33,17 +30,32 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       // add all shelves to the DOM
       $('#shelves').append(shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.filter.$visual,
         $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual, $('<hr>'), shelves.shape.$visual,
-        $('<hr>'), shelves.size.$visual, $('<hr>'), shelves.remove.$visual);
-      $('#layout').append(shelves.row.$visual, $('<hr>'), shelves.column.$visual);
+        $('<hr>'), shelves.size.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+      $('#layout').append(shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
       inter.asRemoveElem($(document.body).find('main'));
     }
 
-    function makeErrorBox (id) {
-      var $errorBox = $('<div class="pl-error-box" id="' + id + '"></div>').appendTo($(document.body));
-      $errorBox.click( () => {
-        $errorBox.hide();
-      });
-      return $errorBox;
+    class InfoBox {
+      constructor (id) {
+        this.id = id;
+        this.$visual = $('<div class="pl-info-box" id="' + id + '"></div>');
+        this.$visual.click( () => {
+          $errorBox.hide();
+        });
+      }
+
+      hide () {
+        this.$visual.hide();
+      }
+
+      show () {
+        this.$visual.show();
+      }
+
+      message (str, type="error") {
+        this.$visual.text(str);
+        this.show();
+      }
     }
 
     /**
@@ -61,41 +73,53 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       drop(shelves.column, shelves.meas.at(1));
     }
 
+    var onUpdate = _.debounce(
+      function () {
+        try {
+          query = VisMEL.VisMEL.FromShelves(shelves, model);
+          queryTable = new QueryTable(query);
+          modelTable = new ModelTable(queryTable);
+        }
+        catch (error) {
+          console.error(error);
+          infoBox.message(error);
+        }
+        modelTable.model()
+          .then(() => {
+            // console.log("modeltable done");
+            infoBox.hide();
+            resultTable = new ResultTable(modelTable, queryTable);
+            // console.log("result table instantiated");
+          })
+          .then(() => resultTable.fetch())
+          .then(() => {
+            // console.log("result table done");
+            viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
+            // console.log("view table done");
+          })
+          /*.then(() => {
+           console.log("query: ");
+           console.log(query);
+           console.log("QueryTable: ");
+           console.log(queryTable);
+           console.log("ModelTabel: ");
+           console.log(modelTable);
+           console.log("resultTable: ");
+           console.log(resultTable);
+           console.log("viewTable: ");
+           console.log(viewTable);
+           console.log("...");
+           })*/
+          .catch((reason) => {
+            console.error(reason);
+            if (reason instanceof XMLHttpRequest) {
+              infoBox.message(reason.responseText);
+            } else if (reason instanceof Error) {
+              infoBox.message(reason.toString())
+            }
+          })
+      }, 200);
 
-    function onUpdate() {
-      query = VisMEL.VisMEL.FromShelves(shelves, model);
-      queryTable = new QueryTable(query);
-      modelTable = new ModelTable(queryTable);
-      modelTable.model()
-        .then(() => {
-          $errorBox.hide();
-        })
-        .then(() => {
-          resultTable = new ResultTable(modelTable, queryTable);
-        })
-        .then(() => resultTable.fetch())
-        .then(() => {
-          viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-        })
-        .then(() => {
-          console.log("query: ");
-          console.log(query);
-          console.log("QueryTable: ");
-          console.log(queryTable);
-          console.log("ModelTabel: ");
-          console.log(modelTable);
-          console.log("resultTable: ");
-          console.log(resultTable);
-          console.log("viewTable: ");
-          console.log(viewTable);
-          console.log("...");
-        })
-       .catch((reason) => {
-          //debugger;
-          $errorBox.text(reason.responseText);
-          $errorBox.show();
-       })
-    }
 
     /**
      * Enables user querying.
@@ -126,8 +150,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         height: 400
       });
 
-    // error box
-    var $errorBox = makeErrorBox("error-box");
+    // create and display info box
+    var infoBox = new InfoBox("info-box");
+    infoBox.$visual.insertBefore($('main'));
 
     $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
     $('#update-button').click( function() {
@@ -221,22 +246,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Starts the application.
        */
       start: function () {
-        console.log("starting the app!");
         var testPQLflag = false,
           testVisMELflag = false;
-
         if (testPQLflag)
           testPQL();
         else if (testVisMELflag)
           testVisMEL();
         else {
-
+          console.log("Starting the actual app!");
           // get initial model
           model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
           model.update().then(populateGUI)
             .then(initialQuerySetup)
             .then(enableQuerying)
-            //.then( () => {debugger; console.log(shelves);})
             .catch((err) => {
               console.error(err);
               throw "Could not load remote model from Server - see above";

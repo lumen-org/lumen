@@ -574,13 +574,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     if (aesthetics.shape instanceof VisMEL.ShapeMap)
       aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
 
+    // let row = query.layout.rows[0];
+    // if (PQL.isFieldUsage(row))
+    //   row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height - Settings.geometry.axis.padding]);
+    //
+    // let col = query.layout.cols[0];
+    // if (PQL.isFieldUsage(col))
+    //   col.visScale = ScaleGen.position(col, col.extent, [paneSize.width - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
+
     let row = query.layout.rows[0];
     if (PQL.isFieldUsage(row))
-      row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height - Settings.geometry.axis.padding]);
+      row.visScale = ScaleGen.position(row, row.extent, [paneSize.height - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
 
     let col = query.layout.cols[0];
     if (PQL.isFieldUsage(col))
-      col.visScale = ScaleGen.position(col, col.extent, [paneSize.width - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
+      col.visScale = ScaleGen.position(col, col.extent, [Settings.geometry.axis.padding, paneSize.width - Settings.geometry.axis.padding]);
 
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 

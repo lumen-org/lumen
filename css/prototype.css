@@ -27,6 +27,18 @@
     max-height: 30px;
 }
 
+#queryTextBox {
+    white-space: pre-wrap
+}
+
+#visDiv {
+    margin: 1rem;
+}
+
+#queryTextBox {
+    font-size: small;
+}
+
 
 /*.drop-hover {
     background-color: #4c55dd;
@@ -86,9 +98,6 @@
     width: 4rem;
 }
 
-#queryTextBox {
-    white-space: pre-wrap
-}
 
 .overlap-center {
     /*background-color: #4c55dd;*/
@@ -111,18 +120,6 @@
     border-bottom-color: #38ACDD
 }
 
-#d3box {
-    width: 100%;
-}
-
-.d3bar {
-    background-color: orangered;
-}
-
-#queryTextBox {
-    font-size: small;
-}
-
 .axis text {
     stroke: none;
     font-weight: lighter;
@@ -137,13 +134,12 @@
     stroke-opacity: 0.3;
 }
 
-.pl-error-box {
-    position: fixed;
-    bottom: 1rem;
+.pl-info-box {
+    /*position: fixed;*/
+    /*bottom: 1rem;*/
     width: 90%;
     min-height: 1rem;
-    margin-left: 5%;
-    margin-right: 5%;
+    margin: .5rem 5%;
     padding: 0.3rem;
     border: solid 1.5px rgb(255, 54, 3);
     border-radius: 0.3rem;

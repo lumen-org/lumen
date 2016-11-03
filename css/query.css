@@ -22,7 +22,7 @@ body {
 }
 .pl-fu {
     /*border: 1px solid black;*/
-    width:200px;
+    min-width:200px;
     height:30px;
     display: flex;
     justify-content: center;
@@ -34,19 +34,33 @@ body {
     border-radius: 0.3em;
     background-color: #F2E6D8;
 }
+
+.pl-field {
+    min-width:200px;
+    border-radius: 0.3em;
+    background-color: #cfcfcf;
+    display: flex;
+    justify-content: center;
+    padding: 0.2rem;
+}
+
 .pl-method {
     position: absolute;
     top: 3px;
     font-size: 0.7em;
 }
-.pl-field {
-    position: absolute;
-    top: 3px;
-    max-width: 170px;
+.pl-field-name {
     font-family: Quicksand;
     font-size: 1.0em;
     font-weight: bold;
 }
+
+.pl-field-in-fu {
+    position: absolute;
+    top: 0.8rem;
+    max-width: 170px;
+}
+
 .pl-button-container {
     position: absolute;
     top: 3px;
@@ -61,6 +75,7 @@ body {
     line-height: 1.5;
     color: #33302E;
 }
+
 .pl-button-container>span,
 .pl-remove-button {
     cursor: pointer;
@@ -127,8 +142,6 @@ body {
     top: 15px;
     transition: top 200ms;
 }
-
-
 
 .pl-fu-density {
     background-color: #9DBBB7;

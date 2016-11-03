@@ -90,7 +90,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
       fu = shapeMap.fu;
     switch (fu.yieldDataType) {
       case PQL.FieldT.DataType.num:
-        throw new Error("continuous shapes not yet implemented.");
+        throw new RangeError("continuous shapes not yet implemented.");
       case PQL.FieldT.DataType.string:
         scale = d3.scale.ordinal()
           .range(d3.svg.symbolTypes)

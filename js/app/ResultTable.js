@@ -50,6 +50,12 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
    * @private
    */
   var aggregate = function (model, query) {
+
+    if (model === undefined)
+      throw RangeError("model is undefined");
+    if (query === undefined)
+      throw RangeError("query is undefined");
+
     // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
     // - multiple measures of the same field are possible
