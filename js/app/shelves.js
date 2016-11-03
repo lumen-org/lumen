@@ -69,8 +69,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    * Populates the given dimension and measure shelf with the field from the given model. Note that references to the fields are added, not copies of them.
    * Note: it does not make added fields {@link beVisual} or {@link beInteractable}!
    * @param model
-   * @param {DimensionShelf} dimShelf
-   * @param {MeasureShelf} measShelf
+   * @param dimShelf
+   * @param measShelf
    */
   function populate(model, dimShelf, measShelf) {
     for (let field of model.fields.values()) {
@@ -158,7 +158,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
     }
 
     clear() {
-      for (let idx = this.records.length; idx > 0; --idx)
+      for (let idx = this.records.length-1; idx >= 0; --idx)
         this.remove(idx);
     }
 
@@ -231,7 +231,6 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
 
   /**
    * Returns a new set of types of shelves.
-   * @returns {{dim: (exports|module.exports|DimensionShelf|*), meas: (exports|module.exports|MeasureShelf|*), detail: (exports|module.exports|DetailShelf|*), color: (exports|module.exports|ColorShelf|*), filter: (exports|module.exports|FilterShelf|*), shape: (exports|module.exports|ShapeShelf|*), size: (exports|module.exports|SizeShelf|*), row: (exports|module.exports|RowShelf|*), column: (exports|module.exports|ColumnShelf|*), remove: (exports|module.exports|RemoveShelf|*)}}
    */
   function construct() {
     return {

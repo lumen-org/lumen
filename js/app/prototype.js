@@ -11,7 +11,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     /**
      * Populates the shelves of the GUI with the fields of the model and makes them interactable.
      */
-    function populateGUI() {
+    function populateGUI(model, shelves) {
       // populate shelves
       sh.populate(model, shelves.dim, shelves.meas);
 
@@ -28,11 +28,37 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
       // add all shelves to the DOM
-      $('#shelves').append(shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.filter.$visual,
-        $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual, $('<hr>'), shelves.shape.$visual,
-        $('<hr>'), shelves.size.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
-      $('#layout').append(shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
+      $('#pl-model').append(
+        shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+      $('#pl-mappings').append(
+        shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+        $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
+      $('#pl-layout').append( shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
+
+      // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
       inter.asRemoveElem($(document.body).find('main'));
+    }
+
+    function makeToolbar (id) {
+      var $modelSelect = $('<div> Model: custom MVG ... </div>');
+      var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {console.log("undo it!");});
+      var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {console.log("redo it!");});
+      var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click( () => clear(shelves));
+      var $query = $('<div class="pl-toolbar-button">Generate Query!</div>')
+        .click( () => { //eval('console.log("");'); // prevents auto-optimization of the closure
+          onUpdate();
+      });
+      return $('<div id="' + id + '">').append($modelSelect, $undo, $redo, $clear, $query);
+    }
+
+    function clear (shelves) {
+      shelves.detail.clear();
+      shelves.color.clear();
+      shelves.filter.clear();
+      shelves.shape.clear();
+      shelves.size.clear();
+      shelves.row.clear();
+      shelves.column.clear();
     }
 
     class InfoBox {
@@ -40,7 +66,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.id = id;
         this.$visual = $('<div class="pl-info-box" id="' + id + '"></div>');
         this.$visual.click( () => {
-          $errorBox.hide();
+          this.hide();
         });
       }
 
@@ -61,7 +87,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     /**
      * do some drag and drops to start with some non-empty VisMEL query
      */
-    function initialQuerySetup() {
+    function initialQuerySetup(shelves) {
       drop(shelves.dim, shelves.meas.at(0));
       //drop(shelves.filter, shelves.meas.at(1));
       //drop(shelves.detail, shelves.dim.at(0));
@@ -115,16 +141,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             if (reason instanceof XMLHttpRequest) {
               infoBox.message(reason.responseText);
             } else if (reason instanceof Error) {
-              infoBox.message(reason.toString())
+              infoBox.message(reason.toString());
             }
-          })
+          });
       }, 200);
 
 
     /**
-     * Enables user querying.
+     * Enables user querying for given shelves.
      */
-    function enableQuerying() {
+    function enableQuerying(shelves) {
       for (const key of Object.keys(shelves))
         shelves[key].on(Emitter.ChangedEvent, onUpdate);
       // trigger initial query execution
@@ -142,23 +168,20 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     // define shelves
     var shelves = sh.construct();
 
+    // create tool bar
+    makeToolbar("pl-toolbar").insertBefore($('main'));
+
+    // create info box
+    var infoBox = new InfoBox("info-box");
+    infoBox.$visual.insertBefore($('main'));
+
     // visualization base element
-    var visPaneD3 = d3.select("#visDiv")
+    var visPaneD3 = d3.select("#pl-visualization")
       .append("svg")
       .attr({
         width: 400,
         height: 400
       });
-
-    // create and display info box
-    var infoBox = new InfoBox("info-box");
-    infoBox.$visual.insertBefore($('main'));
-
-    $('#debug-stuff').append($('<button type="button" id="update-button">Generate Query!</button>'));
-    $('#update-button').click( function() {
-      onUpdate();
-      //eval('console.log("");'); // prevents auto-optimization of the closure
-    });
 
     function testPQL() { // jshint ignore:line
       function printResult(res) {
@@ -256,12 +279,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           console.log("Starting the actual app!");
           // get initial model
           model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
-          model.update().then(populateGUI)
-            .then(initialQuerySetup)
-            .then(enableQuerying)
+          model.update()
+            .then(() => populateGUI(model, shelves))
+            .then(() => initialQuerySetup(shelves))
+            .then(() => enableQuerying(shelves))
             .catch((err) => {
               console.error(err);
-              throw "Could not load remote model from Server - see above";
+              infoBox.message("Could not load remote model from Server!");
             });
         }
       }

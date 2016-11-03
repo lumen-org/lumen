@@ -20,6 +20,7 @@ body {
     font-family: Quicksand, Verdana, Sans-serif;
     font-size: 100%;
 }
+
 .pl-fu {
     /*border: 1px solid black;*/
     min-width:200px;
@@ -36,7 +37,7 @@ body {
 }
 
 .pl-field {
-    min-width:200px;
+    /*min-width: 200px;*/
     border-radius: 0.3em;
     background-color: #cfcfcf;
     display: flex;
@@ -166,3 +167,13 @@ body {
     font-weight: bold;
     color: black;
 }
+
+#pl-model {
+    min-width: 7rem;
+}
+
+#pl-mappings {
+    min-width: 15rem;
+}
+
+
