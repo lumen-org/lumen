@@ -147,7 +147,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             .then(() => c.resultTable.fetch())
             .then(() => {
               // console.log("result table done");
-              c.viewTable = new ViewTable(visPaneD3, c.resultTable, c.queryTable);
+              c.viewTable = new ViewTable(c.visualD3, c.resultTable, c.queryTable);
               // console.log("view table done");
             })
             /*.then(() => {
@@ -329,19 +329,22 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
           //// per context
 
+          //
           var context = makeContext();
           context.server = "http://127.0.0.1:5000/webservice";
 
-          // TODO: the set of visualizations and their context
+          // TODO: as much as possible should be in makeContext!
+          // also the context needs to know about the visuals such that it can enable and disable it
+          // hiding and showing the different DOM elements for the visualizations is what needs to be done in activate(context)!
 
           // create and insert tool bar
           makeToolbar(context.shelves, context.update).insertBefore($('main'));
 
           // visualization base element
-          var visPaneD3 = d3.select("#pl-visualization-container")
+          context.visualD3 = d3.select("#pl-visualization-container")
             .append("svg")
             .classed("pl-visualization", true)
-            .attr();
+            .attr({width: 300, height: 300});
 
           let $visuals = makeGUI(context.model, context.shelves, context.update);
           $('#pl-model-container').append($visuals.models);
