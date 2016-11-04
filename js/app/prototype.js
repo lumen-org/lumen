@@ -9,48 +9,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     /**
-     * Populates the shelves of the GUI with the fields of the model and makes them interactable.
+     * Utility function. Clears the given collection of shelves
      */
-    function populateGUI(model, shelves) {
-      // populate shelves
-      sh.populate(model, shelves.dim, shelves.meas);
-
-      // make all shelves visual and interactable
-      shelves.meas.beVisual({label: 'Measures'}).beInteractable();
-      shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
-      shelves.detail.beVisual({label: 'Details'}).beInteractable();
-      shelves.color.beVisual({label: 'Color'}).beInteractable();
-      shelves.filter.beVisual({label: 'Filter'}).beInteractable();
-      shelves.shape.beVisual({label: 'Shape'}).beInteractable();
-      shelves.size.beVisual({label: 'Size'}).beInteractable();
-      shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-      shelves.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-      shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-
-      // add all shelves to the DOM
-      $('#pl-model').append(
-        shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
-      $('#pl-mappings').append(
-        shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
-        $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
-      $('#pl-layout').append( shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
-
-      // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
-      inter.asRemoveElem($(document.body).find('main'));
-    }
-
-    function makeToolbar (id) {
-      var $modelSelect = $('<div> Model: custom MVG ... </div>');
-      var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {console.log("undo it!");});
-      var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {console.log("redo it!");});
-      var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click( () => clear(shelves));
-      var $query = $('<div class="pl-toolbar-button">Generate Query!</div>')
-        .click( () => { //eval('console.log("");'); // prevents auto-optimization of the closure
-          onUpdate();
-      });
-      return $('<div id="' + id + '">').append($modelSelect, $undo, $redo, $clear, $query);
-    }
-
     function clear (shelves) {
       shelves.detail.clear();
       shelves.color.clear();
@@ -61,31 +21,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       shelves.column.clear();
     }
 
-    class InfoBox {
-      constructor (id) {
-        this.id = id;
-        this.$visual = $('<div class="pl-info-box" id="' + id + '"></div>');
-        this.$visual.click( () => {
-          this.hide();
-        });
-      }
-
-      hide () {
-        this.$visual.hide();
-      }
-
-      show () {
-        this.$visual.show();
-      }
-
-      message (str, type="error") {
-        this.$visual.text(str);
-        this.show();
-      }
-    }
 
     /**
-     * do some drag and drops to start with some non-empty VisMEL query
+     * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
       drop(shelves.dim, shelves.meas.at(0));
@@ -99,61 +37,161 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       drop(shelves.column, shelves.meas.at(1));
     }
 
-    var onUpdate = _.debounce(
-      function () {
-        try {
-          query = VisMEL.VisMEL.FromShelves(shelves, model);
-          queryTable = new QueryTable(query);
-          modelTable = new ModelTable(queryTable);
-        }
-        catch (error) {
-          console.error(error);
-          infoBox.message(error);
-        }
-        modelTable.model()
-          .then(() => {
-            // console.log("modeltable done");
-            infoBox.hide();
-            resultTable = new ResultTable(modelTable, queryTable);
-            // console.log("result table instantiated");
-          })
-          .then(() => resultTable.fetch())
-          .then(() => {
-            // console.log("result table done");
-            viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-            // console.log("view table done");
-          })
-          /*.then(() => {
-           console.log("query: ");
-           console.log(query);
-           console.log("QueryTable: ");
-           console.log(queryTable);
-           console.log("ModelTabel: ");
-           console.log(modelTable);
-           console.log("resultTable: ");
-           console.log(resultTable);
-           console.log("viewTable: ");
-           console.log(viewTable);
-           console.log("...");
-           })*/
-          .catch((reason) => {
-            console.error(reason);
-            if (reason instanceof XMLHttpRequest) {
-              infoBox.message(reason.responseText);
-            } else if (reason instanceof Error) {
-              infoBox.message(reason.toString());
-            }
-          });
-      }, 200);
+    /**
+     * An info box allows receives messages that it shows.
+     */
+    class InfoBox {
+      constructor (id) {
+        this.id = id;
+        this._$visual = $('<div class="pl-info-box" id="' + id + '"></div>');
+        this._$visual.click( () => {
+          this.hide();
+        });
+      }
+
+      hide () {
+        this.$visual.hide();
+      }
+
+      show () {
+        this.$visual.show();
+      }
+
+      message (str, type="error") {
+        this._$visual.text(str);
+        this.show();
+      }
+
+      get $visual () {
+        return this._$visual;
+      }
+    }
 
     /**
-     * Enables user querying for given shelves.
+     * Create and return GUI for shelves and models.
      */
-    function enableQuerying(shelves) {
+    function makeGUI(model, shelves, update) {
+      // make all shelves visual and interactable
+      shelves.meas.beVisual({label: 'Measures'}).beInteractable();
+      shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
+      shelves.detail.beVisual({label: 'Details'}).beInteractable();
+      shelves.color.beVisual({label: 'Color'}).beInteractable();
+      shelves.filter.beVisual({label: 'Filter'}).beInteractable();
+      shelves.shape.beVisual({label: 'Shape'}).beInteractable();
+      shelves.size.beVisual({label: 'Size'}).beInteractable();
+      shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
+      shelves.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+      shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+
+      // add all shelves visuals to containers
+      var models = $('<div class="pl-model"></div>').append(
+        shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+      var mappings = $('<div class="pl-mappings"></div>').append(
+        shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+        $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
+      var layout = $('<div class="pl-layout"></div>').append( shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
+
+      // Enables user querying for given shelves.
       for (const key of Object.keys(shelves))
-        shelves[key].on(Emitter.ChangedEvent, onUpdate);
-      // trigger initial query execution
-      onUpdate();
+        shelves[key].on(Emitter.ChangedEvent, update);
+
+      return {'models':models, 'mappings':mappings, 'layout':layout};
+    }
+
+    /**
+     * Creates and returns a toolbar.
+     */
+    function makeToolbar (shelves, update) {
+      var $modelSelect = $('<div> Model: custom MVG ... </div>');
+      var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {console.log("undo it!");});
+      var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {console.log("redo it!");});
+      var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click( () => clear(shelves));
+      var $query = $('<div class="pl-toolbar-button">Query!</div>')
+        .click( () => { //eval('console.log("");'); // prevents auto-optimization of the closure
+          update();
+      });
+      return $('<div class="pl-toolbar">').append($modelSelect, $undo, $redo, $clear, $query);
+    }
+
+    /**
+     * Creates and returns a new, empty context.
+     */
+    function makeContext() {
+
+      /**
+       * Creates and returns a function to update a context. On calling this function the
+       * context does not need to be provided again.
+       *
+       * @param c the context.
+       */
+      function makeContextedUpdateFct (c) {
+
+        // Note that this function accesses the local scope!
+        function update () {
+          try {
+            c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model);
+            c.queryTable = new QueryTable(c.query);
+            c.modelTable = new ModelTable(c.queryTable);
+          }
+          catch (error) {
+            console.error(error);
+            infoBox.message(error);
+          }
+          c.modelTable.model()
+            .then(() => {
+              // console.log("modeltable done");
+              infoBox.hide();
+              c.resultTable = new ResultTable(c.modelTable, c.queryTable);
+              // console.log("result table instantiated");
+            })
+            .then(() => c.resultTable.fetch())
+            .then(() => {
+              // console.log("result table done");
+              c.viewTable = new ViewTable(visPaneD3, c.resultTable, c.queryTable);
+              // console.log("view table done");
+            })
+            /*.then(() => {
+             console.log("query: ");
+             console.log(query);
+             console.log("QueryTable: ");
+             console.log(queryTable);
+             console.log("ModelTabel: ");
+             console.log(modelTable);
+             console.log("resultTable: ");
+             console.log(resultTable);
+             console.log("viewTable: ");
+             console.log(viewTable);
+             console.log("...");
+             })*/
+            .catch((reason) => {
+              console.error(reason);
+              if (reason instanceof XMLHttpRequest) {
+                infoBox.message(reason.responseText);
+              } else if (reason instanceof Error) {
+                infoBox.message(reason.toString());
+              }
+            });
+        }
+
+        return update;
+      }
+
+      var context = {
+        // server and model
+        server: "",
+        model: {},
+        // shelves configuration
+        shelves: sh.construct(),
+        // the stages of the pipeline: query -> ... -> visualization
+        query: {},
+        queryTable: {},
+        modelTable: {},
+        resultTable: {},
+        viewTable: {}
+      };
+      context.update = _.debounce(makeContextedUpdateFct(context), 200);
+
+      return context;
     }
 
     /**
@@ -183,41 +221,40 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       // update shelves
     }
 
-    /// the active context
-    // the current server and model
-    var server = "http://127.0.0.1:5000/webservice",
-      model = {};
-    // shelves configuration
-    var shelves = sh.construct();
-    // the stages of the pipeline: query -> ... -> visualization
-    var query = {},
-      queryTable = {},
-      modelTable = {},
-      resultTable = {},
-      viewTable = {};
-    // TODO: the set of visualizations and their context
+    /// independent of context
 
-    // create tool bar
-    makeToolbar("pl-toolbar").insertBefore($('main'));
+    // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
+    inter.asRemoveElem($(document.body).find('main'));
 
     // create info box
     var infoBox = new InfoBox("info-box");
     infoBox.$visual.insertBefore($('main'));
 
+    //// per context
+
+    var context = makeContext();
+    context.server = "http://127.0.0.1:5000/webservice";
+
+    // TODO: the set of visualizations and their context
+
+    // create tool bar
+    makeToolbar(context.shelves, context.update).insertBefore($('main'));
+
     // visualization base element
-    var visPaneD3 = d3.select("#pl-visualization")
+    var visPaneD3 = d3.select("#pl-visualization-container")
       .append("svg")
+      .classed("pl-visualization", true)
       .attr({
         width: 400,
         height: 400
       });
 
-    function testPQL() { // jshint ignore:line
+    function testPQL(server) { // jshint ignore:line
       function printResult(res) {
         console.log(res);
         return res;
       }
-      var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
+      var mb = new Remote.ModelBase(server);
       var iris, pw, pl, sw, sl;
       mb.get('iris')
         .then( iris_ => {
@@ -253,8 +290,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         .then( () => iris);
     }
 
-    function testVisMEL() {
-      var mb = new Remote.ModelBase("http://127.0.0.1:5000/webservice");
+    function testVisMEL(server) {
+      //var c = context;
+      var mb = new Remote.ModelBase(server);
       var query, iris, pw, pl, sw, sl;
       mb.get('iris')
         .then( iris_ => {
@@ -301,17 +339,24 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var testPQLflag = false,
           testVisMELflag = false;
         if (testPQLflag)
-          testPQL();
+          testPQL(context.server);
         else if (testVisMELflag)
-          testVisMEL();
+          testVisMEL(context.server);
         else {
           console.log("Starting the actual app!");
           // get initial model
-          model = new Remote.Model('mvg4', server);
-          model.update()
-            .then(() => populateGUI(model, shelves))
-            .then(() => initialQuerySetup(shelves))
-            .then(() => enableQuerying(shelves))
+          context.model = new Remote.Model('mvg4', context.server);
+          context.model.update()
+            .then(() => {
+              // on model change
+              let $visuals = makeGUI(context.model, context.shelves, context.update);
+              $('#pl-model-container').append($visuals.models);
+              $('#pl-mappings-container').append($visuals.mappings);
+              $('#pl-layout-container').append($visuals.layout);
+            })
+            .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
+            .then(() => initialQuerySetup(context.shelves)) // on initial startup only
+            //.then(() => enableQuerying(context.shelves, context.update))  // remove later, debug
             .catch((err) => {
               console.error(err);
               infoBox.message("Could not load remote model from Server!");

@@ -31,7 +31,7 @@ main {
     white-space: pre-wrap
 }
 
-#pl-visualization {
+.pl-visualization {
     margin: 1rem;
 }
 
@@ -39,7 +39,7 @@ main {
     font-size: small;
 }
 
-#pl-toolbar {
+.pl-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-around;

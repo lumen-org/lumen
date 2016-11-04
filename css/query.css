@@ -168,11 +168,11 @@ body {
     color: black;
 }
 
-#pl-model {
+#pl-model-container {
     min-width: 7rem;
 }
 
-#pl-mappings {
+#pl-mappings-container {
     min-width: 15rem;
 }
 
