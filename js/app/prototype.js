@@ -146,7 +146,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           });
       }, 200);
 
-
     /**
      * Enables user querying for given shelves.
      */
@@ -157,16 +156,46 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       onUpdate();
     }
 
-    // locally 'global' variables
-    var model = {},
-      query = {},
+    /**
+     * Activates a context and enables interactive editing of a query on/for it.
+     * @param context Context to activate.
+     */
+    function activate (context) {
+      // set local references to the chosen context
+      server = "http://127.0.0.1:5000/webservice";
+      model = context.model;
+      query = context.query;
+      if(context.hasOwnProperty('modelTable')) {
+        modelTable = context.modelTable;
+      } else {
+        modelTable = {};
+      }
+      if(context.hasOwnProperty('resultTable')) {
+        resultTable = context.resultTable;
+      } else {
+        resultTable = {};
+      }
+      if(context.hasOwnProperty('viewTable')) {
+        viewTable = context.viewTable;
+      } else {
+        viewTable = {};
+      }
+      // update shelves
+    }
+
+    /// the active context
+    // the current server and model
+    var server = "http://127.0.0.1:5000/webservice",
+      model = {};
+    // shelves configuration
+    var shelves = sh.construct();
+    // the stages of the pipeline: query -> ... -> visualization
+    var query = {},
       queryTable = {},
       modelTable = {},
       resultTable = {},
       viewTable = {};
-
-    // define shelves
-    var shelves = sh.construct();
+    // TODO: the set of visualizations and their context
 
     // create tool bar
     makeToolbar("pl-toolbar").insertBefore($('main'));
@@ -278,7 +307,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         else {
           console.log("Starting the actual app!");
           // get initial model
-          model = new Remote.Model('mvg4', "http://127.0.0.1:5000/webservice");
+          model = new Remote.Model('mvg4', server);
           model.update()
             .then(() => populateGUI(model, shelves))
             .then(() => initialQuerySetup(shelves))
