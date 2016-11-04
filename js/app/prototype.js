@@ -230,24 +230,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     var infoBox = new InfoBox("info-box");
     infoBox.$visual.insertBefore($('main'));
 
-    //// per context
-
-    var context = makeContext();
-    context.server = "http://127.0.0.1:5000/webservice";
-
-    // TODO: the set of visualizations and their context
-
-    // create tool bar
-    makeToolbar(context.shelves, context.update).insertBefore($('main'));
-
-    // visualization base element
-    var visPaneD3 = d3.select("#pl-visualization-container")
-      .append("svg")
-      .classed("pl-visualization", true)
-      .attr({
-        width: 400,
-        height: 400
-      });
 
     function testPQL(server) { // jshint ignore:line
       function printResult(res) {
@@ -344,15 +326,33 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           testVisMEL(context.server);
         else {
           console.log("Starting the actual app!");
+
+          //// per context
+
+          var context = makeContext();
+          context.server = "http://127.0.0.1:5000/webservice";
+
+          // TODO: the set of visualizations and their context
+
+          // create and insert tool bar
+          makeToolbar(context.shelves, context.update).insertBefore($('main'));
+
+          // visualization base element
+          var visPaneD3 = d3.select("#pl-visualization-container")
+            .append("svg")
+            .classed("pl-visualization", true)
+            .attr();
+
+          let $visuals = makeGUI(context.model, context.shelves, context.update);
+          $('#pl-model-container').append($visuals.models);
+          $('#pl-mappings-container').append($visuals.mappings);
+          $('#pl-layout-container').append($visuals.layout);
+
           // get initial model
           context.model = new Remote.Model('mvg4', context.server);
           context.model.update()
             .then(() => {
               // on model change
-              let $visuals = makeGUI(context.model, context.shelves, context.update);
-              $('#pl-model-container').append($visuals.models);
-              $('#pl-mappings-container').append($visuals.mappings);
-              $('#pl-layout-container').append($visuals.layout);
             })
             .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
             .then(() => initialQuerySetup(context.shelves)) // on initial startup only

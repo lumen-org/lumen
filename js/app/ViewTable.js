@@ -362,7 +362,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * @alias module:ViewTable
    */
   var ViewTable;
-  ViewTable = function (paneD3, results, queries) {
+  ViewTable = function (paneSize, results, queries) {
 
     this.results = results;
     this.queries = queries;
@@ -378,6 +378,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
       }
     );
+
+    // create root svg element
+    var paneD3 = d3.select(document.createElement("div"))
+      .classed("pl-visualization", true)
+      .attr(paneSize);
+
+    // store it for use in outside world
+    this.visualDOM = paneD3.node();
 
     // init table canvas
     this.canvas = initCanvas(paneD3,
