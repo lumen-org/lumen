@@ -168,6 +168,12 @@ body {
     color: black;
 }
 
+.pl-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 #pl-model-container {
     min-width: 7rem;
 }
@@ -175,5 +181,3 @@ body {
 #pl-mappings-container {
     min-width: 15rem;
 }
-
-

@@ -269,15 +269,24 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     return removeButton;
   }
 
+  /**
+   * Creates and returns GUI elements to convert the given record to another usage.
+   * The records content must either be a BaseMap or a FieldUsage. The buttons allow to change the
+   * FieldUsage to another 'type', i.e. switching between aggregation, split and density.
+   *
+   * This is self-contained. Using the buttons
+   */
   function conversionButtons (record) {
 
     function translate (record, TargetType) {
       let content = record.content;
-      let oldFU =  (content instanceof VisMEL.BaseMap ? content.fu : content);
-      // construct new FU/Map
-      let newFU = TargetType.FromFieldUsage(oldFU);
+      let isBaseMap = content instanceof VisMEL.BaseMap;
+      // construct new FU
+      let newFU = TargetType.FromFieldUsage(isBaseMap ? content.fu : content);
+      // construct new Mapping if necessary
+      let newContent = isBaseMap ? content.constructor.DefaultMap(newFU) : newFU;
       // and replace the old one
-      record.replaceBy(newFU);
+      record.replaceBy(newContent);
     }
 
     var button = $(/*jshint multistr: true */

@@ -146,6 +146,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // Note that this function accesses the local scope!
         function update () {
+          console.log("updating!");
           try {
             c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model);
             c.queryTable = new QueryTable(c.query);
@@ -168,19 +169,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               c.viewTable = new ViewTable(c.$visuals.visualization.get(0), c.resultTable, c.queryTable);
               // console.log("view table done");
             })
-            /*.then(() => {
+            .then(() => {
              console.log("query: ");
-             console.log(query);
+             console.log(c.query);
              console.log("QueryTable: ");
-             console.log(queryTable);
+             console.log(c.queryTable);
              console.log("ModelTabel: ");
-             console.log(modelTable);
+             console.log(c.modelTable);
              console.log("resultTable: ");
-             console.log(resultTable);
+             console.log(c.resultTable);
              console.log("viewTable: ");
-             console.log(viewTable);
+             console.log(c.viewTable);
              console.log("...");
-             })*/
+             })
             .catch((reason) => {
               console.error(reason);
               if (reason instanceof XMLHttpRequest) {
@@ -367,7 +368,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           activate(context);
 
           // get initial model
-          context.model = new Remote.Model('mvg4', context.server);
+          context.model = new Remote.Model('iris', context.server);
           context.model.update()
             .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
             .then(() => initialQuerySetup(context.shelves)) // on initial startup only
