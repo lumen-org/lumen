@@ -13,7 +13,7 @@ define([], function() {
 
   class UnRedo {
 
-    constructor(limit = 1000) {
+    constructor(limit = 100) {
       this._limit = limit;
       this._current = 0;
       this._present = 0;

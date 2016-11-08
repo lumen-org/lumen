@@ -4,12 +4,12 @@
  * @module main
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     /**
-     * Utility function. Clears the given collection of shelves
+     * Utility function. Clears the given collection of shelves, except for measure and dimension shelves.
      */
     function clear (shelves) {
       shelves.detail.clear();
@@ -38,7 +38,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     }
 
     /**
-     * An info box allows receives messages that it shows.
+     * An info box receives messages that it shows.
      */
     class InfoBox {
       constructor (id) {
@@ -71,10 +71,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     /**
      * Creates and returns a toolbar.
      */
-    function makeToolbar (shelves, update) {
+    function makeToolbar (shelves, update, unredoer) {
       var $modelSelect = $('<div> Model: custom MVG ... </div>');
-      var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {console.log("undo it!");});
-      var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {console.log("redo it!");});
+      var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
+        if (unredoer.hasPrevious)
+          activate(unredoer.undo());
+        console.log("undid it!");
+
+      });
+      var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
+        if (unredoer.hasNext)
+          activate(unredoer.redo());
+        console.log("redid it!");
+      });
       var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click( () => clear(shelves));
       var $query = $('<div class="pl-toolbar-button">Query!</div>')
         .click( () => { //eval('console.log("");'); // prevents auto-optimization of the closure
@@ -87,7 +96,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     /**
      * Create and return GUI for shelves and models.
      */
-    function makeGUI(model, shelves, update) {
+    function makeGUI(model, shelves, update, unredoer) {
       // make all shelves visual and interactable
       shelves.meas.beVisual({label: 'Measures'}).beInteractable();
       shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
@@ -114,7 +123,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       for (const key of Object.keys(shelves))
         shelves[key].on(Emitter.ChangedEvent, update);
 
-      visual.toolbar = makeToolbar(shelves, update);
+      visual.toolbar = makeToolbar(shelves, update, unredoer);
 
       visual.visualization = $('<svg class="pl-visualization"></svg>');
 
@@ -200,7 +209,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       };
 
       context.update = _.debounce(makeContextedUpdateFct(context), 200);
-      context.$visuals = makeGUI(context.model, context.shelves, context.update);
+      context.$visuals = makeGUI(context.model, context.shelves, context.update, context.unredoer);
+      context.unredoer = new UnRedo(20);
 
       return context;
     }
