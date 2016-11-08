@@ -199,7 +199,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append(fieldNamesDiv(that.names))
+        .append(multiFieldDiv(that, record))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
         .append(removeButton(record));
@@ -215,7 +215,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
    function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append(fieldNamesDiv(that.names))
+        .append(multiFieldDiv(that, record))
         .append(conversionButtons(record))
         .append(removeButton(record));
     }
@@ -230,7 +230,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append(fieldNamesDiv(that.name))
+        .append(singleFieldDiv([that.name], record))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
         .append(removeButton(record));
@@ -246,7 +246,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     function _updateVisual () {
       $visual.html('')
         .append(methodSelector(that))
-        .append(fieldNamesDiv(that))
+        .append(singleFieldDiv([that.name], record))
         .append(argumentsEditField(that))
         .append(removeButton(record));
     }
@@ -263,9 +263,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
   function removeButton (record) {
     var removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
-    removeButton.click( () => {
-      record.shelf.remove(record);
-    });
+    removeButton.click(() => record.remove());
     return removeButton;
   }
 
@@ -324,8 +322,56 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     return textEdit;
   }
 
-  function fieldNamesDiv (fieldNames) {
-    return $('<div class="pl-field-name pl-field-in-fu noselect">' + fieldNames.toString() +  '</div>');
+  function singleFieldDiv (fieldName, record, removable = true) {
+    var $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
+    let $fieldDiv = $('<div class="pl-field-name"></div>');
+    if (removable) {
+      let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
+      $removeButton.click(()=>{
+        record.remove();
+      });
+      $fieldDiv.append($removeButton)
+        .append($('<span>' + fieldName + '</span>'));
+    }
+
+    $fieldNames.append($fieldDiv);
+    return $fieldNames;
+  }
+
+  function multiFieldDiv (fu, record, removable = true) {
+    var $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
+    for (let name of fu.names) {
+
+      let $fieldDiv = $('<div class="pl-field-name"></div>');
+
+      // add remove button: i.e. a botton that allows to remove a field from a multi-field-usage
+      if (removable) {
+        let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
+        $removeButton.click(()=>{
+          if (fu.names.length === 1)
+            return record.remove();
+          fu.fields = fu.fields.filter( elem => elem.name !== name );
+          if (fu.yields === name)
+            fu.yields = fu.fields[0].name;
+          fu.emit(Emitter.InternalChangedEvent);
+        });
+        $fieldDiv.append($removeButton);
+      }
+
+      // add name of field and make it clickable to select the yield type
+      let $clickableName = $('<span>' + name + '</span>')
+        .toggleClass('pl-yield-field', fu.yields === name)
+        .click(() => {
+          if (fu.yields !== name) {
+            fu.yields = name;
+            fu.emit(Emitter.InternalChangedEvent);
+          }
+        });
+      $fieldDiv.append($clickableName);
+
+      $fieldNames.append($fieldDiv);
+    }
+    return $fieldNames;
   }
 
   return {

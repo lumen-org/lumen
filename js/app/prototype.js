@@ -368,7 +368,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           activate(context);
 
           // get initial model
-          context.model = new Remote.Model('iris', context.server);
+          //context.model = new Remote.Model('iris', context.server);
+          context.model = new Remote.Model('mvg4', context.server);
           context.model.update()
             .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
             .then(() => initialQuerySetup(context.shelves)) // on initial startup only
