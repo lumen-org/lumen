@@ -109,21 +109,23 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   }
 
   function _lastSplitAfter (tRecord, overlap) {
+    let lastSplit;
     let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 1 : 0);
     let tShelf = tRecord.shelf;
-    for (let idx = tRecord.index() + offset; idx < tRecord.shelf.length; idx++)
+    for (let idx = tRecord.index() + offset; idx < tShelf.length; idx++)
       if (PQL.isSplit(tShelf.contentAt(idx)))
-        tRecord = tShelf.at(idx);
-    return tRecord;
+        lastSplit = tShelf.at(idx);
+    return lastSplit;
   }
 
   function _earlierstDensityAggrBefore (tRecord, overlap) {
+    let earliestDensityAggr;
     let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 0 : 1);
     let tShelf = tRecord.shelf;
     for (let idx = tRecord.index() - offset; idx >= 0; idx--)
-      if (PQL.isSplit(tShelf.contentAt(idx)))
-        tRecord = tShelf.at(idx);
-    return tRecord;
+      if (PQL.isAggregationOrDensity(tShelf.contentAt(idx)))
+        earliestDensityAggr = tShelf.at(idx);
+    return earliestDensityAggr;
   }
 
   /**
@@ -189,10 +191,10 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
         // note that overlap remains unchanged only in this case
         tShelf.append(content);
       } else if (overlap === 'left' || overlap === 'top') {
-        tRecord = tShelf.at[0];
+        tRecord = tShelf.at(0);
         overlap = 'left';
       } else if (overlap === 'bottom' || overlap === 'right' || overlap === 'center') {
-        tRecord = tShelf.at[tShelf.length-1];
+        tRecord = tShelf.at(tShelf.length-1);
         overlap = 'right';
       } else {
         throw new RangeError("invalid overlap = " + overlap);
@@ -205,35 +207,23 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     if (tRecord !== undefined) {
       let lastSplit = _lastSplitAfter(tRecord, overlap),
         firstAggrDensity = _earlierstDensityAggrBefore(tRecord, overlap),
-        isAggrDensity = PQL.isAggregationOrDensity(_getFieldUsage(tRecord));
+        isAggrDensity = PQL.isAggregationOrDensity(content);
 
-      if (overlap === 'center') {
-        if (isAggrDensity && lastSplit.index() > tRecord.index()) {
-          lastSplit.append(content);
-        } else if (!isAggrDensity && firstAggrDensity.index() < tRecord.index()) {
-          firstAggrDensity.prepend(content);
-        } else
+      // note: _lastSplitAfter and _earlierstDensityAggrBefore respect the overlap parameter. Hence we don't need to consider this again, when checking for invalid drop positions. Before we had different (but in the end identical) fixing code for overlap === 'center', overlap === 'right' || overlap == 'bottom' ...
+
+      if (isAggrDensity && lastSplit !== undefined && lastSplit.index() >= tRecord.index())
+        lastSplit.append(content);
+      else if (!isAggrDensity && firstAggrDensity !== undefined && firstAggrDensity.index() <= tRecord.index())
+        firstAggrDensity.prepend(content);
+      else {
+        // this is only reached if no fix is needed
+        if (overlap === 'center')
           tRecord.replaceBy(content);
-      }
-
-      if (overlap === 'right' || overlap === 'bottom') {
-        if (isAggrDensity && lastSplit.index() >= tRecord.index()) {
-          lastSplit.append(content);
-        } else if (!isAggrDensity && firstAggrDensity.index() <= tRecord.index()) {
-          firstAggrDensity.prepend(content);
-        } else
+        else if (overlap === 'right' || overlap === 'bottom')
           tRecord.append(content);
+        else if (overlap === 'left' || overlap === 'top')
+          tRecord.prepend(content);
       }
-
-      if (overlap === 'left' || overlap === 'top') {
-        if (isAggrDensity && lastSplit.index() > tRecord.index()) {
-          lastSplit.append(content);
-        } else if (!isAggrDensity && firstAggrDensity.index() < tRecord.index()) {
-          firstAggrDensity.prepend(content);
-        } else
-          tRecord.append(content);
-      }
-
     }
     if (!_isDimOrMeasureShelf(sShelf)) sRecord.remove();
   };
