@@ -67,6 +67,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
     }
 
+    /**
+     * Creates and returns a model selector, i.e. an input field whose value is used as a model name.
+     * On input confirmation a new context is created, the according model is fetched and activated.
+     */
     function makeModelSelector () {
       let $modelInput = $('<input type="text" value="iris"/>')
         .keydown( (event) => {
@@ -82,7 +86,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             context.model =  new Remote.Model(modelName, context.server);
             context.model.update()
               .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
-              .then(() => {activate(context)})
+              .then(() => activate(context))
               .catch((err) => {
                 console.error(err);
                 infoBox.message("Could not load remote model from Server!");
@@ -123,10 +127,20 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     }
 
 
+    function makeVisualization(context) {
+      var $pane = $('<svg class="pl-visualization-svg"></svg>');
+      var $title = $('<div>' + "empty atm" + context.model.name + '</div>');
+      var $nav = $('x');
+      return $('<div class="pl-visualization"></div>')
+        .append($title, $nav, $pane)
+        .click( () => activate(context) );
+    }
+
     /**
      * Create and return GUI for shelves and models.
      */
-    function makeGUI(model, shelves, update, unredoer) {
+    function makeGUI(model, shelves, update, unredoer, context) {
+    // function makeGUI(context) {
       // make all shelves visual and interactable
       shelves.meas.beVisual({label: 'Measures'}).beInteractable();
       shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
@@ -155,7 +169,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
       visual.toolbar = makeToolbar(shelves, update, unredoer);
 
-      visual.visualization = $('<svg class="pl-visualization"></svg>');
+      visual.visualization = makeVisualization(context);
+      // visual.visualization = $('<svg class="pl-visualization"></svg>');
+
+      visual.visPanel = $('.pl-visualization-svg', visual.visualization);
 
       return visual;
     }
@@ -196,7 +213,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             .then(() => c.resultTable.fetch())
             .then(() => {
               // console.log("result table done");
-              c.viewTable = new ViewTable(c.$visuals.visualization.get(0), c.resultTable, c.queryTable, c);
+              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.resultTable, c.queryTable, c);
               // console.log("view table done");
             })
             .then(() => {
@@ -239,7 +256,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       };
 
       context.update = _.debounce(makeContextedUpdateFct(context), 200);
-      context.$visuals = makeGUI(context.model, context.shelves, context.update, context.unredoer);
+      context.$visuals = makeGUI(context.model, context.shelves, context.update, context.unredoer, context);
       context.unredoer = new UnRedo(20);
 
       return context;
@@ -275,7 +292,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         /// disable old context
         if (!_.isEmpty(_currentContext)) {
           for(const key in _currentContext.$visuals)
-            _currentContext.$visuals[key].hide();
+            // TODO: make it nicer??
+            if (key !== 'visualization' && key !== 'visPanel')
+              _currentContext.$visuals[key].hide();
         }
         /// activate new context
         _currentContext = context;
