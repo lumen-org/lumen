@@ -190,8 +190,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     /// build up axis stack
     function _buildAxis(fieldUsages, canvas, axisType) {
       let stackDepth = fieldUsages.stackDepth,
-        templSplitDims = (()=>{let foo=fieldUsages.filter(PQL.isSplit); foo.pop(); return foo;})(), // in any case do not consider the last element
-        templSplitStackDepth = templSplitDims.length;
+        templSplitDims = fieldUsages.filter(PQL.isSplit);
+      // do not split the pane by the last split usage, if there is no aggregation or density
+      if (!fieldUsages.some(PQL.isAggregationOrDensity))
+        templSplitDims.pop();
+      let templSplitStackDepth = templSplitDims.length;
 
       let axisStack = new Array(templSplitStackDepth); // axis stack
       let range = (axisType === "x axis" ? canvas.size.width : canvas.size.height); // the range in px of current axis stack level
