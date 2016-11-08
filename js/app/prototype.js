@@ -67,12 +67,42 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
     }
 
+    function makeModelSelector () {
+      let $modelInput = $('<input type="text" value="iris"/>')
+        .keydown( (event) => {
+          var modelName = event.target.value;
+          if (event.keyCode === 13) {
+            // create new context and visualization with that model if it exists
+            var context = makeContext();
+            context.server = "http://127.0.0.1:5000/webservice";
+            addHideVisuals(context.$visuals);
+
+            // fetch the model
+            console.log("model name : ", modelName );
+            context.model =  new Remote.Model(modelName, context.server);
+            context.model.update()
+              .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
+              .then(() => {activate(context)})
+              .catch((err) => {
+                console.error(err);
+                infoBox.message("Could not load remote model from Server!");
+              });
+          }
+        });
+
+      var $ms = $('<div class="pl-model-selector"></div>')
+        .append($('<span>model:</span>'))
+        .append($modelInput);
+
+      return $ms;
+    }
+
 
     /**
      * Creates and returns a toolbar.
      */
     function makeToolbar (shelves, update, unredoer) {
-      var $modelSelect = $('<div> Model: custom MVG ... </div>');
+
       var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
         if (unredoer.hasPrevious)
           activate(unredoer.undo());
@@ -89,7 +119,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         .click( () => { //eval('console.log("");'); // prevents auto-optimization of the closure
           update();
         });
-      return $('<div class="pl-toolbar">').append($modelSelect, $undo, $redo, $clear, $query);
+      return $('<div class="pl-toolbar">').append($modelSelector, $undo, $redo, $clear, $query);
     }
 
 
@@ -170,17 +200,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               // console.log("view table done");
             })
             .then(() => {
-             console.log("query: ");
-             console.log(c.query);
-             console.log("QueryTable: ");
-             console.log(c.queryTable);
-             console.log("ModelTabel: ");
-             console.log(c.modelTable);
-             console.log("resultTable: ");
-             console.log(c.resultTable);
-             console.log("viewTable: ");
-             console.log(c.viewTable);
-             console.log("...");
+               console.log("query: ");
+               console.log(c.query);
+               console.log("QueryTable: ");
+               console.log(c.queryTable);
+               console.log("ModelTabel: ");
+               console.log(c.modelTable);
+               console.log("resultTable: ");
+               console.log(c.resultTable);
+               console.log("viewTable: ");
+               console.log(c.viewTable);
              })
             .catch((reason) => {
               console.error(reason);
@@ -239,6 +268,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      */
     var activate = (function(){
 
+      // don't get confused. In the end it returns a function. And that function has a closure to hold its private variable _currentContext. Thats it.
       var _currentContext = {};
 
       function activate (context) {
@@ -262,6 +292,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     // create info box
     var infoBox = new InfoBox("info-box");
     infoBox.$visual.insertBefore($('main'));
+
+    // create model selector (reused in all toolbars)
+    var $modelSelector = makeModelSelector();
 
     function testPQL(server) { // jshint ignore:line
       function printResult(res) {
