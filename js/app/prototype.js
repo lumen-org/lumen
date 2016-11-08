@@ -196,7 +196,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             .then(() => c.resultTable.fetch())
             .then(() => {
               // console.log("result table done");
-              c.viewTable = new ViewTable(c.$visuals.visualization.get(0), c.resultTable, c.queryTable);
+              c.viewTable = new ViewTable(c.$visuals.visualization.get(0), c.resultTable, c.queryTable, c);
               // console.log("view table done");
             })
             .then(() => {
@@ -291,7 +291,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     // create info box
     var infoBox = new InfoBox("info-box");
-    infoBox.$visual.insertBefore($('main'));
+    infoBox.$visual.insertAfter($('main'));
 
     // create model selector (reused in all toolbars)
     var $modelSelector = makeModelSelector();

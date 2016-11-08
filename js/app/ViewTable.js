@@ -385,8 +385,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // init table canvas
     this.canvas = initCanvas(d3.select(pane),
       0, // margin around the canvas
-      {
-        top: 5, right: 5,
+      { top: 5, right: 5,
         bottom: query.layout.cols.stackDepth * Settings.geometry.axis.size,
         left: query.layout.rows.stackDepth * Settings.geometry.axis.size
       } // padding for axis
