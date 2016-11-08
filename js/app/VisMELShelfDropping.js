@@ -28,7 +28,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   }
 
   /**
-   * Helper function that extracts a Field from a record that contains either a Field, a BaseMap or a FieldUsage
+   * Helper function that extracts a FieldUsage from a record that contains either a BaseMap or a FieldUsage
    */
   function _getFieldUsage (record) {
     let content = record.content;
@@ -61,6 +61,11 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     throw new RangeError('invalid record content: ' + content);
   }
 
+  /**
+   * Creates a new field usage instance from the given record that suits the type of shelf it is from. Returns that new FieldUsage.
+   * @param record
+   * @private
+   */
   function _fieldUsageFromRecord (record) {
     let shelf = record.shelf;
     if (shelf.type === sh.ShelfTypeT.dimension)
@@ -72,6 +77,53 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       return field.isDiscrete() ? PQL.Split.DefaultSplit(field) : PQL.Aggregation.DefaultAggregation(field);
     } else
       return _getFieldUsage(record);
+  }
+
+  function _fixDropTarget(fu, tShelf, tRecord, overlap) {
+    if (tRecord === undefined)
+      throw new RangeError("tRecord may not be undefined");
+    if (overlap === 'center')
+      return tRecord;
+    if (PQL.isAggregationOrDensity(fu)) {
+      // find index of last split after tRecord
+      // let lastSplitIdx = -1;
+      // exclude tRecord for that search, if it's anyway replaced or the new record is inserted after it
+      let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 1 : 0);
+      // for (let idx = tRecord.index() + offset; idx < tShelf.length; idx++) {
+      //   let fu = tShelf.contentAt(idx);
+      //   if (PQL.isSplit(fu))
+      //     lastSplitIdx = idx;
+      // }
+      // if (lastSplitIdx !== -1) {
+      //   // fix position
+      // }
+      for (let idx = tRecord.index() + offset; idx < tShelf.length; idx++)
+        if (PQL.isSplit(tShelf.contentAt(idx)))
+          tRecord = tShelf.at(idx);
+
+    } else {
+      // move it in front of the first aggregation and density
+    }
+
+    return tRecord;
+  }
+
+  function _lastSplitAfter (tRecord, overlap) {
+    let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 1 : 0);
+    let tShelf = tRecord.shelf;
+    for (let idx = tRecord.index() + offset; idx < tRecord.shelf.length; idx++)
+      if (PQL.isSplit(tShelf.contentAt(idx)))
+        tRecord = tShelf.at(idx);
+    return tRecord;
+  }
+
+  function _earlierstDensityAggrBefore (tRecord, overlap) {
+    let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 0 : 1);
+    let tShelf = tRecord.shelf;
+    for (let idx = tRecord.index() - offset; idx >= 0; idx--)
+      if (PQL.isSplit(tShelf.contentAt(idx)))
+        tRecord = tShelf.at(idx);
+    return tRecord;
   }
 
   /**
@@ -98,8 +150,10 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     if (!(source instanceof sh.Record)) {
       throw new TypeError('source must be a Record');
     }
+    //console.log("Dropping on item with overlap = " + overlap);
     // delegate to correct handler
     if (target instanceof sh.Record) {
+      // TODO: what if record is no field usage but just a field!?
       let fu = _getFieldUsage(target);
       if (PQL.isAggregationOrDensity(fu) && overlap === _OverlapEnum.center) {
         // add field to list of fields for that field usage
@@ -113,7 +167,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       onDrop[target.type](undefined, target, source, source.shelf, overlap);
     else
       throw new TypeError('target must be a Record or a Shelf');
-  };
+  }
 
   var onDrop = {};
   onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
@@ -127,57 +181,59 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
 
   onDrop[sh.ShelfTypeT.row] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    // general rule: measures always come after dimensions
-    let content;
-    // reuse existing or construct new aggregation or split usage
-    if (sShelf.type === sh.ShelfTypeT.dimension)
-      content = PQL.Split.DefaultSplit(_getField(sRecord));
-    else if (sShelf.type === sh.ShelfTypeT.measure)
-      content = PQL.Aggregation.DefaultAggregation(_getField(sRecord));
-    else if (sShelf.type === sh.ShelfTypeT.filter) {
-      let field = _getField(sRecord);
-      content = field.isDiscrete() ? PQL.Split.DefaultSplit(field) : PQL.Aggregation.DefaultAggregation(field);
-    } else
-      content = _getFieldUsage(sRecord);
+    var content = _fieldUsageFromRecord(sRecord);
 
-    // todo: fix for invalid drop positions,i.e.: dropping dimensions _after_ measures, or measures _before_ dimensions
-    // alternative: do reorder after the element has been dropped
+    // maps the "drop of shelf"-case to the "drop on record"-case
+    if (tRecord === undefined) {
+      if (tShelf.empty()) {
+        // note that overlap remains unchanged only in this case
+        tShelf.append(content);
+      } else if (overlap === 'left' || overlap === 'top') {
+        tRecord = tShelf.at[0];
+        overlap = 'left';
+      } else if (overlap === 'bottom' || overlap === 'right' || overlap === 'center') {
+        tRecord = tShelf.at[tShelf.length-1];
+        overlap = 'right';
+      } else {
+        throw new RangeError("invalid overlap = " + overlap);
+      }
+    }
+
+/*    TODO: debug the lastSplitAfter, ... and the whole dropping thing
+    TODO: I think this can be simplified. _lastSplit starts with the correct values thanks to overlap - hence all/some the cases are the same*/
+
     if (tRecord !== undefined) {
-      switch (overlap) {
-        case _OverlapEnum.left:
-        case _OverlapEnum.top:
-          // insert before element
-          tRecord.prepend(content);
-          break;
-        case _OverlapEnum.right:
-        case _OverlapEnum.bottom:
-          // insert after target element
-          tRecord.append(content);
-          break;
-        case _OverlapEnum.center:
-          // replace
-          tRecord.remove();
+      let lastSplit = _lastSplitAfter(tRecord, overlap),
+        firstAggrDensity = _earlierstDensityAggrBefore(tRecord, overlap),
+        isAggrDensity = PQL.isAggregationOrDensity(_getFieldUsage(tRecord));
+
+      if (overlap === 'center') {
+        if (isAggrDensity && lastSplit.index() > tRecord.index()) {
+          lastSplit.append(content);
+        } else if (!isAggrDensity && firstAggrDensity.index() < tRecord.index()) {
+          firstAggrDensity.prepend(content);
+        } else
           tRecord.replaceBy(content);
-          break;
-        default:
-          console.error("Dropping on item, but overlap = " + overlap);
       }
-    } else {
-      switch (overlap) {
-        case _OverlapEnum.left:
-        case _OverlapEnum.top:
-          // insert in the beginning
-          tShelf.prepend(content);
-          break;
-        case _OverlapEnum.right:
-        case _OverlapEnum.bottom:
-        case _OverlapEnum.center:
-          // insert at the end
-          tShelf.append(content);
-          break;
-        default:
-          console.error("Dropping on item, but overlap = " + overlap);
+
+      if (overlap === 'right' || overlap === 'bottom') {
+        if (isAggrDensity && lastSplit.index() >= tRecord.index()) {
+          lastSplit.append(content);
+        } else if (!isAggrDensity && firstAggrDensity.index() <= tRecord.index()) {
+          firstAggrDensity.prepend(content);
+        } else
+          tRecord.append(content);
       }
+
+      if (overlap === 'left' || overlap === 'top') {
+        if (isAggrDensity && lastSplit.index() > tRecord.index()) {
+          lastSplit.append(content);
+        } else if (!isAggrDensity && firstAggrDensity.index() < tRecord.index()) {
+          firstAggrDensity.prepend(content);
+        } else
+          tRecord.append(content);
+      }
+
     }
     if (!_isDimOrMeasureShelf(sShelf)) sRecord.remove();
   };

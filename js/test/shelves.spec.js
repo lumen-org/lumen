@@ -29,8 +29,8 @@ define(['app/shelves', 'app/PQL'], function (sh, f) {
 
     it('tests DataSet.populate', function () {
 
-      expect(shelf.meas.length()).toBe(4);
-      expect(shelf.dim.length()).toBe(3);
+      expect(shelf.meas.length).toBe(4);
+      expect(shelf.dim.length).toBe(3);
       shelf.dim.records.forEach(function (record) {
         expect(record.content.role === f.FieldT.Role.dimension);
       });
@@ -84,7 +84,7 @@ define(['app/shelves', 'app/PQL'], function (sh, f) {
       shelf.row.remove(shelf.row.at(1));
       expect(shelf.row.at(1).content.name).toBe('age');
       expect(shelf.row.at(0).content.name).toBe('weight');
-      expect(shelf.row.length()).toBe(2);
+      expect(shelf.row.length).toBe(2);
     });
 
     it('tests shelf functions (even more)', function () {

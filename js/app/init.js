@@ -18,6 +18,10 @@ define(['lib/logger','d3'], function (Logger, d3) {
     return parseFloat(this.attr(attributeString));
   };
 
+  d3.selection.prototype.style2num = function (attributeString) {
+    return parseFloat(this.style(attributeString));
+  };
+
   // extent array prototype
   var _nameMap = obj => obj.name;
 

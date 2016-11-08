@@ -32,7 +32,9 @@ main {
 }
 
 .pl-visualization {
-    margin: 1rem;
+    /*margin: 1rem;*/
+    width: 400px;
+    height: 400px;
 }
 
 #queryTextBox {

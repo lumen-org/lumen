@@ -76,7 +76,10 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
     // register to related events to keep view updated
     this.on(s.Shelf.Event.Add, record => record.beVisual());
-    this.on(s.Shelf.Event.Remove, record => record.removeVisual());
+    this.on(s.Shelf.Event.Remove, record => {
+      return record.removeVisual();
+    }
+    );
 
     return this;
   };

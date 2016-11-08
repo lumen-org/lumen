@@ -36,8 +36,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // setup basic geometry of actual drawing canvas, with margin (outer) and padding (inner)
     var canvas = {};
     canvas.paneD3 = canvasD3;
-    canvas.outerWidth = canvas.paneD3.attr2num("width");
-    canvas.outerHeight = canvas.paneD3.attr2num("height");
+    canvas.outerWidth = canvas.paneD3.style2num("width");
+    canvas.outerHeight = canvas.paneD3.style2num("height");
     canvas.padding = padding;
     canvas.margin = margin;
 
@@ -356,13 +356,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    *
    * Note that the axis are part of the {@link ViewTable}, not the ViewPanes. Also note that axis' are based on scales. And scales are attached to (almost) each {@link FieldUsage} of this query, as they are reused accross many of the sub-viewPanes.
    *
-   * @param paneD3 A <svg> element, wrapped in a D3 selection. This must already have a width and height.
+   * @param paneD3 A <svg> element. This must already have a width and height.
    * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
    * @constructor
    * @alias module:ViewTable
    */
   var ViewTable;
-  ViewTable = function (paneD3, results, queries) {
+  ViewTable = function (pane, results, queries) {
 
     this.results = results;
     this.queries = queries;
@@ -380,7 +380,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     );
 
     // init table canvas
-    this.canvas = initCanvas(paneD3,
+    this.canvas = initCanvas(d3.select(pane),
       0, // margin around the canvas
       {
         top: 5, right: 5,

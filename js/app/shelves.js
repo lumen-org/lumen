@@ -207,18 +207,25 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       return this.insert(obj, idx);
     }
 
-    length() {
+    get length() {
       return this.records.length;
     }
 
     empty() {
-      return (this.length() === 0);
+      return (this.length === 0);
     }
 
     toString() {
       return this.records.reduce(function (val, elem) {
         return val + elem.content.toString() + "\n";
       }, "");
+    }
+
+    *[Symbol.iterator]() {
+      var nextIdx = 0;
+      while (nextIdx < this.length) {
+        yield this.at(nextIdx++);
+      }
     }
   }
 
@@ -249,6 +256,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
 
   return {
     Shelf: Shelf,
+   // ShelfIterator: ShelfIterator,
     ShelfTypeT: ShelfTypeT,
     Record: Record,
     populate: populate,
