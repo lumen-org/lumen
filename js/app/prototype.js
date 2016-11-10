@@ -77,13 +77,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           var modelName = event.target.value;
           if (event.keyCode === 13) {
             // create new context and visualization with that model if it exists
-            var context = makeContext();
-            context.server = "http://127.0.0.1:5000/webservice";
+            var context = makeContext("http://127.0.0.1:5000/webservice", modelName);
             addHideVisuals(context.$visuals);
-
-            // fetch the model
-            console.log("model name : ", modelName );
-            context.model =  new Remote.Model(modelName, context.server);
+            // fetch model
             context.model.update()
               .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
               .then(() => activate(context))
@@ -129,7 +125,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     function makeVisualization(context) {
       var $pane = $('<svg class="pl-visualization-svg"></svg>');
-      var $title = $('<div>' + "empty atm" + context.model.name + '</div>');
+      var $title = $('<div>' + context.model.name + '</div>');
       var $nav = $('x');
       return $('<div class="pl-visualization"></div>')
         .append($title, $nav, $pane)
@@ -181,7 +177,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     /**
      * Creates and returns a new, empty context.
      */
-    function makeContext() {
+    function makeContext(server = undefined, modelName = undefined) {
 
       /**
        * Creates and returns a function to update a context. On calling this function the
@@ -243,7 +239,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
       var context = {
         // server and model
-        server: "",
+        server: server,
         model: {},
         // shelves configuration
         shelves: sh.construct(),
@@ -254,6 +250,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         resultTable: {},
         viewTable: {}
       };
+
+      if (modelName !== undefined && server !== undefined)
+        context.model = new Remote.Model(modelName, server);
 
       context.update = _.debounce(makeContextedUpdateFct(context), 200);
       context.$visuals = makeGUI(context.model, context.shelves, context.update, context.unredoer, context);
@@ -411,17 +410,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         else {
           console.log("Starting the actual app!");
 
-          // create initial context
-          var context = makeContext();
-          context.server = "http://127.0.0.1:5000/webservice";
+          // create initial context with model
+          var context = makeContext("http://127.0.0.1:5000/webservice", 'iris');
           addHideVisuals(context.$visuals);
 
           // activate that context
           activate(context);
 
-          // get initial model
-          //context.model = new Remote.Model('iris', context.server);
-          context.model = new Remote.Model('mvg4', context.server);
+          // fetch model
           context.model.update()
             .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
             .then(() => initialQuerySetup(context.shelves)) // on initial startup only

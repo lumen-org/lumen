@@ -32,7 +32,13 @@ main {
 }
 
 .pl-visualization {
+    border: 1px solid lightgrey;
+    padding: .5rem 1rem 0rem 1.5rem;
+    margin: .5rem;
+}
 
+#pl-visualization-container {
+    display: flex;
 }
 
 .pl-visualization-svg {
