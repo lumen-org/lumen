@@ -26,7 +26,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-      drop(shelves.dim, shelves.meas.at(0));
+      // drop(shelves.dim, shelves.meas.at(0));
+      // drop(shelves.column, shelves.meas.at(1));
       //drop(shelves.filter, shelves.meas.at(1));
       //drop(shelves.detail, shelves.dim.at(0));
       //drop(shelves.shape, shelves.dim.at(0));
@@ -34,7 +35,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       //drop(shelves.row, shelves.dim.at(0));
       //drop(shelves.row, shelves.meas.at(1));
       //drop(shelves.color, shelves.meas.at(2));
-      drop(shelves.column, shelves.meas.at(1));
     }
 
     /**
@@ -421,7 +421,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
           // get initial model
           //context.model = new Remote.Model('iris', context.server);
-          context.model = new Remote.Model('mvg4', context.server);
+          //context.model = new Remote.Model('mvg4', context.server);
+          context.model = new Remote.Model('categorical_dummy', context.server);
           context.model.update()
             .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
             .then(() => initialQuerySetup(context.shelves)) // on initial startup only

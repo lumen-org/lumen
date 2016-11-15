@@ -114,11 +114,22 @@ define([], function() {
       (!(prop in proto) || proto[prop] !== obj[prop]);
   };
 
+  /**
+   * Returns true iff obj has an own property with value value.
+   */
+  var hasValue = function (obj, value) {
+    for (let key in obj)
+      if (obj.hasOwnProperty(key) && obj[key] === value)
+        return true;
+    return false;
+  };
+
   return {
     selectValue: selectValue,
     listify: listify,
     join: join,
     domain: domain,
-    hasProperty: hasProperty
+    hasProperty: hasProperty,
+    hasValue: hasValue
   };
 });

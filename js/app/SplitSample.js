@@ -62,7 +62,7 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
      * @param {Discrete} domain The domain to split.
      * @param {boolean} valueFlag If set, this function returns an array of all values of the domain, otherwise, it returns an array of domains, each having only a single element as its domain.
      */
-    singleElements: function (domain, valueFlag) {
+    elements: function (domain, valueFlag) {
       if (!(domain instanceof Domain.Discrete))
         throw new TypeError("domain must be of type Domain.Discrete");
       let values = domain.values.slice();

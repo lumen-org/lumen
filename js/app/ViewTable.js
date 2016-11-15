@@ -467,25 +467,27 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     }
 
     /**
-     * Tweaks for continuous extents.
+     * Tweaks the (continuous) extents of a given FieldUsage for nicer displaying. For discrete FieldUsages it leaves
+     * the extent unchanged.
      * (1) non-singular extent: add 5% of extent to upper and lower bound of extent
      * (2) singular extent and singular !== 0: upper = singular+5%*singular, lower = singular-5%*singular
      * (3) singular extent and singular === 0: upper = 1 , lower = -1
      */
-    function _normalize (extent) {
-      if (extent.length === 2) { // iff continuous extent
-        if (extent[0] === extent[1]) { // if singular
-          let singular = extent[0];
-          if (singular === 0)
-            extent = [-1, 1];
-          else
-            extent = [singular - 0.05*singular, singular + 0.05*singular];
-        } else {
-          let relOff = 0.05*(extent[1]-extent[0]);
-          extent = [extent[0] - relOff, extent[1] + relOff];
-        }
+    function _normalizeExtent (fu) {
+      if (PQL.hasDiscreteYield(fu))
+        return;
+      let extent = fu.extent;
+      if (extent[0] === extent[1]) { // if singular
+        let singular = extent[0];
+        if (singular === 0)
+          extent = [-1, 1];
+        else
+          extent = [singular - 0.05*singular, singular + 0.05*singular];
+      } else {
+        let relOff = 0.05*(extent[1]-extent[0]);
+        extent = [extent[0] - relOff, extent[1] + relOff];
       }
-      return extent;
+      fu.extent = extent;
     }
 
     // extents of splits in table algebra expression
@@ -537,20 +539,31 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
       let lc = queries.at[0][cIdx].layout.cols[0];
       if (PQL.isFieldUsage(lc))
-        lc.extent = _normalize(lc.extent);
+        _normalizeExtent(lc)
+        //lc.extent = _normalizeExtent(lc.extent);
     }
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       let lr = queries.at[rIdx][0].layout.rows[0];
       if (PQL.isFieldUsage(lr))
-        lr.extent = _normalize(lr.extent);
+        _normalizeExtent(lr)
+        //lr.extent = _normalizeExtent(lr.extent);
     }
 
     // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
     {
       let qa = query.layers[0].aesthetics;
-      if (qa.color instanceof VisMEL.ColorMap) qa.color.fu.extent = _normalize(color);
-      if (qa.shape instanceof VisMEL.ShapeMap) qa.shape.fu.extent = _normalize(shape);
-      if (qa.size instanceof VisMEL.SizeMap) qa.size.fu.extent = _normalize(size);
+      if (qa.color instanceof VisMEL.ColorMap) {
+        qa.color.fu.extent = color;
+        _normalizeExtent(qa.color.fu);
+      }
+      if (qa.shape instanceof VisMEL.ShapeMap) {
+        qa.shape.fu.extent = shape;
+        _normalizeExtent(qa.shape.fu);
+      }
+      if (qa.size instanceof VisMEL.SizeMap) {
+        qa.size.fu.extent = size;
+        _normalizeExtent(qa.size.fu);
+      }
     }
   };
 

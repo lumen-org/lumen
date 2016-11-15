@@ -77,9 +77,11 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
 
   var SplitMethod = Object.freeze({
     equiDist: 'equiDist',
-    identity: 'identity'
+    identity: 'identity',
+    elements: 'elements'
   });
-  var isSplitMethod = (m) => m === SplitMethod.equiDist || m === SplitMethod.identity;
+  //var isSplitMethod = (m) => m === SplitMethod.equiDist || m === SplitMethod.identity;
+  var isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
 
   var AggregationMethods = Object.freeze({
     argmax: 'maximum',
@@ -184,7 +186,12 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
     }
 
     static DefaultSplit (field) {
-      return new Split(field, SplitMethod.equiDist, [4]);
+      if (field.dataType === FieldT.DataType.string)
+        return new Split(field, SplitMethod.elements, []);
+      else if (field.dataType === FieldT.DataType.num)
+        return new Split(field, SplitMethod.equiDist, [4]);
+      else
+        throw new RangeError("invalid data type");
     }
 
     static toJSON (a) {

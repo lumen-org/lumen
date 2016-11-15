@@ -23,8 +23,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       for (let i = 0; i < cols; ++i) {
         if (table.fu[i].yieldDataType === PQL.FieldT.DataType.num)
           extent[i] = d3.extent(table, row => row[i]); // jshint ignore:line
-        else if (table.fu[i].yieldDataType === PQL.FieldT.DataType.num)
-          extent[i] = d3.set(table, row => row[i]); // jshint ignore:line
+        else if (table.fu[i].yieldDataType === PQL.FieldT.DataType.string)
+          extent[i] = _.unique(_.map(table, row => row[i]));
         else
           throw new RangeError("invalid data type.");
       }
