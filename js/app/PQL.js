@@ -184,7 +184,7 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
     }
 
     static DefaultSplit (field) {
-      return new Split(field, SplitMethod.equiDist, [4]);
+      return new Split(field, SplitMethod.equiDist, [3]);
     }
 
     static toJSON (a) {

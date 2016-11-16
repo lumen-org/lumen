@@ -32,19 +32,24 @@ main {
 }
 
 .pl-visualization {
-    border: 1px solid lightgrey;
+    /*border: 1px solid lightgrey;*/
     padding: .5rem 1rem 0rem 1.5rem;
     margin: .5rem;
 }
 
+.pl-visualization > div {
+    font-weight: bold;
+}
+
 #pl-visualization-container {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .pl-visualization-svg {
     /*margin: 1rem;*/
-    width: 400px;
-    height: 400px;
+    width: 600px;
+    height: 600px;
 }
 
 #queryTextBox {
@@ -104,6 +109,7 @@ main {
     flex-direction: row;
     align-items: center;
     min-height: 70px;
+    min-width: 270px;
 }
 
 .shelf.vertical {
@@ -180,4 +186,16 @@ main {
     color: rgb(255, 54, 3);
     font-weight: bold;
     display: none;
+}
+
+.pl-model-selector {
+    display: flex;
+}
+
+.pl-model-selector > div {
+    margin-right: 1rem;
+}
+
+.pl-model-selector > input {
+
 }

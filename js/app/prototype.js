@@ -91,7 +91,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         });
 
       var $ms = $('<div class="pl-model-selector"></div>')
-        .append($('<span>model:</span>'))
+        .append($('<div>load new model:</div>'))
         .append($modelInput);
 
       return $ms;
@@ -119,7 +119,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         .click( () => { //eval('console.log("");'); // prevents auto-optimization of the closure
           update();
         });
-      return $('<div class="pl-toolbar">').append($modelSelector, $undo, $redo, $clear, $query);
+      return $('<div class="pl-toolbar">').append(makeModelSelector, $undo, $redo, $clear, $query);
     }
 
 
@@ -312,7 +312,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     infoBox.$visual.insertAfter($('main'));
 
     // create model selector (reused in all toolbars)
-    var $modelSelector = makeModelSelector();
+    //var $modelSelector = makeModelSelector();
 
     function testPQL(server) { // jshint ignore:line
       function printResult(res) {
