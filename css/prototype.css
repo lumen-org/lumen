@@ -32,6 +32,7 @@ main {
 }
 
 .pl-visualization {
+    position: relative;
     /*border: 1px solid lightgrey;*/
     padding: .5rem 1rem 0rem 1.5rem;
     margin: .5rem;
@@ -39,6 +40,19 @@ main {
 
 .pl-visualization > div {
     font-weight: bold;
+}
+
+.pl-visualization > .pl-remove-button {
+    top: .55rem;
+    left: .3rem;
+    position: absolute;
+    font-weight: bold;
+}
+
+.pl-visualization:hover > .pl-hidden {
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 150ms, opacity 150ms;
 }
 
 #pl-visualization-container {

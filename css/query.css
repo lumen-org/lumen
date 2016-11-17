@@ -116,10 +116,11 @@ body {
 
 
 .pl-hidden {
-    visibility:hidden;
+    visibility: hidden;
     opacity: 0;
     transition: visibility 150ms, opacity 150ms;
 }
+
 
 .pl-field-name:hover > .pl-hidden,
 .pl-fu:hover > .pl-hidden {

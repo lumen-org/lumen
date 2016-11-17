@@ -125,8 +125,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     function makeVisualization(context) {
       var $pane = $('<svg class="pl-visualization-svg"></svg>');
+
+      var $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
+      $removeButton.click(context.remove);
+
       var $title = $('<div>' + context.model.name + '</div>');
-      var $nav = $('x');
+      var $nav = $removeButton;
       return $('<div class="pl-visualization"></div>')
         .append($title, $nav, $pane)
         .click( () => activate(context) );
@@ -135,8 +139,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     /**
      * Create and return GUI for shelves and models.
      */
-    function makeGUI(model, shelves, update, unredoer, context) {
-    // function makeGUI(context) {
+    function makeGUI(context) {
+      var shelves = context.shelves;
       // make all shelves visual and interactable
       shelves.meas.beVisual({label: 'Measures'}).beInteractable();
       shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
@@ -161,9 +165,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
       // Enables user querying for shelves
       for (const key of Object.keys(shelves))
-        shelves[key].on(Emitter.ChangedEvent, update);
+        shelves[key].on(Emitter.ChangedEvent, context.update);
 
-      visual.toolbar = makeToolbar(shelves, update, unredoer);
+      visual.toolbar = makeToolbar(shelves, context.update, context.unredoer);
 
       visual.visualization = makeVisualization(context);
       // visual.visualization = $('<svg class="pl-visualization"></svg>');
@@ -237,6 +241,17 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         return update;
       }
 
+      function remove() {
+        // destructor of this context
+        //clear(context.shelves)
+        debugger;
+        let $visuals = context.$visuals;
+        for(let visual in $visuals) {
+          if ($visuals.hasOwnProperty(visual))
+            $visuals[visual].remove();
+        }
+      }
+
       var context = {
         // server and model
         server: server,
@@ -248,14 +263,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         queryTable: {},
         modelTable: {},
         resultTable: {},
-        viewTable: {}
+        viewTable: {},
+        remove: remove
       };
 
       if (modelName !== undefined && server !== undefined)
         context.model = new Remote.Model(modelName, server);
 
       context.update = _.debounce(makeContextedUpdateFct(context), 200);
-      context.$visuals = makeGUI(context.model, context.shelves, context.update, context.unredoer, context);
+      context.$visuals = makeGUI(context);
       context.unredoer = new UnRedo(20);
 
       return context;
