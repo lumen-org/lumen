@@ -88,7 +88,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         width: width,
         height: height,
         stroke: Settings.appearance.pane.borderColor,
-        'stroke-width': 2,
+        //'stroke-width': 0,
         'fill': Settings.appearance.pane.fill
         //'fill-opacity': 0
       });

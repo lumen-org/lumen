@@ -74,7 +74,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
         break;
       case PQL.FieldT.DataType.string:
         // discrete domain: map to center of equally sized bands
-        scale = d3.scale.ordinal().rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
+        scale = d3.scale.ordinal().rangePoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
       default: throw new RangeError("invalid yieldDataType: " + fu.yieldDataType);
     }
@@ -116,11 +116,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
     switch (fu.yieldDataType) {
       case PQL.FieldT.DataType.num:
         // continuous domain
-        scale = d3.scale.linear().rangeRound(range);
+        scale = d3.scale.linear().range(range);
         break;
       case PQL.FieldT.DataType.string:
         // discrete domain: map to center of equally sized bands
-        scale = d3.scale.ordinal().rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
+        //scale = d3.scale.ordinal().rangeRoundPoints(range, 1.0);  // "1.0" makes points centered in their band
+        scale = d3.scale.ordinal().rangePoints(range, 1.0);  // "1.0" makes points centered in their band
         break;
       default: throw new RangeError("invalid Field.dataType: " + fu.yieldDataType);
     }
