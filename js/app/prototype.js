@@ -79,7 +79,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                   infoBox.message("Could not load remote model from Server!");
                   // TODO: remove vis and everything else ...
                 });
-
             }
           });
 
@@ -96,8 +95,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * @param context A context.
        */
       setContext (context) {
-        // if (!(context instanceof Context))
-        //   throw TypeError("context must be an instance of Context");
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
         this._context = context; // TODO: not even taht is needed ...
         //TODO in the future: fetch available models from the modelserver...? for now we are done!
       }
@@ -142,15 +141,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * @param context A context.
        */
       setContext (context) {
-        // if (!(context instanceof Context))
-        //   throw TypeError("context must be an instance of Context");
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
 
         this._context = context;
         this._modelSelector.setContext(context);
 
       }
     }
-
 
 
     class Context {
@@ -217,7 +215,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           return update;
         }
 
-
         // server and model
         this.server = server;
         this.model = {};
@@ -241,12 +238,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.hideVisuals();
         this.attachVisuals();
       }
-
-
-      // loadModel (name) {
-      //   this.model = new Remote.Model(name, this.server);
-      //   // TODO: more stuff to do to update GUI ...
-      // }
 
       /**
        * destructor of this context
@@ -279,7 +270,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         $('#pl-visualization-container').append($visuals.visualization);
       }
 
-
       /**
        * Utility function. Clears the given collection of shelves, except for measure and dimension shelves.
        */
@@ -293,7 +283,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         shelves.row.clear();
         shelves.column.clear();
       }
-
 
       static _makeVisualization(context) {
         var $pane = $('<svg class="pl-visualization-svg"></svg>');
@@ -311,7 +300,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       /**
        * Create and return GUI for shelves and models.
        *
-       * Note: this is only GUI that is instanciated for each context. "Singelton" GUI elements
+       * Note: this is only GUI stuff  that is instantiated for each context. "Singleton" GUI elements
        * are not managed like this.
        */
       static _makeGUI(context) {
@@ -355,8 +344,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * @param context Context to activate.
      */
     var activate = (function(){
-
-      // don't get confused. In the end it returns a function. And that function has a closure to hold its private variable _currentContext. Thats it.
+      // don't get confused. In the end it returns a function. And that function has a closure to hold its private variable _currentContext. That's it.
       var _currentContext = {};
 
       function _activate (context) {
@@ -364,7 +352,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         if (!_.isEmpty(_currentContext)) {
           let $curVis = _currentContext.$visuals;
           for(const key in $curVis)
-            // TODO: make it nicer??
             if (key !== 'visualization' && key !== 'visPanel')
               $curVis[key].hide();
           // remove marking for current active visualization
