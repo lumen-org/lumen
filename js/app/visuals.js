@@ -247,7 +247,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       $visual.html('')
         .append(methodSelector(that))
         .append(singleFieldDiv([that.name], record))
-        .append(argumentsEditField(that))
+        .append(argumentsEditField_Filter(that))
         .append(removeButton(record));
     }
     let that = this;
@@ -266,6 +266,10 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     removeButton.click(() => record.remove());
     return removeButton;
   }
+
+
+  //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
+
 
   /**
    * Creates and returns GUI elements to convert the given record to another usage.
@@ -317,6 +321,28 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
     let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
       " value='" + JSON.stringify(fu.args) + "'" +
+      ">");
+    textEdit.keydown(submitOnEnter);
+    return textEdit;
+  }
+
+  // almost same as above, but still different
+  function argumentsEditField_Filter (fu) {
+    function submitOnEnter(elem) {
+      if (event.keyCode == 13) {
+        try{
+          // create domain of same type as in fu
+          let input = JSON.parse(elem.target.value);
+          fu.args = new fu.args.constructor(input);
+          fu.emit(Emitter.InternalChangedEvent);
+        } catch (e) {
+          console.log("invalid arguments for FU");
+        }
+      }
+    }
+
+    let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
+      " value='" + JSON.stringify(fu.args.value) + "'" +
       ">");
     textEdit.keydown(submitOnEnter);
     return textEdit;

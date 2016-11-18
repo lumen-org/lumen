@@ -2,7 +2,7 @@
  * This module defines the components of PQL and provides functionality to construct PQL queries.
  *
  * There is two representations of a PQL query: an 'internal' JS-Object based one, and a 'external' JSON-formatted one.
- * While the latter is meant for use with the JS compute environment, it can be turned into the JSON-format by calling
+ * While the former is meant for use with the JS compute environment, it can be turned into the JSON-format by calling
  * appropriate methods. The JSON-format is for cross-compute-environment usage.
  *
  * This module defines FieldUsages and associated method. FieldUsages can be:
@@ -114,7 +114,7 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
   }
 
   class Filter extends FieldUsage {
-    // TODO: Filter, Density, Aggregation Split: need to emit some internal changed event for visualization synchronization
+    // TODO: Filter, Density, Aggregation Split: need to emit some internal changed event for visualization synchronization. At the moment this is so rare that emitInternalChanged is simply called from outside when necessary. However, that is obviously not clean.
 
     constructor (field, method, args=[]) {
       super();
@@ -141,7 +141,7 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
       return {
         name: f.name,
         operator: f.method,
-        value: f.args
+        value: f.args.value
       };
     }
 
