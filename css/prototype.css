@@ -33,9 +33,14 @@ main {
 
 .pl-visualization {
     position: relative;
-    /*border: 1px solid lightgrey;*/
     padding: .5rem 1rem 0rem 1.5rem;
     margin: .5rem;
+}
+
+.pl-visualization.pl-active {
+    /*border: 2px solid lightgrey;*/
+    border-radius: .4em;
+    background-color: #F9F9F9;
 }
 
 .pl-visualization > div {
