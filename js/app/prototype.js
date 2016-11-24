@@ -284,6 +284,20 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         shelves.column.clear();
       }
 
+      /**
+       * Creates a deep copy of this context. This means a new (local view on the) model is created, as well as a copy of the shelves and their contents.  As the standard new context it is already "visual" (i.e. attachVisuals is called), but its "hidden" before (i.e. hideVisuals() is called).
+       * Note that the pipeline including the visualization is not copied, but rerun (i.e. query, querytable, modelTable)
+       */
+      copy () {
+        var copy = new Context(this.server, this.model.name);
+        // copy shelves (exkl visuals)
+        copy.shelves = this.shelves.copy(); //TODO??
+        // recreate visuals
+        // rerun pipeline ?
+
+        return copy;
+      }
+
       static _makeVisualization(context) {
         var $pane = $('<svg class="pl-visualization-svg"></svg>');
 
@@ -300,7 +314,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       /**
        * Create and return GUI for shelves and models.
        *
-       * Note: this is only GUI stuff  that is instantiated for each context. "Singleton" GUI elements
+       * Note: this is GUI stuff that is instantiated for each context. "Singleton" GUI elements
        * are not managed like this.
        */
       static _makeGUI(context) {
@@ -483,7 +497,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           console.log("Starting the actual app!");
 
           // create initial context with model
-          var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
+          var context = new Context("http://127.0.0.1:5000/webservice", 'adult');
+          //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
           // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
           // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
 
