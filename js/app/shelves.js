@@ -123,6 +123,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       this.records = [];
       if (!type) throw new RangeError("parameter 'type' missing");
       this.type = type;
+      this.opt = opt;
       if (!opt) opt = {};
       this.limit = utils.selectValue(opt.limit, Number.MAX_SAFE_INTEGER);
       Emitter(this);
@@ -168,7 +169,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
 
     contentAt(idx) {
       var record = this.records[idx];
-      return (record ? record.content : {});
+      return (record ? record.content : {}); // TODO: I think that should throw instead!
     }
 
     content() {
@@ -219,6 +220,18 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       return this.records.reduce(function (val, elem) {
         return val + elem.content.toString() + "\n";
       }, "");
+    }
+
+    /**
+     * Returns a deep copy of this shelf.
+     */
+    copy () {
+      var copy = new Shelf(this.type, this.opt);
+      for(let elem in this) {
+        debugger;
+        copy.append(elem.content.copy());
+      }
+      return copy;
     }
 
     *[Symbol.iterator]() {

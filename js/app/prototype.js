@@ -87,7 +87,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           .append($modelInput);
 
         if(context !== undefined)
-          this.setContext(context)
+          this.setContext(context);
       }
 
       /**
@@ -133,7 +133,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $undo, $redo, $clear, $query);
 
         if(context !== undefined)
-          this.setContext(context)
+          this.setContext(context);
       }
 
       /**
@@ -155,7 +155,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       /**
        * Creates and returns a new, empty context.
        */
-      constructor (server = undefined, modelName = undefined) {
+      constructor (server, modelName, shelves) {
 
         /**
          * Creates and returns a function to update a context. On calling this function the
@@ -217,9 +217,17 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // server and model
         this.server = server;
-        this.model = {};
+        if (modelName !== undefined && server !== undefined)
+          this.model = new Remote.Model(modelName, server);
+        else
+          this.model = {};
+
         // shelves configuration
-        this.shelves = sh.construct();
+        if (modelName !== undefined && server !== undefined && shelves !== undefined)
+          this.shelves = shelves.copy();
+        else
+          this.shelves = sh.construct();
+
         // the stages of the pipeline: query -> ... -> visualization
         this.query = {};
         this.queryTable = {};
@@ -227,9 +235,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.resultTable = {};
         this.viewTable = {};
         //this.remove = remove;
-
-        if (modelName !== undefined && server !== undefined)
-          this.model = new Remote.Model(modelName, server);
 
         this.update = _.debounce(makeContextedUpdateFct(this), 200);
         this.$visuals = Context._makeGUI(this);
