@@ -65,7 +65,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     // note: in the general case query.fieldUsages() and [...dimensions, ...measures] do not contain the same set of
     //  field usages, as duplicate dimensions won't show up in dimensions
     // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity
-    // (see "TODO-reference" in interfaction.js) no duplicate split should be allowed at all!
+    // (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
 
     var fieldUsages = query.fieldUsages();
     var dimensions = [];
@@ -77,10 +77,10 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       let sameBase = dimensions.find(elem => (fu.name === elem.name));
       if (sameBase) {
         // fu is already there
-        if (fu.method !== sameBase.method)
-          throw new RangeError("If using multiple splits of the same field in an atomic query, their splitter methods must match!");
-        else
+        if (fu.method === sameBase.method /*|| fu.method === 'identity'*/)
           fu.index = sameBase.index;
+        else
+          throw new RangeError("If using multiple splits of the same field in an atomic query, either their splitter methods must match, or at most one may split differently than by 'identity'!");
       }
       else {
         // fu is new

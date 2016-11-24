@@ -20,13 +20,15 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
   }
 
   /**
-   * @returns {Array|*} Applies the split on its field and returns an array of filters that represent the restriction
-   * of the domain of each split.
+   * @returns {Array|*} Applies the split on its field and returns an array of filters that represent
+   * the restriction of the domain of each split.
    */
   function splitToFilters (split) {
-    let values = splitToValues(split);
+    //let values = splitToValues(split);
+    let field = split.field;
+    let domains =  Splitter[split.method](field.domain.bounded(field.extent), false /*valueflag*/, split.args);
     // create filter for each split value
-    return values.map( value => new PQL.Filter(split.field, 'equals', value) );
+    return domains.map( domain => new PQL.Filter(split.field, 'equals', domain) );
   }
 
   /**

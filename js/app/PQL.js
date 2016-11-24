@@ -21,7 +21,7 @@
  * @module PQL
  */
 
-define(['lib/emitter','./utils'], function (Emitter, utils) {
+define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) {
   "use strict";
 
   /**
@@ -116,12 +116,16 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
   class Filter extends FieldUsage {
     // TODO: Filter, Density, Aggregation Split: need to emit some internal changed event for visualization synchronization. At the moment this is so rare that emitInternalChanged is simply called from outside when necessary. However, that is obviously not clean.
 
-    constructor (field, method, args=[]) {
+    constructor (field, method, args) {
       super();
       if (!isField(field))
         throw TypeError("'field' must be a field");
       if (!isFilterMethod(method))
         throw RangeError("invalid method for Filter: " + method.toString());
+      if (args === undefined)
+        args = new field.domain.constructor();
+      if (!(args instanceof domain.Abstract))
+        throw TypeError("'args' must be a domain");
       this.field = field;
       this.method = method;
       this.args = args;
@@ -138,7 +142,7 @@ define(['lib/emitter','./utils'], function (Emitter, utils) {
     }
 
     static toJSON (f) {
-      return {
+      return {        
         name: f.name,
         operator: f.method,
         value: f.args.value

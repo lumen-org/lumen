@@ -7,13 +7,20 @@
 define(['./utils'], function (utils) {
   "use strict";
 
-  class DiscreteDomain {
+  class Domain {
+
+  }
+
+  class DiscreteDomain extends Domain {
     /**
      * Constructs a discrete domain.
-     * @param values A single value or an array of values for the domain. Pass null or [null] to create an unbounded Domain.
+     * @param values A single value or an array of values for the domain. Pass nothing or null or [null] to create an unbounded Domain.
      * @constructor
      */
     constructor(values) {
+      super();
+      if (values == undefined)
+        values = null;
       values = utils.listify(values);
       this.values = values.slice();
     }
@@ -59,7 +66,7 @@ define(['./utils'], function (utils) {
 
   }
 
-  class NumericDomain {
+  class NumericDomain extends Domain {
 
     /**
      * Constructs a simple continuous numerical domain from the given interval.
@@ -70,6 +77,9 @@ define(['./utils'], function (utils) {
      * @constructor
      */
     constructor(arg) {
+      super();
+      if (arg == undefined)
+        arg = null;
       if (_.isArray(arg)) {
         this.l = arg[0];
         this.h = arg[1];
@@ -145,6 +155,7 @@ define(['./utils'], function (utils) {
   }
 
   return {
+    Abstract: Domain,
     Discrete: DiscreteDomain,
     Numeric: NumericDomain
   };

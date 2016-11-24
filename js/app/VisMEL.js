@@ -100,6 +100,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
   }
 
+
   /**
    * Constructs an empty Layer or constructs a Layer from the given 'aesthetics shelf'.
    * @param shelf
@@ -108,14 +109,32 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   class Layer {
     constructor() {
       // empty constructor
-      this.filters = [];
-      this.aesthetics = {
+
+      /**
+       * @returns an array of all visual maps in this aesthetics object. Note that there are never any visual maps on the details shelf, as this contains field usages.
+       */
+      function visualMaps () {
+        var collection = [];
+        if (aesthetics.color && aesthetics.color instanceof ColorMap)
+          collection.push(aesthetics.color);
+        if (aesthetics.shape && aesthetics.shape instanceof ShapeMap)
+          collection.push(aesthetics.shape);
+        if (aesthetics.size && aesthetics.size instanceof SizeMap)
+          collection.push(aesthetics.size);
+        return collection;
+      }
+
+      var aesthetics = {
         mark: "auto",
         color: {},
         shape: {},
         size: {},
-        details: []
+        details: [],
+        visualMaps: visualMaps
       };
+
+      this.filters = [];
+      this.aesthetics = aesthetics;
     }
 
     static FromShelves(shelves) {
@@ -192,23 +211,23 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     /**
+     * @param exclude A iterable of descriptors to exclude from the collection. Allowed values of the iterable are 'layout', 'details', 'filters', 'aesthetics'.
      * @returns Returns the set of {@link FieldUsage}s of this query.
+     *
      */
-    fieldUsages() {
+    fieldUsages(exclude=[]) {
+      exclude = new Set(exclude);
       let layer = this.layers[0],
         layout = this.layout,
         aesthetics = layer.aesthetics;
-
       // vismel expressions consist of fieldusages ...
       let usedVars = _.union(
-        layout.rows.fieldUsages(),
-        layout.cols.fieldUsages(),
-        aesthetics.details,
-        layer.filters);
-      // ... and fieldmaps
-      if (aesthetics.color && aesthetics.color instanceof ColorMap) usedVars.push(aesthetics.color.fu);
-      if (aesthetics.shape && aesthetics.shape instanceof ShapeMap) usedVars.push(aesthetics.shape.fu);
-      if (aesthetics.size && aesthetics.size instanceof SizeMap) usedVars.push(aesthetics.size.fu);
+        exclude.has('layout') ? undefined : layout.rows.fieldUsages(),
+        exclude.has('layout') ? undefined : layout.cols.fieldUsages(),
+        exclude.has('details') ? undefined : aesthetics.details,
+        exclude.has('filters') ? undefined : layer.filters,
+        exclude.has('aesthetics') ? undefined : aesthetics.visualMaps().map(map => map.fu)
+      );
 
       return usedVars.filter(PQL.isFieldUsage);
     }
