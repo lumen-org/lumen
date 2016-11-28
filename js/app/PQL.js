@@ -46,7 +46,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
    * @alias module:Field.Field
    */
   class Field {
-    constructor (name, dataType, domain, extent, dataSource) {
+    constructor (name, dataType, domain, extent) {
       if (!_.isString(name)) throw TypeError("name must be a string, but is: " + name.toString());
       if (!_.contains(FieldT.DataType, dataType)) throw RangeError("invalid dataType: " + dataType.toString());
       if (extent.isUnbounded()) throw RangeError("extent may not be unbounded.");
@@ -55,7 +55,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       this.dataType = dataType;
       this.domain = domain;
       this.extent = extent;
-      this.dataSource = dataSource;
+      //this.dataSource = dataSource;
       Emitter(this);
     }
 
@@ -68,6 +68,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
 
     isDiscrete() {
       return (this.dataType === FieldT.DataType.string);
+    }
+
+    copy () {
+      return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy());
     }
   }
 
@@ -152,6 +156,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     toString() {
       return this.field.name + " " + this.method + " " + this.args;
     }
+
+    copy () {
+      return new Filter(this.field.copy(), this.method, this.args);
+    }
   }
 
   class Split extends FieldUsage {
@@ -178,6 +186,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
 
     toString() {
       return this.method  + " of " + this.field.name + " with args:" + " " + this.args;
+    }
+
+    copy () {
+      return new Split(this.field.copy(), this.method, this.args);
     }
 
     static FromFieldUsage (fu) {
@@ -249,6 +261,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       return Aggregation.toJSON(this);
     }
 
+    copy () {
+      return new Aggregation(this.fields.map(field => field.copy()), this.method, this.yields, this.args);
+    }
+
     static toJSON (a) {
       return {
         name: a.names,
@@ -284,6 +300,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
 
     toJSON() {
       return Density.toJSON(this);
+    }
+
+    copy () {
+      return new Density(this.fields.map(field => field.copy()));
     }
 
     static toJSON(d) {

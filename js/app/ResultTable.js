@@ -64,8 +64,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
     // note: in the general case query.fieldUsages() and [...dimensions, ...measures] do not contain the same set of
     //  field usages, as duplicate dimensions won't show up in dimensions
-    // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity
-    // (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
+    // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
 
     var fieldUsages = query.fieldUsages();
     var dimensions = [];
