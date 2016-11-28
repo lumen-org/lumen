@@ -64,6 +64,10 @@ define(['./utils'], function (utils) {
       return this.values;
     }
 
+    copy () {
+      return new DiscreteDomain(this.values);
+    }
+
   }
 
   class NumericDomain extends Domain {
@@ -151,6 +155,10 @@ define(['./utils'], function (utils) {
 
     toString () {
       return "[" + this.l + "," + this.h + "]";
+    }
+
+    copy () {
+      return new NumericDomain([this.l, this.h]);
     }
   }
 

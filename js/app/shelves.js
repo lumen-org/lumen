@@ -223,22 +223,20 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
     }
 
     /**
-     * Returns a deep copy of this shelf.
+     * Returns a deep copy of this shelf. This expects that all content can be copied by a method
+     * .copy() on it.
      */
     copy () {
       var copy = new Shelf(this.type, this.opt);
-      for(let elem in this) {
-        debugger;
+      for(let elem of this)
         copy.append(elem.content.copy());
-      }
       return copy;
     }
 
     *[Symbol.iterator]() {
       var nextIdx = 0;
-      while (nextIdx < this.length) {
+      while (nextIdx < this.length)
         yield this.at(nextIdx++);
-      }
     }
   }
 

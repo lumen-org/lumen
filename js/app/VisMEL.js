@@ -19,6 +19,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       this.bubbleEventUp(this, Emitter.InternalChangedEvent, Emitter.ChangedEvent);
     }
 
+    copy () {
+      return new BaseMap(this.fu);
+    }
+
     static DefaultMap(fu) {
       return new BaseMap(fu);
     }
@@ -36,6 +40,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         this.colormap = 'default';
       } else
         throw new RangeError('invalid value for yieldDataType: ' + fu.yieldDataType);
+    }
+
+    copy () {
+      return new ColorMap(this.fu, this.channel);
     }
 
     static DefaultMap(fu) {

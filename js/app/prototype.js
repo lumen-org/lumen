@@ -73,7 +73,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               // fetch model
               context.model.update()
                 .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
-                .then(() => activate(context))
+                .then(() => activate(context, ['visualization', 'visPanel']))
                 .catch((err) => {
                   console.error(err);
                   infoBox.message("Could not load remote model from Server!");
@@ -109,11 +109,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
       constructor (context) {
 
-        // TODO: undo/redo not implemented yet. later $undo, ... will probably have to be a instance variable, in order to be able to undo/redo on the correct instance
         var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let unredoer = this._context.unredoer;
           if (unredoer.hasPrevious)
-            activate(unredoer.undo());
+            this._context.loadShelves(unredoer.undo());
           console.log("undid it!");
         });
         var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
@@ -123,15 +122,30 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           console.log("redid it!");
         });
 
+
         var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
           () => this._context.clearShelves());
+
+        var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
+          () => {
+            let clone = this._context.copy();
+            // fetch model
+            clone.model.update()
+              .then(() => activate(clone, ['visualization', 'visPanel']))
+              .then(() => clone.update())
+              .catch((err) => {
+                console.error(err);
+                infoBox.message("Could not load remote model from Server!");
+                // TODO: remove vis and everything else ...
+              });
+          }
+        );
+
         var $query = $('<div class="pl-toolbar-button">Query!</div>').click(
           () => this._context.update());
 
         this._modelSelector = new ModelSelector(context);
-
-        //this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $undo, $redo, $clear, $query);
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clear, $query);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo, $redo, $clear, $query);
 
         if(context !== undefined)
           this.setContext(context);
@@ -154,13 +168,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     class Context {
       /**
-       * Creates and returns a new, empty context.
+       * Creates an new context. If no parameters are given, the context is empty.
+       * However, you can also specify the server, or the server and the modelName, or the server, the modelname and existing shelves for these.
        */
       constructor (server, modelName, shelves) {
 
         /**
-         * Creates and returns a function to update a context. On calling this function the
-         * context does not need to be provided again.
+         * Creates and returns a function to update a context. _On calling this function the
+         * context does not need to be provided again!_
          *
          * @param c the context.
          */
@@ -190,6 +205,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                 // console.log("result table done");
                 c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.resultTable, c.queryTable, c);
                 // console.log("view table done");
+              })
+              .then(() => {
+                // commit to undoer
+                // TODO: commit only if something changed!
+                c.unredoer.commit(c.copy());
+                debugger;
               })
               .then(() => {
                 console.log("query: ");
@@ -225,7 +246,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
-          this.shelves = shelves.copy();
+          this.shelves = shelves;
         else
           this.shelves = sh.construct();
 
@@ -241,7 +262,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.$visuals = Context._makeGUI(this);
         this.unredoer = new UnRedo(20);
 
-        this.hideVisuals();
+        this.displayVisuals(false);
         this.attachVisuals();
       }
 
@@ -257,12 +278,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
 
       /**
-       * Sets all visuals to hidden.
+       * Hide or show visuals. You can specify which visuals to except from it.
        */
-      hideVisuals() {
+      displayVisuals(flag, except = []) {
         var $visuals = this.$visuals;
+        var except = new Set(except)
         for(var key in $visuals)
-          $visuals[key].hide();
+          if ($visuals.hasOwnProperty(key) && !except.has(key)) {
+            flag ? $visuals[key].show() : $visuals[key].hide();
+          }
       }
 
       /**
@@ -291,16 +315,30 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
 
       /**
+       * Loads a configuration of shelves in this context. Note that the shelves must match the model.
+       * @param shelves
+       */
+      loadShelves (shelves) {
+        this.shelves = shelves;
+
+        blub
+        // load them into GUI, make them visual ..
+        throw Error("continue here!");
+
+      }
+
+      /**
        * Creates a deep copy of this context. This means a new (local view on the) model is created, as well as a copy of the shelves and their contents.  As the standard new context it is already "visual" (i.e. attachVisuals is called), but its "hidden" before (i.e. hideVisuals() is called).
        * Note that the pipeline including the visualization is not copied, but rerun (i.e. query, querytable, modelTable)
        */
       copy () {
-        var copy = new Context(this.server, this.model.name);
-        // copy shelves (exkl visuals)
-        copy.shelves = this.shelves.copy(); //TODO??
-        // recreate visuals
-        // rerun pipeline ?
+        // copy shelves (excludes visuals)
+        var shelvesCopy = {};
+        for (const key of Object.keys(this.shelves))
+          shelvesCopy[key] = this.shelves[key].copy();
 
+        // pass these to the context constructor
+        var copy = new Context(this.server, this.model.name, shelvesCopy);
         return copy;
       }
 
@@ -314,7 +352,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $nav = $removeButton;
         return $('<div class="pl-visualization"></div>')
           .append($title, $nav, $pane)
-          .click( () => activate(context) );
+          .click( () => activate(context, ['visualization', 'visPanel']) );
       }
 
       /**
@@ -361,31 +399,27 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     /**
      * Activates a context and enables interactive editing of a query on/for it.
+     * It hides all visuals of the current context, except those specified.
      * @param context Context to activate.
      */
     var activate = (function(){
       // don't get confused. In the end it returns a function. And that function has a closure to hold its private variable _currentContext. That's it.
       var _currentContext = {};
 
-      function _activate (context) {
+      function _activate (context, except = []) {
         /// disable old context
         if (!_.isEmpty(_currentContext)) {
-          let $curVis = _currentContext.$visuals;
-          for(const key in $curVis)
-            if (key !== 'visualization' && key !== 'visPanel')
-              $curVis[key].hide();
-          // remove marking for current active visualization
-          $curVis['visualization'].toggleClass('pl-active', false);
+          _currentContext.displayVisuals(false, except);
+            // remove marking for current active visualization
+          _currentContext.$visuals['visualization'].toggleClass('pl-active', false);
         }
 
         /// activate new context
         _currentContext = context;
-        let $curVis = _currentContext.$visuals;
-        for(const key in $curVis)
-          $curVis[key].show();
+        _currentContext.displayVisuals(true);
 
         // add marking for new active visualization
-        $curVis['visualization'].toggleClass('pl-active', true);
+        _currentContext.$visuals['visualization'].toggleClass('pl-active', true);
 
         toolbar.setContext(context);
         // TODO: later maybe its nicer to emit a signal on context change. but for now its easier this way.
@@ -509,7 +543,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
 
           // activate that context
-          activate(context);
+          activate(context, ['visualization', 'visPanel']);
 
           // fetch model
           context.model.update()

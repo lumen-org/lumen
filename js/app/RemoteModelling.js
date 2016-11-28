@@ -169,7 +169,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
           if (dtypes[i] === PQL.FieldT.DataType.num)
             row[i] = +row[i];
           //else if (dtypes[i] == F.FieldT.DataType.string)
-          //  row[i] = row[i]
+          //  row[i] = row[i] // identity ...
           else if (dtypes[i] !== PQL.FieldT.DataType.string)
               throw new RangeError("invalid dataType: " + dtypes[i]);
         }
