@@ -130,7 +130,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         this._modelSelector = new ModelSelector(context);
 
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $undo, $redo, $clear, $query);
+        //this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $undo, $redo, $clear, $query);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clear, $query);
 
         if(context !== undefined)
           this.setContext(context);

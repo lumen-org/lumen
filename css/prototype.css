@@ -67,8 +67,8 @@ main {
 
 .pl-visualization-svg {
     /*margin: 1rem;*/
-    width: 600px;
-    height: 600px;
+    width: 400px;
+    height: 400px;
 }
 
 #queryTextBox {
