@@ -112,7 +112,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasUndo)
-            c.loadShelves(c.unredoer.undo(c.copyShelves()));
+            c.loadShelves(c.unredoer.undo());
           else
             infoBox.message("no undo left!");
         });
@@ -124,7 +124,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasRedo)
-            c.loadShelves(c.unredoer.redo(c.copyShelves()));
+            c.loadShelves(c.unredoer.redo());
           else
             infoBox.message("no redo left!");
         });
@@ -186,7 +186,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         function makeContextedUpdateFct (c) {
 
           // Note that this function accesses the local scope!
-          function update () {
+          function update (commit = true) {
             console.log("updating!");
             try {
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model);
@@ -211,22 +211,24 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                 // console.log("view table done");
               })
               .then(() => {
-                // commit to undoer
                 // TODO: commit only if something changed!
-//                 c.unredoer.commit(c.copyShelves());
+                if (commit) {
+                  c.unredoer.commit(c.copyShelves());
+                  console.log("commiting");
+                }
               })
-              .then(() => {
-                console.log("query: ");
-                console.log(c.query);
-                console.log("QueryTable: ");
-                console.log(c.queryTable);
-                console.log("ModelTabel: ");
-                console.log(c.modelTable);
-                console.log("resultTable: ");
-                console.log(c.resultTable);
-                console.log("viewTable: ");
-                console.log(c.viewTable);
-              })
+              // .then(() => {
+              //   console.log("query: ");
+              //   console.log(c.query);
+              //   console.log("QueryTable: ");
+              //   console.log(c.queryTable);
+              //   console.log("ModelTabel: ");
+              //   console.log(c.modelTable);
+              //   console.log("resultTable: ");
+              //   console.log(c.resultTable);
+              //   console.log("viewTable: ");
+              //   console.log(c.viewTable);
+              // })
               .catch((reason) => {
                 console.error(reason);
                 if (reason instanceof XMLHttpRequest) {
@@ -335,7 +337,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           $oldVis[key] = $newVis[key];
         }
 
-        this.update();
+        this.update(false);
       }
 
       /**

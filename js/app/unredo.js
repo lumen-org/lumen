@@ -23,21 +23,23 @@ define([], function() {
     /**
      * @returns the previous state if there is a previous state, and the current state otherwise.
      */
-    undo(state) {
+    undo() {
       if (!this.hasUndo)
         throw new RangeError("no undo left");
-      this._redo.push(state);
-      return this._undo.pop();
+      let undo = this._undo.pop();
+      this._redo.push(undo);
+      return undo;
     }
 
     /**
      * @returns the next state if there is a next state, and throws a RangeError otherwise.
      */
-    redo(state) {
+    redo() {
       if (!this.hasRedo)
         throw new RangeError("no redo left");
-      this._undo.push(state);
-      return this._redo.pop();
+      let redo = this._redo.pop();
+      this._undo.push(redo);
+      return redo;
     }
 
     /**
