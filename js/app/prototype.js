@@ -110,22 +110,26 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       constructor (context) {
 
         var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
-          let unredoer = this._context.unredoer;
-          if (unredoer.hasPrevious)
-            this._context.loadShelves(unredoer.undo());
-          console.log("undid it!");
+          let c = this._context;
+          if (c.unredoer.hasUndo)
+            c.loadShelves(c.unredoer.undo(c.copyShelves()));
+          else
+            infoBox.message("no undo left!");
+        });
+        var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
+          let c = this._context;
+          c.unredoer.commit(c.copyShelves());
+          console.log("saved it!");
         });
         var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
-          let unredoer = this._context.unredoer;
-          if (unredoer.hasNext)
-            activate(unredoer.redo());
-          console.log("redid it!");
+          let c = this._context;
+          if (c.unredoer.hasRedo)
+            c.loadShelves(c.unredoer.redo(c.copyShelves()));
+          else
+            infoBox.message("no redo left!");
         });
-
-
         var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
-          () => this._context.clearShelves());
-
+          () => this._context.clearShelves(['dim','meas']));
         var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
           () => {
             let clone = this._context.copy();
@@ -145,7 +149,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           () => this._context.update());
 
         this._modelSelector = new ModelSelector(context);
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo, $redo, $clear, $query);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo, $save, $redo, $clear, $query);
 
         if(context !== undefined)
           this.setContext(context);
@@ -209,8 +213,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               .then(() => {
                 // commit to undoer
                 // TODO: commit only if something changed!
-                c.unredoer.commit(c.copy());
-                debugger;
+//                 c.unredoer.commit(c.copyShelves());
               })
               .then(() => {
                 console.log("query: ");
@@ -258,9 +261,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.viewTable = {};
         //this.remove = remove;
 
+        // update is not an instance method that needs to be called with a proper this. it always knows its context.
         this.update = _.debounce(makeContextedUpdateFct(this), 200);
-        this.$visuals = Context._makeGUI(this);
         this.unredoer = new UnRedo(20);
+
+        // this creates all GUI elements
+        this.$visuals = Context._makeGUI(this);
 
         this.displayVisuals(false);
         this.attachVisuals();
@@ -282,15 +288,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       displayVisuals(flag, except = []) {
         var $visuals = this.$visuals;
-        var except = new Set(except)
-        for(var key in $visuals)
-          if ($visuals.hasOwnProperty(key) && !except.has(key)) {
+        var except = new Set(except);
+        for (const key of Object.keys($visuals))
+          if (!except.has(key))
             flag ? $visuals[key].show() : $visuals[key].hide();
-          }
       }
 
       /**
-       * Attaches all visuals to the appropiate containers (see code)
+       * Attaches all visuals to the appropriate containers of the actual DOM (see code).
        */
       attachVisuals() {
         var $visuals = this.$visuals;
@@ -303,28 +308,44 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       /**
        * Utility function. Clears the given collection of shelves, except for measure and dimension shelves.
        */
-      clearShelves () {
-        var shelves = this.shelves;
-        shelves.detail.clear();
-        shelves.color.clear();
-        shelves.filter.clear();
-        shelves.shape.clear();
-        shelves.size.clear();
-        shelves.row.clear();
-        shelves.column.clear();
+      clearShelves (except = []) {
+        var except = new Set(except);
+        for (const key of Object.keys(this.shelves))
+          if (!except.has(key))
+            this.shelves[key].clear();
       }
 
       /**
-       * Loads a configuration of shelves in this context. Note that the shelves must match the model.
-       * @param shelves
+       * Loads a new configuration of shelves in this context. Note that the shelves must match the model. The shelves replace the currently set shelves, and are also set as made visual and interactive.
+       * @param shelves A new configuration of shelves.
        */
       loadShelves (shelves) {
+        // make new visual representations
         this.shelves = shelves;
+        var $newVis = Context._makeShelvesGUI(this);
 
-        blub
-        // load them into GUI, make them visual ..
-        throw Error("continue here!");
+        // replace current visuals with the ones
+        // some more details, by the example of the '.pl-model'-div
+        //  - replaceWith replaces some selection with something else: we want to replace the old '.pl-model'-div with the new one
+        //  - however, that does not delete the old one. so we do that with remove(). Note that replaceWith returns the replaced elements.
+        //  - neither it update the selection $oldVis.models refers to. hence we have to ste that as well.
+        let $oldVis = this.$visuals;
+        for (const key of Object.keys($newVis)) {
+          $oldVis[key].replaceWith($newVis[key]).remove();
+          $oldVis[key] = $newVis[key];
+        }
 
+        this.update();
+      }
+
+      /**
+       * Returns a deep copy of the shelves of this context (excluding any visuals).
+       */
+      copyShelves() {
+        var shelvesCopy = {};
+        for (const key of Object.keys(this.shelves))
+          shelvesCopy[key] = this.shelves[key].copy();
+        return shelvesCopy;
       }
 
       /**
@@ -332,14 +353,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Note that the pipeline including the visualization is not copied, but rerun (i.e. query, querytable, modelTable)
        */
       copy () {
-        // copy shelves (excludes visuals)
-        var shelvesCopy = {};
-        for (const key of Object.keys(this.shelves))
-          shelvesCopy[key] = this.shelves[key].copy();
-
-        // pass these to the context constructor
-        var copy = new Context(this.server, this.model.name, shelvesCopy);
-        return copy;
+        // TODO: undo/redo states are lost on copy
+        return new Context(this.server, this.model.name, this.copyShelves());
       }
 
       static _makeVisualization(context) {
@@ -356,13 +371,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
 
       /**
-       * Create and return GUI for shelves and models.
-       *
-       * Note: this is GUI stuff that is instantiated for each context. "Singleton" GUI elements
-       * are not managed like this.
+       * Creates a visual, interactable representation of the shelves in the given context and returns this as an object with three attributes: models, mappings and  layout respectively. Each are a jQuery selection of the visual representation, respectively.
+       * @param context
+       * @private
        */
-      static _makeGUI(context) {
+      static _makeShelvesGUI (context) {
         var shelves = context.shelves;
+
         // make all shelves visual and interactable
         shelves.meas.beVisual({label: 'Measures'}).beInteractable();
         shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
@@ -389,9 +404,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         for (const key of Object.keys(shelves))
           shelves[key].on(Emitter.ChangedEvent, context.update);
 
+        return visual;
+      }
+
+      /**
+       * Create and return GUI for shelves and models.
+       *
+       * Note: this is GUI stuff that is instantiated for each context. "Singleton" GUI elements
+       * are not managed like this.
+       */
+      static _makeGUI(context) {
+        var visual = Context._makeShelvesGUI(context);
         visual.visualization = Context._makeVisualization(context);
         visual.visPanel = $('.pl-visualization-svg', visual.visualization);
-
         return visual;
       }
     }
