@@ -217,18 +217,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                   console.log("commiting");
                 }
               })
-              // .then(() => {
-              //   console.log("query: ");
-              //   console.log(c.query);
-              //   console.log("QueryTable: ");
-              //   console.log(c.queryTable);
-              //   console.log("ModelTabel: ");
-              //   console.log(c.modelTable);
-              //   console.log("resultTable: ");
-              //   console.log(c.resultTable);
-              //   console.log("viewTable: ");
-              //   console.log(c.viewTable);
-              // })
+              .then(() => {
+                console.log("query: ");
+                console.log(c.query);
+                console.log("QueryTable: ");
+                console.log(c.queryTable);
+                console.log("ModelTabel: ");
+                console.log(c.modelTable);
+                console.log("resultTable: ");
+                console.log(c.resultTable);
+                console.log("viewTable: ");
+                console.log(c.viewTable);
+              })
               .catch((reason) => {
                 console.error(reason);
                 if (reason instanceof XMLHttpRequest) {

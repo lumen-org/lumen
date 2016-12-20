@@ -17,6 +17,7 @@ define([], function() {
       // this._limit = limit;
       this._undo = [];
       this._redo = [];
+      this._current = undefined;
       this.clear();
     }
 
@@ -26,9 +27,9 @@ define([], function() {
     undo() {
       if (!this.hasUndo)
         throw new RangeError("no undo left");
-      let undo = this._undo.pop();
-      this._redo.push(undo);
-      return undo;
+      this._redo.push(this._current);
+      this._current = this._undo.pop();
+      return this._current;
     }
 
     /**
@@ -37,9 +38,9 @@ define([], function() {
     redo() {
       if (!this.hasRedo)
         throw new RangeError("no redo left");
-      let redo = this._redo.pop();
-      this._undo.push(redo);
-      return redo;
+      this._undo.push(this._current);
+      this._current = this._redo.pop();
+      return this._current;
     }
 
     /**
@@ -47,11 +48,13 @@ define([], function() {
      * If the maximum number of states to store is reached the oldest one is lost.
      */
     commit(state) {
-      // add new state
-      this._undo.push(state);
+      // push (old) current state to undo stack
+      this._undo.push(this._current);
+
+      this._current = state;
 
       // loses all redos
-      this._redo = [];
+      //this._redo = [];
       //
       // // truncate list to limit
       // if (this._current === this._limit) {
@@ -67,6 +70,7 @@ define([], function() {
     clear() {
       this._undo = [];
       this._redo = [];
+      this._current = undefined;
     }
 
     /**
