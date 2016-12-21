@@ -14,11 +14,11 @@ define([], function() {
 
   class UnRedo {
 
-    constructor(limit = 100) {
-      this._limit = limit;
-      this._current = 0;
-      this._present = 0;
-      this._queue = [];
+    constructor(/*limit = 100*/) {
+      // this._limit = limit;
+      this._undo = [];
+      this._redo = [];
+      this._current = undefined;
       this.clear();
     }
 
@@ -26,27 +26,22 @@ define([], function() {
      * @returns the previous state if there is a previous state, and the current state otherwise.
      */
     undo() {
-      if (this.hasPrevious) {
-        this._current--;
-      }
-      return this.current();
+      if (!this.hasUndo)
+        throw new RangeError("no undo left");
+      this._redo.push(this._current);
+      this._current = this._undo.pop();
+      return this._current;
     }
 
     /**
-     * @returns the next state if there is a next state, and the current state otherwise.
+     * @returns the next state if there is a next state, and throws a RangeError otherwise.
      */
     redo() {
-      if (this.hasNext) {
-        this._current++;
-      }
-      return this.current();
-    }
-
-    /**
-     * @returns {*} the current state.
-     */
-    current() {
-      return this._queue[this._current];
+      if (!this.hasRedo)
+        throw new RangeError("no redo left");
+      this._undo.push(this._current);
+      this._current = this._redo.pop();
+      return this._current;
     }
 
     /**
@@ -54,26 +49,29 @@ define([], function() {
      * If the maximum number of states to store is reached the oldest one is lost.
      */
     commit(state) {
-      this._current++;
+      // push (old) current state to undo stack
+      this._undo.push(this._current);
+
+      this._current = state;
+
       // loses all redos
-      this._present = this._current;
-      // add new state
-      this._queue[this._current] = state;
-      // truncate list to limit
-      if (this._current === this._limit) {
-        this._queue = this._queue.slice(1);
-        this._current--;
-        this._present--;
-      }
+      //this._redo = [];
+      //
+      // // truncate list to limit
+      // if (this._current === this._limit) {
+      //   this._queue = this._queue.slice(1);
+      //   this._current--;
+      //   this._present--;
+      // }
     }
 
     /**
      * Clears the whole undo / redo queue.
      */
     clear() {
-      this._current = 0;
-      this._present = 0;
-      this._queue = [];
+      this._undo = [];
+      this._redo = [];
+      this._current = undefined;
     }
 
     /**
@@ -86,15 +84,15 @@ define([], function() {
     /**
      * @returns {boolean} True iff there is a previous to the current state.
      */
-    get hasPrevious() {
-      return this._current !== 0;
+    get hasRedo() {
+      return !this._redo.empty();
     }
 
     /**
      * @returns {boolean} True iff there is a next to the current state.
      */
-    get hasNext() {
-      return this._current === this._present;
+    get hasUndo() {
+      return !this._undo.empty();
     }
 
   }
