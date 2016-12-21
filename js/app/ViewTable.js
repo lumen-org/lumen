@@ -8,6 +8,7 @@
  *
  * @module ViewTable
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
 define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],

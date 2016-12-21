@@ -1,5 +1,6 @@
 /**
  * This module does initializations that have to be done before everything else.
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @module init
  */
 define(['lib/logger','d3'], function (Logger, d3) {

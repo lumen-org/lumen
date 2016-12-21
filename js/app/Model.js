@@ -1,6 +1,7 @@
 /**
  * Model module.
  * @module Model
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
 define(['./PQL'], function (PQL) {

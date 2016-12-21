@@ -2,6 +2,7 @@
  * Definition of domains of {@link Field}s.
  * @module Domain
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
 define(['./utils'], function (utils) {

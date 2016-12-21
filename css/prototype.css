@@ -1,10 +1,4 @@
-/**
-  @author Philipp Lucas
-  CSS for prototype.html
-*
-* {
-    box-sizing: border-box;
-}*/
+/* copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 main {
     display: flex;

@@ -6,6 +6,7 @@
  *
  * @module RemoteModel
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
 define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function (Logger, d3, utils, Domain, PQL, Model) {

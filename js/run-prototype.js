@@ -1,5 +1,6 @@
 /**
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  *
  * This configures requirejs and serves as a single entry point for the prototype application.
  * The actual application if called after necessary libraries are loaded via a callback function. See below.

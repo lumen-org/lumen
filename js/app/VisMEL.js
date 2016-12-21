@@ -4,6 +4,8 @@
  * This module allows to construct VisMEL queries from shelves and sources, and defines utility functions on VisMEL queries.
  *
  * @module VisMEL
+ * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
 define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, utils, PQL, TableAlgebra) {

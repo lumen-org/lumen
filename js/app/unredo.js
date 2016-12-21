@@ -7,7 +7,8 @@
  * If you commit a new state, all states _after_ the current state that has last been retrieved are lost.
  *
  * @module UnRedo
- * @author Philipp Lucas
+ * @author Philipp Lucas, Matthias Mitterreiter
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 define([], function() {
 

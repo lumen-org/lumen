@@ -2,6 +2,7 @@
  * Utility functions.
  * @module utils
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 define([], function() {
   'use strict';

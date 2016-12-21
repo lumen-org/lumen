@@ -2,6 +2,7 @@
  * Adds Drag and Drop capability the visuals of to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
  *
  * @module interaction
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
 define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], function (Logger, sh, drop, vis) {

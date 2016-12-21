@@ -2,6 +2,7 @@
  * Main component that assembles and manages the actual GUI of the PMV web client.
  *
  * @module main
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
 define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],

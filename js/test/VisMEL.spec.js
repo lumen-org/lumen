@@ -1,3 +1,7 @@
+/**
+ * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ */
 define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'app/ModelTable', 'app/ResultTable', 'app/ViewTable', 'app/RemoteModelling'],
   function (d3, PQL, VisMEL, TableAlgebraExpr, QueryTable, ModelTable, ResultTable, ViewTable, Remote ) {
   "use strict";

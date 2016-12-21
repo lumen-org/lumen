@@ -1,3 +1,6 @@
+/**
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ */
 define([], function () {
   "use strict";
 

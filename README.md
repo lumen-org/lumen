@@ -19,13 +19,9 @@ Clone this repository into a folder of your choice. Let's call it `root`. If you
 
 ### Running it ###
 
-Open `index.html` in your browser (preferably Chrome) and navigate to `prototype` or directly open `html/prototype.html`.
+Open `html/prototype.html` in your browser (preferably Chrome)
 
 Note that a ModelBase server is expected to run at 'localhost:5000/webservice'. You can get it from [here](https://bitbucket.org/phlpp/modelbase).
-
-### Other Notes ###
-
-* 'daphne' is a separate side project. you can safely ignore it entirely.
 
 ### Contact ###
 

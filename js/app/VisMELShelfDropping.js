@@ -7,6 +7,7 @@
  *
  * @module interaction
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'], function (Logger, util, sh, vis, PQL, VisMEL) {
   'use strict';

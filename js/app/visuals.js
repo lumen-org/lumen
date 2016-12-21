@@ -4,6 +4,7 @@
  *
  * @module visuals
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL'], function(Logger, util, Emitter, s, VisMEL, PQL) {
 

@@ -2,6 +2,7 @@
  * Tests for {@link module:TableAlgebra}.
  *
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @module
  */
 define(['lib/logger', 'app/PQL', 'app/shelves', 'app/TableAlgebra', 'app/interaction'], function (Logger, F, sh, TableAlgebraExpr, inter) {

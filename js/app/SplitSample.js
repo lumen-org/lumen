@@ -4,6 +4,7 @@
  * todo: maybe I should move splitters and samplers to the specific domain definitions. it seems a little awkward and unnatural to have them separate that much: e.g. I'm checking for the correct types in each splitters ...
  *
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @module SplitSample
  */
 define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {

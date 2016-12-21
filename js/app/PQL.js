@@ -18,6 +18,7 @@
  *  The so created 'JSON' can be serialized into a string using the core modele JSON.stringify function.
  *
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @module PQL
  */
 

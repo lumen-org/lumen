@@ -1,5 +1,6 @@
 /**
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  *
  * This file configures requirejs and serves as a single entry point for the javascript application.
  * The actual application is called after necessary libraries are loaded via a callback function. See below.

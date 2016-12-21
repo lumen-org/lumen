@@ -3,6 +3,7 @@
  *
  * @module shelves
  * @author Philipp Lucas
+ * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 //define(['lib/emitter', 'lib/logger', './utils', './PQL',], function (E, Logger, utils, PQL) {
 define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function (Emitter, Logger, utils, PQL, VisMEL) {
