@@ -77,9 +77,9 @@ define([], function() {
     /**
      * @returns the maximum number of states stored in the manager.
      */
-    get limit() {
+    /*get limit() {
       return this._limit;
-    }
+    }*/
 
     /**
      * @returns {boolean} True iff there is a previous to the current state.

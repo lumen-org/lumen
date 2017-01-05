@@ -11,7 +11,7 @@
  *   * a density
  *   * a Filter on a Model
  *
- *  Essentially FieldUsages represent an usage of (multiple) Fields of a model.
+ * Essentially FieldUsages represent an usage of (multiple) Fields of a model.
  *
  *  They also can be converted to suitable 'JSON formatted' PQL symbols by calling {*}toJSON , i.e. a Split becomes a SplitTuple,
  *  an Aggregation becomes an AggregationTuple, etc.

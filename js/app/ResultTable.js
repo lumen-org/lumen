@@ -13,7 +13,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   /**
    * Attaches the extent of each column of a (row-based) table under the attribute .extent and returns the modified table.
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
-   * Note that the passed table is expected to have a .fu attribute, which describes the FU of each column.
+   * Note that the passed table is expected to have a .fu attribute, which describes the FieldUsage of each column.
    */
   function _attachExtent (table) {
     if (table.length === 0 || table[0].length === 0)
@@ -39,11 +39,11 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
    *
    * # Map from FieldUsages to columns in result table:
    * In order to know which {@link FieldUsage} of the query is represented by which column of the result table,
-   * an attribute 'index' is attached to all field usages of the query.
+   * an attribute 'index' is attached to each field usages of the query.
    *
    * # Map from columns in result table to FieldUsages:
-   * The reverse mapping is provided by the attribute 'fu', where '.fu[i]' maps to the corresponding {@link FieldUsage}
-   * of the i-th column of the result table.
+   * The reverse mapping is provided by the attribute 'fu' on the table itself,
+   * where '.fu[i]' maps to the corresponding {@link FieldUsage} of the i-th column of the result table.
    *
    * @param model The model to aggregate.
    * @param query The atomic query to the model.

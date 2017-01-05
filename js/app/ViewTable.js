@@ -453,6 +453,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    *
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
    *
+   * Note: you cannot use the .extent or .domain of any field of any field usage that query and queries consists of
+   * The reason is that these are not updated as a result of query answering. That is because the queries all refer
+   * to Fields of some model instance. And that model instance is never actually changed. Instead new models are
+   * created on both the remote and local side.
+   *
    * @param query
    * @param queries
    * @param results
@@ -491,20 +496,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       fu.extent = extent;
     }
 
-    // extents of splits in table algebra expression
-    [...query.layout.rows, ...query.layout.cols].filter(PQL.isSplit).forEach( dim => {
-      // we get the actuall value of the bounded domain of this field
-      let field = dim.field;
-      dim.extent = field.domain.bounded(field.extent).value;
-    });
-
     // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
     let color = [],
       shape = [],
       size = [];
 
     // init empty extent for measure on ROWS/COLS
-    [...query.layout.cols, ...query.layout.rows].filter(PQL.isAggregationOrDensity).forEach(
+    [...query.layout.cols, ...query.layout.rows].filter(PQL.isFieldUsage).forEach(
       m => m.extent = []
     );
 
@@ -526,12 +524,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           size = _extentUnion(size, r.extent[qa.size.fu.index], PQL.hasDiscreteYield(qa.size.fu));
 
         // row and column extents
-        // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. thats why this works.
+        // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. that's why this works.
         let lr = q.layout.rows[0];
-        if (PQL.isAggregationOrDensity(lr))
+        if (PQL.isFieldUsage(lr))
           lr.extent = _extentUnion(lr.extent, r.extent[lr.index], PQL.hasDiscreteYield(lr));
         let lc = q.layout.cols[0];
-        if (PQL.isAggregationOrDensity(lc))
+        if (PQL.isFieldUsage(lc))
           lc.extent = _extentUnion(lc.extent, r.extent[lc.index], PQL.hasDiscreteYield(lc));
       }
     }
@@ -541,13 +539,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       let lc = queries.at[0][cIdx].layout.cols[0];
       if (PQL.isFieldUsage(lc))
         _normalizeExtent(lc)
-        //lc.extent = _normalizeExtent(lc.extent);
     }
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       let lr = queries.at[rIdx][0].layout.rows[0];
       if (PQL.isFieldUsage(lr))
         _normalizeExtent(lr)
-        //lr.extent = _normalizeExtent(lr.extent);
     }
 
     // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
