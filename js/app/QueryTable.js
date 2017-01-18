@@ -71,7 +71,12 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
    */
   var QueryTable = function (query) {
 
-    // todo: apply filter on dimensions
+    // todo: apply filter on splitting dimensions!!
+    // do this by modifying the fields of the splits in the rows and column accordingly
+    let filters = query.layers[0].filters;
+    for (let idx=0; idx<filters.length; idx++) {
+      filters[idx].apply();
+    }
 
     this.base = query;
     let rowBase = _expandTemplate(query, 'rows');

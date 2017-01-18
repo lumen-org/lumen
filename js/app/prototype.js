@@ -72,8 +72,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               var context = new Context("http://127.0.0.1:5000/webservice", modelName);
 
               // fetch model
-              context.model.update()
-                .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
+              context.basemodel.update()
+                .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas))
                 .then(() => activate(context, ['visualization', 'visPanel']))
                 .catch((err) => {
                   console.error(err);
@@ -135,7 +135,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           () => {
             let clone = this._context.copy();
             // fetch model
-            clone.model.update()
+            clone.basemodel.update()
               .then(() => activate(clone, ['visualization', 'visPanel']))
               .then(() => clone.update())
               .catch((err) => {
@@ -190,6 +190,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           function update (commit = true) {
             console.log("updating!");
             try {
+              c.model = c.basemodel.localCopy();
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model);
               c.queryTable = new QueryTable(c.query);
               c.modelTable = new ModelTable(c.queryTable);
@@ -244,11 +245,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         }
 
         // server and model
+        // note that basemodel is expected to be constant, i.e. it never is changed
         this.server = server;
         if (modelName !== undefined && server !== undefined)
-          this.model = new Remote.Model(modelName, server);
+          this.basemodel = new Remote.Model(modelName, server);
         else
-          this.model = {};
+          this.basemodel = {};
 
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
@@ -357,7 +359,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       copy () {
         // TODO: undo/redo states are lost on copy
-        return new Context(this.server, this.model.name, this.copyShelves());
+        return new Context(this.server, this.basemodel.name, this.copyShelves());
       }
 
       static _makeVisualization(context) {
@@ -366,7 +368,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
 
-        var $title = $('<div>' + context.model.name + '</div>');
+        var $title = $('<div>' + context.basemodel.name + '</div>');
         var $nav = $removeButton;
         return $('<div class="pl-visualization"></div>')
           .append($title, $nav, $pane)
@@ -574,8 +576,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           activate(context, ['visualization', 'visPanel']);
 
           // fetch model
-          context.model.update()
-            .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
+          context.basemodel.update()
+            .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas)) // on model change
             .then(() => initialQuerySetup(context.shelves)) // on initial startup only
             .catch((err) => {
               console.error(err);

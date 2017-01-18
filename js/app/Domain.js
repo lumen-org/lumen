@@ -28,20 +28,30 @@ define(['./utils'], function (utils) {
 
     _checkType(d) {
       if (!(d instanceof DiscreteDomain))
-        throw new TypeError("domain must also be of type Discrete");
+        throw new TypeError("domain must also be of type DiscreteDomain");
     }
 
     union(domain) {
       this._checkType(domain);
-      return new DiscreteDomain(_.union(this.values, domain.values));
+      if(this.isUnbounded())
+        // cannot become any larger
+        return new DiscreteDomain(this.values);
+      else
+        return new DiscreteDomain(_.union(this.values, domain.values));
     }
 
     intersection(domain) {
       this._checkType(domain);
-      return new DiscreteDomain(_.intersection(this.values, domain.values));
+      if(this.isUnbounded())
+        // it remains all the values to intersect with
+        return new DiscreteDomain(domain.values);
+      else
+        return new DiscreteDomain(_.intersection(this.values, domain.values));
     }
 
     minus(domain) {
+      throw Error("Not implemented");
+      // TODO: not sure what to do. I'd need the extent to compute the difference
       this._checkType(domain);
       return new DiscreteDomain(_.difference(this.values, domain.values));
     }
@@ -77,8 +87,7 @@ define(['./utils'], function (utils) {
      * Constructs a simple continuous numerical domain from the given interval.
      * A continuous numeric domain is just an interval, including its bounds.
      *
-     * @param arg Either the interval of the domain as a 2-element list, or a single value. Pass null or [null, null]
-     *  to construct an unbounded domain.
+     * @param arg Either the interval of the domain as a 2-element list, or a single value. Pass null or [null, null] to construct an unbounded domain.
      * @constructor
      */
     constructor(arg) {
@@ -92,6 +101,10 @@ define(['./utils'], function (utils) {
         this.l = arg;
         this.h = arg;
       }
+      if(this.l == null)
+        this.l = Number.NEGATIVE_INFINITY;
+      if(this.h == null)
+        this.h = Number.POSITIVE_INFINITY;
     }
 
     _checkType (d) {
@@ -126,11 +139,11 @@ define(['./utils'], function (utils) {
     }
 
     isSingular() {
-      return this.l !== null && this.l === this.h;
+      return this.l !== Number.NEGATIVE_INFINITY && this.l === this.h;
     }
 
     isUnbounded() {
-      return this.l === null || this.h === null;
+      return this.l === Number.NEGATIVE_INFINITY || this.h === Number.POSITIVE_INFINITY;
     }
 
     isBounded() {

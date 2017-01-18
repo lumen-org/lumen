@@ -158,6 +158,20 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       return this.field.name + " " + this.method + " " + this.args;
     }
 
+    /**
+     * Apply the filter, i.e. restrict the domain of the field stored in the filter as specified by the filter.
+     */
+    apply () {
+      let newDomain;
+      if( this.method == 'in') {
+        newDomain = this.field.domain.intersection(this.args);
+      } else {
+        // TODO: implement more methods
+        throw Error("not implemented yet. PQL.js line ~170")
+      }
+      this.field.domain = newDomain;
+    }
+
     copy () {
       return new Filter(this.field.copy(), this.method, this.args);
     }

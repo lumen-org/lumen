@@ -29,7 +29,8 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
     let field = split.field;
     let domains =  Splitter[split.method](field.domain.bounded(field.extent), false /*valueflag*/, split.args);
     // create filter for each split value
-    return domains.map( domain => new PQL.Filter(split.field, 'equals', domain) );
+    //return domains.map( domain => new PQL.Filter(split.field, 'equals', domain) );
+    return domains.map( domain => new PQL.Filter(split.field, 'in', domain) );
   }
 
   /**

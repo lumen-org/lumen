@@ -186,8 +186,9 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     }
 
     /**
+     * Creates remotely a copy of this model with a given name.
      * @param {string} [name] - the name of the clone of this model.
-     * TODO: there is a strange dependency in the code: copied models are expected to share the same {@link Field} (identical in terms of the === operator). However, when the same model is loaded twice, e.g. by creating two instances of RemoteModel this will not (and can not easily) be the base. The problem is in Model.isField.
+     * TODO: there is a strange dependency in the code: copied models are expected to share the same {@link Field} (identical in terms of the === operator). However, when the same model is loaded twice, e.g. by creating two instances of RemoteModel this will not (and can not easily) be the case. The problem is in Model.isField.
      * @returns {Promise} A promise to a copy of this model.
      */
     copy(name) {
@@ -200,6 +201,18 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
           myClone.fields = new Map(that.fields);
           return myClone;
         });
+    }
+
+
+    /**
+     * Returns a copy of this object. This does not actually copy any model on the remote host. It simply copies the local object and does not run any remote queries at all.
+     */
+    localCopy() {
+      var clone = new RemoteModel(this.name, this.url);
+      for (let [key, value] of this.fields.entries()) {
+        clone.fields.set(key, value.copy());
+      }
+      return clone;
     }
   }
 
