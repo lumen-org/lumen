@@ -72,7 +72,11 @@ define(['./utils'], function (utils) {
     }
 
     get value() {
-      return this.values;
+      return (this.isSingular() ? this.values[0] : this.values);
+    }
+
+    isSingular() {
+      return this.values.length == 1 && !this.isUnbounded();
     }
 
     copy () {

@@ -94,16 +94,16 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
   });
   var isAggregationMethod = (m) => (m === AggregationMethods.argavg || m === AggregationMethods.argmax);
 
-  var DensityMethod = Object.freeze({
+  var DensityMethodT = Object.freeze({
     density: 'density'
   });
-  var isDensityMethod = (m) => m === DensityMethod.density;
+  var isDensityMethod = (m) => m === DensityMethodT.density;
 
-  var FilterMethod = Object.freeze({
-    equals: 'equals',
+  var FilterMethodT = Object.freeze({
+    equals: '==',
     in: 'in'
   });
-  var isFilterMethod = (m) => m === FilterMethod.equals || m === FilterMethod.in;
+  var isFilterMethod = (m) => m === FilterMethodT.equals || m === FilterMethodT.in;
 
 
   class FieldUsage {
@@ -122,6 +122,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     // TODO: Filter, Density, Aggregation Split: need to emit some internal changed event for visualization synchronization. At the moment this is so rare that emitInternalChanged is simply called from outside when necessary. However, that is obviously not clean.
 
     constructor (field, method, args) {
+      debugger;
       super();
       if (!isField(field))
         throw TypeError("'field' must be a field");
@@ -136,8 +137,23 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       this.args = args;
     }
 
+    /**
+     * Sets a new domain to filter on.
+     * @param newDomain
+     */
+    setDomain (newDomain) {
+      // need to convert method?
+      if (this.method == FilterMethodT.in && newDomain.isSingular())
+        this.method = FilterMethodT.equals;
+      else if (this.method == FilterMethodT.equals && !newDomain.isSingular())
+        this.method = FilterMethodT.in
+      this.args = newDomain;
+    }
+
     static DefaultFilter (field) {
-      return new Filter(field, FilterMethod.in, field.extent);
+      let extent = field.extent;
+      let method = extent.isSingular() ? FilterMethodT.equals : FilterMethodT.in;
+      return new Filter(field, method, extent);
     }
 
     get name() {return this.field.name;}
@@ -147,6 +163,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     }
 
     static toJSON (f) {
+      debugger;
       return {        
         name: f.name,
         operator: f.method,
@@ -163,12 +180,12 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
      */
     apply () {
       let newDomain;
-      if( this.method == 'in') {
+      if (this.method == FilterMethodT.in || this.method == FilterMethodT.equals)
         newDomain = this.field.domain.intersection(this.args);
-      } else {
-        // TODO: implement more methods
-        throw Error("not implemented yet. PQL.js line ~170")
-      }
+      // else if (this.method = FilterMethodT.equals)
+      //   newDomain = this.field.domain;
+      else
+        throw Error("not implemented yet. PQL.js line ~170"); // TODO: implement more methods
       this.field.domain = newDomain;
     }
 
@@ -301,7 +318,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
       this.fields = fields;
-      this.method = DensityMethod.density;
+      this.method = DensityMethodT.density;
       this.yieldDataType = FieldT.DataType.num;
     }
 
@@ -475,6 +492,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     Density: Density,
     Split: Split,
     Filter: Filter,
+    FilterMethodT: FilterMethodT,
     isAggregation: isAggregation,
     isDensity: isDensity,
     isAggregationOrDensity: isAggregationOrDensity,

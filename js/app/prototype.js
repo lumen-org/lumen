@@ -567,7 +567,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           console.log("Starting the actual app!");
 
           // create initial context with model
-          var context = new Context("http://127.0.0.1:5000/webservice", 'adult');
+          var context = new Context("http://127.0.0.1:5000/webservice", 'cg_crabs');
           //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
           // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
           // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
