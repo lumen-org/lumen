@@ -100,7 +100,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
   var isDensityMethod = (m) => m === DensityMethodT.density;
 
   var FilterMethodT = Object.freeze({
-    equals: '==',
+    equals: 'equals',
     in: 'in'
   });
   var isFilterMethod = (m) => m === FilterMethodT.equals || m === FilterMethodT.in;
@@ -122,7 +122,6 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     // TODO: Filter, Density, Aggregation Split: need to emit some internal changed event for visualization synchronization. At the moment this is so rare that emitInternalChanged is simply called from outside when necessary. However, that is obviously not clean.
 
     constructor (field, method, args) {
-      debugger;
       super();
       if (!isField(field))
         throw TypeError("'field' must be a field");
@@ -163,7 +162,6 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     }
 
     static toJSON (f) {
-      debugger;
       return {        
         name: f.name,
         operator: f.method,

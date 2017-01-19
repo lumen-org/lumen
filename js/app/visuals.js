@@ -333,7 +333,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       if (event.keyCode == 13) {
         try{
           // create domain of same type as in fu
-          debugger;
           let input = JSON.parse(elem.target.value);
           fu.setDomain(new fu.args.constructor(input));
           fu.emit(Emitter.InternalChangedEvent);

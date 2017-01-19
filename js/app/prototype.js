@@ -98,7 +98,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       setContext (context) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
-        this._context = context; // TODO: not even taht is needed ...
+        this._context = context; // TODO: not even tht is needed ...
         //TODO in the future: fetch available models from the modelserver...? for now we are done!
       }
     }
@@ -192,6 +192,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             try {
               c.model = c.basemodel.localCopy();
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model);
+              c.query.rebase(c.model);  // important! rebase on the basemodel's copy to prevent modification of basemodel
               c.queryTable = new QueryTable(c.query);
               c.modelTable = new ModelTable(c.queryTable);
             }
@@ -220,7 +221,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                 }
               })
               .then(() => {
-                console.log("query: ");
+                console.log("context: ");
+                console.log(c);
+                /*console.log("query: ");
                 console.log(c.query);
                 console.log("QueryTable: ");
                 console.log(c.queryTable);
@@ -229,7 +232,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                 console.log("resultTable: ");
                 console.log(c.resultTable);
                 console.log("viewTable: ");
-                console.log(c.viewTable);
+                console.log(c.viewTable);*/
               })
               .catch((reason) => {
                 console.error(reason);

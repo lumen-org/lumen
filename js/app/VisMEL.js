@@ -119,32 +119,31 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   class Layer {
     constructor() {
       // empty constructor
-
-      /**
-       * @returns an array of all visual maps in this aesthetics object. Note that there are never any visual maps on the details shelf, as this contains field usages.
-       */
-      function visualMaps () {
-        var collection = [];
-        if (aesthetics.color && aesthetics.color instanceof ColorMap)
-          collection.push(aesthetics.color);
-        if (aesthetics.shape && aesthetics.shape instanceof ShapeMap)
-          collection.push(aesthetics.shape);
-        if (aesthetics.size && aesthetics.size instanceof SizeMap)
-          collection.push(aesthetics.size);
-        return collection;
-      }
-
       var aesthetics = {
         mark: "auto",
         color: {},
         shape: {},
         size: {},
-        details: [],
-        visualMaps: visualMaps
+        details: []
       };
 
       this.filters = [];
       this.aesthetics = aesthetics;
+    }
+
+    /**
+     * @returns an array of all visual maps in this aesthetics object. Note that there are never any visual maps on the details shelf, as this contains field usages.
+     */
+    visualMaps () {
+      let collection = [];
+      let a = this.aesthetics;
+      if (a.color && a.color instanceof ColorMap)
+        collection.push(a.color);
+      if (a.shape && a.shape instanceof ShapeMap)
+        collection.push(a.shape);
+      if (a.size && a.size instanceof SizeMap)
+        collection.push(a.size);
+      return collection;
     }
 
     static FromShelves(shelves) {
@@ -198,6 +197,13 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       this.layers = [new Layer()];
     }
 
+    /**
+     * Constructs a VisMEL query from given shelves and a source.
+     * @param shelves A dictionary of shelves, as used in 'prototype.js'. see the code for all 'keys'. Too lazy to document here.
+     * @param source A model to be used for the query. Note that this model should the same model which the entries of the shelves refer to eventually (i.e. shelves contain FieldUsages, which refer to Fields, which are part of a model). However, this is NOT validated. You can however use the method VisMEL.rebase(model) to rebase all FieldUsages on another model. This might be useful to prevent changes to prevent changes to the original model in course of the execution of the query.
+     * @returns {VisMEL}
+     * @constructor
+     */
     static FromShelves(shelves, source) {
       // construct from shelves and sources
       var vismel = new VisMEL();
@@ -230,16 +236,36 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       let layer = this.layers[0],
         layout = this.layout,
         aesthetics = layer.aesthetics;
-      // vismel expressions consist of fieldusages ...
+      // VisMEL expressions consist of FieldUsages ...
       let usedVars = _.union(
         exclude.has('layout') ? undefined : layout.rows.fieldUsages(),
         exclude.has('layout') ? undefined : layout.cols.fieldUsages(),
         exclude.has('details') ? undefined : aesthetics.details,
         exclude.has('filters') ? undefined : layer.filters,
-        exclude.has('aesthetics') ? undefined : aesthetics.visualMaps().map(map => map.fu)
+        exclude.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
       );
-
       return usedVars.filter(PQL.isFieldUsage);
+    }
+
+    /**
+     * Rebases this query on a given model. This replaces any {@link Field} of this query by the {@link Field} of the same name of the given model.
+     * @param model The model to rebase the query on.
+     * @return The modified VisMEL query.
+     */
+    rebase (model) {
+      for (let fu of this.fieldUsages()) {
+        if (PQL.isSplit(fu) || PQL.isFilter(fu)) {
+          let name = fu.field.name;
+          fu.field = model.fields.get(name);
+        }
+        else if (PQL.isAggregationOrDensity(fu)) {
+          fu.fields = fu.fields.map(
+            field => model.fields.get(field.name)
+          );
+        }
+        else
+          throw TypeError("unknown type of field usage");
+      }
     }
   }
 

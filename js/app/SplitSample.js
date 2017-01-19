@@ -31,7 +31,6 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
     // create filter for each split value
     //return domains.map( domain => new PQL.Filter(split.field, 'equals', domain) );
     return domains.map( domain => {
-      debugger;
       let method = domain.isSingular() ? PQL.FilterMethodT.equals : PQL.FilterMethodT.in;
       return new PQL.Filter(split.field, method, domain);
     } );
