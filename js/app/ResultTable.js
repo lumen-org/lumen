@@ -101,7 +101,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     return model.predict(
       [...dimensions, ...measures],
       [],
-      dimensions
+      dimensions,
+      query.mode
     ).then( table => {
       table.fu = idx2fu;
       return _attachExtent(table);

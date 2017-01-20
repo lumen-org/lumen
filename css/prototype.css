@@ -212,3 +212,7 @@ main {
 .pl-model-selector > input {
 
 }
+
+.pl_datavsmodel_radio {
+    margin: 0;
+}

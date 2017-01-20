@@ -166,7 +166,7 @@ define(['./utils'], function (utils) {
      */
     bounded(extent) {
       if(this.isUnbounded())
-        return new NumericDomain([this.l === null ? extent.l : this.l, this.h === null ? extent.h : this.h]);
+        return new NumericDomain([this.l === Number.NEGATIVE_INFINITY ? extent.l : this.l, this.h === Number.POSITIVE_INFINITY ? extent.h : this.h]);
       else
         return this;
     }

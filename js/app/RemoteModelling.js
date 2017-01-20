@@ -147,7 +147,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
      * @param splitBy {FieldUsage} A list or a single object of {@link Split}.
      * @returns {Array} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
-    predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
+    predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/, mode = 'model') {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
       var jsonContent = PQL.toJSON.predict(this.name, predict, where, splitBy);
 
@@ -182,7 +182,13 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
           let data = d3.csv.parseRows(jsonData.data, parseRow);
           let model = d3.csv.parseRows(jsonData.model, parseRow);
           data.header = model.header = jsonData.header;
-          return model;
+
+          if (mode == 'model')
+            return model;
+          else if (mode == 'data')
+            return data;
+          else
+            throw "parallel model+data visualization not yet implemented.";
         });
     }
 

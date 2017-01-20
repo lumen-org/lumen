@@ -191,7 +191,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      * @constructor
      * @alias module:VisMEL
      */
-    constructor(source) {
+    constructor(source, mode='model') {
+      this.mode = mode;
       this.sources = new Sources(source);
       this.layout = new Layout();
       this.layers = [new Layer()];
@@ -204,12 +205,13 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      * @returns {VisMEL}
      * @constructor
      */
-    static FromShelves(shelves, source) {
+    static FromShelves(shelves, source, mode) {
       // construct from shelves and sources
       var vismel = new VisMEL();
       vismel.sources = new Sources(source);
       vismel.layout = new Layout(shelves.row.content(), shelves.column.content());
       vismel.layers = [Layer.FromShelves(shelves)];
+      vismel.mode = mode;
       return vismel;
     }
 
@@ -223,6 +225,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       copy.sources = this.sources.shallowCopy();
       copy.layout = this.layout.shallowCopy();
       copy.layers = this.layers.map(layer => layer.shallowCopy());
+      copy.mode = this.mode;
       return copy;
     }
 

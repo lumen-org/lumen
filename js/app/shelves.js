@@ -249,7 +249,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
   });
 
   /**
-   * Returns a new set of types of shelves.
+   * Returns a new set of different types of shelves.
    */
   function construct() {
     return {

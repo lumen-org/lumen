@@ -190,8 +190,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           function update (commit = true) {
             console.log("updating!");
             try {
+              let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
+
               c.model = c.basemodel.localCopy();
-              c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model);
+              c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model, mode);
               c.query.rebase(c.model);  // important! rebase on the basemodel's copy to prevent modification of basemodel
               c.queryTable = new QueryTable(c.query);
               c.modelTable = new ModelTable(c.queryTable);

@@ -63,8 +63,21 @@
 <div id="pl-toolbar-container"></div>
 <main>
     <div>
+        <div id="pl-datavsmodel-container">
+            <div class="shelf vertical">
+                <div class="shelf-title">Model vs Data</div>
+                <form id="pl-datavsmodel-form">
+                        <input type="radio" checked name="datavsmodel" value="model" id="datavsmodel_model" class="pl_datavsmodel_radio">
+                        <label for="datavsmodel_model">model</label>
+                        <input type="radio" name="datavsmodel" value="both" id="datavsmodel_both" class="pl_datavsmodel_radio">
+                        <label for="datavsmodel_both">both</label>
+                        <input type="radio" name="datavsmodel" value="data" id="datavsmodel_data" class="pl_datavsmodel_radio">
+                        <label for="datavsmodel_data">data</label>
+                </form>
+            </div>
+            <hr>
+        </div>
         <div id="pl-model-container"> </div>
-
     </div>
     <div>
         <div id="pl-mappings-container"> </div>

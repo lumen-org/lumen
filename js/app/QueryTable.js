@@ -70,7 +70,6 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
    * @constructor
    */
   var QueryTable = function (query) {
-
     // apply filter on splitting dimensions
     // do this by modifying the fields of the splits in the rows and column accordingly
     let filters = query.layers[0].filters;
@@ -90,14 +89,6 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
       rows: this.at.length,
       cols: (this.at.length > 0 ? this.at[0].length : 0)
     };
-
-    // verify expansion
-    // @debug
-    /*for (let r=0; r<this.size.rows; ++r)
-      for(let c=0; c<this.size.cols; ++c)
-        if(this.at[r][c].layout.rows.filter( o => !PQL.isAggregation(o) ).length !== 0 ||
-           this.at[r][c].layout.cols.filter( o => !PQL.isAggregation(o) ).length !== 0)
-          throw "templated expansion failed!"; */
   };
 
   /**
