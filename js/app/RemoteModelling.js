@@ -179,9 +179,10 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
 
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
-          let table = d3.csv.parseRows(jsonData.data, parseRow);
-          table.header = jsonData.header;
-          return table;
+          let data = d3.csv.parseRows(jsonData.data, parseRow);
+          let model = d3.csv.parseRows(jsonData.model, parseRow);
+          data.header = model.header = jsonData.header;
+          return model;
         });
     }
 
