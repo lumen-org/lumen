@@ -56,7 +56,6 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       this.dataType = dataType;
       this.domain = domain;
       this.extent = extent;
-      //this.dataSource = dataSource;
       Emitter(this);
     }
 

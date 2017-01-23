@@ -73,8 +73,9 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    * @param dimShelf
    * @param measShelf
    */
-  function populate(model, dimShelf, measShelf) {
+  function populate(model, dimShelf, measShelf, modeldataShelf) {
     for (let field of model.fields.values()) {
+      if ()
       if (field.dataType === PQL.FieldT.DataType.num)
         measShelf.append(field);
       else if (field.dataType === PQL.FieldT.DataType.string)
@@ -82,6 +83,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       else
         throw new RangeError('invalid value in field.dataType: ' + field.dataType);
     }
+    // finally add model vs data field
+    modeldataShelf
   }
 
 
@@ -91,6 +94,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    * @alias module:shelves.ShelfTypeT
    */
   var ShelfTypeT = Object.freeze({
+    modeldata: 'mvdShelf',
     dimension: 'dimensionShelf',
     measure: 'measureShelf',
     row: 'rowShelf',
@@ -253,6 +257,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    */
   function construct() {
     return {
+      modeldata: new Shelf(ShelfTypeT.modeldata),
       dim: new Shelf(ShelfTypeT.dimension),
       meas: new Shelf(ShelfTypeT.measure),
       detail: new Shelf(ShelfTypeT.detail),

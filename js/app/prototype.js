@@ -225,16 +225,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               .then(() => {
                 console.log("context: ");
                 console.log(c);
-                /*console.log("query: ");
-                console.log(c.query);
-                console.log("QueryTable: ");
-                console.log(c.queryTable);
-                console.log("ModelTabel: ");
-                console.log(c.modelTable);
-                console.log("resultTable: ");
-                console.log(c.resultTable);
-                console.log("viewTable: ");
-                console.log(c.viewTable);*/
               })
               .catch((reason) => {
                 console.error(reason);
@@ -389,6 +379,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var shelves = context.shelves;
 
         // make all shelves visual and interactable
+        shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Measures'}).beInteractable();
         shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
@@ -404,7 +395,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
-          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+          shelves.modeldata.$visual, $('<hr>'), shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
