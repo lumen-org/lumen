@@ -496,13 +496,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         .then(ic => ic.predict(
           ["petal_length", new PQL.Density(pl)],
           [],
-          new PQL.Split(pl, "equiDist", [5])))
+          new PQL.Split(pl, "equidist", [5])))
         .then(printResult)
         .then( () => iris)
         .then(ic => ic.predict(
           [sw, pl, new PQL.Density(pl)],
           [],
-          [new PQL.Split(pl, "equiDist", [5]), new PQL.Split(sw, "equiDist", [3])]))
+          [new PQL.Split(pl, "equidist", [5]), new PQL.Split(sw, "equidist", [3])]))
         .then(printResult)
         .then( () => iris);
     }
@@ -522,8 +522,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         .then( () => {
           let pw_aggr = new PQL.Aggregation([pw,sw], "maximum", "petal_width");
           let sw_aggr = new PQL.Aggregation([pw,sw], "maximum", "sepal_width");
-          let pl_split = new PQL.Split(pl, "equiDist", [20]);
-          let sl_split = new PQL.Split(sl, "equiDist", [20]);
+          let pl_split = new PQL.Split(pl, "equidist", [20]);
+          let sl_split = new PQL.Split(sl, "equidist", [20]);
           let plsl_density = new PQL.Density([pl,sl]);
           query = new VisMEL.VisMEL(iris);
           query.layout.rows = new TableAlgebraExpr([pw_aggr]);

@@ -45,7 +45,7 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
      * @param {NumericDomain} domain The domain to split
      * @param n Number of subintervals
      */
-    equiInterval: function (domain, valueFlag, n) {
+    equiinterval: function (domain, valueFlag, n) {
       if (!(domain instanceof Domain.Numeric))
         throw new TypeError("domain must be of type Domain.NumericDomain");
       // slice into n intervals of same length
@@ -92,7 +92,7 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
      * @param {NumericDomain} domain The domain to sample.
      * @param n
      */
-    equiDist: function (domain, valueFlag, n) {
+    equidist: function (domain, valueFlag, n) {
       if (!(domain instanceof Domain.Numeric)) {
         throw new TypeError("domain must be of type Domain.NumericDomain");
       }

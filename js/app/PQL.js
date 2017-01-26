@@ -80,12 +80,12 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
   }
 
   var SplitMethod = Object.freeze({
-    equiDist: 'equiDist',
+    equidist: 'equidist',
     identity: 'identity',
     elements: 'elements',
-    equiInterval: 'equiInterval'
+    equiinterval: 'equiinterval'
   });
-  //var isSplitMethod = (m) => m === SplitMethod.equiDist || m === SplitMethod.identity;
+  //var isSplitMethod = (m) => m === SplitMethod.equidist || m === SplitMethod.identity;
   var isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
 
   var AggregationMethods = Object.freeze({
@@ -235,8 +235,8 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
-        //return new Split(field, SplitMethod.equiDist, [4]);
-        return new Split(field, SplitMethod.equiInterval, [4]);
+        //return new Split(field, SplitMethod.equidist, [4]);
+        return new Split(field, SplitMethod.equiinterval, [4]);
       else
         throw new RangeError("invalid data type");
     }

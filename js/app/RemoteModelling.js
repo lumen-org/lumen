@@ -180,16 +180,8 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
           let data = d3.csv.parseRows(jsonData.data, parseRow);
-          //let model = d3.csv.parseRows(jsonData.model, parseRow);
-          //data.header = model.header = jsonData.header;
           data.header = jsonData.header;
-
-          // if (mode == 'model')
-          //   return model;
-          // else if (mode == 'data')
           return data;
-          // else
-          //   throw "parallel model+data visualization not yet implemented.";
         });
     }
 

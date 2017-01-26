@@ -46,13 +46,13 @@ define( ['app/RemoteModelling', 'app/PQL'], function (Remote, PQL) {
         .then(ic => ic.predict(
           ["petal_length", new PQL.Density(pl)],
           [],
-          new PQL.Split(pl, "equiDist", [5])))
+          new PQL.Split(pl, "equidist", [5])))
         .then(printResult)
         .then( () => iris)
         .then(ic => ic.predict(
           [sw, pl, new PQL.Density(pl)],
           [],
-          [new PQL.Split(pl, "equiDist", [5]), new PQL.Split(sw, "equiDist", [3])]))
+          [new PQL.Split(pl, "equidist", [5]), new PQL.Split(sw, "equidist", [3])]))
         .then(printResult)
         .then( () => done() )
         .catch( err => {

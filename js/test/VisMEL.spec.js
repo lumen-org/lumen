@@ -53,8 +53,8 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
       promise.then( () => {
         let pw_aggr = new PQL.Aggregation([pw,sw], "maximum", "petal_width");
         let sw_aggr = new PQL.Aggregation([pw,sw], "maximum", "sepal_width");
-        let pl_split = new PQL.Split(pl, "equiDist", [3]);
-        let sl_split = new PQL.Split(sl, "equiDist", [3]);
+        let pl_split = new PQL.Split(pl, "equidist", [3]);
+        let sl_split = new PQL.Split(sl, "equidist", [3]);
         let plsl_density = new PQL.Density([pl,sl]);
         query = new VisMEL.VisMEL(iris);
         query.layout.rows = new TableAlgebraExpr([pw_aggr]);
@@ -88,8 +88,8 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
         // TODO: here is more prepared VisMEL queries for testing...
         /*
          .then( () => {
-         let pw_split = new PQL.Split(pw, "equiDist", [4]);
-         let sw_split = new PQL.Split(sw, "equiDist", [4]);
+         let pw_split = new PQL.Split(pw, "equidist", [4]);
+         let sw_split = new PQL.Split(sw, "equidist", [4]);
          let pw_density = new PQL.Density([pw,sw]);
          query = new VisMEL.VisMEL(undefined, iris);
          query.layout.rows = new TableAlgebraExpr([sw_split]);
@@ -103,10 +103,10 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
 
         /*
          .then( () => {
-         let pw_split = new PQL.Split(pw, "equiDist", [4]);
-         let sw_split = new PQL.Split(sw, "equiDist", [4]);
-         let pl_split = new PQL.Split(pl, "equiDist", [5]);
-         let sl_split = new PQL.Split(sl, "equiDist", [4]);
+         let pw_split = new PQL.Split(pw, "equidist", [4]);
+         let sw_split = new PQL.Split(sw, "equidist", [4]);
+         let pl_split = new PQL.Split(pl, "equidist", [5]);
+         let sl_split = new PQL.Split(sl, "equidist", [4]);
          let pw_aggr = new PQL.Aggregation([pw,sw], "maximum", "petal_width");
          let sw_aggr = new PQL.Aggregation([pw,sw], "maximum", "sepal_width");
          query = new VisMEL.VisMEL(undefined, iris);
@@ -118,7 +118,7 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
          }) //*/
         /*
          .then( () => {
-         let pw_split = new PQL.Split(iris.fields["petal_width"], "equiDist", [20]);
+         let pw_split = new PQL.Split(iris.fields["petal_width"], "equidist", [20]);
          let pw_aggr = new PQL.Aggregation(iris.fields["petal_width"], "maximum", "petal_width");
          let pw_density = new PQL.Density(iris.fields["petal_width"]);
          query = new VisMEL.VisMEL(undefined, iris);
@@ -128,8 +128,8 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
          })//*/
 
         /*        .then( () => {
-         let sw_split = new PQL.Split(iris.fields["sepal_width"], "equiDist", [5]);
-         let pl_split = new PQL.Split(iris.fields["petal_length"], "equiDist", [10]);
+         let sw_split = new PQL.Split(iris.fields["sepal_width"], "equidist", [5]);
+         let pl_split = new PQL.Split(iris.fields["petal_length"], "equidist", [10]);
          let pl_density = new PQL.Density(iris.fields["petal_length"]);
          let pw_aggr = new PQL.Aggregation(iris.fields["petal_width"], "maximum", "petal_width");
          let sw_aggr = new PQL.Aggregation(iris.fields["sepal_width"], "maximum", "sepal_width");
