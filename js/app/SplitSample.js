@@ -45,7 +45,7 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
      * @param {NumericDomain} domain The domain to split
      * @param n Number of subintervals
      */
-    equiIntervals: function (domain, valueFlag, n) {
+    equiInterval: function (domain, valueFlag, n) {
       if (!(domain instanceof Domain.Numeric))
         throw new TypeError("domain must be of type Domain.NumericDomain");
       // slice into n intervals of same length

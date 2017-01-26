@@ -82,7 +82,8 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
   var SplitMethod = Object.freeze({
     equiDist: 'equiDist',
     identity: 'identity',
-    elements: 'elements'
+    elements: 'elements',
+    equiInterval: 'equiInterval'
   });
   //var isSplitMethod = (m) => m === SplitMethod.equiDist || m === SplitMethod.identity;
   var isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
@@ -234,7 +235,8 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
-        return new Split(field, SplitMethod.equiDist, [4]);
+        //return new Split(field, SplitMethod.equiDist, [4]);
+        return new Split(field, SplitMethod.equiInterval, [4]);
       else
         throw new RangeError("invalid data type");
     }
