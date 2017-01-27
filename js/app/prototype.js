@@ -117,11 +117,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           else
             infoBox.message("no undo left!");
         });
-        var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
+        /*var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
           let c = this._context;
           c.unredoer.commit(c.copyShelves());
           console.log("saved it!");
-        });
+        });*/
         var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasRedo)
@@ -150,7 +150,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           () => this._context.update());
 
         this._modelSelector = new ModelSelector(context);
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo, $save, $redo, $clear, $query);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query);
 
         if(context !== undefined)
           this.setContext(context);
@@ -395,7 +395,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
-          shelves.modeldata.$visual, $('<hr>'), shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+          //shelves.modeldata.$visual, $('<hr>'),
+          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
