@@ -9,6 +9,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
   function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
+    // the default model to be loaded on startup
+    const DEFAULT_MODEL = 'cg_crabs';
+
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
@@ -564,7 +567,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           console.log("Starting the actual app!");
 
           // create initial context with model
-          var context = new Context("http://127.0.0.1:5000/webservice", 'cg_crabs');
+          var context = new Context("http://127.0.0.1:5000/webservice", DEFAULT_MODEL);
           //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
           // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
           // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
