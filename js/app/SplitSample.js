@@ -14,8 +14,6 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
    * @returns {*} Returns the actual split into single values / subdomains.
    */
   function splitToValues (split) {
-    // todo: 5 is a magic number. introduce a configuration variable to allow custom splitting
-    //return this.splitter(this.domain, true, 10);
     let field = split.field;
     return Splitter[split.method](field.domain.bounded(field.extent), true /*valueflag*/, split.args);
   }

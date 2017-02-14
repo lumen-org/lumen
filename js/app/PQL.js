@@ -387,6 +387,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     return fu.yieldDataType === FieldT.DataType.string;
   }
 
+  function hasNumericYield(fu) {
+    return fu.yieldDataType === FieldT.DataType.num;
+  }
+
   /**
    * Returns the set of (unique) {@link Field}s implicitly contained in the given array of field usages.
    * Note that uniqueness is decided (and returned) on the level of Field not FieldUsages.
@@ -500,6 +504,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     isFieldUsage: isFieldUsage,
     fields: fields,
     hasDiscreteYield: hasDiscreteYield,
+    hasNumericYield: hasNumericYield,
     toJSON: toJSON
   };
 

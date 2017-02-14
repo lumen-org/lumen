@@ -177,16 +177,21 @@ main {
     stroke: none;
     font-weight: lighter;
 }
-
 .axis line {
     fill: none;
     stroke: grey;
-    stroke-linecap: "round";
     shape-rendering: crispEdges;
-    stroke-dasharray: 2,6;
     stroke-opacity: 0.3;
 }
 
+.axis.numeric line {
+    stroke-linecap: "round";
+    stroke-dasharray: 2,6;
+}
+
+.axis.discrete line {
+
+}
 .pl-info-box {
     /*position: fixed;*/
     /*bottom: 1rem;*/

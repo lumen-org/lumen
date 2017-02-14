@@ -117,6 +117,7 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
       if (PQL.isFieldUsage(elem)) {
         // keep split if its the last element. This leads to drastically improved performance
         if (PQL.isSplit(elem) && idx !== len-1) {
+          elem.extent = S.splitToValues(elem);
           let filters = S.splitToFilters(elem);
           // "splitToFilters()" returns an array of FieldUsages, however, we need an array of arrays where each inner array only has a single element: namely the field usage with reduced domain
           domainExpr.push(filters.map( f => [f] ));

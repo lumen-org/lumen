@@ -307,14 +307,38 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     if (!PQL.isFieldUsage(axis.FU))
       return;
 
-    axis.axisD3 = pane.paneD3.append("g").classed(axisType, true);
+    let discreteAxis = PQL.hasDiscreteYield(axis.FU);
+
+    axis.axisD3 = pane.paneD3.append("g")
+      .classed(axisType, true)
+      .classed(discreteAxis ? "discrete" : "numeric", true);
     if (axisType === "x axis")
       axis.axisD3.attr("transform", "translate(0," + pane.size.height + ")");
-    
+
     axis.axis = d3.svg.axis()
       .scale(axis.FU.visScale)
-      .orient(axisType === "x axis" ? "bottom" : "left")
-      .tickSize(-(axisType === "x axis" ? canvasSize.height : canvasSize.width), 1);
+      .orient(axisType === "x axis" ? "bottom" : "left");
+
+    // sets number of depending on available space
+    if (!discreteAxis) {
+      let availableSpace = axisType === "x axis" ? pane.size.width : pane.size.height;
+      let spacePerTick = axisType === "x axis" ? 60 : 60;
+      let tickCnt = Math.floor(availableSpace / spacePerTick);
+      if (tickCnt < 2)
+        tickCnt = 2;
+      axis.axis.ticks(tickCnt);
+    }
+
+    // show three significant digits
+    if (PQL.hasNumericYield(axis.FU)){
+      axis.axis.tickFormat(d3.format(".3g"));
+    }
+
+    if (discreteAxis) {
+      axis.axis.tickSize(-5, 0);
+    } else {
+      axis.axis.tickSize(-(axisType === "x axis" ? canvasSize.height : canvasSize.width), 0);
+    }
     
     // draw axis    
     axis.axis(axis.axisD3);
@@ -330,8 +354,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     }
 
     // add field usage name, i.e. label of axis
-    let x = axisType === "x axis" ? pane.size.width / 2 : -(Settings.geometry.axis.labelFontSizePx * 2 + 4),
-      y = axisType === "y axis" ? pane.size.height / 2 : Settings.geometry.axis.labelFontSizePx * 2 + 4;
+    let x = axisType === "x axis" ? pane.size.width / 2 : -(Settings.geometry.axis.labelFontSizePx * 2 - 5),
+      y = axisType === "y axis" ? pane.size.height / 2 : Settings.geometry.axis.labelFontSizePx * 2 + 2;
     axis.labelD3 = axis.axisD3.append("text")
       .text(axis.FU.yields)
       .classed("axis label", true)
@@ -453,6 +477,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    *
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
    *
+   * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are
+   * generated on a atomic query level and hence its hard to infer the extent of them from the result table... Ah, it's
+   * just messy.
+   *
    * Note: you cannot use the .extent or .domain of any field of any field usage that query and queries consists of
    * The reason is that these are not updated as a result of query answering. That is because the queries all refer
    * to Fields of some model instance. And that model instance is never actually changed. Instead new models are
@@ -503,7 +531,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // init empty extent for measure on ROWS/COLS
     [...query.layout.cols, ...query.layout.rows].filter(PQL.isFieldUsage).forEach(
-      m => m.extent = []
+      m => {
+        if (m.extent === undefined)
+          m.extent = [];
+      }
     );
 
     // iterate over results for each atomic query
@@ -538,12 +569,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
       let lc = queries.at[0][cIdx].layout.cols[0];
       if (PQL.isFieldUsage(lc))
-        _normalizeExtent(lc)
+        _normalizeExtent(lc);
     }
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       let lr = queries.at[rIdx][0].layout.rows[0];
       if (PQL.isFieldUsage(lr))
-        _normalizeExtent(lr)
+        _normalizeExtent(lr);
     }
 
     // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
@@ -561,7 +592,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         qa.size.fu.extent = size;
         _normalizeExtent(qa.size.fu);
       }
-    }
+    };
   };
 
   /**
