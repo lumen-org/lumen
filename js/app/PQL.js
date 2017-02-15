@@ -259,7 +259,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       if (!isAggregationMethod(method))
         throw RangeError("invalid method for Aggregation: " + method);
       if (-1 == fields.map(f=>f.name).indexOf(yields))
-        throw RangeError("yields is not a name of any of aggregated fields: " + yields);
+        throw RangeError("yields is not a name of any field: " + yields);
       this.fields = fields;
       this.method = method;
       this.yields = yields;
