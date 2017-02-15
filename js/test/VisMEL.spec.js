@@ -3,7 +3,7 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'app/ModelTable', 'app/ResultTable', 'app/ViewTable', 'app/RemoteModelling'],
-  function (d3, PQL, VisMEL, TableAlgebraExpr, QueryTable, ModelTable, ResultTable, ViewTable, Remote ) {
+  function (d3, PQL, VisMEL, TableAlgebraExpr, QueryTable, ModelTable, RT, ViewTable, Remote ) {
   "use strict";
 
   describe('VisMEL specifications', function () {
@@ -40,7 +40,7 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
         return modelTable.model()
           .then(() => {
             console.log(modelTable);
-            resultTable = new ResultTable(modelTable, queryTable);
+            resultTable = new RT.AggrResultTable(modelTable, queryTable);
             return resultTable.fetch();
           })
           .then(() => {

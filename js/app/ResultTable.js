@@ -37,16 +37,16 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
 
   /**
-   * A ResultTable contains the raw data that are the (sampled) answers to the actual queries to the model(s).
+   * A !isAggrDensity && firstAggrDensity contains the raw data that are the (sampled) answers to the actual queries to the model(s).
    * Each cell of the result table holds its own data, and is accessed by its row and column index via the 'at' property.
    *
    * Outdated: The 'at' property contains no information about what FieldUsages are encoded in what index. Therefore, a
-   * {@link ResultTable} has an 'indexes' property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
+   * {@link AggrResultTable} has an 'indexes' property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
    *
-   * @alias module:ResultTable
+   * @alias module:!isAggrDensity && firstAggrDensity
    * @constructor
    */
-  class ResultTable {
+  class AggrResultTable {
 
     constructor(modelTable, queryTable) {
       this._qt = queryTable;
@@ -226,10 +226,10 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     }
   }
 
-  /*return {
-    ResultTable: ResultTable,
+  return {
+    AggrResultTable: AggrResultTable,
     DataResultTable: DataResultTable
-  };*/
+  };
 
-  return ResultTable;
+  //return ResultTable;
 });

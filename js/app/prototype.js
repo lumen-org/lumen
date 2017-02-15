@@ -6,7 +6,7 @@
  * @author Philipp Lucas
  */
 define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, ResultTable, ViewTable, Remote, TableAlgebraExpr) {
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, TableAlgebraExpr) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -92,7 +92,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             c.modelTable.model()
               .then(() => {
                 infoBox.hide();
-                c.resultTable = new ResultTable(c.modelTable, c.queryTable);
+                c.resultTable = new RT.AggrResultTable(c.modelTable, c.queryTable);
               })
               .then(() => c.resultTable.fetch())
               .then(() => {
@@ -540,7 +540,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           return modelTable.model();
         })
         .then(() => {
-          resultTable = new ResultTable(modelTable, queryTable);
+          resultTable = new RT.AggrResultTable(modelTable, queryTable);
           return resultTable.fetch();
         })
         .then(() => {

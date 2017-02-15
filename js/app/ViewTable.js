@@ -12,7 +12,7 @@
  */
 
 define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
-  function (Logger, d3, PQL, VisMEL, ResultTable, S, ScaleGen, Settings) {
+  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, Settings) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');
