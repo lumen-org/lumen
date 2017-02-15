@@ -57,6 +57,19 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     });
   }
 
+  /** Utility function to parse a row according to expected data types */
+  function parseRow (row, dtypes) {
+    for (let i=0; i<len; ++i) {
+      if (dtypes[i] === PQL.FieldT.DataType.num)
+        row[i] = +row[i];
+      //else if (dtypes[i] == F.FieldT.DataType.string)
+      //  row[i] = row[i] // identity ...
+      else if (dtypes[i] !== PQL.FieldT.DataType.string)
+        throw new RangeError("invalid dataType: " + dtypes[i]);
+    }
+    return row;
+  }
+
   /**
    * A RemoteModel is a local representation of / proxy to a remote Probability Model. It holds a local copy of the header
    * of the model, but any further data are fetched from the remote model. It provides an interface to run
@@ -180,6 +193,25 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
           let data = d3.csv.parseRows(jsonData.data, parseRow);
+          data.header = jsonData.header;
+          return data;
+        });
+    }
+
+    select (select, where = []) {
+      [select, where] = utils.listify(select, where);
+      let jsonContent = PQL.toJSON.select(this.name, select, where);
+
+      // list of datatypes of fields to predict - needed to parse returned csv-string correctly
+      // let len = predict.length;
+      let dtypes = select.map( s => this.fields.get(s).dataType );
+
+      // bind dtypes to parserows as needed
+      let myparserows = row => parseRow(row, dtypes);
+
+      return executeRemotely(jsonContent, this.url)
+        .then( jsonData => {
+          let data = d3.csv.parseRows(jsonData.data, myparserows);
           data.header = jsonData.header;
           return data;
         });

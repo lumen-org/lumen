@@ -145,7 +145,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       if (this.method == FilterMethodT.in && newDomain.isSingular())
         this.method = FilterMethodT.equals;
       else if (this.method == FilterMethodT.equals && !newDomain.isSingular())
-        this.method = FilterMethodT.in
+        this.method = FilterMethodT.in;
       this.args = newDomain;
     }
 
@@ -418,13 +418,13 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
      * @param predict  A list or a single object of ({@link Aggregation}|{@link Density}|name-of-field|{@link Field})
      * @param where A list or a single object of {@link Filter}
      * @param splitBy A list or a single object of {@link Split}.
-     * @returns {Array} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
+     * @returns {Object} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
     predict: function (from, predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
       if (!where.every(isFilter)) throw new TypeError("'where' must be all of type Filter.");
-      if (!splitBy.every(isSplit)) throw new TypeError("'where' must be all of type Split.");
+      if (!splitBy.every(isSplit)) throw new TypeError("'splitby' must be all of type Split.");
       return {
         "PREDICT": predict.map(p => {
           if (_.isString(p)) // its just the name of a field then
@@ -439,6 +439,17 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
         "FROM": from,
         "WHERE": where.map(Filter.toJSON),
         "SPLIT BY": splitBy.map(Split.toJSON)
+      };
+    },
+
+    select: function (from, select, where = []) {
+      if (!_.isString(from)) throw new TypeError("'from' must be of type String");
+      if (!select.every(_.isString)) throw new TypeError("'select' must be all of type Split.");
+      if (!where.every(isFilter)) throw new TypeError("'where' must be all of type Filter.");
+      return {
+        "SELECT": select,
+        "FROM": from,
+        "WHERE": where.map(Filter.toJSON)
       };
     },
 
