@@ -57,122 +57,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
     }
 
-    /**
-     * A model selector, i.e. an input field whose value is used as a model name.
-     * On input confirmation a new context is created, the according model is fetched and activated.
-     */
-    class ModelSelector {
-
-      constructor (context) {
-        this._context = context;
-
-        let $modelInput = $('<input type="text" value=""/>')
-          .keydown( (event) => {
-            var modelName = event.target.value;
-            if (event.keyCode === 13) {
-
-              // create new context and visualization with that model if it exists
-              var context = new Context("http://127.0.0.1:5000/webservice", modelName);
-
-              // fetch model
-              context.basemodel.update()
-                .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas))
-                .then(() => activate(context, ['visualization', 'visPanel']))
-                .catch((err) => {
-                  console.error(err);
-                  infoBox.message("Could not load remote model from Server!");
-                  // TODO: remove vis and everything else ...
-                });
-            }
-          });
-
-        this.$visual = $('<div class="pl-model-selector"></div>')
-          .append($('<div>load new model:</div>'))
-          .append($modelInput);
-
-        if(context !== undefined)
-          this.setContext(context);
-      }
-
-      /**
-       * Sets the context that the toolbar controls.
-       * @param context A context.
-       */
-      setContext (context) {
-        if (!(context instanceof Context))
-          throw TypeError("context must be an instance of Context");
-        this._context = context; // TODO: not even tht is needed ...
-        //TODO in the future: fetch available models from the modelserver...? for now we are done!
-      }
-    }
-
-    /**
-     * A toolbar to control a context.
-     */
-    class Toolbar {
-
-      constructor (context) {
-
-        var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
-          let c = this._context;
-          if (c.unredoer.hasUndo)
-            c.loadShelves(c.unredoer.undo());
-          else
-            infoBox.message("no undo left!");
-        });
-        /*var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
-          let c = this._context;
-          c.unredoer.commit(c.copyShelves());
-          console.log("saved it!");
-        });*/
-        var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
-          let c = this._context;
-          if (c.unredoer.hasRedo)
-            c.loadShelves(c.unredoer.redo());
-          else
-            infoBox.message("no redo left!");
-        });
-        var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
-          () => this._context.clearShelves(['dim','meas']));
-        var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
-          () => {
-            let clone = this._context.copy();
-            // fetch model
-            clone.basemodel.update()
-              .then(() => activate(clone, ['visualization', 'visPanel']))
-              .then(() => clone.update())
-              .catch((err) => {
-                console.error(err);
-                infoBox.message("Could not load remote model from Server!");
-                // TODO: remove vis and everything else ...
-              });
-          }
-        );
-
-        var $query = $('<div class="pl-toolbar-button">Query!</div>').click(
-          () => this._context.update());
-
-        this._modelSelector = new ModelSelector(context);
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query);
-
-        if(context !== undefined)
-          this.setContext(context);
-      }
-
-      /**
-       * Sets the context that the toolbar controls.
-       * @param context A context.
-       */
-      setContext (context) {
-        if (!(context instanceof Context))
-          throw TypeError("context must be an instance of Context");
-
-        this._context = context;
-        this._modelSelector.setContext(context);
-
-      }
-    }
-
 
     class Context {
       /**
@@ -207,16 +91,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             }
             c.modelTable.model()
               .then(() => {
-                // console.log("modeltable done");
                 infoBox.hide();
                 c.resultTable = new ResultTable(c.modelTable, c.queryTable);
-                // console.log("result table instantiated");
               })
               .then(() => c.resultTable.fetch())
               .then(() => {
-                // console.log("result table done");
                 c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.resultTable, c.queryTable, c);
-                // console.log("view table done");
               })
               .then(() => {
                 // TODO: commit only if something changed!
@@ -290,8 +170,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Hide or show visuals. You can specify which visuals to except from it.
        */
       displayVisuals(flag, except = []) {
-        var $visuals = this.$visuals;
-        var except = new Set(except);
+        let $visuals = this.$visuals;
+        except = new Set(except);
         for (const key of Object.keys($visuals))
           if (!except.has(key))
             flag ? $visuals[key].show() : $visuals[key].hide();
@@ -301,7 +181,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Attaches all visuals to the appropriate containers of the actual DOM (see code).
        */
       attachVisuals() {
-        var $visuals = this.$visuals;
+        let $visuals = this.$visuals;
         $('#pl-model-container').append($visuals.models);
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
@@ -312,7 +192,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        * Utility function. Clears the given collection of shelves, except for measure and dimension shelves.
        */
       clearShelves (except = []) {
-        var except = new Set(except);
+        except = new Set(except);
         for (const key of Object.keys(this.shelves))
           if (!except.has(key))
             this.shelves[key].clear();
@@ -426,6 +306,122 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
     }
 
+    /**
+     * A model selector, i.e. an input field whose value is used as a model name.
+     * On input confirmation a new context is created, the according model is fetched and activated.
+     */
+    class ModelSelector {
+
+      constructor (context) {
+        this._context = context;
+
+        let $modelInput = $('<input type="text" value=""/>')
+          .keydown( (event) => {
+            var modelName = event.target.value;
+            if (event.keyCode === 13) {
+
+              // create new context and visualization with that model if it exists
+              var context = new Context("http://127.0.0.1:5000/webservice", modelName);
+
+              // fetch model
+              context.basemodel.update()
+                .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas))
+                .then(() => activate(context, ['visualization', 'visPanel']))
+                .catch((err) => {
+                  console.error(err);
+                  infoBox.message("Could not load remote model from Server!");
+                  // TODO: remove vis and everything else ...
+                });
+            }
+          });
+
+        this.$visual = $('<div class="pl-model-selector"></div>')
+          .append($('<div>load new model:</div>'))
+          .append($modelInput);
+
+        if(context !== undefined)
+          this.setContext(context);
+      }
+
+      /**
+       * Sets the context that the toolbar controls.
+       * @param context A context.
+       */
+      setContext (context) {
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
+        this._context = context; // TODO: not even tht is needed ...
+        //TODO in the future: fetch available models from the modelserver...? for now we are done!
+      }
+    }
+
+    /**
+     * A toolbar to control a context.
+     */
+    class Toolbar {
+
+      constructor (context) {
+
+        var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
+          let c = this._context;
+          if (c.unredoer.hasUndo)
+            c.loadShelves(c.unredoer.undo());
+          else
+            infoBox.message("no undo left!");
+        });
+        /*var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
+         let c = this._context;
+         c.unredoer.commit(c.copyShelves());
+         console.log("saved it!");
+         });*/
+        var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
+          let c = this._context;
+          if (c.unredoer.hasRedo)
+            c.loadShelves(c.unredoer.redo());
+          else
+            infoBox.message("no redo left!");
+        });
+        var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
+          () => this._context.clearShelves(['dim','meas']));
+        var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
+          () => {
+            let clone = this._context.copy();
+            // fetch model
+            clone.basemodel.update()
+              .then(() => activate(clone, ['visualization', 'visPanel']))
+              .then(() => clone.update())
+              .catch((err) => {
+                console.error(err);
+                infoBox.message("Could not load remote model from Server!");
+                // TODO: remove vis and everything else ...
+              });
+          }
+        );
+
+        var $query = $('<div class="pl-toolbar-button">Query!</div>').click(
+          () => this._context.update());
+
+        this._modelSelector = new ModelSelector(context);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query);
+
+        if(context !== undefined)
+          this.setContext(context);
+      }
+
+      /**
+       * Sets the context that the toolbar controls.
+       * @param context A context.
+       */
+      setContext (context) {
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
+
+        this._context = context;
+        this._modelSelector.setContext(context);
+
+      }
+    }
+
 
     /**
      * Activates a context and enables interactive editing of a query on/for it.
@@ -441,7 +437,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         if (!_.isEmpty(_currentContext)) {
           _currentContext.displayVisuals(false, except);
             // remove marking for current active visualization
-          _currentContext.$visuals['visualization'].toggleClass('pl-active', false);
+          _currentContext.$visuals.visualization.toggleClass('pl-active', false);
         }
 
         /// activate new context
@@ -449,7 +445,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         _currentContext.displayVisuals(true);
 
         // add marking for new active visualization
-        _currentContext.$visuals['visualization'].toggleClass('pl-active', true);
+        _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
         toolbar.setContext(context);
         // TODO: later maybe its nicer to emit a signal on context change. but for now its easier this way.
