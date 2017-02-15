@@ -59,7 +59,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
 
   /** Utility function to parse a row according to expected data types */
   function parseRow (row, dtypes) {
-    for (let i=0; i<len; ++i) {
+    for (let i=0; i<row.length; ++i) {
       if (dtypes[i] === PQL.FieldT.DataType.num)
         row[i] = +row[i];
       //else if (dtypes[i] == F.FieldT.DataType.string)
@@ -177,22 +177,12 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
         else 
           throw new RangeError("unhandled case");
 
-      // function to parse a row according to expected data types
-      function parseRow (row) {
-        for (let i=0; i<len; ++i) {
-          if (dtypes[i] === PQL.FieldT.DataType.num)
-            row[i] = +row[i];
-          //else if (dtypes[i] == F.FieldT.DataType.string)
-          //  row[i] = row[i] // identity ...
-          else if (dtypes[i] !== PQL.FieldT.DataType.string)
-              throw new RangeError("invalid dataType: " + dtypes[i]);
-        }
-        return row;
-      }
+      // bind dtypes to parserows as needed
+      let myparserows = row => parseRow(row, dtypes);
 
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
-          let data = d3.csv.parseRows(jsonData.data, parseRow);
+          let data = d3.csv.parseRows(jsonData.data, myparserows);
           data.header = jsonData.header;
           return data;
         });
