@@ -444,7 +444,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
 
     select: function (from, select, where = []) {
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
-      if (!select.every(_.isString)) throw new TypeError("'select' must be all of type Split.");
+      if (!select.every(_.isString)) throw new TypeError("'select' must be all of type string.");
       if (!where.every(isFilter)) throw new TypeError("'where' must be all of type Filter.");
       return {
         "SELECT": select,

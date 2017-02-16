@@ -93,8 +93,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               .then(() => {
                 infoBox.hide();
                 c.resultTable = new RT.AggrResultTable(c.modelTable, c.queryTable);
+                c.dataRT = new RT.DataResultTable(c.queryTable, c.model);
               })
               .then(() => c.resultTable.fetch())
+              .then(() => c.dataRT.fetch())
               .then(() => {
                 c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.resultTable, c.queryTable, c);
               })

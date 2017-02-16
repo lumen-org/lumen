@@ -147,8 +147,9 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
   class DataResultTable {
 
-    constructor(queryTable) {
+    constructor(queryTable, model) {
       this._qt = queryTable;
+      this._model = model;
       this.size = queryTable.size;
       this.at = new Array(this.size.rows);
     }
@@ -167,9 +168,9 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
       let idx2fu = [];
       let idx = 0;
-      let select = {};  // dict of <field-name to select> to <index of column in result-table>
+      let select = new Map();  // map of <field-name to select> to <index of column in result-table>
       let filters = [];
-      for (let fu in query.fieldUsages()) {
+      for (let fu of query.fieldUsages()) {
         let name;
         if (PQL.isFilter(fu)) {
           filters.push(fu);
@@ -185,27 +186,25 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
           throw RangeError('Unknown object in field usages: ' + fu.toString());
 
         // DEBUG: assert that it doesn't have a dataindex yet
-        if ('dataindex' in fu)
-          throw RangeError("it shouldnt have an index yet. its value is: " + fu.dataindex.toString());
+        //if ('dataindex' in fu)
+        //  throw RangeError("it shouldnt have an index yet. its value is: " + fu.dataindex.toString());
 
-        if (name in select) {
+        if (select.has(name)) {
           // don't add again but reuse the stored index
-          fu.dataindex = select[name];
+          fu.dataindex = select.get(name);
         } else {
           fu.dataindex = idx;
-          select[name] = idx;
+          select.set(name, idx);
           idx2fu.push(fu);
           idx++;
         }
       }
 
       // run PQL query
-      return model.select(
-        select.keys(),
-        filters,
-        [],
-        query.mode // TODO: what is this?
-      ).then( table => {
+      return this._model.select(
+        Array.from(select.keys()),
+        filters
+      ).then(table => {
         table.fu = idx2fu;
         return _attachExtent(table);
       });

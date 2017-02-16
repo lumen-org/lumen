@@ -59,7 +59,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
 
   /** Utility function to parse a row according to expected data types */
   function parseRow (row, dtypes) {
-    for (let i=0; i<row.length; ++i) {
+    for (let i=0; i<dtypes.length; ++i) {
       if (dtypes[i] === PQL.FieldT.DataType.num)
         row[i] = +row[i];
       //else if (dtypes[i] == F.FieldT.DataType.string)
