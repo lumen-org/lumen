@@ -165,7 +165,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       var jsonContent = PQL.toJSON.predict(this.name, predict, where, splitBy);
 
       // list of datatypes of fields to predict - needed to parse returned csv-string correctly
-      let len = predict.length;
       let dtypes = [];
       for (let p of predict)
         if (_.isString(p))
@@ -193,7 +192,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       let jsonContent = PQL.toJSON.select(this.name, select, where);
 
       // list of datatypes of fields to predict - needed to parse returned csv-string correctly
-      // let len = predict.length;
       let dtypes = select.map( s => this.fields.get(s).dataType );
 
       // bind dtypes to parserows as needed
@@ -225,7 +223,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
         });
     }
 
-
     /**
      * Returns a copy of this object. This does not actually copy any model on the remote host. It simply copies the local object and does not run any remote queries at all.
      */
@@ -237,7 +234,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       return clone;
     }
   }
-
 
   /**
    * A RemoteModelBase is a proxy to/ a local representation of a remote ModelBase. To run queries you can either use

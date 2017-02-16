@@ -185,15 +185,15 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
         else
           throw RangeError('Unknown object in field usages: ' + fu.toString());
 
-        // DEBUG: assert that it doesn't have a dataindex yet
-        //if ('dataindex' in fu)
-        //  throw RangeError("it shouldnt have an index yet. its value is: " + fu.dataindex.toString());
+        // DEBUG: assert that it doesn't have a dataIndex yet
+        //if ('dataIndex' in fu)
+        //  throw RangeError("it shouldnt have an index yet. its value is: " + fu.dataIndex.toString());
 
         if (select.has(name)) {
           // don't add again but reuse the stored index
-          fu.dataindex = select.get(name);
+          fu.dataIndex = select.get(name);
         } else {
-          fu.dataindex = idx;
+          fu.dataIndex = idx;
           select.set(name, idx);
           idx2fu.push(fu);
           idx++;

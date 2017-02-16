@@ -104,11 +104,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   /**
    * Draws the given atomic query using given data into the pane and returns the pane.
    * @param query
-   * @param data
+   * @param aggr
    * @param pane
    * @returns {pane}
    */
-  function drawAtomicPane(query, data, pane) {
+  function drawAtomicPane(query, aggr, data, pane) {
 
     // working variables
     let aesthetics = query.layers[0].aesthetics;
@@ -124,13 +124,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // @update
     let pointsD3 = pane.pointsD3
       .selectAll(".point")
-      .data(data);
+      .data(aggr);
 
     // add scales to field usages of this query
     attachScales(query, pane.size);
 
     // attach mappers
-    attachMappers(query, pane.size, data);
+    attachMappers(query, pane.size, aggr);
 
     // add new svg elements for enter subselection
     let newPointsD3 = pointsD3
@@ -376,6 +376,26 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     else throw new RangeError("invalid value of axis:", axis);
   }
 
+  function initExtents(queries) {
+    let query = queries.base;
+    let qa = query.layers[0].aesthetics;
+    if (qa.color instanceof VisMEL.ColorMap)
+      qa.color.fu.extent = [];
+    if (qa.shape instanceof VisMEL.ShapeMap)
+      qa.shape.fu.extent = [];
+    if (qa.size instanceof VisMEL.SizeMap)
+      qa.size.fu.extent = [];
+
+    // init empty extent for measure on ROWS/COLS
+    [...query.layout.cols, ...query.layout.rows].filter(PQL.isFieldUsage).forEach(
+      m => {
+        // TODO: this is a not so nice hack. extent of templating splits is added elsewhere...
+        if (m.extent === undefined)
+          m.extent = [];
+      }
+    );
+  }
+
   /**
    * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
    * inherited from templated query, extents are also available at the atomic query.
@@ -404,8 +424,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * @param query
    * @param queries
    * @param results
+   * @param idxAttr string name of the attribute of a FieldUsage that stores the index of the column in the result tables that
+   *  contain the result for that FieldUsage.
    */
-  var attachExtents = function (query, queries, results) {
+  var attachExtents = function (queries, results, idxAttr) {
 
     /**
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
@@ -415,6 +437,43 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       return (discreteFlag ? _.union(extent, newData) : d3.extent([...extent, ...newData]) );
     }
 
+    // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
+    let aes = new Map();
+    let qa = queries.base.layers[0].aesthetics;
+    if (qa.color instanceof VisMEL.ColorMap)
+      aes.set('color', qa.color.fu);
+    if (qa.shape instanceof VisMEL.ShapeMap)
+      aes.set('shape', qa.shape.fu);
+    if (qa.size instanceof VisMEL.SizeMap)
+      aes.set('size', qa.size.fu);
+
+
+    /// iterate over results for each atomic query
+    // all aesthetics of all atomic queries simply refer to the base query one.
+    let row = new Array(queries.size.rows);
+    for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+      row[rIdx] = [];
+      for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
+        let r = results.at[rIdx][cIdx],
+          q = queries.at[rIdx][cIdx];
+
+        // aesthetics extents
+        for(let fu of aes.values())
+          fu.extent = _extentUnion(fu.extent, r.extent[fu[idxAttr]], PQL.hasDiscreteYield(fu));
+
+        // row and column extents
+        // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. that's why this works.
+        let lr = q.layout.rows[0];
+        if (PQL.isFieldUsage(lr))
+          lr.extent = _extentUnion(lr.extent, r.extent[lr[idxAttr]], PQL.hasDiscreteYield(lr));
+        let lc = q.layout.cols[0];
+        if (PQL.isFieldUsage(lc))
+          lc.extent = _extentUnion(lc.extent, r.extent[lc[idxAttr]], PQL.hasDiscreteYield(lc));
+      }
+    }
+  };
+
+  function normalizeExtents(queries) {
     /**
      * Tweaks the (continuous) extents of a given FieldUsage for nicer displaying. For discrete FieldUsages it leaves
      * the extent unchanged.
@@ -439,48 +498,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       fu.extent = extent;
     }
 
-    // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
-    let color = [],
-      shape = [],
-      size = [];
-
-    // init empty extent for measure on ROWS/COLS
-    [...query.layout.cols, ...query.layout.rows].filter(PQL.isFieldUsage).forEach(
-      m => {
-        if (m.extent === undefined)
-          m.extent = [];
-      }
-    );
-
-    // iterate over results for each atomic query
-    let row = new Array(queries.size.rows);
-    for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
-      row[rIdx] = [];
-      for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-        let r = results.at[rIdx][cIdx],
-          q = queries.at[rIdx][cIdx];
-
-        // aesthetics extents
-        let qa = q.layers[0].aesthetics;
-        if (qa.color instanceof VisMEL.ColorMap) 
-          color = _extentUnion(color, r.extent[qa.color.fu.index], PQL.hasDiscreteYield(qa.color.fu));
-        if (qa.shape instanceof VisMEL.ShapeMap)
-          shape = _extentUnion(shape, r.extent[qa.shape.fu.index], PQL.hasDiscreteYield(qa.shape.fu));
-        if (qa.size instanceof VisMEL.SizeMap)
-          size = _extentUnion(size, r.extent[qa.size.fu.index], PQL.hasDiscreteYield(qa.size.fu));
-
-        // row and column extents
-        // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. that's why this works.
-        let lr = q.layout.rows[0];
-        if (PQL.isFieldUsage(lr))
-          lr.extent = _extentUnion(lr.extent, r.extent[lr.index], PQL.hasDiscreteYield(lr));
-        let lc = q.layout.cols[0];
-        if (PQL.isFieldUsage(lc))
-          lc.extent = _extentUnion(lc.extent, r.extent[lc.index], PQL.hasDiscreteYield(lc));
-      }
-    }
-
-    // normalize row and column extents
     for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
       let lc = queries.at[0][cIdx].layout.cols[0];
       if (PQL.isFieldUsage(lc))
@@ -492,23 +509,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         _normalizeExtent(lr);
     }
 
-    // attach extents to field usages of all queries. Note that all atomic queries use references to the field usages of the base query
-    {
-      let qa = query.layers[0].aesthetics;
-      if (qa.color instanceof VisMEL.ColorMap) {
-        qa.color.fu.extent = color;
-        _normalizeExtent(qa.color.fu);
-      }
-      if (qa.shape instanceof VisMEL.ShapeMap) {
-        qa.shape.fu.extent = shape;
-        _normalizeExtent(qa.shape.fu);
-      }
-      if (qa.size instanceof VisMEL.SizeMap) {
-        qa.size.fu.extent = size;
-        _normalizeExtent(qa.size.fu);
-      }
-    };
-  };
+    let qa = queries.base.layers[0].aesthetics;
+    if (qa.color instanceof VisMEL.ColorMap)
+      _normalizeExtent(qa.color.fu);
+    if (qa.shape instanceof VisMEL.ShapeMap)
+      _normalizeExtent(qa.shape.fu);
+    if (qa.size instanceof VisMEL.SizeMap)
+      _normalizeExtent(qa.size.fu);
+  }
 
   /**
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
@@ -645,7 +653,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   var ViewTable;
   ViewTable = function (pane, aggrRT, dataRT, queries) {
 
-    this.results = aggrRT;
+    this.aggrResults = aggrRT;
+    this.dataResults = dataRT;
     this.queries = queries;
     this.size = aggrRT.size;
     let query = queries.base;
@@ -675,8 +684,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       width: this.canvas.size.width / this.size.cols
     };
 
+    initExtents(queries);
+
     // extents
-    attachExtents(query, queries, aggrRT);
+    attachExtents(queries, this.aggrResults, 'index');
+    //attachExtents(queries, this.dataResults, 'dataIndex');
+
+    normalizeExtents(queries);
 
     // create scales
     // todo: move scales outside of atomic panes, like extents
@@ -702,12 +716,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
         this.at[rIdx][cIdx] = drawAtomicPane(
           this.queries.at[rIdx][cIdx],
-          this.results.at[rIdx][cIdx],
+          this.aggrResults.at[rIdx][cIdx],
+          this.dataResults.at[rIdx][cIdx],
           subPane
         );
 
-        if (cIdx === 0) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
-        if (rIdx === (this.size.rows - 1)) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
+        if (cIdx === 0)
+          attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
+        if (rIdx === (this.size.rows - 1))
+          attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
       }
     }
 
