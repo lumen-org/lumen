@@ -377,91 +377,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   }
 
   /**
-   * A ViewTable takes a ResultTable and turns it into an actual visual representation.
-   * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
-   *
-   * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
-   *
-   * Note that the axis are part of the {@link ViewTable}, not the ViewPanes. Also note that axis' are based on scales. And scales are attached to (almost) each {@link FieldUsage} of this query, as they are reused accross many of the sub-viewPanes.
-   *
-   * @param paneD3 A <svg> element. This must already have a width and height.
-   * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
-   * @constructor
-   * @alias module:ViewTable
-   */
-  var ViewTable;
-  ViewTable = function (pane, results, queries) {
-
-    this.results = results;
-    this.queries = queries;
-    this.size = results.size;
-    let query = queries.base;
-
-    /// one time on init:
-    /// todo: is this actually "redo on canvas size change" ?
-
-    // axis stack depth
-    [query.layout.rows, query.layout.cols].forEach(
-      rc => {
-        rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
-      }
-    );
-
-    // init table canvas
-    this.canvas = initCanvas(d3.select(pane),
-      0, // margin around the canvas
-      { top: 5, right: 5,
-        bottom: query.layout.cols.stackDepth * Settings.geometry.axis.size,
-        left: query.layout.rows.stackDepth * Settings.geometry.axis.size
-      } // padding for axis
-    );
-
-    // infer size of atomic plots
-    this.subPaneSize = {
-      height: this.canvas.size.height / this.size.rows,
-      width: this.canvas.size.width / this.size.cols
-    };
-
-    // extents
-    attachExtents(query, queries, results);
-
-    // create scales
-    // todo: move scales outside of atomic panes, like extents
-
-    // create visuals mappers
-    // todo: move mappers outside of atomic panes, like extents
-
-    // create axis
-    // todo: implement
-    // find a nice way to create the stack of them. somehow matches the result of the table algebra stuff ... ?!
-
-    // create table of ViewPanes
-    this.at = new Array(this.size.rows);
-    for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
-      this.at[rIdx] = new Array(this.size.cols);
-      for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
-
-        let subPane = addAtomicPane(
-          this.canvas.canvasD3,
-          this.subPaneSize,
-          {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
-        );
-
-        this.at[rIdx][cIdx] = drawAtomicPane(
-          this.queries.at[rIdx][cIdx],
-          this.results.at[rIdx][cIdx],
-          subPane
-        );
-
-        if (cIdx === 0) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
-        if (rIdx === (this.size.rows - 1)) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
-      }
-    }
-
-    setupTemplatingAxis(query, this.canvas);
-  };
-
-  /**
    * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
    * inherited from templated query, extents are also available at the atomic query.
    *
@@ -711,6 +626,92 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
     }
 
+  };
+
+
+  /**
+   * A ViewTable takes a ResultTable and turns it into an actual visual representation.
+   * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
+   *
+   * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
+   *
+   * Note that the axis are part of the {@link ViewTable}, not the ViewPanes. Also note that axis' are based on scales. And scales are attached to (almost) each {@link FieldUsage} of this query, as they are reused accross many of the sub-viewPanes.
+   *
+   * @param paneD3 A <svg> element. This must already have a width and height.
+   * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
+   * @constructor
+   * @alias module:ViewTable
+   */
+  var ViewTable;
+  ViewTable = function (pane, aggrRT, dataRT, queries) {
+
+    this.results = aggrRT;
+    this.queries = queries;
+    this.size = aggrRT.size;
+    let query = queries.base;
+
+    /// one time on init:
+    /// todo: is this actually "redo on canvas size change" ?
+
+    // axis stack depth
+    [query.layout.rows, query.layout.cols].forEach(
+      rc => {
+        rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
+      }
+    );
+
+    // init table canvas
+    this.canvas = initCanvas(d3.select(pane),
+      0, // margin around the canvas
+      { top: 5, right: 5,
+        bottom: query.layout.cols.stackDepth * Settings.geometry.axis.size,
+        left: query.layout.rows.stackDepth * Settings.geometry.axis.size
+      } // padding for axis
+    );
+
+    // infer size of atomic plots
+    this.subPaneSize = {
+      height: this.canvas.size.height / this.size.rows,
+      width: this.canvas.size.width / this.size.cols
+    };
+
+    // extents
+    attachExtents(query, queries, aggrRT);
+
+    // create scales
+    // todo: move scales outside of atomic panes, like extents
+
+    // create visuals mappers
+    // todo: move mappers outside of atomic panes, like extents
+
+    // create axis
+    // todo: implement
+    // find a nice way to create the stack of them. somehow matches the result of the table algebra stuff ... ?!
+
+    // create table of ViewPanes
+    this.at = new Array(this.size.rows);
+    for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
+      this.at[rIdx] = new Array(this.size.cols);
+      for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+
+        let subPane = addAtomicPane(
+          this.canvas.canvasD3,
+          this.subPaneSize,
+          {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
+        );
+
+        this.at[rIdx][cIdx] = drawAtomicPane(
+          this.queries.at[rIdx][cIdx],
+          this.results.at[rIdx][cIdx],
+          subPane
+        );
+
+        if (cIdx === 0) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
+        if (rIdx === (this.size.rows - 1)) attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
+      }
+    }
+
+    setupTemplatingAxis(query, this.canvas);
   };
 
   return ViewTable;

@@ -5,8 +5,8 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './TableAlgebra'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, TableAlgebraExpr) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -73,7 +73,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
          */
         function makeContextedUpdateFct (c) {
 
-          // Note that this function accesses the local scope!
+          // Note that this function accesses the file scope!
           function update (commit = true) {
             console.log("updating!");
             try {
@@ -92,17 +92,17 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             c.modelTable.model()
               .then(() => {
                 infoBox.hide();
-                c.resultTable = new RT.AggrResultTable(c.modelTable, c.queryTable);
+                c.aggrRT = new RT.AggrResultTable(c.modelTable, c.queryTable);
                 c.dataRT = new RT.DataResultTable(c.queryTable, c.model);
               })
-              .then(() => c.resultTable.fetch())
+              .then(() => c.aggrRT.fetch())
               .then(() => c.dataRT.fetch())
               .then(() => {
-                c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.resultTable, c.queryTable, c);
+                c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable);
               })
               .then(() => {
-                // TODO: commit only if something changed!
                 if (commit) {
+                  // TODO: commit only if something changed!
                   c.unredoer.commit(c.copyShelves());
                   console.log("commiting");
                 }
@@ -142,7 +142,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.query = {};
         this.queryTable = {};
         this.modelTable = {};
-        this.resultTable = {};
+        this.aggrRT = {};
+        this.dataRT = {};
         this.viewTable = {};
         //this.remove = remove;
 
@@ -175,8 +176,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         let $visuals = this.$visuals;
         except = new Set(except);
         for (const key of Object.keys($visuals))
-          if (!except.has(key))
-            flag ? $visuals[key].show() : $visuals[key].hide();
+          if (!except.has(key)) {
+            if (flag) $visuals[key].show();
+            else $visuals[key].hide();
+          }
       }
 
       /**
@@ -468,120 +471,28 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     var toolbar = new Toolbar();
     toolbar.$visual.appendTo($('#pl-toolbar-container'));
 
-    function testPQL(server) { // jshint ignore:line
-      function printResult(res) {
-        console.log(res);
-        return res;
-      }
-      var mb = new Remote.ModelBase(server);
-      var iris, pw, pl, sw, sl;
-      mb.get('iris')
-        .then( iris_ => {
-          iris = iris_;
-          pw = iris.fields.get("petal_width");
-          pl = iris.fields.get("petal_length");
-          sw = iris.fields.get("sepal_width");
-          sl = iris.fields.get("sepal_length");
-        })
-        .then( () => mb.header('iris'))
-        .then(printResult)
-        .then( () => mb.get('iris'))
-        .then(printResult)
-        .then(iris => iris.copy("iris_copy"))
-        .then(ic => ic.model(['sepal_length', 'petal_length', 'sepal_width']))
-        .then(printResult)
-        .then(ic => {
-          iris = ic.model("*", [new PQL.Filter(sl, "equals", 5)]);
-          return iris;
-        })
-        .then(printResult)
-        .then(ic => ic.predict(
-          ["petal_length", new PQL.Density(pl)],
-          [],
-          new PQL.Split(pl, "equidist", [5])))
-        .then(printResult)
-        .then( () => iris)
-        .then(ic => ic.predict(
-          [sw, pl, new PQL.Density(pl)],
-          [],
-          [new PQL.Split(pl, "equidist", [5]), new PQL.Split(sw, "equidist", [3])]))
-        .then(printResult)
-        .then( () => iris);
-    }
-
-    function testVisMEL(server) {
-      //var c = context;
-      var mb = new Remote.ModelBase(server);
-      var query, iris, pw, pl, sw, sl;
-      mb.get('iris')
-        .then( iris_ => {
-          iris = iris_;
-          pw = iris.fields.get("petal_width");
-          pl = iris.fields.get("petal_length");
-          sw = iris.fields.get("sepal_width");
-          sl = iris.fields.get("sepal_length");
-        })
-        .then( () => {
-          let pw_aggr = new PQL.Aggregation([pw,sw], "maximum", "petal_width");
-          let sw_aggr = new PQL.Aggregation([pw,sw], "maximum", "sepal_width");
-          let pl_split = new PQL.Split(pl, "equidist", [20]);
-          let sl_split = new PQL.Split(sl, "equidist", [20]);
-          let plsl_density = new PQL.Density([pl,sl]);
-          query = new VisMEL.VisMEL(iris);
-          query.layout.rows = new TableAlgebraExpr([pw_aggr]);
-          query.layout.cols = new TableAlgebraExpr([sw_aggr]);
-          query.layers[0].aesthetics.details.push(sl_split);
-          query.layers[0].aesthetics.details.push(pl_split);
-          query.layers[0].aesthetics.color = new VisMEL.ColorMap(plsl_density, 'rgb');
-          query.layers[0].aesthetics.size = new VisMEL.SizeMap(plsl_density);
-          return query;
-        })
-        .then(query => {
-          queryTable = new QueryTable(query);
-          modelTable = new ModelTable(queryTable);
-          return modelTable.model();
-        })
-        .then(() => {
-          resultTable = new RT.AggrResultTable(modelTable, queryTable);
-          return resultTable.fetch();
-        })
-        .then(() => {
-          viewTable = new ViewTable(visPaneD3, resultTable, queryTable);
-        });
-    } // function testVisMEL
-
     return {
       /**
        * Starts the application.
        */
       start: function () {
-        var testPQLflag = false,
-          testVisMELflag = false;
-        if (testPQLflag)
-          testPQL("http://127.0.0.1:5000/webservice");
-        else if (testVisMELflag)
-          testVisMEL("http://127.0.0.1:5000/webservice");
-        else {
-          console.log("Starting the actual app!");
+        // create initial context with model
+        var context = new Context("http://127.0.0.1:5000/webservice", DEFAULT_MODEL);
+        //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
+        // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
+        // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
 
-          // create initial context with model
-          var context = new Context("http://127.0.0.1:5000/webservice", DEFAULT_MODEL);
-          //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
-          // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
-          // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
+        // activate that context
+        activate(context, ['visualization', 'visPanel']);
 
-          // activate that context
-          activate(context, ['visualization', 'visPanel']);
-
-          // fetch model
-          context.basemodel.update()
-            .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas)) // on model change
-            .then(() => initialQuerySetup(context.shelves)) // on initial startup only
-            .catch((err) => {
-              console.error(err);
-              infoBox.message("Could not load remote model from Server!");
-            });
-        }
+        // fetch model
+        context.basemodel.update()
+          .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas)) // on model change
+          .then(() => initialQuerySetup(context.shelves)) // on initial startup only
+          .catch((err) => {
+            console.error(err);
+            infoBox.message("Could not load remote model from Server!");
+          });
       }
     };
 
