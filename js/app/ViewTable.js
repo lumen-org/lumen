@@ -158,28 +158,30 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   function drawAtomicPane(query, aggr, data, pane) {
 
     // TODO: adding scales to FieldUsage on an atomic pane level doesn't exactly make sense... it's really recreating
-    // the same scale (and mapping later) over and over again. But we got more important things to do at the moment.
+    //  the same scale (and mapping later) over and over again. But we got more important things to do at the moment.
 
     // add scales to field usages of this query
     attachScales(query, pane.size);
 
-    // attach mappers
-    attachMappers(query, pane.size, aggr);
+    // create map of label to BaseMap instance
+    let aes = new Map();
+    let qa = query.layers[0].aesthetics;
+    if (qa.color instanceof VisMEL.ColorMap)
+      aes.set('color', qa.color);
+    if (qa.shape instanceof VisMEL.ShapeMap)
+      aes.set('shape', qa.shape);
+    if (qa.size instanceof VisMEL.SizeMap)
+      aes.set('size', qa.size);
 
-    let aesthetics = query.layers[0].aesthetics;
-    let layout = query.layout;
+    continue here to create an appropiate map for data and aggr: build a map of density-related BaseMaps and the rest
 
+    let mapper = getMapper(query, pane.size, aggr, 'index');
     pane.aggrMarksD3 = pane.paneD3.append("g");
-    let mappers = { color: aesthetics.color.mapper,
-      size: aesthetics.size.mapper,
-      shape: aesthetics.shape.mapper,
-      transform : layout.transformMapper,
-      hover: aesthetics.hoverMapper
-    };
-    drawMarks(pane.aggrMarksD3, aggr, mappers);
+    drawMarks(pane.aggrMarksD3, aggr, mapper);
 
+    mapper = getMapper(query, pane.size, data, 'dataIndex');
     pane.dataMarksD3 = pane.paneD3.append("g");
-    drawMarks(pane.aggrMarksD3, data, mappers);
+    drawMarks(pane.aggrMarksD3, data, mapper);
 
     return pane;
   }
@@ -578,14 +580,94 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // no need for scales of: filters, details
   };
 
+    /**
+     * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path,
+     * color, size and others. Mappers are used in D3 to bind data to visuals.
+     *
+     * Before mappers can be set up, the scales need to be set up.
+     */
+    function getMapper (query, paneSize, data, indexAttr, what) {
+      let aesthetics = query.layers[0].aesthetics;
+
+      // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
+      function _valueOrAvg(data) {
+        return _.isArray(data) ? data[0] + data[1] / 2 : data;
+      }
+
+      let mapper = {};
+
+      if (what.has('color')) {
+        color = what.get('color');
+        mapper.color = color.visScale(_valueOrAvg(d[color.fu[indexAttr]]));
+      } else {
+        Settings.maps.color;
+      }
+
+      let color = aesthetics.color;
+      mapper.color = ( color instanceof VisMEL.ColorMap ?
+        d => color.visScale(_valueOrAvg(d[color.fu[indexAttr]])) :
+        Settings.maps.color );
+
+      let size = aesthetics.size;
+      mapper.size = ( size instanceof VisMEL.SizeMap ?
+        function (d) {
+          return size.visScale(_valueOrAvg(d[size.fu[indexAttr]]));
+        } :
+        Settings.maps.size );
+
+      let shape = aesthetics.shape;
+      mapper.shape = ( shape instanceof VisMEL.ShapeMap ?
+        function (d) {
+          return shape.visScale(_valueOrAvg(d[shape.fu[indexAttr]]));
+        } :
+        Settings.maps.shape );
+
+      mapper.hover = (d) => d.reduce(
+        (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
+
+      let layout = query.layout;
+      let colFU = layout.cols[0],
+        rowFU = layout.rows[0];
+      let isColFU = PQL.isFieldUsage(colFU),
+        isRowFU = PQL.isFieldUsage(rowFU);
+      let xPos = paneSize.width / 2,
+        yPos = paneSize.height / 2;
+
+      if (isColFU && isRowFU) {
+        mapper.transform = function (d) {
+          return 'translate(' +
+            colFU.visScale(d[colFU[indexAttr]]) + ',' +
+            rowFU.visScale(d[rowFU[indexAttr]]) + ')';
+        };
+      }
+      else if (isColFU && !isRowFU) {
+        mapper.transform = function (d) {
+          return 'translate(' +
+            colFU.visScale(d[colFU[indexAttr]]) + ',' +
+            yPos + ')';
+        };
+      }
+      else if (!isColFU && isRowFU) {
+        mapper.transform = function (d) {
+          return 'translate(' +
+            xPos + ',' +
+            rowFU.visScale(d[rowFU[indexAttr]]) + ')';
+        };
+      }
+      else {
+        // todo: jitter?
+        mapper.transform = 'translate(' + xPos + ',' + yPos + ')';
+      }
+
+      return mapper;
+    }
+
 
   /**
    * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path,
    * color, size and others. Mappers are used in D3 to bind data to visuals.
    *
    * Before mappers can be set up, the scales need to be set up.
-   *
-   * todo: add mapper for hovering on marks
    */
   var attachMappers = function (query, paneSize, data) {
     let aesthetics = query.layers[0].aesthetics;
