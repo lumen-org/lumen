@@ -117,12 +117,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     /// plot samples
     // create a group for point marks
     // @init
-    pane.pointsD3 = pane.paneD3.append("g");
+    pane.aggrMarksD3 = pane.paneD3.append("g");
 
     /// update / remove / add marks
     // store update selection, this also creates enter and exit subselections
     // @update
-    let pointsD3 = pane.pointsD3
+    let aggrMarksD3 = pane.aggrMarksD3
       .selectAll(".point")
       .data(aggr);
 
@@ -133,16 +133,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     attachMappers(query, pane.size, aggr);
 
     // add new svg elements for enter subselection
-    let newPointsD3 = pointsD3
+    let newAggrMarksD3 = aggrMarksD3
       .enter()
       .append("g")
       .classed("point mark", true);
-    newPointsD3
+    newAggrMarksD3
       .append("path")
       .classed("path", true);
     
     // add hover for data 
-    newPointsD3
+    newAggrMarksD3
       .append("svg:title")
       .text(aesthetics.hoverMapper);
 
@@ -151,7 +151,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // set position of shapes by translating the enclosing g group
     // @specific for each view cell
-    pointsD3.attr('transform', layout.transformMapper);
+    aggrMarksD3.attr('transform', layout.transformMapper);
 
     // setup shape path generator
     // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
@@ -162,7 +162,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
     // @common for all view cells
-    pointsD3.select(".path").attr({
+    aggrMarksD3.select(".path").attr({
       'd': shapePathGen,
       fill: aesthetics.color.mapper
     });
@@ -431,9 +431,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     /**
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
+     * Note: it gracefully forgives undefined arguments in extent and newData
      * @returns The updated extent
      */
     function _extentUnion(extent, newData, discreteFlag) {
+      if (extent === undefined) extent = [];
+      if (newData === undefined) newData = [];
       return (discreteFlag ? _.union(extent, newData) : d3.extent([...extent, ...newData]) );
     }
 
@@ -688,7 +691,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // extents
     attachExtents(queries, this.aggrResults, 'index');
-    //attachExtents(queries, this.dataResults, 'dataIndex');
+    attachExtents(queries, this.dataResults, 'dataIndex');
 
     normalizeExtents(queries);
 
