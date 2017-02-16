@@ -100,6 +100,53 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     };
   }
 
+  function drawMarks (marksD3, data, mapper) {
+    // create a group for marks
+    // @init
+
+    /// update / remove / add marks
+    // store update selection, this also creates enter and exit subselections
+    // @update
+    marksD3 = marksD3
+      .selectAll(".point")
+      .data(data);
+
+    // add new svg elements for enter subselection
+    let newAggrMarksD3 = marksD3
+      .enter()
+      .append("g")
+      .classed("point mark", true);
+    newAggrMarksD3
+      .append("path")
+      .classed("path", true);
+
+    // add hover for data
+    newAggrMarksD3
+      .append("svg:title")
+      //.text(aesthetics.hoverMapper);
+      .text(mapper.hover);
+
+    // the just appended elements are now part of the update selection!
+    // -> now update all the same way
+
+    // set position of shapes by translating the enclosing g group
+    // @specific for each view cell
+    marksD3.attr('transform', mapper.transform);
+
+    // setup shape path generator
+    // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
+    // @common for all view cells
+    let shapePathGen = d3.svg.symbol()
+      .size(mapper.size)
+      .type(mapper.shape);
+
+    // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
+    // @common for all view cells
+    marksD3.select(".path").attr({
+      'd': shapePathGen,
+      fill: mapper.color
+    });
+  }
 
   /**
    * Draws the given atomic query using given data into the pane and returns the pane.
@@ -110,21 +157,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    */
   function drawAtomicPane(query, aggr, data, pane) {
 
-    // working variables
-    let aesthetics = query.layers[0].aesthetics;
-    let layout = query.layout;
-
-    /// plot samples
-    // create a group for point marks
-    // @init
-    pane.aggrMarksD3 = pane.paneD3.append("g");
-
-    /// update / remove / add marks
-    // store update selection, this also creates enter and exit subselections
-    // @update
-    let aggrMarksD3 = pane.aggrMarksD3
-      .selectAll(".point")
-      .data(aggr);
+    // TODO: adding scales to FieldUsage on an atomic pane level doesn't exactly make sense... it's really recreating
+    // the same scale (and mapping later) over and over again. But we got more important things to do at the moment.
 
     // add scales to field usages of this query
     attachScales(query, pane.size);
@@ -132,40 +166,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // attach mappers
     attachMappers(query, pane.size, aggr);
 
-    // add new svg elements for enter subselection
-    let newAggrMarksD3 = aggrMarksD3
-      .enter()
-      .append("g")
-      .classed("point mark", true);
-    newAggrMarksD3
-      .append("path")
-      .classed("path", true);
-    
-    // add hover for data 
-    newAggrMarksD3
-      .append("svg:title")
-      .text(aesthetics.hoverMapper);
+    let aesthetics = query.layers[0].aesthetics;
+    let layout = query.layout;
 
-    // the just appended elements are now part of the update selection!
-    // -> now update all the same way
+    pane.aggrMarksD3 = pane.paneD3.append("g");
+    let mappers = { color: aesthetics.color.mapper,
+      size: aesthetics.size.mapper,
+      shape: aesthetics.shape.mapper,
+      transform : layout.transformMapper,
+      hover: aesthetics.hoverMapper
+    };
+    drawMarks(pane.aggrMarksD3, aggr, mappers);
 
-    // set position of shapes by translating the enclosing g group
-    // @specific for each view cell
-    aggrMarksD3.attr('transform', layout.transformMapper);
-
-    // setup shape path generator
-    // -> shape and size can be mapped by accessor-functions on the path/symbol-generator.
-    // @common for all view cells
-    let shapePathGen = d3.svg.symbol()
-      .size(aesthetics.size.mapper)
-      .type(aesthetics.shape.mapper);
-
-    // -> color can be mapped by .attr('fill', accessor-fct) (on the path element)
-    // @common for all view cells
-    aggrMarksD3.select(".path").attr({
-      'd': shapePathGen,
-      fill: aesthetics.color.mapper
-    });
+    pane.dataMarksD3 = pane.paneD3.append("g");
+    drawMarks(pane.aggrMarksD3, data, mappers);
 
     return pane;
   }
