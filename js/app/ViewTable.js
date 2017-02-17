@@ -164,22 +164,35 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     attachScales(query, pane.size);
 
     // create map of label to BaseMap instance
-    let aes = new Map();
+    let uses = new Map();
     let qa = query.layers[0].aesthetics;
     if (qa.color instanceof VisMEL.ColorMap)
-      aes.set('color', qa.color);
+      uses.set('color', qa.color);
     if (qa.shape instanceof VisMEL.ShapeMap)
-      aes.set('shape', qa.shape);
+      uses.set('shape', qa.shape);
     if (qa.size instanceof VisMEL.SizeMap)
-      aes.set('size', qa.size);
+      uses.set('size', qa.size);
+    let row = query.layout.rows[0];
+    if (PQL.isFieldUsage(row))
+      uses.set('row', row);
+    let col = query.layout.cols[0];
+    if (PQL.isFieldUsage(col))
+      uses.set('col', col);
 
-    continue here to create an appropiate map for data and aggr: build a map of density-related BaseMaps and the rest
-
-    let mapper = getMapper(query, pane.size, aggr, 'index');
+    let mapper = getMapper(pane.size, aggr, 'index', uses);
     pane.aggrMarksD3 = pane.paneD3.append("g");
     drawMarks(pane.aggrMarksD3, aggr, mapper);
 
-    mapper = getMapper(query, pane.size, data, 'dataIndex');
+    // continue here to create an appropiate map for data and aggr: build a map of density-related BaseMaps and the rest
+    // remove any density usage
+    uses.forEach(
+      (val, key, mymap) => {
+        if (PQL.isDensity(val) || PQL.isDensity(val.fu))
+          mymap.delete(key);
+      }
+    );
+
+    mapper = getMapper(pane.size, data, 'dataIndex', uses);
     pane.dataMarksD3 = pane.paneD3.append("g");
     drawMarks(pane.aggrMarksD3, data, mapper);
 
@@ -586,8 +599,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      *
      * Before mappers can be set up, the scales need to be set up.
      */
-    function getMapper (query, paneSize, data, indexAttr, what) {
-      let aesthetics = query.layers[0].aesthetics;
+    function getMapper (paneSize, data, indexAttr, what) {
+      // let aesthetics = query.layers[0].aesthetics;
 
       // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
       function _valueOrAvg(data) {
@@ -596,26 +609,28 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       let mapper = {};
 
+      /*
       if (what.has('color')) {
         color = what.get('color');
         mapper.color = color.visScale(_valueOrAvg(d[color.fu[indexAttr]]));
       } else {
-        Settings.maps.color;
+        mapper.color = Settings.maps.color;
       }
 
-      let color = aesthetics.color;
-      mapper.color = ( color instanceof VisMEL.ColorMap ?
-        d => color.visScale(_valueOrAvg(d[color.fu[indexAttr]])) :
-        Settings.maps.color );
-
-      let size = aesthetics.size;
-      mapper.size = ( size instanceof VisMEL.SizeMap ?
-        function (d) {
+      if (what.has('size')) {
+        let size = aesthetics.size;
+        mapper.size = function (d) {
           return size.visScale(_valueOrAvg(d[size.fu[indexAttr]]));
-        } :
-        Settings.maps.size );
+        };
+      } else {
+        mapper.size = Settings.maps.size;
+      }
 
-      let shape = aesthetics.shape;
+      if (what.has('shape')) {
+
+      }
+
+
       mapper.shape = ( shape instanceof VisMEL.ShapeMap ?
         function (d) {
           return shape.visScale(_valueOrAvg(d[shape.fu[indexAttr]]));
@@ -625,33 +640,63 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       mapper.hover = (d) => d.reduce(
         (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
 
-      let layout = query.layout;
-      let colFU = layout.cols[0],
-        rowFU = layout.rows[0];
-      let isColFU = PQL.isFieldUsage(colFU),
-        isRowFU = PQL.isFieldUsage(rowFU);
+      */
+
+
+
+
+      let color = what.get('color');
+      mapper.color = ( color !== undefined ?
+        d => color.visScale(_valueOrAvg(d[color.fu[indexAttr]])) :
+        Settings.maps.color );
+
+      let size = what.get('size');
+      mapper.size = ( size !== undefined ?
+        function (d) {
+          return size.visScale(_valueOrAvg(d[size.fu[indexAttr]]));
+        } :
+        Settings.maps.size );
+
+      let shape = what.get('shape');
+      mapper.shape = ( shape !== undefined ?
+        function (d) {
+          return shape.visScale(_valueOrAvg(d[shape.fu[indexAttr]]));
+        } :
+        Settings.maps.shape );
+
+      if (what.has('hover'))
+        mapper.hover = (d) => d.reduce(
+          (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
+
+      // let layout = query.layout;
+      let col = what.get('col'),
+        row = what.get('row');
+      // let isColFU = PQL.isFieldUsage(colFU),
+      //   isRowFU = PQL.isFieldUsage(rowFU);
+      // let isColFU = what.has('col'),
+      //   isRowFU = what.has('row');
       let xPos = paneSize.width / 2,
         yPos = paneSize.height / 2;
 
-      if (isColFU && isRowFU) {
+      if (col !== undefined && row !== undefined) {
         mapper.transform = function (d) {
           return 'translate(' +
-            colFU.visScale(d[colFU[indexAttr]]) + ',' +
-            rowFU.visScale(d[rowFU[indexAttr]]) + ')';
+            col.visScale(d[col[indexAttr]]) + ',' +
+            row.visScale(d[row[indexAttr]]) + ')';
         };
       }
-      else if (isColFU && !isRowFU) {
+      else if (col !== undefined && row === undefined) {
         mapper.transform = function (d) {
           return 'translate(' +
-            colFU.visScale(d[colFU[indexAttr]]) + ',' +
+            col.visScale(d[col[indexAttr]]) + ',' +
             yPos + ')';
         };
       }
-      else if (!isColFU && isRowFU) {
+      else if (col === undefined && row !== undefined) {
         mapper.transform = function (d) {
           return 'translate(' +
             xPos + ',' +
-            rowFU.visScale(d[rowFU[indexAttr]]) + ')';
+            row.visScale(d[row[indexAttr]]) + ')';
         };
       }
       else {
