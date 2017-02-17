@@ -6,10 +6,12 @@ define([], function () {
 
   return Object.freeze({
     maps: {
-      size: 64,
-      minSize: 32,
+      size: 32,
+      minSize: 16,
       maxSize: 2048,
-      color: "red",
+      fill: "#377eb8",
+      stroke: "#377eb8",
+      opacity: 0.3,
       shape: "circle"
     },
 
@@ -21,6 +23,7 @@ define([], function () {
     },
 
     geometry: {
+      // TODO: is that actually used?
       axis: {
         // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
         size: 35,

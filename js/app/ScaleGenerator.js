@@ -2,7 +2,7 @@
  *
  * @module ScaleGenerator
  * @author Philipp Lucas
- * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, cbrew, PQL) {
   "use strict";

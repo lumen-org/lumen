@@ -8,7 +8,7 @@
  *
  * @module ViewTable
  * @author Philipp Lucas
- * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
 define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
@@ -123,7 +123,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // add hover for data
     newAggrMarksD3
       .append("svg:title")
-      //.text(aesthetics.hoverMapper);
       .text(mapper.hover);
 
     // the just appended elements are now part of the update selection!
@@ -144,7 +143,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // @common for all view cells
     marksD3.select(".path").attr({
       'd': shapePathGen,
-      fill: mapper.color
+      fill: mapper.fill,
+      stroke: mapper.stroke,
+      opacity: mapper.opacity
     });
   }
 
@@ -157,44 +158,70 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    */
   function drawAtomicPane(query, aggr, data, pane) {
 
+    /**
+     * TODO:
+     * I think I need to reorganize the code below. I need to be able to give options on how the mapping is
+     * established, I need to be easily able to set it to different values, ...
+     * Somehow, the getMapper seems weird, but I don't really know yet how. Do I need it at all, or should I just
+     * have separate functions to set up on mapping each, given some options.
+     *
+     * For example at the moment uses.fill is always expected to have a ColorMap as its value.
+     * But I need it to also accept a constant value to use.
+     *
+     * But for now I just want it done. so I'll make it dirty a bit...
+     */
+
     // TODO: adding scales to FieldUsage on an atomic pane level doesn't exactly make sense... it's really recreating
     //  the same scale (and mapping later) over and over again. But we got more important things to do at the moment.
 
     // add scales to field usages of this query
     attachScales(query, pane.size);
 
-    // create map of label to BaseMap instance
+    // create map of label to "<setting-of-how-map>"
+    // convention: it has an attribute .base iff it is based on some BaseMap/FieldUsage
+    // conventions: it has an attribute .value iff it is a constant value to map to
     let uses = new Map();
     let qa = query.layers[0].aesthetics;
-    if (qa.color instanceof VisMEL.ColorMap)
-      uses.set('color', qa.color);
+    if (qa.color instanceof VisMEL.ColorMap) 
+      uses.set('fill', {base: qa.color});
     if (qa.shape instanceof VisMEL.ShapeMap)
-      uses.set('shape', qa.shape);
+      uses.set('shape', {base: qa.shape});
     if (qa.size instanceof VisMEL.SizeMap)
-      uses.set('size', qa.size);
+      uses.set('size', {base: qa.size});
     let row = query.layout.rows[0];
     if (PQL.isFieldUsage(row))
-      uses.set('row', row);
+      uses.set('row', {base: row});
     let col = query.layout.cols[0];
     if (PQL.isFieldUsage(col))
-      uses.set('col', col);
+      uses.set('col', {base: col});
+    uses.set('hover', {});
+    uses.set('opacity', {value: 1.0});  // TODO: put into settings
 
-    let mapper = getMapper(pane.size, aggr, 'index', uses);
+    let mapper = getMapper(uses, aggr, 'index', pane.size);
     pane.aggrMarksD3 = pane.paneD3.append("g");
     drawMarks(pane.aggrMarksD3, aggr, mapper);
 
-    // continue here to create an appropiate map for data and aggr: build a map of density-related BaseMaps and the rest
-    // remove any density usage
+    // remove any density usage since that doesn't exist for data-selects
     uses.forEach(
-      (val, key, mymap) => {
-        if (PQL.isDensity(val) || PQL.isDensity(val.fu))
-          mymap.delete(key);
+      (val, key, uses) => {
+        if (PQL.isDensity(val.base) || val.base && PQL.isDensity(val.base.fu))
+          uses.delete(key);
       }
     );
+    uses.set('opacity', {value: 0.3}); // TODO: put into settings
 
-    mapper = getMapper(pane.size, data, 'dataIndex', uses);
+    // data marks have no fill but the fill color as stroke color instead
+    // remap fill color to stroke color
+    let fill = uses.get('fill');
+    if (fill !== undefined) {
+      uses.delete('fill');
+      uses.set('fill', {value: 'none'});// overwrite fill
+      uses.set('stroke', fill);
+    }
+
+    mapper = getMapper(uses, data, 'dataIndex', pane.size);
     pane.dataMarksD3 = pane.paneD3.append("g");
-    drawMarks(pane.aggrMarksD3, data, mapper);
+    //drawMarks(pane.dataMarksD3, data, mapper);
 
     return pane;
   }
@@ -598,10 +625,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      * color, size and others. Mappers are used in D3 to bind data to visuals.
      *
      * Before mappers can be set up, the scales need to be set up.
+     *
+     * TODO: change implementation such that each value of the passed in map 'what' contains all necessary data to
+     * set up the mapping for that value
      */
-    function getMapper (paneSize, data, indexAttr, what) {
-      // let aesthetics = query.layers[0].aesthetics;
-
+    function getMapper (what, data, indexAttr, paneSize) {
       // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
       function _valueOrAvg(data) {
         return _.isArray(data) ? data[0] + data[1] / 2 : data;
@@ -609,76 +637,74 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       let mapper = {};
 
-      /*
-      if (what.has('color')) {
-        color = what.get('color');
-        mapper.color = color.visScale(_valueOrAvg(d[color.fu[indexAttr]]));
-      } else {
-        mapper.color = Settings.maps.color;
+      function mapFill(fill) {
+        if (fill === undefined) {
+          return Settings.maps.fill;
+        } else if (fill.hasOwnProperty('base')) {
+          return d => fill.base.visScale(_valueOrAvg(d[fill.base.fu[indexAttr]]));
+        } else if (fill.hasOwnProperty('value')) {
+          return fill.value;
+        } else {
+          throw RangeError();
+        }
       }
+      mapper.fill = mapFill(what.get('fill'));
 
-      if (what.has('size')) {
-        let size = aesthetics.size;
-        mapper.size = function (d) {
-          return size.visScale(_valueOrAvg(d[size.fu[indexAttr]]));
-        };
-      } else {
-        mapper.size = Settings.maps.size;
+      function mapStroke(stroke) {
+        if (stroke === undefined) {
+          return Settings.maps.stroke;
+        } else if (stroke.hasOwnProperty('base')) {
+          return d => stroke.base.visScale(_valueOrAvg(d[stroke.base.fu[indexAttr]]));
+        } else if (stroke.hasOwnProperty('value')) {
+          return stroke.value;
+        } else {
+          throw RangeError();
+        }
       }
+      mapper.stroke = mapStroke(what.get('stroke'));
 
-      if (what.has('shape')) {
+      let opacity = what.get('opacity');
+      mapper.opacity = (opacity !== undefined ? opacity.value : Settings.maps.opacity);
 
+      function mapSize(size) {
+        if (size === undefined) {
+          return Settings.maps.size;
+        } else if (size.hasOwnProperty('base')) {
+          return d => size.base.visScale(_valueOrAvg(d[size.base.fu[indexAttr]]));
+        } else if (size.hasOwnProperty('value')) {
+          return size.value;
+        } else {
+          throw RangeError();
+        }
       }
+      mapper.size = mapSize(what.get('size'));
 
-
-      mapper.shape = ( shape instanceof VisMEL.ShapeMap ?
-        function (d) {
-          return shape.visScale(_valueOrAvg(d[shape.fu[indexAttr]]));
-        } :
-        Settings.maps.shape );
-
-      mapper.hover = (d) => d.reduce(
-        (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
-
-      */
-
-
-
-
-      let color = what.get('color');
-      mapper.color = ( color !== undefined ?
-        d => color.visScale(_valueOrAvg(d[color.fu[indexAttr]])) :
-        Settings.maps.color );
-
-      let size = what.get('size');
-      mapper.size = ( size !== undefined ?
-        function (d) {
-          return size.visScale(_valueOrAvg(d[size.fu[indexAttr]]));
-        } :
-        Settings.maps.size );
-
-      let shape = what.get('shape');
-      mapper.shape = ( shape !== undefined ?
-        function (d) {
-          return shape.visScale(_valueOrAvg(d[shape.fu[indexAttr]]));
-        } :
-        Settings.maps.shape );
+      function mapShape(shape) {
+        if (shape === undefined) {
+          return Settings.maps.shape;
+        } else if (shape.hasOwnProperty('base')) {
+          return d => shape.base.visScale(_valueOrAvg(d[shape.base.fu[indexAttr]]));
+        } else if (shape.hasOwnProperty('value')) {
+          return shape.value;
+        } else {
+          throw RangeError();
+        }
+      }
+      mapper.shape = mapShape(what.get('shape'));
 
       if (what.has('hover'))
         mapper.hover = (d) => d.reduce(
           (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
 
-      // let layout = query.layout;
       let col = what.get('col'),
         row = what.get('row');
-      // let isColFU = PQL.isFieldUsage(colFU),
-      //   isRowFU = PQL.isFieldUsage(rowFU);
-      // let isColFU = what.has('col'),
-      //   isRowFU = what.has('row');
       let xPos = paneSize.width / 2,
         yPos = paneSize.height / 2;
 
-      if (col !== undefined && row !== undefined) {
+      if (col !== undefined) col = col.base;
+      if (row !== undefined) row = row.base;
+
+        if (col !== undefined && row !== undefined) {
         mapper.transform = function (d) {
           return 'translate(' +
             col.visScale(d[col[indexAttr]]) + ',' +
@@ -706,80 +732,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       return mapper;
     }
-
-
-  /**
-   * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path,
-   * color, size and others. Mappers are used in D3 to bind data to visuals.
-   *
-   * Before mappers can be set up, the scales need to be set up.
-   */
-  var attachMappers = function (query, paneSize, data) {
-    let aesthetics = query.layers[0].aesthetics;
-
-    // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
-    function _valueOrAvg(data) {
-      return _.isArray(data) ? data[0] + data[1] / 2 : data;
-    }
-
-    let color = aesthetics.color;
-    color.mapper = ( color instanceof VisMEL.ColorMap ?
-      d => color.visScale(_valueOrAvg(d[color.fu.index])) :
-      Settings.maps.color );
-
-    let size = aesthetics.size;
-    size.mapper = ( size instanceof VisMEL.SizeMap ?
-      function (d) {
-        return size.visScale(_valueOrAvg(d[size.fu.index]));
-      } :
-      Settings.maps.size );
-
-    let shape = aesthetics.shape;
-    shape.mapper = ( shape instanceof VisMEL.ShapeMap ?
-      function (d) {
-        return shape.visScale(_valueOrAvg(d[shape.fu.index]));
-      } :
-      Settings.maps.shape );
-
-    aesthetics.hoverMapper = (d) => d.reduce(
-      (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
-
-    let layout = query.layout;
-    let colFU = layout.cols[0],
-      rowFU = layout.rows[0];
-    let isColFU = PQL.isFieldUsage(colFU),
-      isRowFU = PQL.isFieldUsage(rowFU);
-    let xPos = paneSize.width / 2,
-      yPos = paneSize.height / 2;
-
-    if (isColFU && isRowFU) {
-      layout.transformMapper = function (d) {
-        return 'translate(' +
-          colFU.visScale(d[colFU.index]) + ',' +
-          rowFU.visScale(d[rowFU.index]) + ')';
-      };
-    }
-    else if (isColFU && !isRowFU) {
-      layout.transformMapper = function (d) {
-        return 'translate(' +
-          colFU.visScale(d[colFU.index]) + ',' +
-          yPos + ')';
-      };
-    }
-    else if (!isColFU && isRowFU) {
-      layout.transformMapper = function (d) {
-        return 'translate(' +
-          xPos + ',' +
-          rowFU.visScale(d[rowFU.index]) + ')';
-      };
-    }
-    else {
-      // todo: jitter?
-      layout.transformMapper = 'translate(' + xPos + ',' + yPos + ')';
-    }
-
-  };
-
 
   /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
