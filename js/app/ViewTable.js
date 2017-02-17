@@ -199,9 +199,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     uses.set('opacity', {value: 0.8});  // TODO: put into settings
     uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
 
-    let mapper = getMapper(uses, aggr, 'index', pane.size);
-    pane.aggrMarksD3 = pane.paneD3.append("g");
-    drawMarks(pane.aggrMarksD3, aggr, mapper);
+    // setup mapper for visual variables. draw later.
+    let aggrMapper = getMapper(uses, aggr, 'index', pane.size);
 
     // remove any density usage since that doesn't exist for data-selects
     uses.forEach(
@@ -221,9 +220,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     }
     uses.set('fill', {value: 'none'}); // overwrite fill
 
-    mapper = getMapper(uses, data, 'dataIndex', pane.size);
-    pane.dataMarksD3 = pane.paneD3.append("g");
-    drawMarks(pane.dataMarksD3, data, mapper);
+    let dataMapper = getMapper(uses, data, 'dataIndex', pane.size);
+
+    // now draw, and let draw aggregation marks after data marks
+    pane.dataMarksD3 = pane.paneD3.append("g").classed("pl-data-marks", true);
+    drawMarks(pane.dataMarksD3, data, dataMapper);
+
+    pane.aggrMarksD3 = pane.paneD3.append("g").classed("pl-aggr-marks", true);
+    drawMarks(pane.aggrMarksD3, aggr, aggrMapper);
 
     return pane;
   }
@@ -448,6 +452,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     [...query.layout.cols, ...query.layout.rows].filter(PQL.isFieldUsage).forEach(
       m => {
         // TODO: this is a not so nice hack. extent of templating splits is added elsewhere...
+        // and in fact it doesn't work...
         if (m.extent === undefined)
           m.extent = [];
       }

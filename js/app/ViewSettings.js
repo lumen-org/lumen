@@ -6,8 +6,8 @@ define([], function () {
 
   return Object.freeze({
     maps: {
-      size: 32,
-      minSize: 24,
+      size: 50,
+      minSize: 32,
       maxSize: 2048,
       fill: "#377eb8",
       stroke: "#222222",

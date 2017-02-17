@@ -199,3 +199,11 @@ body {
 #pl-mappings-container {
     min-width: 15rem;
 }
+
+.pl-aggr-marks .point {
+    stroke-width: 2px;
+}
+
+.pl-data-marks .point  {
+    stroke-width: 2px;
+}

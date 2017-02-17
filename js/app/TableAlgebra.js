@@ -115,6 +115,7 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
 
     this.forEach( function(elem, idx) {
       if (PQL.isFieldUsage(elem)) {
+        elem.extent = []
         // keep split if its the last element. This leads to drastically improved performance
         if (PQL.isSplit(elem) && idx !== len-1) {
           elem.extent = S.splitToValues(elem);
