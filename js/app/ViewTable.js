@@ -182,8 +182,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // conventions: it has an attribute .value iff it is a constant value to map to
     let uses = new Map();
     let qa = query.layers[0].aesthetics;
-    if (qa.color instanceof VisMEL.ColorMap) 
+    if (qa.color instanceof VisMEL.ColorMap) {
       uses.set('fill', {base: qa.color});
+    }
     if (qa.shape instanceof VisMEL.ShapeMap)
       uses.set('shape', {base: qa.shape});
     if (qa.size instanceof VisMEL.SizeMap)
@@ -195,7 +196,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     if (PQL.isFieldUsage(col))
       uses.set('col', {base: col});
     uses.set('hover', {});
-    uses.set('opacity', {value: 1.0});  // TODO: put into settings
+    uses.set('opacity', {value: 0.8});  // TODO: put into settings
+    uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
 
     let mapper = getMapper(uses, aggr, 'index', pane.size);
     pane.aggrMarksD3 = pane.paneD3.append("g");
@@ -208,20 +210,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           uses.delete(key);
       }
     );
-    uses.set('opacity', {value: 0.3}); // TODO: put into settings
+    uses.set('opacity', {value: 0.5}); // TODO: put into settings
+    uses.set('stroke', {value: Settings.maps.fill});  // TODO: put into settings
 
     // data marks have no fill but the fill color as stroke color instead
     // remap fill color to stroke color
     let fill = uses.get('fill');
     if (fill !== undefined) {
-      uses.delete('fill');
-      uses.set('fill', {value: 'none'});// overwrite fill
       uses.set('stroke', fill);
     }
+    uses.set('fill', {value: 'none'}); // overwrite fill
 
     mapper = getMapper(uses, data, 'dataIndex', pane.size);
     pane.dataMarksD3 = pane.paneD3.append("g");
-    //drawMarks(pane.dataMarksD3, data, mapper);
+    drawMarks(pane.dataMarksD3, data, mapper);
 
     return pane;
   }
