@@ -196,7 +196,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     if (PQL.isFieldUsage(col))
       uses.set('col', {base: col});
     uses.set('hover', {});
-    uses.set('opacity', {value: 0.8});  // TODO: put into settings
+    uses.set('opacity', {value: 1.0});  // TODO: put into settings
     uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
 
     // setup mapper for visual variables. draw later.
@@ -209,7 +209,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           uses.delete(key);
       }
     );
-    uses.set('opacity', {value: 0.5}); // TODO: put into settings
+    uses.set('opacity', {value: 0.4}); // TODO: put into settings
     uses.set('stroke', {value: Settings.maps.fill});  // TODO: put into settings
 
     // data marks have no fill but the fill color as stroke color instead

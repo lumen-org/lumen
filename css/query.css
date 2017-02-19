@@ -201,9 +201,9 @@ body {
 }
 
 .pl-aggr-marks .point {
-    stroke-width: 2px;
+    stroke-width: 2.5px;
 }
 
 .pl-data-marks .point  {
-    stroke-width: 2px;
+    stroke-width: 1.5px;
 }
