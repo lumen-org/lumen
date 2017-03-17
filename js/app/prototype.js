@@ -255,7 +255,29 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $nav = $removeButton;
         return $('<div class="pl-visualization"></div>')
           .append($title, $nav, $pane)
-          .click( () => activate(context, ['visualization', 'visPanel']) );
+          .click( () => activate(context, ['visualization', 'visPanel']) )
+          .resizable({
+            stop: (event, ui) => {
+              let c = context;
+
+              // set new size
+              $pane.css({
+                'width': ui.size.width-40,
+                'height': ui.size.height-40,
+              });
+
+              // size change
+              //let widthChange = ui.size.width - ui.originalSize.width,
+              //heightChange = ui.size.height - ui.originalSize.height;
+              //$pane.css({
+              //  'width': parseInt( $pane.css('width'), 10) + widthChange + "px",
+              //  'height': parseInt( $pane.css('height'), 10) + heightChange + "px"
+              //});
+
+              // redraw
+              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable);
+            }
+          });
       }
 
       /**
