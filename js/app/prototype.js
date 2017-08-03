@@ -348,7 +348,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             if (event.keyCode === 13) {
 
               // create new context and visualization with that model if it exists
-              var context = new Context("http://127.0.0.1:5000/webservice", modelName);
+              var context = new Context("http://probmodvis.pythonanywhere.com/webservice", modelName);
+              // var context = new Context("http:///webservice", modelName);
 
               // fetch model
               context.basemodel.update()
@@ -356,7 +357,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                 .then(() => activate(context, ['visualization', 'visPanel']))
                 .catch((err) => {
                   console.error(err);
-                  infoBox.message("Could not load remote model from Server!");
+                  infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
                   // TODO: remove vis and everything else ...
                 });
             }
@@ -499,7 +500,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       start: function () {
         // create initial context with model
-        var context = new Context("http://127.0.0.1:5000/webservice", DEFAULT_MODEL);
+        var context = new Context("http://probmodvis.pythonanywhere.com/webservice", DEFAULT_MODEL);
         //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
         // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
         // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
