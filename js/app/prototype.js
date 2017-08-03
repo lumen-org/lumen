@@ -10,7 +10,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     // the default model to be loaded on startup
-    const DEFAULT_MODEL = 'cg_crabs';
+    const DEFAULT_MODEL = 'mcg_crabs';
+    
+    // the default model server
+    // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
+    const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000/webservice';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -348,8 +352,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             if (event.keyCode === 13) {
 
               // create new context and visualization with that model if it exists
-              var context = new Context("http://probmodvis.pythonanywhere.com/webservice", modelName);
-              // var context = new Context("http:///webservice", modelName);
+              var context = new Context(DEFAULT_SERVER_ADDRESS, modelName);
 
               // fetch model
               context.basemodel.update()
@@ -500,10 +503,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       start: function () {
         // create initial context with model
-        var context = new Context("http://probmodvis.pythonanywhere.com/webservice", DEFAULT_MODEL);
-        //var context = new Context("http://127.0.0.1:5000/webservice", 'categorical_dummy');
-        // var context = new Context("http://127.0.0.1:5000/webservice", 'iris');
-        // var context = new Context("http://127.0.0.1:5000/webservice", 'mvg4');
+        var context = new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL);
+        // var context = new Context(DEFAULT_SERVER_ADDRESS, 'categorical_dummy');
+        // var context = new Context(DEFAULT_SERVER_ADDRESS, 'iris');
+        // var context = new Context(DEFAULT_SERVER_ADDRESS, 'mvg4');
 
         // activate that context
         activate(context, ['visualization', 'visPanel']);
