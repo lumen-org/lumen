@@ -222,21 +222,33 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       return new Split(this.field.copy(), this.method, this.args);
     }
 
-    static FromFieldUsage (fu) {
+    static FromFieldUsage (fu, mode = "layout-split") {
       if (isSplit(fu) || isFilter(fu))
-        return Split.DefaultSplit(fu.field);
+        return Split.DefaultSplit(fu.field, mode);
       else if (isAggregation(fu) || isDensity(fu))
-        return Split.DefaultSplit(fu.fields[0]);
+        return Split.DefaultSplit(fu.fields[0], mode);
       else
         throw new TypeError("fu is not a FieldUsage");
     }
 
-    static DefaultSplit (field) {
+    /**
+     * Returns a split with decent values for the chose usage mode.
+     * The defaults of the modes are as follows:
+     *   * aggregations and density: split to elements or 25 equiintervals
+     *   * layout-split: split to elements or 5 equiintervals
+     * @param field
+     * @param mode Optional. One of: 'aggregation', 'density', 'layout-split'
+     * @returns {Split}
+     * @constructor
+     */
+    static DefaultSplit (field, mode = "layout-split") {
+      let split_cnt = 5;
+      if (mode === 'aggregation' || mode === 'density')
+        split_cnt = 25;
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
-        //return new Split(field, SplitMethod.equidist, [4]);
-        return new Split(field, SplitMethod.equiinterval, [4]);
+        return new Split(field, SplitMethod.equiinterval, [split_cnt]);
       else
         throw new RangeError("invalid data type");
     }

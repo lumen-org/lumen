@@ -32,7 +32,8 @@ define(['./PQL'], function(PQL) {
       query.layers[0].filters,
       makeBaseModelName(model.name, rIdx, cIdx));
 
-    // TODO: apply all remaining filters on independent variables, todo: don't forget to remove filters from sub query(?)
+    // TODO: apply all remaining filters on independent variables
+    // TODO: don't forget to remove filters from sub query(?)
   };
 
 

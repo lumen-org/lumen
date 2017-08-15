@@ -25,6 +25,11 @@ main {
     white-space: pre-wrap
 }
 
+#pl-plotly {
+    width: 600px;
+    height: 400px;
+}
+
 .pl-visualization {
     position: relative;
     padding: .5rem 1rem 0rem 1.5rem;

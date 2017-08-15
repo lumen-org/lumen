@@ -5,8 +5,8 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './AtomicPlotly', './RemoteModelling'],
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -98,11 +98,20 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
                 infoBox.hide();
                 c.aggrRT = new RT.AggrResultTable(c.modelTable, c.queryTable);
                 c.dataRT = new RT.DataResultTable(c.queryTable, c.model);
+                c.uniDensityRT = new RT.UniDensityResultTable(c.queryTable, c.model);
+                c.biDensityRT = new RT.BiDensityResultTable(c.queryTable, c.model);
               })
               .then(() => c.aggrRT.fetch())
               .then(() => c.dataRT.fetch())
+              .then(() => c.uniDensityRT.fetch())
+              .then(() => c.biDensityRT.fetch())
               .then(() => {
                 c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable);
+              })
+              /*try visualize the first atomic plot*/
+              .then(() => {
+                AtomicPlotly.plot(document.getElementById('pl-plotly'),
+                  c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
               })
               .then(() => {
                 if (commit) {
@@ -148,6 +157,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.modelTable = {};
         this.aggrRT = {};
         this.dataRT = {};
+        this.uniDensityRT = {};
+        this.biDensityRT = {};
         this.viewTable = {};
         //this.remove = remove;
 
@@ -220,7 +231,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // some more details, by the example of the '.pl-model'-div
         //  - replaceWith replaces some selection with something else: we want to replace the old '.pl-model'-div with the new one
         //  - however, that does not delete the old one. so we do that with remove(). Note that replaceWith returns the replaced elements.
-        //  - neither it update the selection $oldVis.models refers to. hence we have to ste that as well.
+        //  - neither of it updates the selection $oldVis.models refers to. hence we have to set that as well.
         let $oldVis = this.$visuals;
         for (const key of Object.keys($newVis)) {
           $oldVis[key].replaceWith($newVis[key]).remove();
@@ -266,6 +277,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
               // set new size
               $pane.css({
+                // TODO: what is this magic -40 ???
                 'width': ui.size.width-40,
                 'height': ui.size.height-40,
               });

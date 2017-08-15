@@ -28,7 +28,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   function initCanvas(canvasD3, margin, padding) {
     // normalize arguments
     if (_.isFinite(margin)) {
-      margin = {top: margin, right: margin, bottom: margin, left: margin};
+    margin = {top: margin, right: margin, bottom: margin, left: margin};
     }
     if (_.isFinite(padding)) {
       padding = {top: padding, right: padding, bottom: padding, left: padding};
@@ -711,7 +711,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       if (col !== undefined) col = col.base;
       if (row !== undefined) row = row.base;
 
-        if (col !== undefined && row !== undefined) {
+      if (col !== undefined && row !== undefined) {
         mapper.transform = function (d) {
           return 'translate(' +
             col.visScale(d[col[indexAttr]]) + ',' +

@@ -35,10 +35,29 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     return table;
   }
 
+  //
+  // /**
+  //  * Abstract ResultTable class which provides a method to fetch a certain type of result for each atomic query
+  //  */
+  // class ResultTable {
+  //
+  //   fetch() {
+  //     let that = this;
+  //     let fetchPromises = new Set().add(Promise.resolve());
+  //     for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
+  //       this.at[rIdx] = new Array(this.size.cols);
+  //       for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+  //         let promise = this.dataSelect(this._qt.at[rIdx][cIdx])
+  //           .then(result => {that.at[rIdx][cIdx] = result;}); // jshint ignore:line
+  //         fetchPromises.add(promise);
+  //       }
+  //     }
+  //     return Promise.all(fetchPromises);
+  //   }
+  // }
 
   /**
-   * A !isAggrDensity && firstAggrDensity contains the raw data that are the (sampled) answers to the actual queries to the model(s).
-   * Each cell of the result table holds its own data, and is accessed by its row and column index via the 'at' property.
+   * An aggregation result table holds a table of aggregations queries and provides the method fetch to execute these queries. The results are then stored in a result table. Each cell of the result table holds its own data, and is accessed by its row and column index via the 'at' property.
    *
    * Outdated: The 'at' property contains no information about what FieldUsages are encoded in what index. Therefore, a
    * {@link AggrResultTable} has an 'indexes' property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
@@ -60,7 +79,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
      *
      * # Map from FieldUsages to columns in result table:
      * In order to know which {@link FieldUsage} of the query is represented by which column of the result table,
-     * an attribute 'index' is attached to each field usages of the query.
+     * an attribute 'index' is attached to each field usage of the query.
      *
      * # Map from columns in result table to FieldUsages:
      * The reverse mapping is provided by the attribute 'fu' on the table itself,
@@ -92,7 +111,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       var dimensions = [];
       var idx2fu = [];
       let idx = 0;
-      fieldUsages.filter(PQL.isSplit).forEach(function (fu) {
+      fieldUsages.filter(PQL.isSplit).forEach( fu => {
         // todo: this kind of comparison is ugly and slow for the case of many dimensions
         // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
         let sameBase = dimensions.find(elem => (fu.name === elem.name));
@@ -145,6 +164,9 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     }
   }
 
+  /**
+   * A data result table contains
+   */
   class DataResultTable {
 
     constructor(queryTable, model) {
@@ -225,9 +247,130 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     }
   }
 
+
+  /**
+   * An UniDensityResultTable creates marginal density queries for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accesed via the attribute .at[][].x and at[][].y where .x refers tothe x axis and y to the y axis.
+   *
+   * TODO: alternative: extend the aggregation query that is anyway issued. This perform better!?
+   */
+  class UniDensityResultTable {
+
+    constructor(queryTable, model) {
+      this._qt = queryTable;
+      this._model = model;
+      this.size = queryTable.size;
+      this.at = new Array(this.size.rows);
+    }
+
+   static marginalSelect(query, model, rowOrCol) {
+     /* there is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. */
+
+      let axisFieldUsage = query.layout[rowOrCol][0];
+      if (!PQL.isFieldUsage(axisFieldUsage)) {
+        // nothing to do! set result table to empty and return fullfilled promise
+        return Promise.resolve([])
+      }
+
+      // collect splits from aesthetics and details shelves
+      let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
+      let splits = query.fieldUsages(['layout','filters']).filter(PQL.isSplit);
+      splits.push(densitySplit);
+      splits.fields = splits.map(split => split.field);
+      splits.names =  splits.map(split => split.name);
+
+      let densityUsage = new PQL.Density(splits.fields);
+
+      // build idx2fu map
+      let idx2fu = splits.concat(densityUsage);
+
+      // run PQL query
+      return model.predict(splits.names.concat(densityUsage), [], splits)
+        .then(table => {
+          table.fu = idx2fu;  // todo: what is that?
+          return _attachExtent(table);
+      });
+    }
+
+    fetch() {
+      let at = this.at;
+      let fetchPromises = new Set().add(Promise.resolve());
+      for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
+        at[rIdx] = new Array(this.size.cols);
+        for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+          let query = this._qt.at[rIdx][cIdx];
+          at[rIdx][cIdx] = {};
+          let promiseX = UniDensityResultTable.marginalSelect(query, this._model, 'cols')
+            .then(result => {at[rIdx][cIdx].x = result;}); // jshint ignore:line
+          fetchPromises.add(promiseX);
+          let promiseY = UniDensityResultTable.marginalSelect(query, this._model, 'rows')
+            .then(result => {at[rIdx][cIdx].y = result;}); // jshint ignore:line
+          fetchPromises.add(promiseY);
+        }
+      }
+      return Promise.all(fetchPromises);
+    }
+  }
+
+
+  /**
+   * A BiDensityResultTable creates a 2d density queries over the FieldUsage on the X and Y axis. It does it for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accesed via the attribute .at.
+   */
+  class BiDensityResultTable {
+
+    constructor(queryTable, basemodel) {
+      this._qt = queryTable;
+      this._model = basemodel;
+      this.size = queryTable.size;
+      this.at = new Array(this.size.rows);
+    }
+
+    /**
+     * Constructs and runs a query for the 2d density over the fields of rows and cols
+     **/
+    static densityPredict(query, model) {
+      // can only get density if there is something on rows and cols
+      let xfu = query.layout.cols[0];
+      let yfu = query.layout.rows[0];
+      if (!PQL.isFieldUsage(xfu) || !PQL.isFieldUsage(yfu)) {
+        // nothing to do! set result table to empty and return fullfilled promise
+        return Promise.resolve([])
+      }
+
+      let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
+      let ySplit = PQL.Split.FromFieldUsage(yfu, 'density');
+      let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
+
+      let idx2fu = [xSplit, ySplit, densityFu];
+
+      // run PQL query
+      return model.predict([xSplit.name, ySplit.name, densityFu], model.filter, [xSplit, ySplit])
+        .then(table => {
+          table.fu = idx2fu;  // todo: what is that?
+          return _attachExtent(table);
+        });
+    }
+
+    fetch() {
+      let at = this.at;
+      let fetchPromises = new Set().add(Promise.resolve());
+      for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
+        at[rIdx] = new Array(this.size.cols);
+        for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+          let query = this._qt.at[rIdx][cIdx];
+          let promise = BiDensityResultTable.densityPredict(query, this._model)
+            .then(result => at[rIdx][cIdx] = result); // jshint ignore:line
+          fetchPromises.add(promise);
+        }
+      }
+      return Promise.all(fetchPromises);
+    }
+  }
+
   return {
     AggrResultTable: AggrResultTable,
-    DataResultTable: DataResultTable
+    DataResultTable: DataResultTable,
+    UniDensityResultTable: UniDensityResultTable,
+    BiDensityResultTable: BiDensityResultTable
   };
 
   //return ResultTable;
