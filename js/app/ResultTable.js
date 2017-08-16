@@ -10,6 +10,24 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   var logger = Logger.get('pl-ResultTable');
   logger.setLevel(Logger.DEBUG);
 
+  /**
+   * Returns an empty result table.
+   * @private
+   */
+  function _emptyResultTable () {
+    let res = [];
+    res.header = [];
+    res.idx2fu = [];
+    res.fu2idx = new Map();
+    return res;
+  }
+
+  function _attachByFU(table) {
+    let byfu = new Map();
+    table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
+    table.byFu = byfu;
+    return table;
+  }
 
   /**
    * Attaches the extent of each column of a (row-based) table under the attribute .extent and returns the modified table.
@@ -34,6 +52,11 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     }
     return table;
   }
+
+
+  // TODO: make all this code below more compact. there is lots of duplication.
+  // TODO: maybe use an abstract base class?
+  // TODO: maybe don't iterate over rows / cols on this level? more as much as possible to the inside?
 
   //
   // /**
@@ -130,18 +153,22 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
         else {
           // fu is new
           fu.index = idx;
-          fu2idx.set(fu, idx);
-          idx++;
           idx2fu.push(fu);
+          fu2idx.set(fu, idx);
           dimensions.push(fu);
+          idx++;
         }
       });
 
       var measures = [];
-      fieldUsages.filter(fu => PQL.isAggregation(fu) || PQL.isDensity(fu)).forEach( fu => {
-        fu.index = idx++;
-        idx2fu.push(fu);
-        measures.push(fu);
+      fieldUsages
+        .filter(fu => PQL.isAggregationOrDensity(fu))
+        .forEach( fu => {
+          fu.index = idx;
+          idx2fu.push(fu);
+          fu2idx.set(fu, idx);
+          measures.push(fu);
+          idx++;
       });
 
       // run PQL query
@@ -154,12 +181,12 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
         table.fu = idx2fu;
         table.idx2fu = idx2fu;
         table.fu2idx = fu2idx;
-        return _attachExtent(table);
+        return _attachExtent(_attachByFU(table));
       });
     }
 
     fetch() {
-      var that = this;
+      let that = this;
       let fetchPromises = new Set().add(Promise.resolve());
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
@@ -197,9 +224,10 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       //  * densities: ignore them. A valid density anyway requires a split - which is handleled above
       // note2: we need to detect multiple usages of the same name and add indices later accordingly
 
-      let idx2fu = [];
-      let idx = 0;
-      let select = new Map();  // map of <field-name to select> to <index of column in result-table>
+      let idx2fu = [],
+       idx = 0,
+       fu2idx = new Map(),
+       select = new Map();  // map of <field-name to select> to <index of column in result-table>
       let filters = [];
       for (let fu of query.fieldUsages()) {
         let name;
@@ -222,9 +250,12 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
         if (select.has(name)) {
           // don't add again but reuse the stored index
-          fu.dataIndex = select.get(name);
+          let prev_idx = select.get(name);
+          fu.dataIndex = prev_idx;
+          fu2idx.set(fu, prev_idx);
         } else {
           fu.dataIndex = idx;
+          fu2idx.set(fu, idx);
           select.set(name, idx);
           idx2fu.push(fu);
           idx++;
@@ -237,7 +268,9 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
         filters
       ).then(table => {
         table.fu = idx2fu;
-        return _attachExtent(table);
+        table.idx2fu = idx2fu;
+        table.fu2idx = fu2idx;
+        return _attachExtent(_attachByFU(table));
       });
     }
 
@@ -271,13 +304,13 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       this.at = new Array(this.size.rows);
     }
 
-   static marginalSelect(query, model, rowOrCol) {
-     /* there is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. */
+    static marginalSelect(query, model, rowOrCol) {
+      /* there is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. */
 
       let axisFieldUsage = query.layout[rowOrCol][0];
       if (!PQL.isFieldUsage(axisFieldUsage)) {
         // nothing to do! set result table to empty and return fullfilled promise
-        return Promise.resolve([])
+        return Promise.resolve(_emptyResultTable())
       }
 
       // collect splits from aesthetics and details shelves
@@ -289,15 +322,19 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
       let densityUsage = new PQL.Density(splits.fields);
 
-      // build idx2fu map
+      // build maps
+      let fu2idx = new Map();
       let idx2fu = splits.concat(densityUsage);
+      idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
       // run PQL query
       return model.predict(splits.names.concat(densityUsage), [], splits)
         .then(table => {
-          table.fu = idx2fu;  // todo: what is that?
-          return _attachExtent(table);
-      });
+          table.fu = idx2fu;
+          table.idx2fu = idx2fu;
+          table.fu2idx = fu2idx;
+          return _attachExtent(_attachByFU(table));
+        });
     }
 
     fetch() {
@@ -342,7 +379,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       let yfu = query.layout.rows[0];
       if (!PQL.isFieldUsage(xfu) || !PQL.isFieldUsage(yfu)) {
         // nothing to do! set result table to empty and return fullfilled promise
-        return Promise.resolve([])
+        return Promise.resolve(_emptyResultTable())
       }
 
       let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
@@ -350,12 +387,16 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
 
       let idx2fu = [xSplit, ySplit, densityFu];
+      let fu2idx = new Map();
+      idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
       // run PQL query
       return model.predict([xSplit.name, ySplit.name, densityFu], model.filter, [xSplit, ySplit])
         .then(table => {
-          table.fu = idx2fu;  // todo: what is that?
-          return _attachExtent(table);
+          table.fu = idx2fu;
+          table.idx2fu = idx2fu;
+          table.fu2idx = fu2idx;
+          return _attachExtent(_attachByFU(table));
         });
     }
 

@@ -20,8 +20,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-      // drop(shelves.dim, shelves.meas.at(0));
-      // drop(shelves.column, shelves.meas.at(1));
+      //drop(shelves.dim, shelves.meas.at(0));
+      //drop(shelves.column, shelves.meas.at(1));
       //drop(shelves.filter, shelves.meas.at(1));
       //drop(shelves.detail, shelves.dim.at(0));
       //drop(shelves.shape, shelves.dim.at(0));
@@ -29,6 +29,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       //drop(shelves.row, shelves.dim.at(0));
       //drop(shelves.row, shelves.meas.at(1));
       //drop(shelves.color, shelves.meas.at(2));
+      drop(shelves.row, shelves.meas.at(0));
+      drop(shelves.column, shelves.meas.at(1));
     }
 
     /**

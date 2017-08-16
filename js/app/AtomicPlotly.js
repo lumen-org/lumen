@@ -15,107 +15,174 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, Settings) {
     "use strict";
 
-    var logger = Logger.get('pl-ViewTable');
+    let logger = Logger.get('pl-ViewTable');
     logger.setLevel(Logger.DEBUG);
 
     // vis defaults
-    var colorscale = {
+    let colorscale = {
       density: 'Greys'
     };
 
+    let config = {
+      pane : {
+        height: 600,
+        width: 800
+      },
+      layout : {
+        marginal_ratio: 0.15,
+        margin: 0.00
+      }
+    };
 
-    function row_major_RT_to_col_major_RT(rt) {
+    // function default_layout () {
+    //   return {
+    //     showlegend: false
+    //   }
+    // }
+    //
+    // function default_trace () {
+    //   return {
+    //     showlegend: false
+    //   }
+    // }
 
+    function row_major_RT_to_col_major_RT(dataTable) {
+      // create dataframe from it
+      let df = new dfjs.DataFrame(dataTable, dataTable.header);
+
+      // turn to column major
+      df = df.transpose();
+      let table = df.toArray();
+
+      // reattach maps
+      table.fu2idx = dataTable.fu2idx;
+      table.idx2fu = dataTable.idx2fu;
+
+      let byfu = new Map();
+      table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
+      table.byFu = byfu;
+
+      // attach direct label accessors
+      /*dataTable.header.forEach((name, idx) => {
+        asarray[name] = asarray[idx];
+      });*/
+
+      return table;
     }
 
 
     function plot(pane, aggrRT, dataRT, uniDensityRT, biDensityRT, query) {
 
-      let layout = query.layout;
+      // empty pane
+      Plotly.purge(pane);
+
+      // change to column major
+      // TODO: in the future we should pass it like this right away
+      aggrRT = row_major_RT_to_col_major_RT(aggrRT);
+      dataRT = row_major_RT_to_col_major_RT(dataRT);
+      uniDensityRT = {
+        x: row_major_RT_to_col_major_RT(uniDensityRT.x),
+        y: row_major_RT_to_col_major_RT(uniDensityRT.y)
+      };
+      biDensityRT = row_major_RT_to_col_major_RT(biDensityRT);
+
+      let qlayout = query.layout;
       // build traces for plot
 
       // field usages
-      let xfu = layout.cols[0],
-        yfu = layout.rows[0];
-      // column indices in result table
-      let xidx = aggrRT.fu2idx[xfu],
-        yidx = aggrRT.fu2idx[yfu];
+      let xfu = qlayout.cols[0],
+        yfu = qlayout.rows[0];
 
       // aggregation plot trace
       let aggr_trace = {
+        name: 'aggregations',
         type: 'scatter',
-        x: aggrRT[xidx],
-        y: aggrRT[yidx],
+        showlegend: false,
+        x: aggrRT.byFu.get(xfu),
+        y: aggrRT.byFu.get(yfu),
       };
 
-      // // 2d density plot trace
-      // let contour_trace = {
-      //   type: 'contour',
-      //   x: common_densities.sepal_width,
-      //   y: common_densities.sepal_length,
-      //   z: common_densities.p,
-      //   opacity: 0.3,
-      //   colorscale: colorscale.density,
-      //   reversescale: true
-      // };
-      //
-      // // samples trace
-      // let sample_trace = {
-      //   type: 'scatter',
-      //   mode: 'markers',
-      //   marker: {
-      //     symbol: "circle-open"
-      //   },
-      //   x: samples.sepal_width,
-      //   y: samples.sepal_length,
-      //   opacity: 0.8
-      // };
-      //
-      // // marginal histogram / density traces
-      // let histo_x_trace_data = {
-      //   type: 'bar',
-      //   x: marginal_densities.sepal_width.value,
-      //   y: marginal_densities.sepal_width.data,
-      //   xaxis: 'x',
-      //   yaxis: 'y2'
-      // };
-      //
-      // let histo_y_trace_model = {
-      //   type: 'scatter',
-      //   x: marginal_densities.sepal_length.model,
-      //   y: marginal_densities.sepal_length.value,
-      //   xaxis: 'x2',
-      //   yaxis: 'y'
-      // };
-      //
-      // // assemble all traces
-      // let data = [
-      //   aggr_trace,
-      //   sample_trace,
-      //   contour_trace,
-      //   histo_x_trace_data,
-      //   histo_y_trace_model
-      // ];
-      //
-      // // create layout
-      // let layout = {
-      //   xaxis2: {
-      //     domain: [0, 0.1],
-      //     autorange: 'reversed'
-      //   },
-      //   xaxis: {
-      //     domain: [0.2, 0.9]
-      //   },
-      //   yaxis2: {
-      //     domain: [0, 0.1],
-      //     autorange: 'reversed'
-      //   },
-      //   yaxis: {
-      //     domain: [0.2, 0.9]
-      //   }
-      // };
-      //
-      // Plotly.plot(pane, data, layout);
+      // 2d density plot trace
+      let contour_trace = {
+        name: '2d density',
+        type: 'contour',
+        showlegend: false,
+        // note: the indizes are by convention!
+        x: biDensityRT[0],
+        y: biDensityRT[1],
+        z: biDensityRT[2],
+        opacity: 0.3,
+        colorscale: colorscale.density,
+        reversescale: true
+      };
+
+      // samples trace
+      let sample_trace = {
+        name: 'samples',
+        type: 'scatter',
+        mode: 'markers',
+        showlegend: false,
+        marker: {
+          symbol: "circle-open"
+        },
+        x: dataRT.byFu.get(xfu),
+        y: dataRT.byFu.get(yfu),
+        opacity: 0.8
+      };
+
+      // marginal histogram / density traces
+      let histo_x_trace_data = {
+        name: 'data marginal on x',
+        type: 'bar',
+        showlegend: false,
+        x: uniDensityRT.x[0],
+        y: uniDensityRT.x[1],
+        xaxis: 'x',
+        yaxis: 'y2'
+      };
+
+      let histo_y_trace_model = {
+        name: 'model marginal on y',
+        type: 'scatter', // defaults to line chart
+        showlegend: false,
+        x: uniDensityRT.y[1],
+        y: uniDensityRT.y[0],
+        xaxis: 'x2',
+        yaxis: 'y'
+      };
+
+      // assemble all traces
+      let data = [
+        aggr_trace,
+        sample_trace,
+        contour_trace,
+        histo_x_trace_data,
+        histo_y_trace_model
+      ];
+
+      let c = config;
+
+      // create layout
+      let layout = {
+        xaxis2: {
+          domain: [0, c.layout.marginal_ratio - c.layout.margin],
+          autorange: 'reversed'
+        },
+        xaxis: {
+          domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+        },
+        yaxis2: {
+          domain: [0, c.layout.marginal_ratio - c.layout.margin],
+          autorange: 'reversed'
+        },
+        yaxis: {
+          domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+        },
+        height: c.pane.height,
+        width: c.pane.width
+      };
+
+      Plotly.plot(pane, data, layout);
     }
 
     return {
