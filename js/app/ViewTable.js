@@ -633,8 +633,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      *
      * Before mappers can be set up, the scales need to be set up.
      *
-     * TODO: change implementation such that each value of the passed in map 'what' contains all necessary data to
-     * set up the mapping for that value
+     * TODO: change implementation such that each value of the passed in map 'what' contains all necessary data to set up the mapping for that value
      */
     function getMapper (what, data, indexAttr, paneSize) {
       // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable

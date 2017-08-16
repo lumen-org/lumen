@@ -81,6 +81,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
      * In order to know which {@link FieldUsage} of the query is represented by which column of the result table,
      * an attribute 'index' is attached to each field usage of the query.
      *
+     * Additionally, the same mapping is provided by the attribute 'fu2idx' of the result table.
+     *
      * # Map from columns in result table to FieldUsages:
      * The reverse mapping is provided by the attribute 'fu' on the table itself,
      * where '.fu[i]' maps to the corresponding {@link FieldUsage} of the i-th column of the result table.
@@ -107,24 +109,29 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       //  field usages, as duplicate dimensions won't show up in dimensions
       // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
 
-      var fieldUsages = query.fieldUsages();
-      var dimensions = [];
-      var idx2fu = [];
-      let idx = 0;
+      let fieldUsages = query.fieldUsages(),
+        dimensions = [],
+        fu2idx = new Map(),
+        idx2fu = [],
+        idx = 0;
+
       fieldUsages.filter(PQL.isSplit).forEach( fu => {
         // todo: this kind of comparison is ugly and slow for the case of many dimensions
         // how to make it better: build boolean associative array based on fu.base -> then the find becomes a simple lookup
         let sameBase = dimensions.find(elem => (fu.name === elem.name));
         if (sameBase) {
           // fu is already there
-          if (fu.method === sameBase.method /*|| fu.method === 'identity'*/)
+          if (fu.method === sameBase.method /*|| fu.method === 'identity'*/) {
             fu.index = sameBase.index;
-          else
+            fu2idx.set(fu, sameBase.index);
+          } else
             throw new RangeError("If using multiple splits of the same field in an atomic query, either their splitter methods must match, or at most one may split differently than by 'identity'!");
         }
         else {
           // fu is new
-          fu.index = idx++;
+          fu.index = idx;
+          fu2idx.set(fu, idx);
+          idx++;
           idx2fu.push(fu);
           dimensions.push(fu);
         }
@@ -145,6 +152,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
         query.mode
       ).then( table => {
         table.fu = idx2fu;
+        table.idx2fu = idx2fu;
+        table.fu2idx = fu2idx;
         return _attachExtent(table);
       });
     }

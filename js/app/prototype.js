@@ -111,7 +111,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               /*try visualize the first atomic plot*/
               .then(() => {
                 AtomicPlotly.plot(document.getElementById('pl-plotly'),
-                  c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
+                  c.aggrRT.at[0][0], c.dataRT.at[0][0], c.uniDensityRT.at[0][0], c.biDensityRT.at[0][0], c.queryTable.at[0][0]);
               })
               .then(() => {
                 if (commit) {
