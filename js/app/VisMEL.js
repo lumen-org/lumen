@@ -230,22 +230,30 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     /**
-     * @param exclude A iterable of descriptors to exclude from the collection. Allowed values of the iterable are 'layout', 'details', 'filters', 'aesthetics'.
+     * @param what A iterable of descriptors to exclude from the collection. Allowed values of the iterable are 'layout', 'details', 'filters', 'aesthetics'.
+     * @param mode: either 'include' or 'exclude'.
      * @returns Returns the set of {@link FieldUsage}s of this query.
      *
      */
-    fieldUsages(exclude=[]) {
-      exclude = new Set(exclude);
+    fieldUsages(what=[], mode='exclude') {
+      let excluded;
+      if (mode === 'exclude')
+        excluded = new Set(what);
+      else if (mode === 'include') {
+        const all = ['layout', 'details', 'filters', 'aesthetics'];
+        excluded = new Set(_.without(all, what));
+      } else
+        throw RangeError("mode must be 'exclude' or 'include'");
       let layer = this.layers[0],
         layout = this.layout,
         aesthetics = layer.aesthetics;
       // VisMEL expressions consist of FieldUsages ...
       let usedVars = _.union(
-        exclude.has('layout') ? undefined : layout.rows.fieldUsages(),
-        exclude.has('layout') ? undefined : layout.cols.fieldUsages(),
-        exclude.has('details') ? undefined : aesthetics.details,
-        exclude.has('filters') ? undefined : layer.filters,
-        exclude.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
+        excluded.has('layout') ? undefined : layout.rows.fieldUsages(),
+        excluded.has('layout') ? undefined : layout.cols.fieldUsages(),
+        excluded.has('details') ? undefined : aesthetics.details,
+        excluded.has('filters') ? undefined : layer.filters,
+        excluded.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
       );
       return usedVars.filter(PQL.isFieldUsage);
     }

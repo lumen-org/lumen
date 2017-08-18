@@ -22,17 +22,23 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     return res;
   }
 
-  function _attachByFU(table) {
+  /**
+   * Returns a direct accessor of FieldUsages to corresponding table columns.
+   * WARNING: only works if the table is column-major!!
+   * @param table
+   * @return {*}
+   * @private
+   */
+  function getByFuAccessor(table, fu2idx) {
     let byfu = new Map();
     table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
-    table.byFu = byfu;
-    return table;
+    return byfu;
   }
 
   /**
-   * Attaches the extent of each column of a (row-based) table under the attribute .extent and returns the modified table.
+   * Attaches the extent of each column of a (row-major) result table under the attribute .extent and returns the modified table.
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
-   * Note that the passed table is expected to have a .fu attribute, which describes the FieldUsage of each column.
+   * Note that a result table is expected, which has .idx2fu property.
    */
   function _attachExtent(table) {
     if (table.length === 0 || table[0].length === 0)
@@ -59,7 +65,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       table.idx2fu = idx2fu;
       table.fu2idx = fu2idx;
       table.query = pql;
-      table = _attachExtent(_attachByFU(table));
+      table = _attachExtent(table);
       if (prop) {
         if (!collection[rIdx][cIdx])
           collection[rIdx][cIdx] = {};
@@ -147,7 +153,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     },
 
     samples: (vismelQuery) => {
-// note:
+      // note:
       // we derive the data-select query from a PQL/VisMEL query as follows:
       //  * filters: stay unchanged as filters
       //  * splits: add the name of what is split to the select-clause
@@ -204,33 +210,44 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     /**
      * An UniDensityResultTable creates marginal density queries for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accesed via the attribute .at[][].x and at[][].y where .x refers tothe x axis and y to the y axis.
      */
-    uniDensity: (vismelQuery, rowOrCol) => {
+    uniDensity: (vismelQuery, rowOrCol, model) => {
 
-      /* there is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. */
+      // there is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols.
+      //
 
-        let axisFieldUsage = vismelQuery.layout[rowOrCol][0];
-        if (!PQL.isFieldUsage(axisFieldUsage)) {
-          // nothing to do! set result table to empty and return fullfilled promise
-          return Promise.resolve(_emptyResultTable())
-        }
 
-        // collect splits from aesthetics and details shelves
-        let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
-        let splits = vismelQuery.fieldUsages(['layout', 'filters']).filter(PQL.isSplit);
-        splits.push(densitySplit);
-        splits.fields = splits.map(split => split.field);
-        splits.names = splits.map(split => split.name);
+      let axisFieldUsage = vismelQuery.layout[rowOrCol][0];
+      if (!PQL.isFieldUsage(axisFieldUsage)) {
+        // nothing to do! set result table to empty and return fullfilled promise
+        return Promise.resolve(_emptyResultTable())
+      }
 
-        let densityUsage = new PQL.Density(splits.fields);
+      // collect splits from aesthetics and details shelves
+      let splits = vismelQuery.fieldUsages(['layout', 'filters'], 'exclude').filter(PQL.isSplit);
+      // create new split for univariate density
+      let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
+      splits.push(densitySplit);
 
-        // build maps
-        let fu2idx = new Map();
-        let idx2fu = splits.concat(densityUsage);
-        idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
+      splits.fields = splits.map(split => split.field);
+      let densityUsage = new PQL.Density(splits.fields);
+
+      // if there is not yet already a filter on model vs data or a split on model vs data ...
+      // TODO: debug this. it should add the model vs data split, if necessary.
+      let filters = vismelQuery.fieldUsages(['filters'], 'include');
+      if(!filters.find(elem => elem.name === 'model vs data')
+        && !splits.find(split => split.name === 'model vs data')) {
+        // .. then add a split on model vs data
+        splits.push(PQL.Split.ModelVsDataSplit(model));
+      }
+
+      // build accessor maps
+      let fu2idx = new Map();
+      let idx2fu = splits.concat(densityUsage);
+      idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
       let query = {
         'type': 'predict',
-        'predict': splits.names.concat(densityUsage),
+        'predict': [...splits.map(split => split.name), densityUsage],
         'splitby': splits
       };
       return {query, fu2idx, idx2fu}
@@ -269,7 +286,16 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
 
   /**
    * Derives for each VisMEL query and each model in the given collection the corresponding PQL
-   * query, executes it and stores both in a 2d array collection. A call to this function returns a promise to the collection.
+   * query, executes it and stores both, the query and its result, in a 2d array collection. A call to this function returns a promise to the collection.
+   *
+   * Each element of the collection is a ResultTable, i.e. a row-major list of lists which stores the result of a query in tabular form. Individual entry can be accessed via [rowIdx][columnIdx].
+   *
+   * It has additional properties as follows:
+   *
+   *  * .header: a list of names for the columns of the table
+   *  * .query: the PQL query whose execution resulted in this result table
+   *  * .fu2idx, .idx2fu: see vismel2pql documentation.
+   *
    *
    * Since the collection is merely an 2d array, elements can be accessed using the standard [] notation
    * @param queryCollection
@@ -285,7 +311,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         // generate and run PQL query
-        let {query:pql, fu2idx:fu2idx, idx2fu:idx2fu} = vismel2pql.aggregation(queryCollection.at[rIdx][cIdx]);
+        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.aggregation(queryCollection.at[rIdx][cIdx]);
         let promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         fetchPromises.add(promise);
       }
@@ -307,7 +333,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        let {query:pql, fu2idx:fu2idx, idx2fu:idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
+        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
         let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         fetchPromises.add(promise);
       }
@@ -330,10 +356,10 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         // for all combinations of (model, data) and (rows, cols) // TODO
-        let {query:pql, fu2idx:fu2idx, idx2fu:idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'cols');
+        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'cols', model);
         let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'x');
         fetchPromises.add(promise);
-        ({query:pql, fu2idx:fu2idx, idx2fu:idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows'));
+        ({query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows', model));
         promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'y');
         fetchPromises.add(promise);
       }
@@ -368,6 +394,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     aggrCollection,
     samplesCollection,
     uniDensityCollection,
-    biDensityCollection
+    biDensityCollection,
+    getByFuAccessor
   };
 });

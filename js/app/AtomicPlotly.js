@@ -58,33 +58,34 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       table.fu2idx = dataTable.fu2idx;
       table.idx2fu = dataTable.idx2fu;
 
-      let byfu = new Map();
-      table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
-      table.byFu = byfu;
-
       // attach direct label accessors
-      /*dataTable.header.forEach((name, idx) => {
-        asarray[name] = asarray[idx];
-      });*/
+      table.byFu = RT.getByFuAccessor(table);
 
       return table;
     }
 
+    // TODO?
+    let trace = {
+      aggr: () => {
+        return 0
+      },
+    };
 
-    function plot(pane, aggrRT, dataRT, uniDensityRT, biDensityRT, query) {
+    function plot(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
 
       // empty pane
       Plotly.purge(pane);
 
-      // change to column major
+      // change data to column major
       // TODO: in the future we should pass it like this right away
       aggrRT = row_major_RT_to_col_major_RT(aggrRT);
       dataRT = row_major_RT_to_col_major_RT(dataRT);
-      uniDensityRT = {
-        x: row_major_RT_to_col_major_RT(uniDensityRT.x),
-        y: row_major_RT_to_col_major_RT(uniDensityRT.y)
+      p1dRT = {
+        x: row_major_RT_to_col_major_RT(p1dRT.x),
+        y: row_major_RT_to_col_major_RT(p1dRT.y)
       };
-      biDensityRT = row_major_RT_to_col_major_RT(biDensityRT);
+      p2dRT = row_major_RT_to_col_major_RT(p2dRT);
+
 
       // shortcuts
       let qlayout = query.layout;
@@ -106,7 +107,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       };
 
       let fmap_color = qaesthetics.color;
-      //let color = fmap_color ? aggrRT.byFu.at(fmap_color.fu) :
       if (fmap_color instanceof VisMEL.ColorMap){
         let color = aggrRT.byFu.get(fmap_color.fu);
         aggr_trace.color = color;
@@ -118,9 +118,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         type: 'contour',
         showlegend: false,
         // note: the indizes are by convention!
-        x: biDensityRT[0],
-        y: biDensityRT[1],
-        z: biDensityRT[2],
+        x: p2dRT[0],
+        y: p2dRT[1],
+        z: p2dRT[2],
         opacity: 0.3,
         colorscale: colorscale.density,
         reversescale: true
@@ -145,8 +145,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         name: 'data marginal on x',
         type: 'bar',
         showlegend: false,
-        x: uniDensityRT.x[0],
-        y: uniDensityRT.x[1],
+        x: p1dRT.x[0],
+        y: p1dRT.x[1],
         xaxis: 'x',
         yaxis: 'y2'
       };
@@ -155,8 +155,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         name: 'model marginal on y',
         type: 'scatter', // defaults to line chart
         showlegend: false,
-        x: uniDensityRT.y[1],
-        y: uniDensityRT.y[0],
+        x: p1dRT.y[1],
+        y: p1dRT.y[0],
         xaxis: 'x2',
         yaxis: 'y'
       };

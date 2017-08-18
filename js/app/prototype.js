@@ -97,9 +97,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             c.modelTable.model()
               .then(() => infoBox.hide())
               .then(() => RT.aggrCollection(c.queryTable, c.modelTable))
-              .then(
-                res => c.aggrRT = res
-              )
+              .then(res => c.aggrRT = res)
               .then(() => RT.samplesCollection(c.queryTable, c.model))
               .then(res => c.dataRT = res)
               .then(() => RT.uniDensityCollection(c.queryTable, c.model))

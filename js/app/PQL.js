@@ -278,6 +278,10 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
         throw new RangeError("invalid data type");
     }
 
+    static ModelVsDataSplit (model) {
+      return Split.DefaultSplit(model.fields.get("model vs data"));
+    }
+
     static toJSON (a) {
       return {
         name: a.name,
