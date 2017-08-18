@@ -70,16 +70,6 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   }
 
   /**
-   * An aggregation result table holds a table of aggregations queries and provides the method fetch to execute these queries. The results are then stored in a result table. Each cell of the result table holds its own data, and is accessed by its row and column index via the 'at' property.
-   *
-   * Outdated: The 'at' property contains no information about what FieldUsages are encoded in what index. Therefore, a
-   * {@link AggrResultTable} has an 'indexes' property, which maps a purpose (e.g. color, shape, horizontal position) to an index.
-   *
-   * @alias module:!isAggrDensity && firstAggrDensity
-   * @constructor
-   */
-
-  /**
    * A collection of translation methods that converts a given VisMEL query into a PQL query.
    *
    * All return an object with three properties: query, fu2idx, idx2fu, as follows:
@@ -277,6 +267,15 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     }
   };
 
+  /**
+   * Derives for each VisMEL query and each model in the given collection the corresponding PQL
+   * query, executes it and stores both in a 2d array collection. A call to this function returns a promise to the collection.
+   *
+   * Since the collection is merely an 2d array, elements can be accessed using the standard [] notation
+   * @param queryCollection
+   * @param modelCollection
+   * @return {Promise.<Array>}
+   */
   function aggrCollection(queryCollection, modelCollection) {
     let size = queryCollection.size;
     let collection = new Array(size.rows);
@@ -294,6 +293,12 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     return Promise.all(fetchPromises).then(() => collection);
   }
 
+  /**
+   * See aggr Collection
+   * @param queryCollection
+   * @param model
+   * @return {Promise.<Array>}
+   */
   function samplesCollection(queryCollection, model) {
     let size = queryCollection.size;
     let collection = new Array(size.rows);
@@ -310,6 +315,12 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     return Promise.all(fetchPromises).then(() => collection);
   }
 
+  /**
+   * See aggr Collection
+   * @param queryCollection
+   * @param model
+   * @return {Promise.<Array>}
+   */
   function uniDensityCollection(queryCollection, model) {
     let size = queryCollection.size;
     let collection = new Array(size.rows);
@@ -331,7 +342,10 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   }
 
   /**
-   * A BiDensityResultTable creates a 2d density queries over the FieldUsage on the X and Y axis. It does it for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accesed via the attribute .at.
+   * See aggr Collection
+   * @param queryCollection
+   * @param model
+   * @return {Promise.<Array>}
    */
   function biDensityCollection(queryCollection, model) {
     let size = queryCollection.size;
