@@ -520,7 +520,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       row[rIdx] = [];
       for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-        let r = results.at[rIdx][cIdx],
+        let r = results[rIdx][cIdx],
           q = queries.at[rIdx][cIdx];
 
         // aesthetics extents
@@ -818,8 +818,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
         this.at[rIdx][cIdx] = drawAtomicPane(
           this.queries.at[rIdx][cIdx],
-          this.aggrResults.at[rIdx][cIdx],
-          this.dataResults.at[rIdx][cIdx],
+          this.aggrResults[rIdx][cIdx],
+          this.dataResults[rIdx][cIdx],
           subPane
         );
 

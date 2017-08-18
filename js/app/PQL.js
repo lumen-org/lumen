@@ -22,6 +22,31 @@
  * @module PQL
  */
 
+/**
+ * The following is the internal PQL query structure:
+ *
+ * * A PQL query is a object that has at least a property "type", with one of the following values:
+ *   'predict', 'select', 'model', 'header', 'copy', 'drop'
+ *
+ *  Depending on the value of "type" it may have more properties, which in turn contain FieldUsages, Fields or names of fields, as appropriate:
+ *
+ * Predictions, i.e. type === 'predict':
+ *    predict
+ *    splitby
+ *    where
+ *    mode
+ *
+ * Selections, i.e. type === 'select':
+ *   select
+ *   where
+ *   mode
+ *
+ * Modelling, i.e. type === 'model':
+ *   model
+ *   where
+ *   as
+ */
+
 define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) {
   "use strict";
 

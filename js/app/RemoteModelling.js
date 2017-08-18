@@ -113,6 +113,24 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       return this;
     }
 
+
+    /**
+     * Runs the given PQL query against the model and returns a Promise to the result table.
+     * @param query A PQL query.
+     */
+    execute(query) {
+      let qtype = query.type;
+      if (!qtype)
+        throw RangeError("a PQL query must have a type, but has none.");
+      if (qtype === 'predict')
+        return this.predict(query.predict, query.where, query.splitby, query.mode);
+      if (qtype === 'model')
+        return this.model(query.model, query.where, query.as);
+      if (qtype === 'select')
+        return this.select(query.select, query.where);
+      throw Error("not yet impemented");
+    }
+
     /**
      * Syncs the local view on the model with the remote model base.
      * @returns {*|Promise.<TResult>} A promise to operation.

@@ -86,9 +86,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       };
       biDensityRT = row_major_RT_to_col_major_RT(biDensityRT);
 
+      // shortcuts
       let qlayout = query.layout;
-      // build traces for plot
+      let qaesthetics = query.layers[0].aesthetics;
 
+      // build traces for plot
       // field usages
       let xfu = qlayout.cols[0],
         yfu = qlayout.rows[0];
@@ -100,7 +102,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         showlegend: false,
         x: aggrRT.byFu.get(xfu),
         y: aggrRT.byFu.get(yfu),
+        // TODO: support color, size and shape
       };
+
+      let fmap_color = qaesthetics.color;
+      //let color = fmap_color ? aggrRT.byFu.at(fmap_color.fu) :
+      if (fmap_color instanceof VisMEL.ColorMap){
+        let color = aggrRT.byFu.get(fmap_color.fu);
+        aggr_trace.color = color;
+      }
 
       // 2d density plot trace
       let contour_trace = {

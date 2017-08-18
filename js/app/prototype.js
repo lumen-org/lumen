@@ -84,7 +84,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             console.log("updating!");
             try {
               let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
-
               c.model = c.basemodel.localCopy();
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model, mode);
               c.query.rebase(c.model);  // important! rebase on the basemodel's copy to prevent modification of basemodel
@@ -96,24 +95,22 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               infoBox.message(error);
             }
             c.modelTable.model()
-              .then(() => {
-                infoBox.hide();
-                c.aggrRT = new RT.AggrResultTable(c.modelTable, c.queryTable);
-                c.dataRT = new RT.DataResultTable(c.queryTable, c.model);
-                c.uniDensityRT = new RT.UniDensityResultTable(c.queryTable, c.model);
-                c.biDensityRT = new RT.BiDensityResultTable(c.queryTable, c.model);
-              })
-              .then(() => c.aggrRT.fetch())
-              .then(() => c.dataRT.fetch())
-              .then(() => c.uniDensityRT.fetch())
-              .then(() => c.biDensityRT.fetch())
-              .then(() => {
-                c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable);
-              })
-              /*try visualize the first atomic plot*/
+              .then(() => infoBox.hide())
+              .then(() => RT.aggrCollection(c.queryTable, c.modelTable))
+              .then(
+                res => c.aggrRT = res
+              )
+              .then(() => RT.samplesCollection(c.queryTable, c.model))
+              .then(res => c.dataRT = res)
+              .then(() => RT.uniDensityCollection(c.queryTable, c.model))
+              .then(res => c.uniDensityRT = res)
+              .then(() => RT.biDensityCollection(c.queryTable, c.model))
+              .then(res => c.biDensityRT = res)
+              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable))
+              // try visualize the first atomic plotly plot
               .then(() => {
                 AtomicPlotly.plot(document.getElementById('pl-plotly'),
-                  c.aggrRT.at[0][0], c.dataRT.at[0][0], c.uniDensityRT.at[0][0], c.biDensityRT.at[0][0], c.queryTable.at[0][0]);
+                  c.aggrRT[0][0], c.dataRT[0][0], c.uniDensityRT[0][0], c.biDensityRT[0][0], c.queryTable.at[0][0]);
               })
               .then(() => {
                 if (commit) {
