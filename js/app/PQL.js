@@ -185,7 +185,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       return new Filter(
         model.fields.get('model vs data'),
         FilterMethodT.equals,
-        domain.Discrete('model')
+        new domain.Discrete('model')
       );
     }
 
@@ -271,7 +271,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
      *   * aggregations and density: split to elements or 25 equiintervals
      *   * layout-split: split to elements or 5 equiintervals
      * @param field
-     * @param mode Optional. One of: 'aggregation', 'density', 'layout-split', 'identity'
+     * @param mode Optional. One of: 'aggregation', 'density', 'layout-split'
      * @returns {Split}
      * @constructor
      */
@@ -279,12 +279,8 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       let split_cnt = 5;
       if (mode === 'aggregation' || mode === 'density')
         split_cnt = 25;
-      if (field.dataType === FieldT.DataType.string) {
-        if (mode === 'layout-split')
-          return new Split(field, SplitMethod.elements, []);
-        else if (mode === 'identity')
-          return new Split(field, SplitMethod.identity, []);
-      }
+      if (field.dataType === FieldT.DataType.string)
+        return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
         return new Split(field, SplitMethod.equiinterval, [split_cnt]);
       else
@@ -293,8 +289,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
 
     static ModelVsDataSplit (model, method = "elements") {
       let mvd = model.fields.get("model vs data");
-
-      return Split.DefaultSplit();
+      return new Split(mvd, method, []);
     }
 
     static toJSON (a) {

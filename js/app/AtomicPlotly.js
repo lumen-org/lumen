@@ -76,20 +76,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // empty pane
       Plotly.purge(pane);
 
-      // change data to column major
-      // TODO: in the future we should pass it like this right away
-      aggrRT = row_major_RT_to_col_major_RT(aggrRT);
-      dataRT = row_major_RT_to_col_major_RT(dataRT);
-      p1dRT = {
-        x: row_major_RT_to_col_major_RT(p1dRT.x),
-        y: row_major_RT_to_col_major_RT(p1dRT.y)
-      };
-      p2dRT = row_major_RT_to_col_major_RT(p2dRT);
-
-
       // shortcuts
       let qlayout = query.layout;
       let qaesthetics = query.layers[0].aesthetics;
+
+      // array of all traces to show. to be filled
+      let traces = [];
 
       // build traces for plot
       // field usages
@@ -97,72 +89,95 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         yfu = qlayout.rows[0];
 
       // aggregation plot trace
-      let aggr_trace = {
-        name: 'aggregations',
-        type: 'scatter',
-        showlegend: false,
-        x: aggrRT.byFu.get(xfu),
-        y: aggrRT.byFu.get(yfu),
-        // TODO: support color, size and shape
-      };
+      if (aggrRT !== undefined) {
+        aggrRT = row_major_RT_to_col_major_RT(aggrRT);
+        let aggr_trace = {
+          name: 'aggregations',
+          type: 'scatter',
+          showlegend: false,
+          x: aggrRT.byFu.get(xfu),
+          y: aggrRT.byFu.get(yfu),
+          // TODO: support color, size and shape
+        };
 
-      let fmap_color = qaesthetics.color;
-      if (fmap_color instanceof VisMEL.ColorMap){
-        let color = aggrRT.byFu.get(fmap_color.fu);
-        aggr_trace.color = color;
+        let fmap_color = qaesthetics.color;
+        if (fmap_color instanceof VisMEL.ColorMap) {
+          let color = aggrRT.byFu.get(fmap_color.fu);
+          aggr_trace.color = color;
+        }
+        traces.push(aggr_trace);
       }
 
       // 2d density plot trace
-      let contour_trace = {
-        name: '2d density',
-        type: 'contour',
-        showlegend: false,
-        // note: the indexes are by convention!
-        x: p2dRT[0],
-        y: p2dRT[1],
-        z: p2dRT[2],
-        opacity: 0.3,
-        colorscale: colorscale.density,
-        reversescale: true
-      };
+      if (p2dRT !== undefined) {
+        p2dRT = row_major_RT_to_col_major_RT(p2dRT);
+        let contour_trace = {
+          name: '2d density',
+          type: 'contour',
+          showlegend: false,
+          // note: the indexes are by convention!
+          x: p2dRT[0],
+          y: p2dRT[1],
+          z: p2dRT[2],
+          opacity: 0.3,
+          colorscale: colorscale.density,
+          reversescale: true
+        };
+        traces.push(contour_trace);
+      }
 
       // samples trace
-      let sample_trace = {
-        name: 'samples',
-        type: 'scatter',
-        mode: 'markers',
-        showlegend: false,
-        marker: {
-          symbol: "circle-open"
-        },
-        x: dataRT.byFu.get(xfu),
-        y: dataRT.byFu.get(yfu),
-        opacity: 0.8
-        // TODO: support color, size and shape
-      };
-
+      if (dataRT !== undefined) {
+        dataRT = row_major_RT_to_col_major_RT(dataRT);
+        let sample_trace = {
+          name: 'samples',
+          type: 'scatter',
+          mode: 'markers',
+          showlegend: false,
+          marker: {
+            symbol: "circle-open"
+          },
+          x: dataRT.byFu.get(xfu),
+          y: dataRT.byFu.get(yfu),
+          opacity: 0.8
+          // TODO: support color, size and shape
+        };
+        traces.push(sample_trace);
+      }
       // marginal histogram / density traces
       // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
 
-      let histo_x_trace_data = {
-        name: 'data marginal on x',
-        type: 'bar',
-        showlegend: false,
-        x: p1dRT.x[0],
-        y: p1dRT.x[1],
-        xaxis: 'x',
-        yaxis: 'y2'
-      };
+      if (p1dRT !== undefined) {
+        // TODO: I believe this needs some tweaking. what can be undefined? .x? or p1dRT?
+        //CONTINUE HERE
 
-      let histo_y_trace_model = {
-        name: 'model marginal on y',
-        type: 'scatter', // defaults to line chart
-        showlegend: false,
-        x: p1dRT.y[1],
-        y: p1dRT.y[0],
-        xaxis: 'x2',
-        yaxis: 'y'
-      };
+        p1dRT = {
+          x: row_major_RT_to_col_major_RT(p1dRT.x),
+          y: row_major_RT_to_col_major_RT(p1dRT.y)
+        };
+        let histo_x_trace_data = {
+          name: 'data marginal on x',
+          type: 'bar',
+          showlegend: false,
+          x: p1dRT.x[1],
+          y: p1dRT.x[2],
+          xaxis: 'x',
+          yaxis: 'y2'
+        };
+        traces.push(histo_x_trace_data);
+
+        let histo_y_trace_model = {
+          name: 'model marginal on y',
+          type: 'scatter', // defaults to line chart
+          showlegend: false,
+          x: p1dRT.y[2],
+          y: p1dRT.y[1],
+          xaxis: 'x2',
+          yaxis: 'y'
+        };
+        traces.push(histo_y_trace_model);
+      }
+
 
       // assemble all traces
       let data = [

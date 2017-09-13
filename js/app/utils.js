@@ -125,12 +125,25 @@ define([], function() {
     return false;
   };
 
+  class ExtendableError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = this.constructor.name;
+      if (typeof Error.captureStackTrace === 'function') {
+        Error.captureStackTrace(this, this.constructor);
+      } else {
+        this.stack = (new Error(message)).stack;
+      }
+    }
+  }
+
   return {
-    selectValue: selectValue,
-    listify: listify,
-    join: join,
-    domain: domain,
-    hasProperty: hasProperty,
-    hasValue: hasValue
+    selectValue,
+    listify,
+    join,
+    domain,
+    hasProperty,
+    hasValue,
+    ExtendableError
   };
 });

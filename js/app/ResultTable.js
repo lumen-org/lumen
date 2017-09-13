@@ -4,7 +4,7 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
+define(['lib/logger', 'd3', './PQL', './utils'], function (Logger, d3, PQL, utils) {
   "use strict";
 
   var logger = Logger.get('pl-ResultTable');
@@ -76,6 +76,11 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   }
 
   /**
+   * Error Class that indicates a conversion error for vismel2pql conversions. No suitable pql query can be derived in this case.
+   */
+  class ConversionError extends utils.ExtendableError {}
+
+  /**
    * A collection of translation methods that converts a given VisMEL query into a PQL query.
    *
    * All return an object with three properties: query, fu2idx, idx2fu, as follows:
@@ -85,6 +90,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
    *   fu2idx: a Map from the FieldUsage s of the VisMEL query to their corresponding column index in the result of the query. This encodes which {@link FieldUsage} of the VisMEL query is represented by which column of the result table.
    *
    *   idx2fu: an array that maps a row index of the result of the query to the corresponding FieldUsage.
+   *
+   * If it is for some reason impossible to generate a valid query from given VisMEL query a
    */
   let vismel2pql = {
     /**
@@ -216,22 +223,24 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
      *   1. column:
      *     * idx: 0
      *     * name: 'data vs model'
-     *     * fieldUsage: A Split or a Filter on the 'data vs model' Field.
+     *     * fieldUsage: A Split on the 'data vs model' Field.
      *   2. column:
      *     * idx: 1
      *     * name: the name of the field which is on rows/cols in the VisMEL query
-     *     * fieldUsage: the fielsUsage which is on rows/cols in the VisMEL query
+     *     * fieldUsage: the FieldUsage which is on rows/cols in the VisMEL query
      *   3. column:
      *     * idx: 2
      *     * name: density[<all involved fields>])
      *     * fieldUsage: a new Density FieldUsage over all splits
-     *   4.+ the rest of the Fields that is possibly split by
+     *   4.+ the rest of the Fields that is split by
      *
      * Handling the model vs data field (mvd):
-     *
      *   case 1: mvd is entirely unused in the base VisMEL query.
-     *     -> then
-     *
+     *     -> then it defaults to a filter on 'model' and a identity split
+     *   case 2: mvd is used as a split:
+     *     -> then stays the same and use the split as the mvds field usage
+     *   case 3: mvd is used as a filter (but not as a split):
+     *     - add a elements split on mvd
      *
      * @param vismelQuery The VisMEL query to derive the PQL query from.
      * @param rowsOrCols There is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. Accordingly, this parameter may have the value 'rows' or 'cols'.
@@ -245,7 +254,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       let axisFieldUsage = vismelQuery.layout[rowsOrCols][0];
       if (!PQL.isFieldUsage(axisFieldUsage)) {
         // nothing to do! set result table to empty and return fullfilled promise
-        return Promise.resolve(_emptyResultTable())
+        //return Promise.resolve(_emptyResultTable());
+        throw ConversionError("empty " + rowsOrCols);
       }
 
       // collect splits from aesthetics and details
@@ -266,38 +276,39 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       let fields4density = [...splits, densitySplit].map(split => split.field);
       let densityUsage = new PQL.Density(fields4density);
 
-      // TODO: ich denk es ist besser, wenn wir keinen split hinzufügen, falls noch kein filter oder split da ist - das entspricht auch der Verfahrensweise bei dem original VisMEL query
-      // noch besser: default explizit machen, d.h.: default is: filter auf model only.
-
-      // if there is not yet already a filter on model vs data or a split on model vs data ...
+      // find mvd filter
       let filters = vismelQuery.fieldUsages(['filters'], 'include');
-      if(!filters.find(elem => elem.name === 'model vs data')
-        && mvd_split_idx == -1) {
+      let mvd_filter = filters.find(elem => elem.name === 'model vs data');
+
+      // if there is no filter on model vs data and no split split on model vs data ...
+      if(mvd_filter === undefined && mvd_split_idx == -1) {
         // .. then add a (new) filter on model vs data == model
         filters.push(PQL.Filter.ModelVsDataFilter(model, 'model'));
-        // .. and add a (new) equi split on model vs data
-        mvd_split = [PQL.Split.ModelVsDataSplit(model, 'identity')]  // need that identity split for consistency
-        //splits.push(PQL.Split.ModelVsDataSplit(model));
+        // .. and add a (new) identity split on model vs data (for consistency)
+        mvd_split = [PQL.Split.ModelVsDataSplit(model, 'identity')]
+      }
+      // if mvd is used as a filter, but has no split on it ...
+      if (mvd_filter !== undefined && mvd_split_idx == -1) {
+        // ... add an elements split
+        mvd_split = [PQL.Split.ModelVsDataSplit(model, 'elements')]
       }
 
       // build accessor maps
-      query_predict_ ...
-      // TODO: fix this. problem is hier scheinbar wieder: 'model vs data'. denn es hat nicht immer ein FieldUsage... nämlich nicht, falls wir den Default Fall annehmen (default: model only)
       let fu2idx = new Map();
-      let idx2fu = splits.concat(densityUsage);
+      let idx2fu = [mvd_split[0], densitySplit, densityUsage, ...splits];
       idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
       let query = {
         'type': 'predict',
         'predict': ['model vs data', densitySplit.name, densityUsage, ...splits.map(split => split.name)],
         'splitby': [...mvd_split, densitySplit, ...splits],
-        'filter': filters
+        'where': filters
       };
       return {query, fu2idx, idx2fu}
     },
 
     /**
-     * Given a VisMEL query, it constructs a PQL query for the 2d density over the fields of rows and cols.
+     * Given a VisMEL query, it constructs a PQL query for the 2d model density over the fields of rows and cols.
      * */
     biDensity: (vismelQuery) => {
       // can only get density if there is something on rows and cols
@@ -305,7 +316,8 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       let yfu = vismelQuery.layout.rows[0];
       if (!PQL.isFieldUsage(xfu) || !PQL.isFieldUsage(yfu)) {
         // nothing to do! set result table to empty and return fullfilled promise
-        return Promise.resolve(_emptyResultTable())
+        //return Promise.resolve(_emptyResultTable())
+        throw ConversionError("at least one empty axis");
       }
 
       let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
@@ -354,8 +366,14 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         // generate and run PQL query
-        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.aggregation(queryCollection.at[rIdx][cIdx]);
-        let promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        let promise;
+        try {
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.aggregation(queryCollection.at[rIdx][cIdx]);
+          promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        } catch (e) {
+          if (e instanceof ConversionError)
+            promise = Promise.resolve(undefined);
+        }
         fetchPromises.add(promise);
       }
     }
@@ -376,8 +394,14 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
-        let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        let promise;
+        try {
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
+          promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        } catch (e) {
+          if (e instanceof ConversionError)
+            promise = Promise.resolve(undefined);
+        }
         fetchPromises.add(promise);
       }
     }
@@ -387,7 +411,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   /**
    * An UniDensityResultTable creates marginal density queries for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accessed via the attribute [][].x and [][].y where .x refers to the x axis and y to the y axis.
    *
-   * [][].x exists iff the respective VisMEL query had any FieldUsage on columns. Similarly for [][].y and a required FieldUsage on Rows.
+   * [][].x is not undefined iff the respective VisMEL query had any FieldUsage on columns. Similarly for [][].y and a required FieldUsage on Rows.
    *
    * For the layout of the individual result tables see vismel2pq.uniDensity().
    *
@@ -403,12 +427,25 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        // for all combinations of (model, data) and (rows, cols) // TODO
-        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'cols', model);
-        let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'x');
+        let promise;
+        try {
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'cols', model);
+          let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'x');
+        }
+        catch (e) {
+          if (e instanceof ConversionError)
+            promise = Promise.resolve(undefined);
+        }
         fetchPromises.add(promise);
-        ({query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows', model));
-        promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'y');
+
+        try {
+          ({query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows', model));
+          promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'y');
+        }
+        catch (e) {
+          if (e instanceof ConversionError)
+            promise = Promise.resolve(undefined);
+        }
         fetchPromises.add(promise);
       }
     }
@@ -425,13 +462,20 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     let size = queryCollection.size;
     let collection = new Array(size.rows);
     collection.size = size;
-    let pql, fu2idx, idx2fu;
+    //let pql, fu2idx, idx2fu;
     let fetchPromises = new Set(); //.add(Promise.resolve());
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.biDensity(queryCollection.at[rIdx][cIdx]);
-        let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        let promise;
+        try {
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.biDensity(queryCollection.at[rIdx][cIdx]);
+          promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        }
+        catch (e) {
+          if (e instanceof ConversionError)
+            promise = Promise.resolve(undefined);
+        }
         fetchPromises.add(promise);
       }
     }
