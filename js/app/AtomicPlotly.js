@@ -117,7 +117,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         name: '2d density',
         type: 'contour',
         showlegend: false,
-        // note: the indizes are by convention!
+        // note: the indexes are by convention!
         x: p2dRT[0],
         y: p2dRT[1],
         z: p2dRT[2],
@@ -138,9 +138,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         x: dataRT.byFu.get(xfu),
         y: dataRT.byFu.get(yfu),
         opacity: 0.8
+        // TODO: support color, size and shape
       };
 
       // marginal histogram / density traces
+      // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
+
       let histo_x_trace_data = {
         name: 'data marginal on x',
         type: 'bar',

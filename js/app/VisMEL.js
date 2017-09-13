@@ -232,7 +232,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     /**
      * @param what A iterable of descriptors to exclude from the collection. Allowed values of the iterable are 'layout', 'details', 'filters', 'aesthetics'.
      * @param mode: either 'include' or 'exclude'.
-     * @returns Returns the set of {@link FieldUsage}s of this query.
+     * @returns Returns an array of {@link FieldUsage}s of this query.
      *
      */
     fieldUsages(what=[], mode='exclude') {

@@ -208,47 +208,90 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
     },
 
     /**
-     * An UniDensityResultTable creates marginal density queries for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accesed via the attribute .at[][].x and at[][].y where .x refers tothe x axis and y to the y axis.
+     *
+     * All filters of the VisMEL query are preserved.
+     *
+     * When executing the resulting query, you will get a result table with columns in a certain order, as follows:
+     *
+     *   1. column:
+     *     * idx: 0
+     *     * name: 'data vs model'
+     *     * fieldUsage: A Split or a Filter on the 'data vs model' Field.
+     *   2. column:
+     *     * idx: 1
+     *     * name: the name of the field which is on rows/cols in the VisMEL query
+     *     * fieldUsage: the fielsUsage which is on rows/cols in the VisMEL query
+     *   3. column:
+     *     * idx: 2
+     *     * name: density[<all involved fields>])
+     *     * fieldUsage: a new Density FieldUsage over all splits
+     *   4.+ the rest of the Fields that is possibly split by
+     *
+     * Handling the model vs data field (mvd):
+     *
+     *   case 1: mvd is entirely unused in the base VisMEL query.
+     *     -> then
+     *
+     *
+     * @param vismelQuery The VisMEL query to derive the PQL query from.
+     * @param rowsOrCols There is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. Accordingly, this parameter may have the value 'rows' or 'cols'.
+     * @param model The model against which the resulting query is executed later.
+     * @return {*}
      */
-    uniDensity: (vismelQuery, rowOrCol, model) => {
+    uniDensity: (vismelQuery, rowsOrCols, model) => {
+      if (rowsOrCols !== 'cols' && rowsOrCols !== 'rows')
+        throw new RangeError("rowsOrCols must be 'rows' or 'cols' but is:" + rowsOrCols.toString());
 
-      // there is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols.
-      //
-
-
-      let axisFieldUsage = vismelQuery.layout[rowOrCol][0];
+      let axisFieldUsage = vismelQuery.layout[rowsOrCols][0];
       if (!PQL.isFieldUsage(axisFieldUsage)) {
         // nothing to do! set result table to empty and return fullfilled promise
         return Promise.resolve(_emptyResultTable())
       }
 
-      // collect splits from aesthetics and details shelves
+      // collect splits from aesthetics and details
       let splits = vismelQuery.fieldUsages(['layout', 'filters'], 'exclude').filter(PQL.isSplit);
+
+      // find (index of) split on data vs model
+      let mvd_split_idx = splits.indexOf(split => split.name === 'model vs data');
+      let mvd_split = []; // this is an array on purpose, even though it as one element at maximum
+      if (mvd_split_idx !== -1) {
+        mvd_split = [splits[mvd_split_idx]];
+        splits = splits.splice(mvd_split_idx, 1); // removes mvd_split
+      }
+
       // create new split for univariate density
       let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
-      splits.push(densitySplit);
 
-      splits.fields = splits.map(split => split.field);
-      let densityUsage = new PQL.Density(splits.fields);
+      // create new univariate density field usage
+      let fields4density = [...splits, densitySplit].map(split => split.field);
+      let densityUsage = new PQL.Density(fields4density);
+
+      // TODO: ich denk es ist besser, wenn wir keinen split hinzufügen, falls noch kein filter oder split da ist - das entspricht auch der Verfahrensweise bei dem original VisMEL query
+      // noch besser: default explizit machen, d.h.: default is: filter auf model only.
 
       // if there is not yet already a filter on model vs data or a split on model vs data ...
-      // TODO: debug this. it should add the model vs data split, if necessary.
       let filters = vismelQuery.fieldUsages(['filters'], 'include');
       if(!filters.find(elem => elem.name === 'model vs data')
-        && !splits.find(split => split.name === 'model vs data')) {
-        // .. then add a split on model vs data
-        splits.push(PQL.Split.ModelVsDataSplit(model));
+        && mvd_split_idx == -1) {
+        // .. then add a (new) filter on model vs data == model
+        filters.push(PQL.Filter.ModelVsDataFilter(model, 'model'));
+        // .. and add a (new) equi split on model vs data
+        mvd_split = [PQL.Split.ModelVsDataSplit(model, 'identity')]  // need that identity split for consistency
+        //splits.push(PQL.Split.ModelVsDataSplit(model));
       }
 
       // build accessor maps
+      query_predict_ ...
+      // TODO: fix this. problem is hier scheinbar wieder: 'model vs data'. denn es hat nicht immer ein FieldUsage... nämlich nicht, falls wir den Default Fall annehmen (default: model only)
       let fu2idx = new Map();
       let idx2fu = splits.concat(densityUsage);
       idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
       let query = {
         'type': 'predict',
-        'predict': [...splits.map(split => split.name), densityUsage],
-        'splitby': splits
+        'predict': ['model vs data', densitySplit.name, densityUsage, ...splits.map(split => split.name)],
+        'splitby': [...mvd_split, densitySplit, ...splits],
+        'filter': filters
       };
       return {query, fu2idx, idx2fu}
     },
@@ -288,7 +331,7 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
    * Derives for each VisMEL query and each model in the given collection the corresponding PQL
    * query, executes it and stores both, the query and its result, in a 2d array collection. A call to this function returns a promise to the collection.
    *
-   * Each element of the collection is a ResultTable, i.e. a row-major list of lists which stores the result of a query in tabular form. Individual entry can be accessed via [rowIdx][columnIdx].
+   * Each element of the collection is a ResultTable, i.e. a row-major list of lists which stores the result of a query in tabular form. An individual entry of the can be accessed via [rowIdx][columnIdx].
    *
    * It has additional properties as follows:
    *
@@ -342,7 +385,12 @@ define(['lib/logger', 'd3', './PQL'], function (Logger, d3, PQL) {
   }
 
   /**
-   * See aggr Collection
+   * An UniDensityResultTable creates marginal density queries for each atomic query of a given queryTable, and stores their results (on request using fetch()) in a result table, that can be accessed via the attribute [][].x and [][].y where .x refers to the x axis and y to the y axis.
+   *
+   * [][].x exists iff the respective VisMEL query had any FieldUsage on columns. Similarly for [][].y and a required FieldUsage on Rows.
+   *
+   * For the layout of the individual result tables see vismel2pq.uniDensity().
+   *
    * @param queryCollection
    * @param model
    * @return {Promise.<Array>}

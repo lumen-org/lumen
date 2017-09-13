@@ -110,7 +110,6 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     elements: 'elements',
     equiinterval: 'equiinterval'
   });
-  //var isSplitMethod = (m) => m === SplitMethod.equidist || m === SplitMethod.identity;
   var isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
 
   var AggregationMethods = Object.freeze({
@@ -178,6 +177,16 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       let extent = field.extent;
       let method = extent.isSingular() ? FilterMethodT.equals : FilterMethodT.in;
       return new Filter(field, method, extent);
+    }
+
+    static ModelVsDataFilter(model, value) {
+      if(value !== 'model' && value !== 'data')
+        throw RangeError("value must be 'model' or 'data' but is " + value.toString());
+      return new Filter(
+        model.fields.get('model vs data'),
+        FilterMethodT.equals,
+        domain.Discrete('model')
+      );
     }
 
     get name() {return this.field.name;}
@@ -262,7 +271,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
      *   * aggregations and density: split to elements or 25 equiintervals
      *   * layout-split: split to elements or 5 equiintervals
      * @param field
-     * @param mode Optional. One of: 'aggregation', 'density', 'layout-split'
+     * @param mode Optional. One of: 'aggregation', 'density', 'layout-split', 'identity'
      * @returns {Split}
      * @constructor
      */
@@ -270,16 +279,22 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
       let split_cnt = 5;
       if (mode === 'aggregation' || mode === 'density')
         split_cnt = 25;
-      if (field.dataType === FieldT.DataType.string)
-        return new Split(field, SplitMethod.elements, []);
+      if (field.dataType === FieldT.DataType.string) {
+        if (mode === 'layout-split')
+          return new Split(field, SplitMethod.elements, []);
+        else if (mode === 'identity')
+          return new Split(field, SplitMethod.identity, []);
+      }
       else if (field.dataType === FieldT.DataType.num)
         return new Split(field, SplitMethod.equiinterval, [split_cnt]);
       else
         throw new RangeError("invalid data type");
     }
 
-    static ModelVsDataSplit (model) {
-      return Split.DefaultSplit(model.fields.get("model vs data"));
+    static ModelVsDataSplit (model, method = "elements") {
+      let mvd = model.fields.get("model vs data");
+
+      return Split.DefaultSplit();
     }
 
     static toJSON (a) {
