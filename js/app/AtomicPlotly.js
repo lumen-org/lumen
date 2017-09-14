@@ -68,12 +68,22 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       return data.map(e => e[col_idx]);
     }
 
-    // TODO?
-    let trace = {
-      aggr: () => {
-        return 0
-      },
-    };
+    /**
+     * Utility Function. Depth-first traversal of a (full) tree where internal nodes are maps, and leaves are anything.
+     * @param tree The tree to traverse
+     * @param fct Function to apply on all leaves. The leave is passed to the function.
+     * @param max_depth Depth of all leaves.
+     * @param depth Current depth. Start with 0.
+     * @param msg debug.
+     */
+    function dfs (tree, fct, max_depth, depth=0, msg="") {
+      if (depth >= max_depth)
+      // apply function on leave level (tree is a leave now!)
+        fct(tree);
+      else
+      // recurse down, i.e. tree is a map
+        tree.each( (value, key) => dfs(value, fct, max_depth, depth+1, msg+"+"));
+    }
 
     function plot(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
 
@@ -88,48 +98,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       let traces = [];
 
       // build traces for plot
-      // field usages
       let xfu = qlayout.cols[0],
         yfu = qlayout.rows[0];
 
-      // aggregation plot trace
-      // if (aggrRT !== undefined) {
-      //   aggrRT = row_major_RT_to_col_major_RT(aggrRT);
-      //   let aggr_trace = {
-      //     name: 'aggregations',
-      //     type: 'scatter',
-      //     showlegend: false,
-      //     x: aggrRT.byFu.get(xfu),
-      //     y: aggrRT.byFu.get(yfu),
-      //     // TODO: support color, size and shape
-      //   };
-      //
-      //   let fmap_color = qaesthetics.color;
-      //   if (fmap_color instanceof VisMEL.ColorMap) {
-      //     let color = aggrRT.byFu.get(fmap_color.fu);
-      //     aggr_trace.color = color;
-      //   }
-      //   traces.push(aggr_trace);
-      // }
-
-      /**
-       * Depth-first traversal of a (full) tree where internal nodes are maps, and leaves are anything.
-       * @param tree The tree to traverse
-       * @param fct Function to apply on all leaves. The leave is passed to the function.
-       * @param max_depth Depth of all leaves.
-       * @param depth Current depth. Start with 0.
-       * @param msg debug.
-       */
-      function dfs (tree, fct, max_depth, depth=0, msg="") {
-        if (depth >= max_depth)
-          // apply function on leave level (tree is a leave now!)
-          fct(tree);
-        else
-          // recurse down, i.e. tree is a map
-          tree.each( (value, key) => dfs(value, fct, max_depth, depth+1, msg+"+"));
-      }
-
-      // aggregation plot traces, grouped by splits
+      // ### aggregation plot traces, grouped by splits
       if (aggrRT !== undefined) {
         let xIdx = aggrRT.fu2idx.get(xfu),
           yIdx = aggrRT.fu2idx.get(yfu);
@@ -168,8 +140,44 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         // }
       }
 
+      // ### marginal histogram / density traces
+      // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
+      function getUniTrace(data, xOrY, modelOrData) {
+        let xIdx = (xOrY === 'x'? 1 : 2),
+          yIdx = (xOrY === 'x'? 2 : 1),
+          xAxis = (xOrY === 'x'? 'x' : 'x2'),
+          yAxis = (xOrY === 'x'? 'y2' : 'y');
 
-      // 2d density plot trace
+        let trace = {
+          name: modelOrData + ' marginal on ' + xOrY,
+          //type: modelOrData === 'model' ? 'scatter' : 'bar',
+          type: 'scatter',
+          showlegend: false,
+          x: select_column(data, xIdx),
+          y: select_column(data, yIdx),
+          xaxis: xAxis,
+          yaxis: yAxis
+        };
+        if (modelOrData === 'data') {
+          trace.line = {shape: 'vh'};
+        }
+        return trace;
+      }
+
+      let nestByMvd = d3c.nest().key(v => v[0]);
+      for (let xOrY of ['x', 'y']) {
+        if (p1dRT[xOrY] !== undefined) {
+          let rt = nestByMvd.map(p1dRT[xOrY]);
+          let rt_data = rt.get('data');
+          if (rt_data !== undefined)
+            traces.push(getUniTrace(rt_data, xOrY, "data"));
+          let rt_model = rt.get('model');
+          if (rt_model !== undefined)
+            traces.push(getUniTrace(rt_model, xOrY, "model"));
+        }
+      }
+
+      // ### 2d density plot trace
       if (p2dRT !== undefined) {
         p2dRT = row_major_RT_to_col_major_RT(p2dRT);
         let contour_trace = {
@@ -187,7 +195,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         traces.push(contour_trace);
       }
 
-      // samples trace
+      // ### samples trace
       if (dataRT !== undefined) {
         dataRT = row_major_RT_to_col_major_RT(dataRT);
         let sample_trace = {
@@ -204,81 +212,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           // TODO: support color, size and shape
         };
         traces.push(sample_trace);
-      }
-
-      // marginal histogram / density traces
-      // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
-      let nestByMvd = d3c.nest().key(v => v[0]);
-
-      if (p1dRT.x !== undefined) {
-        // group by model vs data
-        let rt = nestByMvd.map(p1dRT.x);
-
-        // x axis marginal data histogram
-        let rt_data =  rt.get('data');
-        if (rt_data !== undefined) {
-          let histo_x_trace_data = {
-            name: 'data marginal on x',
-            type: 'bar',
-            showlegend: false,
-            x: select_column(rt_data, 1),
-            y: select_column(rt_data, 2),
-            xaxis: 'x',
-            yaxis: 'y2'
-          };
-          traces.push(histo_x_trace_data);
-        }
-
-        // x axis marginal model density plot
-        let rt_model =  rt.get('model');
-        if (rt_model !== undefined) {
-          let histo_x_trace_model = {
-            name: 'model marginal on x',
-            type: 'scatter',
-            showlegend: false,
-            x: select_column(rt_model, 1),
-            y: select_column(rt_model, 2),
-            xaxis: 'x',
-            yaxis: 'y2'
-          };
-          traces.push(histo_x_trace_model);
-        }
-      }
-
-      if (p1dRT.y !== undefined) {
-        // group by model vs data
-        let rt = nestByMvd.map(p1dRT.y);
-
-        // y axis marginal data histogram
-        let rt_data =  rt.get('data');
-        if (rt_data !== undefined) {
-          let histo_y_trace_data = {
-            name: 'data marginal on y',
-            type: 'bar',
-            showlegend: false,
-            x: select_column(rt_data, 2),
-            y: select_column(rt_data, 1),
-            xaxis: 'x2',
-            yaxis: 'y',
-            orientation: 'h'
-          };
-          traces.push(histo_y_trace_data);
-        }
-
-        // y axis marginal model density plot
-        let rt_model =  rt.get('model');
-        if (rt_model !== undefined) {
-          let histo_y_trace_model = {
-            name: 'model marginal on y',
-            type: 'scatter',
-            showlegend: false,
-            x: select_column(rt_model, 2),
-            y: select_column(rt_model, 1),
-            xaxis: 'x2',
-            yaxis: 'y'
-          };
-          traces.push(histo_y_trace_model);
-        }
       }
 
       let c = config;
