@@ -172,6 +172,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         return trace;
       }
 
+      /**
+       * Splits given data into subgroups by all splits of the vismel query (but not model vs data splits). For each subgroup an appropriate trace is generated. The array of all traces is returned.
+       * @param data The data to split further.
+       * @param fu2idx A map of FieldUsages to column indices in the data.
+       * @param xOrY 'x' ('y') if the trace is for x (y) axis.
+       * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
+       * @return {Array} or traces.
+       */
       function getSplittedUniTraces(data, fu2idx, xOrY, modelOrData) {
         // split into more traces by all remaining splits (but not model vs data splits)
         let splits = query.fieldUsages('layout', 'exclude').filter(PQL.isSplit)
