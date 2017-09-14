@@ -142,6 +142,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
 
       // ### marginal histogram / density traces
       // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
+
+      /**
+       * Returns a trace for marginal histogram/density of x or y axis.
+       * @param data Data for trace.
+       * @param xOrY 'x' ('y') if the trace is for x (y) axis.
+       * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
+       * @return A trace.
+       */
       function getUniTrace(data, xOrY, modelOrData) {
         let xIdx = (xOrY === 'x'? 1 : 2),
           yIdx = (xOrY === 'x'? 2 : 1),
@@ -164,18 +172,34 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         return trace;
       }
 
+      function getSplittedUniTraces(data, fu2idx, xOrY, modelOrData) {
+        // split into more traces by all remaining splits (but not model vs data splits)
+        let splits = query.fieldUsages('layout', 'exclude').filter(PQL.isSplit)
+          .filter(split => split.name !== 'model vs data');
+        let split_idxs = splits.map(split => fu2idx.get(split));
+
+        // build nesting function
+        let nester = d3c.nest();
+        for (let idx of split_idxs)
+          nester.key(e => e[idx]);
+
+        // nest it!
+        let nestedData = nester.map(data);
+
+        let traces = [];
+        dfs(nestedData, leaveData => traces.push(getUniTrace(leaveData, xOrY, modelOrData)), splits.length);
+        return traces;
+      }
+
       let nestByMvd = d3c.nest().key(v => v[0]);
-      for (let xOrY of ['x', 'y']) {
+      for (let xOrY of ['x', 'y'])
         if (p1dRT[xOrY] !== undefined) {
           let rt = nestByMvd.map(p1dRT[xOrY]);
-          let rt_data = rt.get('data');
-          if (rt_data !== undefined)
-            traces.push(getUniTrace(rt_data, xOrY, "data"));
-          let rt_model = rt.get('model');
-          if (rt_model !== undefined)
-            traces.push(getUniTrace(rt_model, xOrY, "model"));
+          for (let modelOrData of ['model', 'data']) {
+            if (rt.get(modelOrData) !== undefined)
+              traces.push(...getSplittedUniTraces(rt.get(modelOrData), p1dRT[xOrY].fu2idx, xOrY, modelOrData));
+          }
         }
-      }
 
       // ### 2d density plot trace
       if (p2dRT !== undefined) {
