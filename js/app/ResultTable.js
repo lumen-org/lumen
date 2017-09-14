@@ -262,12 +262,10 @@ define(['lib/logger', 'd3', './PQL', './utils'], function (Logger, d3, PQL, util
       let splits = vismelQuery.fieldUsages(['layout', 'filters'], 'exclude').filter(PQL.isSplit);
 
       // find (index of) split on data vs model
-      let mvd_split_idx = splits.indexOf(split => split.name === 'model vs data');
+      let mvd_split_idx = splits.findIndex(split => split.name === 'model vs data');
       let mvd_split = []; // this is an array on purpose, even though it as one element at maximum
-      if (mvd_split_idx !== -1) {
-        mvd_split = [splits[mvd_split_idx]];
-        splits = splits.splice(mvd_split_idx, 1); // removes mvd_split
-      }
+      if (mvd_split_idx !== -1)
+        mvd_split = splits.splice(mvd_split_idx, 1); // removes mvd_split and returns it
 
       // create new split for univariate density
       let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
@@ -439,7 +437,7 @@ define(['lib/logger', 'd3', './PQL', './utils'], function (Logger, d3, PQL, util
         fetchPromises.add(promise);
 
         try {
-          ({query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows', model));
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows', model);
           promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'y');
         }
         catch (e) {

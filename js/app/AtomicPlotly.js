@@ -146,15 +146,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
       // marginal histogram / density traces
       // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
-
-      if (p1dRT !== undefined) {
-        // TODO: I believe this needs some tweaking. what can be undefined? .x? or p1dRT?
-        //CONTINUE HERE
-
-        p1dRT = {
-          x: row_major_RT_to_col_major_RT(p1dRT.x),
-          y: row_major_RT_to_col_major_RT(p1dRT.y)
-        };
+      if (p1dRT.x !== undefined) {
+        p1dRT.x = row_major_RT_to_col_major_RT(p1dRT.x);
         let histo_x_trace_data = {
           name: 'data marginal on x',
           type: 'bar',
@@ -165,7 +158,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           yaxis: 'y2'
         };
         traces.push(histo_x_trace_data);
+      }
 
+      if (p1dRT.y !== undefined) {
+        p1dRT.y = row_major_RT_to_col_major_RT(p1dRT.y);
         let histo_y_trace_model = {
           name: 'model marginal on y',
           type: 'scatter', // defaults to line chart
@@ -177,16 +173,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         };
         traces.push(histo_y_trace_model);
       }
-
-
-      // assemble all traces
-      let data = [
-        aggr_trace,
-        sample_trace,
-        contour_trace,
-        histo_x_trace_data,
-        histo_y_trace_model
-      ];
 
       let c = config;
 
@@ -210,7 +196,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         width: c.pane.width
       };
 
-      Plotly.plot(pane, data, layout);
+      Plotly.plot(pane, traces, layout);
     }
 
     return {
