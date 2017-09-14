@@ -106,9 +106,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         let xIdx = aggrRT.fu2idx.get(xfu),
           yIdx = aggrRT.fu2idx.get(yfu);
 
-        // split into more traces by all remaining splits
+        // split into more traces by all remaining splits on discrete field
         // i.e.: possibly details, color, shape, size
-        let splits = query.fieldUsages('layout', 'exclude').filter(PQL.isSplit);
+        let splits = query.fieldUsages('layout', 'exclude')
+          .filter(PQL.isSplit)
+          .filter(split => split.field.isDiscrete());
         let split_idxs = splits.map(split => aggrRT.fu2idx.get(split));
 
         // build nesting function
@@ -182,8 +184,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
        */
       function getSplittedUniTraces(data, fu2idx, xOrY, modelOrData) {
         // split into more traces by all remaining splits (but not model vs data splits)
-        let splits = query.fieldUsages('layout', 'exclude').filter(PQL.isSplit)
-          .filter(split => split.name !== 'model vs data');
+        let splits = query.fieldUsages('layout', 'exclude')
+          .filter(PQL.isSplit)
+          .filter(split => split.name !== 'model vs data')
+          .filter(split => split.field.isDiscrete());
         let split_idxs = splits.map(split => fu2idx.get(split));
 
         // build nesting function
