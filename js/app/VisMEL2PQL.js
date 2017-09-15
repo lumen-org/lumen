@@ -265,7 +265,8 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     aggregation,
     samples,
     biDensity,
-    uniDensity
+    uniDensity,
+    ConversionError
   };
 
 });

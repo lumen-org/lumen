@@ -591,21 +591,26 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     let aesthetics = query.layers[0].aesthetics;
 
-    if (aesthetics.color instanceof VisMEL.ColorMap && aesthetics.color.visScale === undefined)
+    // if (aesthetics.color instanceof VisMEL.ColorMap && aesthetics.color.visScale === undefined)
+    if (aesthetics.color instanceof VisMEL.ColorMap)
         aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.fu.extent);
 
-    if (aesthetics.size instanceof VisMEL.SizeMap && aesthetics.size.visScale === undefined)
+    // if (aesthetics.size instanceof VisMEL.SizeMap && aesthetics.size.visScale === undefined)
+    if (aesthetics.size instanceof VisMEL.SizeMap)
         aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
 
-    if (aesthetics.shape instanceof VisMEL.ShapeMap && aesthetics.shape.visScale === undefined)
+    // if (aesthetics.shape instanceof VisMEL.ShapeMap && aesthetics.shape.visScale === undefined)
+    if (aesthetics.shape instanceof VisMEL.ShapeMap)
         aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
 
     let row = query.layout.rows[0];
-    if (PQL.isFieldUsage(row) && row.visScale === undefined)
+    // if (PQL.isFieldUsage(row) && row.visScale === undefined)
+    if (PQL.isFieldUsage(row))
       row.visScale = ScaleGen.position(row, row.extent, [paneSize.height - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
 
     let col = query.layout.cols[0];
-    if (PQL.isFieldUsage(col) && col.visScale === undefined)
+    // if (PQL.isFieldUsage(col) && col.visScale === undefined)
+    if (PQL.isFieldUsage(col))
       col.visScale = ScaleGen.position(col, col.extent, [Settings.geometry.axis.padding, paneSize.width - Settings.geometry.axis.padding]);
 
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query

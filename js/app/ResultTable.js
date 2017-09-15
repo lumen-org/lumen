@@ -102,7 +102,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
           let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.aggregation(queryCollection.at[rIdx][cIdx]);
           promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         } catch (e) {
-          if (e instanceof ConversionError)
+          if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
         }
         fetchPromises.add(promise);
@@ -130,7 +130,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
           let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
           promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         } catch (e) {
-          if (e instanceof ConversionError)
+          if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
         }
         fetchPromises.add(promise);
@@ -164,7 +164,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
           let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'x');
         }
         catch (e) {
-          if (e instanceof ConversionError)
+          if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
         }
         fetchPromises.add(promise);
@@ -174,7 +174,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
           promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'y');
         }
         catch (e) {
-          if (e instanceof ConversionError)
+          if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
         }
         fetchPromises.add(promise);
@@ -204,7 +204,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
           promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         }
         catch (e) {
-          if (e instanceof ConversionError)
+          if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
         }
         fetchPromises.add(promise);
