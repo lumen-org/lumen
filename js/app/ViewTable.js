@@ -465,8 +465,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * The point is that for visualization the extents over _all_ result tables are required, as we need uniform
    * extents over all atomic panes for a visually uniform visualization.
    *
-   * Therefore
-   *
    * Note that extents may take different forms:
    *  - single value (discrete FU)
    *  - interval (continuous FU), or
@@ -579,10 +577,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   }
 
   /**
-   * Attaches scales to each {@link FieldUsage} in the given query that needs a scale.
+   * Attaches scales to each {@link FieldUsage} in the given query that needs a scale to the property .visScale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
    *
-   * Before scales can be set, extents needs to be set for each FieldUsage.
+   * If a FieldUsage has already a scale assigned (i.e. .scale != undefined), then _no_ new scale is assigned but the existing one is kept.
+   *
+   * Before scales can be set, extents needs to be set for each FieldUsage. See attachExtents().
    *
    * @param query {VisMEL} A VisMEL query.
    * @param paneSize {{width, height}} Width and heights of the target pane in px.
@@ -591,29 +591,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     let aesthetics = query.layers[0].aesthetics;
 
-    if (aesthetics.color instanceof VisMEL.ColorMap)
-      aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.fu.extent);
+    if (aesthetics.color instanceof VisMEL.ColorMap && aesthetics.color.visScale === undefined)
+        aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.fu.extent);
 
-    if (aesthetics.size instanceof VisMEL.SizeMap)
-      aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
+    if (aesthetics.size instanceof VisMEL.SizeMap && aesthetics.size.visScale === undefined)
+        aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
 
-    if (aesthetics.shape instanceof VisMEL.ShapeMap)
-      aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
-
-    // let row = query.layout.rows[0];
-    // if (PQL.isFieldUsage(row))
-    //   row.visScale = ScaleGen.position(row, row.extent, [Settings.geometry.axis.padding, paneSize.height - Settings.geometry.axis.padding]);
-    //
-    // let col = query.layout.cols[0];
-    // if (PQL.isFieldUsage(col))
-    //   col.visScale = ScaleGen.position(col, col.extent, [paneSize.width - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
+    if (aesthetics.shape instanceof VisMEL.ShapeMap && aesthetics.shape.visScale === undefined)
+        aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
 
     let row = query.layout.rows[0];
-    if (PQL.isFieldUsage(row))
+    if (PQL.isFieldUsage(row) && row.visScale === undefined)
       row.visScale = ScaleGen.position(row, row.extent, [paneSize.height - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
 
     let col = query.layout.cols[0];
-    if (PQL.isFieldUsage(col))
+    if (PQL.isFieldUsage(col) && col.visScale === undefined)
       col.visScale = ScaleGen.position(col, col.extent, [Settings.geometry.axis.padding, paneSize.width - Settings.geometry.axis.padding]);
 
     // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
@@ -625,9 +617,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path,
      * color, size and others. Mappers are used in D3 to bind data to visuals.
      *
-     * Before mappers can be set up, the scales need to be set up.
+     * Before mappers can be set up, the scales need to be set up. See attachScales().
      *
-     * TODO: change implementation such that each value of the passed in map 'what' contains all necessary data to set up the mapping for that value
+     * @param what {Map} a map of identifier to BaseMap s.
+     * @param data {Array} the ResultTable to be mapped by the mapper.
+     * @param paneSize {Object} {width, height} Size of pane to draw in, measuered in pixel.
      */
     function getMapper (what, data, paneSize) {
       // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
@@ -794,6 +788,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     attachExtents(queries, this.aggrResults);
     attachExtents(queries, this.dataResults);
     normalizeExtents(queries);
+
+    //
+    //attachScales()
 
     // create scales
     // todo: move scales outside of atomic panes, like extents
