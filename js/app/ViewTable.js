@@ -200,7 +200,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
 
     // setup mapper for visual variables. draw later.
-    let aggrMapper = getMapper(uses, aggr, 'index', pane.size);
+    let aggrMapper = getMapper(uses, aggr, pane.size);
 
     // remove any density usage since that doesn't exist for data-selects
     uses.forEach(
@@ -215,12 +215,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // data marks have no fill but the fill color as stroke color instead
     // remap fill color to stroke color
     let fill = uses.get('fill');
-    if (fill !== undefined) {
+    if (fill !== undefined)
       uses.set('stroke', fill);
-    }
     uses.set('fill', {value: 'none'}); // overwrite fill
 
-    let dataMapper = getMapper(uses, data, 'dataIndex', pane.size);
+    let dataMapper = getMapper(uses, data, pane.size);
 
     // now draw, and let draw aggregation marks after data marks
     pane.dataMarksD3 = pane.paneD3.append("g").classed("pl-data-marks", true);
@@ -438,7 +437,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     else throw new RangeError("invalid value of axis:", axis);
   }
 
-  function initExtents(queries) {
+  function initEmptyExtents(queries) {
     let query = queries.base;
     let qa = query.layers[0].aesthetics;
     if (qa.color instanceof VisMEL.ColorMap)
@@ -630,7 +629,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      *
      * TODO: change implementation such that each value of the passed in map 'what' contains all necessary data to set up the mapping for that value
      */
-    function getMapper (what, data, indexAttr, paneSize) {
+    function getMapper (what, data, paneSize) {
       // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
       function _valueOrAvg(val) {
         return _.isArray(val) ? val[0] + val[1] / 2 : val;
@@ -791,13 +790,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     };
 
     // extents
-    initExtents(queries);
+    initEmptyExtents(queries);
     attachExtents(queries, this.aggrResults);
     attachExtents(queries, this.dataResults);
     normalizeExtents(queries);
-
-    // extents new
-
 
     // create scales
     // todo: move scales outside of atomic panes, like extents

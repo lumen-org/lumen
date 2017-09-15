@@ -20,9 +20,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
   /**
    * Error Class that indicates a conversion error for vismel2pql conversions. No suitable pql query can be derived in this case.
    */
-  class ConversionError extends utils.ExtendableError {
-  }
-
+  class ConversionError extends utils.ExtendableError {}
 
   /**
    * Translates a VisMEL query into a PQL query of the aggregations requested in the VisMEL query.
