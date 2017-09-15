@@ -150,7 +150,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
        * @param data Data for trace.
        * @param xOrY 'x' ('y') if the trace is for x (y) axis.
        * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
-       * @return A trace.
+       * @return Object: A trace.
        */
       function getUniTrace(data, xOrY, modelOrData) {
         let xIdx = (xOrY === 'x'? 1 : 2),
@@ -186,8 +186,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         // split into more traces by all remaining splits (but not model vs data splits)
         let splits = query.fieldUsages('layout', 'exclude')
           .filter(PQL.isSplit)
-          .filter(split => split.name !== 'model vs data')
-          .filter(split => split.field.isDiscrete());
+          .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
         let split_idxs = splits.map(split => fu2idx.get(split));
 
         // build nesting function

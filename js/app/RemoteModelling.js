@@ -1,6 +1,6 @@
 /**
- * "Remote Model" module. It allows to execute PQL queries against a remote model base and receive the response in terms
- * of a Promise.
+ * "Remote Model" module. It allows to execute PQL queries against a remote model base and provides the response in terms
+ * of a Promise to a result table.
  *
  * The interface expects JSON
  *

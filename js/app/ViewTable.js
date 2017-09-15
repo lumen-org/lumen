@@ -741,7 +741,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
   /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.
-   * This visualization is attach to the DOM, as it is created within the limits of a given <svg> element.
+   * This visualization is attached to the DOM, as it is created within the limits of a given <svg> element.
    *
    * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
    *
