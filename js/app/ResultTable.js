@@ -10,19 +10,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
   var logger = Logger.get('pl-ResultTable');
   logger.setLevel(Logger.DEBUG);
 
-  //
-  // /**
-  //  * Returns an empty result table.
-  //  * @private
-  //  */
-  // function _emptyResultTable() {
-  //   let res = [];
-  //   res.header = [];
-  //   res.idx2fu = [];
-  //   res.fu2idx = new Map();
-  //   return res;
-  // }
-  //
+
   /**
    * Returns a direct accessor of FieldUsages to corresponding table columns.
    * WARNING: only works if the table is column-major!!
@@ -42,25 +30,30 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
    * Note that a result table is expected, which has the .idx2fu property.
    */
-  function _attachExtent(table) {
-    if (table.length === 0 || table[0].length === 0)
-      table.extent = [];
+  function _attachExtent(resulttable) {
+    if (resulttable.length === 0 || resulttable[0].length === 0)
+      resulttable.extent = [];
     else {
-      let cols = table[0].length;
+      let cols = resulttable[0].length;
       let extent = new Array(cols);
       for (let i = 0; i < cols; ++i) {
-        if (table.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
-          extent[i] = d3.extent(table, row => row[i]); // jshint ignore:line
-        else if (table.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
-          extent[i] = _.unique(_.map(table, row => row[i]));
+        if (resulttable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
+          extent[i] = d3.extent(resulttable, row => row[i]); // jshint ignore:line
+        else if (resulttable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
+          extent[i] = _.unique(_.map(resulttable, row => row[i]));
         else
           throw new RangeError("invalid data type.");
       }
-      table.extent = extent;
+      resulttable.extent = extent;
     }
-    return table;
+    return resulttable;
   }
 
+
+  /**
+   * Utility function for multiple reuse in collection creation below.
+   * @private
+   */
   function _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, prop = undefined) {
     return model.execute(pql).then(table => {
       table.idx2fu = idx2fu;
@@ -75,7 +68,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         collection[rIdx][cIdx] = table;
     });
   }
-
 
 
   /**

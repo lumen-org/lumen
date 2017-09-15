@@ -179,7 +179,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // create map of label to "<setting-of-how-map>"
     // convention: it has an attribute .base iff it is based on some BaseMap/FieldUsage
-    // conventions: it has an attribute .value iff it is a constant value to map to
+    // convention: it has an attribute .value iff it is a constant value to map to
     let uses = new Map();
     let qa = query.layers[0].aesthetics;
     if (qa.color instanceof VisMEL.ColorMap) {
@@ -466,6 +466,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * The point is that for visualization the extents over _all_ result tables are required, as we need uniform
    * extents over all atomic panes for a visually uniform visualization.
    *
+   * Therefore
+   *
    * Note that extents may take different forms:
    *  - single value (discrete FU)
    *  - interval (continuous FU), or
@@ -475,23 +477,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    *
    * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
    *
-   * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are
-   * generated on a atomic query level and hence its hard to infer the extent of them from the result table... Ah, it's
-   * just messy.
+   * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... Ah, it's just messy... :-(
    *
-   * Note: you cannot use the .extent or .domain of any field of any field usage that query and queries consists of
-   * The reason is that these are not updated as a result of query answering. That is because the queries all refer
-   * to Fields of some model instance. And that model instance is never actually changed. Instead new models are
-   * created on both the remote and local side.
+   * Note: you cannot use the .extent or .domain of any field of any field usage that query and queries consists of The reason is that these are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
    *
    * @param query
    * @param queries
    * @param results
-   * @param idxAttr string name of the attribute of a FieldUsage that stores the index of the column in the result tables that
-   *  contain the result for that FieldUsage.
    */
-  var attachExtents = function (queries, results, idxAttr) {
-
+  var attachExtents = function (queries, results) {
     /**
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
      * Note: it gracefully forgives undefined arguments in extent and newData
@@ -504,6 +498,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     }
 
     // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
+    // retrieve FieldUsages of aestetics for later reuse
     let aes = new Map();
     let qa = queries.base.layers[0].aesthetics;
     if (qa.color instanceof VisMEL.ColorMap)
@@ -520,21 +515,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
       row[rIdx] = [];
       for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-        let r = results[rIdx][cIdx],
+        let rt = results[rIdx][cIdx],
           q = queries.at[rIdx][cIdx];
 
         // aesthetics extents
         for(let fu of aes.values())
-          fu.extent = _extentUnion(fu.extent, r.extent[fu[idxAttr]], PQL.hasDiscreteYield(fu));
+          fu.extent = _extentUnion(fu.extent, rt.extent[rt.fu2idx.get(fu)], PQL.hasDiscreteYield(fu));
 
         // row and column extents
         // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. that's why this works.
         let lr = q.layout.rows[0];
         if (PQL.isFieldUsage(lr))
-          lr.extent = _extentUnion(lr.extent, r.extent[lr[idxAttr]], PQL.hasDiscreteYield(lr));
+          lr.extent = _extentUnion(lr.extent, rt.extent[rt.fu2idx.get(lr)], PQL.hasDiscreteYield(lr));
         let lc = q.layout.cols[0];
         if (PQL.isFieldUsage(lc))
-          lc.extent = _extentUnion(lc.extent, r.extent[lc[idxAttr]], PQL.hasDiscreteYield(lc));
+          lc.extent = _extentUnion(lc.extent, rt.extent[rt.fu2idx.get(lc)], PQL.hasDiscreteYield(lc));
       }
     }
   };
@@ -637,17 +632,19 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      */
     function getMapper (what, data, indexAttr, paneSize) {
       // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
-      function _valueOrAvg(data) {
-        return _.isArray(data) ? data[0] + data[1] / 2 : data;
+      function _valueOrAvg(val) {
+        return _.isArray(val) ? val[0] + val[1] / 2 : val;
       }
 
+      let fu2idx = data.fu2idx;
       let mapper = {};
 
       function mapFill(fill) {
         if (fill === undefined) {
           return Settings.maps.fill;
         } else if (fill.hasOwnProperty('base')) {
-          return d => fill.base.visScale(_valueOrAvg(d[fill.base.fu[indexAttr]]));
+          let idx = fu2idx.get(fill.base.fu);
+          return d => fill.base.visScale(_valueOrAvg(d[idx]));
         } else if (fill.hasOwnProperty('value')) {
           return fill.value;
         } else {
@@ -660,7 +657,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         if (stroke === undefined) {
           return Settings.maps.stroke;
         } else if (stroke.hasOwnProperty('base')) {
-          return d => stroke.base.visScale(_valueOrAvg(d[stroke.base.fu[indexAttr]]));
+          let idx = fu2idx.get(stroke.base.fu);
+          return d => stroke.base.visScale(_valueOrAvg(d[idx]));
         } else if (stroke.hasOwnProperty('value')) {
           return stroke.value;
         } else {
@@ -676,7 +674,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         if (size === undefined) {
           return Settings.maps.size;
         } else if (size.hasOwnProperty('base')) {
-          return d => size.base.visScale(_valueOrAvg(d[size.base.fu[indexAttr]]));
+          let idx = fu2idx.get(size.base.fu);
+          return d => size.base.visScale(_valueOrAvg(d[idx]));
         } else if (size.hasOwnProperty('value')) {
           return size.value;
         } else {
@@ -689,7 +688,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         if (shape === undefined) {
           return Settings.maps.shape;
         } else if (shape.hasOwnProperty('base')) {
-          return d => shape.base.visScale(_valueOrAvg(d[shape.base.fu[indexAttr]]));
+          let idx = fu2idx.get(shape.base.fu);
+          return d => shape.base.visScale(_valueOrAvg(d[idx]));
         } else if (shape.hasOwnProperty('value')) {
           return shape.value;
         } else {
@@ -711,24 +711,28 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       if (row !== undefined) row = row.base;
 
       if (col !== undefined && row !== undefined) {
+        let colIdx = fu2idx.get(col),
+          rowIdx = fu2idx.get(row);
         mapper.transform = function (d) {
           return 'translate(' +
-            col.visScale(d[col[indexAttr]]) + ',' +
-            row.visScale(d[row[indexAttr]]) + ')';
+            col.visScale(d[colIdx]) + ',' +
+            row.visScale(d[rowIdx]) + ')';
         };
       }
       else if (col !== undefined && row === undefined) {
+        let colIdx = fu2idx.get(col);
         mapper.transform = function (d) {
           return 'translate(' +
-            col.visScale(d[col[indexAttr]]) + ',' +
+            col.visScale(d[colIdx]) + ',' +
             yPos + ')';
         };
       }
       else if (col === undefined && row !== undefined) {
+        let rowIdx = fu2idx.get(row);
         mapper.transform = function (d) {
           return 'translate(' +
             xPos + ',' +
-            row.visScale(d[row[indexAttr]]) + ')';
+            row.visScale(d[rowIdx]) + ')';
         };
       }
       else {
@@ -786,13 +790,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       width: this.canvas.size.width / this.size.cols
     };
 
-    initExtents(queries);
-
     // extents
-    attachExtents(queries, this.aggrResults, 'index');
-    attachExtents(queries, this.dataResults, 'dataIndex');
-
+    initExtents(queries);
+    attachExtents(queries, this.aggrResults);
+    attachExtents(queries, this.dataResults);
     normalizeExtents(queries);
+
+    // extents new
+
 
     // create scales
     // todo: move scales outside of atomic panes, like extents

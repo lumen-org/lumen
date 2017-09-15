@@ -118,17 +118,11 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
       else
         throw RangeError('Unknown object in field usages: ' + fu.toString());
 
-      // DEBUG: assert that it doesn't have a dataIndex yet
-      //if ('dataIndex' in fu)
-      //  throw RangeError("it shouldnt have an index yet. its value is: " + fu.dataIndex.toString());
-
       if (select.has(name)) {
         // don't add again but reuse the stored index
         let prev_idx = select.get(name);
-        fu.dataIndex = prev_idx;
         fu2idx.set(fu, prev_idx);
       } else {
-        fu.dataIndex = idx;
         fu2idx.set(fu, idx);
         select.set(name, idx);
         idx2fu.push(fu);

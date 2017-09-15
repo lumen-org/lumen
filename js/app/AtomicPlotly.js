@@ -34,18 +34,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       }
     };
 
-    // function default_layout () {
-    //   return {
-    //     showlegend: false
-    //   }
-    // }
-    //
-    // function default_trace () {
-    //   return {
-    //     showlegend: false
-    //   }
-    // }
-
     function row_major_RT_to_col_major_RT(dataTable) {
       // create dataframe from it
       let df = new dfjs.DataFrame(dataTable, dataTable.header);
@@ -69,7 +57,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
     }
 
     /**
-     * Utility Function. Depth-first traversal of a (full) tree where internal nodes are maps, and leaves are anything.
+     * Utility Function. Depth-first traversal of a (full) tree where internal nodes are d3 maps, and leaves are anything.
      * @param tree The tree to traverse
      * @param fct Function to apply on all leaves. The leave is passed to the function.
      * @param max_depth Depth of all leaves.
