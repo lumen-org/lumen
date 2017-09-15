@@ -12,6 +12,9 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
 
   /**
    * Scale generators return a D3 scale based on a given {@link F.FieldUsage} for a certain visual usage.
+   *
+   * What is a scale? "maps a dimension of abstract data to a visual variable." (https://medium.com/@mbostock/introducing-d3-scale-61980c51545f)
+   *
    * It is important to note that the generated scale depends on:
    *   * its role: i.e. is used a dimension or a measure/aggregation. If used as a dimension, its domain values can be used as the scales domain. If it is a measure, the extend of the values of the aggregation must be used as the scales domain.
    *   *  the kind of the field usage, i.e. is it continuous or discrete

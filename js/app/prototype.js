@@ -104,12 +104,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               .then(res => c.uniDensityRT = res)
               .then(() => RT.biDensityCollection(c.queryTable, c.model))
               .then(res => c.biDensityRT = res)
-              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable))
+              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
               // try visualize the first atomic plotly plot
-              // .then(() => {
-              //   AtomicPlotly.plot(document.getElementById('pl-plotly'),
-              //     c.aggrRT[0][0], c.dataRT[0][0], c.uniDensityRT[0][0], c.biDensityRT[0][0], c.queryTable.at[0][0]);
-              // })
+              .then(() => {
+                AtomicPlotly.plot(document.getElementById('pl-plotly'),
+                  c.aggrRT[0][0], c.dataRT[0][0], c.uniDensityRT[0][0], c.biDensityRT[0][0], c.queryTable.at[0][0]);
+              })
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!

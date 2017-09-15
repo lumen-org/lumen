@@ -73,23 +73,19 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         tree.each( (value, key) => dfs(value, fct, max_depth, depth+1, msg+"+"));
     }
 
-    function plot(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
 
-      // empty pane
-      Plotly.purge(pane);
+    let tracer = {};
+    /**
+     * Build and return traces for aggregation plot, grouped by splits.
+     * @param aggrRT
+     * @param query
+     * @return {Array}
+     */
+    tracer.aggr = function (aggrRT, query) {
+      let xfu = query.layout.cols[0],
+        yfu = query.layout.rows[0],
+        traces = [];
 
-      // shortcuts
-      let qlayout = query.layout;
-      let qaesthetics = query.layers[0].aesthetics;
-
-      // array of all traces to show. to be filled
-      let traces = [];
-
-      // build traces for plot
-      let xfu = qlayout.cols[0],
-        yfu = qlayout.rows[0];
-
-      // ### aggregation plot traces, grouped by splits
       if (aggrRT !== undefined) {
         let xIdx = aggrRT.fu2idx.get(xfu),
           yIdx = aggrRT.fu2idx.get(yfu);
@@ -119,20 +115,81 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             y: select_column(data, yIdx),
             // TODO: support color, size and shape
           };
+
+          // let fmap_color = qaesthetics.color;
+          // if (fmap_color instanceof VisMEL.ColorMap) {
+          //   let color = aggrRT.byFu.get(fmap_color.fu);
+          //   aggr_trace.color = color;
+          // }
           traces.push(aggr_trace);
         };
-        dfs(aggrNestedRT, attach_aggr_trace, splits.length);
 
-        // let fmap_color = qaesthetics.color;
-        // if (fmap_color instanceof VisMEL.ColorMap) {
-        //   let color = aggrRT.byFu.get(fmap_color.fu);
-        //   aggr_trace.color = color;
-        // }
+        dfs(aggrNestedRT, attach_aggr_trace, splits.length);
       }
 
-      // ### marginal histogram / density traces
-      // -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
+      return traces;
+    };
 
+    tracer.aggrNew = function (aggrRT, query, mapper) {
+      let xfu = query.layout.cols[0],
+        yfu = query.layout.rows[0],
+        traces = [];
+
+      if (aggrRT !== undefined) {
+        let xIdx = aggrRT.fu2idx.get(xfu),
+          yIdx = aggrRT.fu2idx.get(yfu);
+
+        // split into more traces by all remaining splits on discrete field
+        // i.e.: possibly details, color, shape, size
+        let splits = query.fieldUsages('layout', 'exclude')
+          .filter(PQL.isSplit)
+          .filter(split => split.field.isDiscrete());
+        let split_idxs = splits.map(split => aggrRT.fu2idx.get(split));
+
+        // build nesting function
+        let nester = d3c.nest();
+        for (let idx of split_idxs)
+          nester.key(e => e[idx]);
+
+        // nest it!
+        let aggrNestedRT = nester.map(aggrRT);
+
+        // create and attach trace for each group, i.e. each leave in the nested data
+        let attach_aggr_trace = (data) => {
+          let aggr_trace = {
+            name: 'aggregations',
+            type: 'scatter',
+            showlegend: false,
+            x: select_column(data, xIdx),
+            y: select_column(data, yIdx),
+            // TODO: support color, size and shape
+          };
+
+          let color = mapper.fill;
+          aggr_trace.color = _.isFunction(color) ? aggrRT.map(color) : color;
+
+          // let fmap_color = qaesthetics.color;
+          // if (fmap_color instanceof VisMEL.ColorMap) {
+          //   let color = aggrRT.byFu.get(fmap_color.fu);
+          //   aggr_trace.color = color;
+          // }
+          traces.push(aggr_trace);
+        };
+
+        dfs(aggrNestedRT, attach_aggr_trace, splits.length);
+      }
+
+      return traces;
+    };
+
+    /**
+     * marginal histogram / density traces
+     * -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
+     * @param p1dRT
+     * @param query
+     * @return {Array}
+     */
+    tracer.uni = function(p1dRT, query) {
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
@@ -190,6 +247,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         return traces;
       }
 
+      let traces = [];
       let nestByMvd = d3c.nest().key(v => v[0]);
       for (let xOrY of ['x', 'y'])
         if (p1dRT[xOrY] !== undefined) {
@@ -199,8 +257,16 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
               traces.push(...getSplittedUniTraces(rt.get(modelOrData), p1dRT[xOrY].fu2idx, xOrY, modelOrData));
           }
         }
+      return traces;
+    };
 
-      // ### 2d density plot trace
+    /** 2d density plot trace builder.
+     * @param p2dRT
+     * @param query
+     * @return {Array}
+     */
+    tracer.bi = function (p2dRT, query) {
+      let traces = []
       if (p2dRT !== undefined) {
         p2dRT = row_major_RT_to_col_major_RT(p2dRT);
         let contour_trace = {
@@ -217,8 +283,19 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         };
         traces.push(contour_trace);
       }
+      return traces;
+    };
 
-      // ### samples trace
+    /**
+     * samples trace builder.
+     * @param p2dRT
+     * @param query
+     * @return {Array}
+     */
+    tracer.samples = function (dataRT, query) {
+      let xfu = query.layout.cols[0],
+        yfu = query.layout.rows[0],
+        traces = [];
       if (dataRT !== undefined) {
         dataRT = row_major_RT_to_col_major_RT(dataRT);
         let sample_trace = {
@@ -236,6 +313,25 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         };
         traces.push(sample_trace);
       }
+      return traces;
+    };
+
+    /**
+     * Plot given data in ResultTables into pane, using the scales and mappers of the FieldUsages of the query.
+     * @param pane
+     * @param query
+     */
+    function plot(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
+
+      // empty pane
+      Plotly.purge(pane);
+
+      // build up traces
+      let traces = [];
+      traces.push(...tracer.aggr(aggrRT, query));
+      // traces.push(...tracer.samples(dataRT, query));
+      // traces.push(...tracer.uni(p1dRT, query));
+      // traces.push(...tracer.bi(p2dRT, query));
 
       let c = config;
 
@@ -263,6 +359,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
     }
 
     return {
-      plot: plot
+      plot,
+      tracer
     }
   });

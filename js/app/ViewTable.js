@@ -11,8 +11,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
-  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, Settings) {
+define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings', './AtomicPlotly'],
+  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, Settings, pl) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');
@@ -149,6 +149,44 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     });
   }
 
+
+  function drawAtomicPlotly(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
+
+    Plotly.purge(pane);
+
+    // extents are available under .extent of the corresponding FieldUsages
+
+    // attaches scales to all FieldUsages (based on extents)
+    attachScales(query, pane.size);
+
+    // setup mappers for all visual variables
+    let uses = new Map();
+    let qa = query.layers[0].aesthetics;
+    if (qa.color instanceof VisMEL.ColorMap) {
+      uses.set('fill', {base: qa.color});
+    }
+    if (qa.shape instanceof VisMEL.ShapeMap)
+      uses.set('shape', {base: qa.shape});
+    if (qa.size instanceof VisMEL.SizeMap)
+      uses.set('size', {base: qa.size});
+    let row = query.layout.rows[0];
+    if (PQL.isFieldUsage(row))
+      uses.set('row', {base: row});
+    let col = query.layout.cols[0];
+    if (PQL.isFieldUsage(col))
+      uses.set('col', {base: col});
+    uses.set('hover', {});
+    uses.set('opacity', {value: 1.0});  // TODO: put into settings
+    uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
+
+    let aggrMapper = getMapper(uses, aggrRT, pane.size);
+
+    let traces = [];
+    traces.push(...pl.tracer.aggrNew(aggrRT, query, aggrMapper));
+
+    return pane;
+  }
+
   /**
    * Draws the given atomic query using given data into the pane and returns the pane.
    * @param query
@@ -163,7 +201,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      * I think I need to reorganize the code below. I need to be able to give options on how the mapping is
      * established, I need to be easily able to set it to different values, ...
      * Somehow, the getMapper seems weird, but I don't really know yet how. Do I need it at all, or should I just
-     * have separate functions to set up on mapping each, given some options.
+     * have separate functions to set up one mapping each, given some options.
      *
      * For example at the moment uses.fill is always expected to have a ColorMap as its value.
      * But I need it to also accept a constant value to use.
@@ -177,7 +215,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     // add scales to field usages of this query
     attachScales(query, pane.size);
 
-    // create map of label to "<setting-of-how-map>"
+    // create map of label to "<setting-of-how-map>". Labels are descriptors of visual variables, i.e. 'fill', 'shape', ...
     // convention: it has an attribute .base iff it is based on some BaseMap/FieldUsage
     // convention: it has an attribute .value iff it is a constant value to map to
     let uses = new Map();
@@ -580,7 +618,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale to the property .visScale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
    *
-   * If a FieldUsage has already a scale assigned (i.e. .scale != undefined), then _no_ new scale is assigned but the existing one is kept.
+   * TODO: If a FieldUsage has already a scale assigned (i.e. .scale != undefined), then _no_ new scale is assigned but the existing one is kept. Note: currently this is not the case. We would need a clean-up function, because redrawing fails otherwise.
    *
    * Before scales can be set, extents needs to be set for each FieldUsage. See attachExtents().
    *
@@ -619,8 +657,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
   };
 
     /**
-     * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path,
-     * color, size and others. Mappers are used in D3 to bind data to visuals.
+     * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path, color, size and others. Mappers are used in D3 to bind data to visuals.
      *
      * Before mappers can be set up, the scales need to be set up. See attachScales().
      *
@@ -750,17 +787,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * Note that the axis are part of the {@link ViewTable}, not the ViewPanes. Also note that axis' are based on scales. And scales are attached to (almost) each {@link FieldUsage} of this query, as they are reused accross many of the sub-viewPanes.
    *
    * @param paneD3 A <svg> element. This must already have a width and height.
-   * @param [resultTable] The {@link ResultTable} to visualize with this viewTable.
+   * @param aggrColl The {@link Collection} to visualize with this viewTable.
    * @constructor
    * @alias module:ViewTable
    */
   var ViewTable;
-  ViewTable = function (pane, aggrRT, dataRT, queries) {
+  ViewTable = function (pane, aggrColl, dataColl, uniColl, biColl, queries) {
 
-    this.aggrResults = aggrRT;
-    this.dataResults = dataRT;
+    this.aggrCollection = aggrColl;
+    this.dataCollection = dataColl;
     this.queries = queries;
-    this.size = aggrRT.size;
+    this.size = aggrColl.size;
     let query = queries.base;
 
     /// one time on init:
@@ -790,12 +827,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // extents
     initEmptyExtents(queries);
-    attachExtents(queries, this.aggrResults);
-    attachExtents(queries, this.dataResults);
+    attachExtents(queries, this.aggrCollection);
+    attachExtents(queries, this.dataCollection);
     normalizeExtents(queries);
-
-    //
-    //attachScales()
 
     // create scales
     // todo: move scales outside of atomic panes, like extents
@@ -821,10 +855,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
         this.at[rIdx][cIdx] = drawAtomicPane(
           this.queries.at[rIdx][cIdx],
-          this.aggrResults[rIdx][cIdx],
-          this.dataResults[rIdx][cIdx],
+          this.aggrCollection[rIdx][cIdx],
+          this.dataCollection[rIdx][cIdx],
           subPane
         );
+
+        this.at[rIdx][cIdx] = drawAtomicPlotly(subPane, aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx]);
 
         if (cIdx === 0)
           attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
