@@ -152,38 +152,66 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
   function drawAtomicPlotly(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
 
-    Plotly.purge(pane);
+    let paneDOM = document.getElementById('pl-plotly');
+    Plotly.purge(paneDOM);
 
     // extents are available under .extent of the corresponding FieldUsages
 
     // attaches scales to all FieldUsages (based on extents)
     attachScales(query, pane.size);
 
-    // setup mappers for all visual variables
+    // setup uses for all visual variables, i.e. map from [str] usage to config
     let uses = new Map();
     let qa = query.layers[0].aesthetics;
-    if (qa.color instanceof VisMEL.ColorMap) {
-      uses.set('fill', {base: qa.color});
-    }
-    if (qa.shape instanceof VisMEL.ShapeMap)
-      uses.set('shape', {base: qa.shape});
-    if (qa.size instanceof VisMEL.SizeMap)
-      uses.set('size', {base: qa.size});
+    if (qa.color instanceof VisMEL.ColorMap) uses.set('fill', {base: qa.color});
+    if (qa.shape instanceof VisMEL.ShapeMap) uses.set('shape', {base: qa.shape});
+    if (qa.size instanceof VisMEL.SizeMap) uses.set('size', {base: qa.size});
     let row = query.layout.rows[0];
-    if (PQL.isFieldUsage(row))
-      uses.set('row', {base: row});
+    if (PQL.isFieldUsage(row)) uses.set('row', {base: row});
     let col = query.layout.cols[0];
-    if (PQL.isFieldUsage(col))
-      uses.set('col', {base: col});
+    if (PQL.isFieldUsage(col)) uses.set('col', {base: col});
     uses.set('hover', {});
     uses.set('opacity', {value: 1.0});  // TODO: put into settings
     uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
 
+    // set up mappers, i.e. map from [str] usage to [fct|value]
     let aggrMapper = getMapper(uses, aggrRT, pane.size);
 
     let traces = [];
     traces.push(...pl.tracer.aggrNew(aggrRT, query, aggrMapper));
 
+    let c = {
+      pane : {
+        height: pane.size.height,
+        width: pane.size.width
+      },
+      layout : {
+        marginal_ratio: 0.15,
+        margin: 0.00
+      }
+    };
+
+    // create layout
+    let layout = {
+      xaxis2: {
+        domain: [0, c.layout.marginal_ratio - c.layout.margin],
+        autorange: 'reversed'
+      },
+      xaxis: {
+        domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+      },
+      yaxis2: {
+        domain: [0, c.layout.marginal_ratio - c.layout.margin],
+        autorange: 'reversed'
+      },
+      yaxis: {
+        domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+      },
+      height: c.pane.height,
+      width: c.pane.width
+    };
+
+    Plotly.plot(paneDOM, traces, layout);
     return pane;
   }
 

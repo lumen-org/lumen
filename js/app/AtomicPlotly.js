@@ -168,11 +168,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           let color = mapper.fill;
           aggr_trace.color = _.isFunction(color) ? aggrRT.map(color) : color;
 
-          // let fmap_color = qaesthetics.color;
-          // if (fmap_color instanceof VisMEL.ColorMap) {
-          //   let color = aggrRT.byFu.get(fmap_color.fu);
-          //   aggr_trace.color = color;
-          // }
+
+
           traces.push(aggr_trace);
         };
 
@@ -189,7 +186,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
      * @param query
      * @return {Array}
      */
-    tracer.uni = function(p1dRT, query) {
+    tracer.uni = function(p1dRT, query, mapper) {
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
