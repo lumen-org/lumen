@@ -11,8 +11,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings', './AtomicPlotly'],
-  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, Settings, pl) {
+define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './MapperGenerator', './ViewSettings', './AtomicPlotly'],
+  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, MapperGen, Settings, pl) {
   "use strict";
 
   var logger = Logger.get('pl-ViewTable');
@@ -155,30 +155,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     let paneDOM = document.getElementById('pl-plotly');
     Plotly.purge(paneDOM);
 
-    // extents are available under .extent of the corresponding FieldUsages
-
-    // attaches scales to all FieldUsages (based on extents)
-    attachScalesNew(query, pane.size);
-
-    // setup uses for all visual variables, i.e. map from [str] usage to config
-    let uses = new Map();
-    let qa = query.layers[0].aesthetics;
-    if (qa.color instanceof VisMEL.ColorMap) uses.set('fill', {base: qa.color});
-    if (qa.shape instanceof VisMEL.ShapeMap) uses.set('shape', {base: qa.shape});
-    if (qa.size instanceof VisMEL.SizeMap) uses.set('size', {base: qa.size});
-    let row = query.layout.rows[0];
-    if (PQL.isFieldUsage(row)) uses.set('row', {base: row});
-    let col = query.layout.cols[0];
-    if (PQL.isFieldUsage(col)) uses.set('col', {base: col});
-    uses.set('hover', {});
-    uses.set('opacity', {value: 1.0});  // TODO: put into settings
-    uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
-
-    // set up mappers, i.e. map from [str] usage to [fct|value]
-    let mapper = getMapperNew(uses);//, aggrRT, pane.size);
+    // get all mappers
+    let mapper = {
+      markersFillColor: MapperGen.markersFillColor(query),
+      markersSize: MapperGen.markersSize(query),
+      aggrShape: MapperGen.markersShape(query, 'filled'),
+      samplesShape: MapperGen.markersShape(query, 'open'),
+      lineColor: MapperGen.lineColor(query),
+    };
 
     let traces = [];
     traces.push(...pl.tracer.aggrNew(aggrRT, query, mapper));
+    traces.push(...pl.tracer.samples(dataRT, query, mapper));
+    traces.push(...pl.tracer.bi(p2dRT, query, mapper));
+    traces.push(...pl.tracer.uni(p1dRT, query, mapper));
 
     let c = {
       pane : {
@@ -646,6 +636,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
    * Attaches scales to each {@link FieldUsage} in the given query that needs a scale to the property .visScale.
    * A scale is a function that maps from the domain of a {@link FieldUsage} to the range of a visual variable, like shape, color, position ...
    *
+   * TODO: this is old, and only needed for my d3 version of drawing.
+   *
    * TODO: If a FieldUsage has already a scale assigned (i.e. .scale != undefined), then _no_ new scale is assigned but the existing one is kept. Note: currently this is not the case. We would need a clean-up function, because redrawing fails otherwise.
    *
    * Before scales can be set, extents needs to be set for each FieldUsage. See attachExtents().
@@ -683,48 +675,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
     // no need for scales of: filters, details
   };
-
-
-    /**
-     * New Version for plotly, with different defaults
-     * @param query
-     * @param paneSize
-     */
-    var attachScalesNew = function (query, paneSize) {
-
-      let aesthetics = query.layers[0].aesthetics;
-
-      // if (aesthetics.color instanceof VisMEL.ColorMap && aesthetics.color.visScale === undefined)
-      if (aesthetics.color instanceof VisMEL.ColorMap)
-        aesthetics.color.visScale = ScaleGen.color(aesthetics.color, aesthetics.color.fu.extent);
-
-      // if (aesthetics.size instanceof VisMEL.SizeMap && aesthetics.size.visScale === undefined)
-      if (aesthetics.size instanceof VisMEL.SizeMap)
-        aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent,
-          [5, 50]);
-          // [Settings.maps.minSize, Settings.maps.maxSize]);
-
-      // if (aesthetics.shape instanceof VisMEL.ShapeMap && aesthetics.shape.visScale === undefined)
-      if (aesthetics.shape instanceof VisMEL.ShapeMap)
-        aesthetics.shape.visScale = ScaleGen.shape(aesthetics.shape, aesthetics.shape.fu.extent);
-
-      let row = query.layout.rows[0];
-      // if (PQL.isFieldUsage(row) && row.visScale === undefined)
-      if (PQL.isFieldUsage(row))
-        row.visScale = ScaleGen.position(row, row.extent, [paneSize.height - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
-
-      let col = query.layout.cols[0];
-      // if (PQL.isFieldUsage(col) && col.visScale === undefined)
-      if (PQL.isFieldUsage(col))
-        col.visScale = ScaleGen.position(col, col.extent, [Settings.geometry.axis.padding, paneSize.width - Settings.geometry.axis.padding]);
-
-      // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
-
-      // no need for scales of: filters, details
-    };
-
-
-
 
     /**
      * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path, color, size and others. Mappers are used in D3 to bind data to visuals.
@@ -848,128 +798,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       return mapper;
     }
 
-
-    /**
-     * Setup mappers for the visual variables in what. Mappers are function that map data item to visual attributes, like a svg path, color, size and others.
-     *
-     * Before mappers can be set up, the scales need to be set up. See attachScales().
-     *
-     * While scales naturally depend on data (e.g. the minimal and maximal value is usually determined by it), the mappers set up here are independent of data.
-     *
-     * Mappers are used in D3 to bind data to visuals.
-     *
-     * @param what {Map} a map of identifier to BaseMap s.
-     //* @param paneSize {Object} {width, height} Size of pane to draw in, measuered in pixel.
-     */
-    function getMapperNew (what) {
-      // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
-      function _valueOrAvg(val) {
-        return _.isArray(val) ? val[0] + val[1] / 2 : val;
-      }
-
-      //let fu2idx = data.fu2idx;
-      let mapper = {};
-
-      function mapFill(fill) {
-        if (fill === undefined) {
-          return Settings.maps.fill;
-        } else if (fill.hasOwnProperty('base')) {
-          return d => fill.base.visScale(_valueOrAvg(d));
-        } else if (fill.hasOwnProperty('value')) {
-          return fill.value;
-        } else {
-          throw RangeError();
-        }
-      }
-      mapper.fill = mapFill(what.get('fill'));
-
-      function mapStroke(stroke) {
-        if (stroke === undefined) {
-          return Settings.maps.stroke;
-        } else if (stroke.hasOwnProperty('base')) {
-          return d => stroke.base.visScale(_valueOrAvg(d));
-        } else if (stroke.hasOwnProperty('value')) {
-          return stroke.value;
-        } else {
-          throw RangeError();
-        }
-      }
-      mapper.stroke = mapStroke(what.get('stroke'));
-
-      let opacity = what.get('opacity');
-      mapper.opacity = (opacity !== undefined ? opacity.value : Settings.maps.opacity);
-
-      function mapSize(size) {
-        if (size === undefined) {
-          return 8;
-          // return Settings.maps.size;
-        } else if (size.hasOwnProperty('base')) {
-          return d => size.base.visScale(_valueOrAvg(d));
-        } else if (size.hasOwnProperty('value')) {
-          return size.value;
-        } else {
-          throw RangeError();
-        }
-      }
-      mapper.size = mapSize(what.get('size'));
-
-      function mapShape(shape) {
-        if (shape === undefined) {
-          return Settings.maps.shape;
-        } else if (shape.hasOwnProperty('base')) {
-          return d => shape.base.visScale(_valueOrAvg(d));
-        } else if (shape.hasOwnProperty('value')) {
-          return shape.value;
-        } else {
-          throw RangeError();
-        }
-      }
-      mapper.shape = mapShape(what.get('shape'));
-
-      // if (what.has('hover'))
-      //   mapper.hover = (d) => d.reduce(
-      //     (prev,di,i) => prev + data.header[i] + ": " + di + "\n", "");
-
-      // let col = what.get('col'),
-      //   row = what.get('row');
-      // let xPos = paneSize.width / 2,
-      //   yPos = paneSize.height / 2;
-      //
-      // if (col !== undefined) col = col.base;
-      // if (row !== undefined) row = row.base;
-      //
-      // if (col !== undefined && row !== undefined) {
-      //   let colIdx = fu2idx.get(col),
-      //     rowIdx = fu2idx.get(row);
-      //   mapper.transform = function (d) {
-      //     return 'translate(' +
-      //       col.visScale(d[colIdx]) + ',' +
-      //       row.visScale(d[rowIdx]) + ')';
-      //   };
-      // }
-      // else if (col !== undefined && row === undefined) {
-      //   let colIdx = fu2idx.get(col);
-      //   mapper.transform = function (d) {
-      //     return 'translate(' +
-      //       col.visScale(d[colIdx]) + ',' +
-      //       yPos + ')';
-      //   };
-      // }
-      // else if (col === undefined && row !== undefined) {
-      //   let rowIdx = fu2idx.get(row);
-      //   mapper.transform = function (d) {
-      //     return 'translate(' +
-      //       xPos + ',' +
-      //       row.visScale(d[rowIdx]) + ')';
-      //   };
-      // }
-      // else {
-      //   // todo: jitter?
-      //   mapper.transform = 'translate(' + xPos + ',' + yPos + ')';
-      // }
-
-      return mapper;
-    }
 
   /**
    * A ViewTable takes a ResultTable and turns it into an actual visual representation.

@@ -88,8 +88,9 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
 
   /**
    * @param fu
+   * @param mode Either 'filled' (filled shapes) or 'open' (non-filled shapes).
    */
-  scaleGenerator.shape = function (shapeMap, domain) {
+  scaleGenerator.shape = function (shapeMap, domain, mode='filled') {
     let scale = [],
       fu = shapeMap.fu;
     switch (fu.yieldDataType) {
@@ -108,7 +109,6 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
     }
     return scale;
   };
-
 
   /**
    * Creates a 'positional' scale based on given field usage and desired range.
