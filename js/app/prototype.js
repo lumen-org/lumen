@@ -31,6 +31,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       //drop(shelves.color, shelves.meas.at(2));
       drop(shelves.row, shelves.meas.at(0));
       drop(shelves.column, shelves.meas.at(1));
+      drop(shelves.detail, shelves.meas.at(2));
     }
 
     /**

@@ -52,8 +52,20 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       return table;
     }
 
-    function select_column(data, col_idx) {
+    function selectColumn(data, col_idx) {
       return data.map(e => e[col_idx]);
+    }
+
+    /**
+     * Utility function that applies a map, which is based on the fieldUsage fu, to data. The correct column of the data is selected by fu2idx.
+     * @param data Data
+     * @param map A map, i.e. either a scalar value or a function.
+     * @param fu The FieldUsage that is mapped
+     * @param fu2idx A Map from FieldUsages to the column index in data.
+     * @return {Array|*} Either a scalar, or an array of the same length than data.
+     */
+    function mapApply(data, map, fu, fu2idx) {
+      return _.isFunction(map) ? selectColumn(data, fu2idx.get(fu)).map(map) : map;
     }
 
     /**
@@ -111,8 +123,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             name: 'aggregations',
             type: 'scatter',
             showlegend: false,
-            x: select_column(data, xIdx),
-            y: select_column(data, yIdx),
+            x: selectColumn(data, xIdx),
+            y: selectColumn(data, yIdx),
             // TODO: support color, size and shape
           };
 
@@ -131,20 +143,22 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
     };
 
     tracer.aggrNew = function (aggrRT, query, mapper) {
-      let xfu = query.layout.cols[0],
+      let fu2idx = aggrRT.fu2idx,
+        aest = query.layers[0].aesthetics,
+        xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
         traces = [];
 
       if (aggrRT !== undefined) {
-        let xIdx = aggrRT.fu2idx.get(xfu),
-          yIdx = aggrRT.fu2idx.get(yfu);
+        let xIdx = fu2idx.get(xfu),
+          yIdx = fu2idx.get(yfu);
 
         // split into more traces by all remaining splits on discrete field
         // i.e.: possibly details, color, shape, size
         let splits = query.fieldUsages('layout', 'exclude')
           .filter(PQL.isSplit)
           .filter(split => split.field.isDiscrete());
-        let split_idxs = splits.map(split => aggrRT.fu2idx.get(split));
+        let split_idxs = splits.map(split => fu2idx.get(split));
 
         // build nesting function
         let nester = d3c.nest();
@@ -156,21 +170,55 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
 
         // create and attach trace for each group, i.e. each leave in the nested data
         let attach_aggr_trace = (data) => {
-          let aggr_trace = {
+          let trace = {
             name: 'aggregations',
             type: 'scatter',
             showlegend: false,
-            x: select_column(data, xIdx),
-            y: select_column(data, yIdx),
+            x: selectColumn(data, xIdx),
+            y: selectColumn(data, yIdx),
+            marker: {
+              // sizemode: 'area',
+            },
+            line: {
+            },
             // TODO: support color, size and shape
           };
 
-          let color = mapper.fill;
-          aggr_trace.color = _.isFunction(color) ? aggrRT.map(color) : color;
+          // marker color, size and shape
+          trace.marker.color = mapApply(data, mapper.fill, aest.color.fu, fu2idx);
+          trace.marker.size = mapApply(data, mapper.size, aest.size.fu, fu2idx);
+          trace.marker.symbol = mapApply(data, mapper.shape, aest.shape.fu, fu2idx);
 
+          // line color and width
+          // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
+          // trace.line.color = mapApply(data, mapper.fill, aest.color.fu, fu2idx);
+          // trace.line.width = mapApply(data, mapper.size, aest.size.fu, fu2idx);
+          // workaround:
+          // trace.line.color = use medial color
+          //trace.line.width = 2;
 
+          /* What is the color of a line?
+           * if split on color:
+           *   if discrete split: each line gets uniform color anyway
+           *   else: color of the average value of the extent
+           * else (if aggregation or density on color):
+           *   if discrete yield: make line grey, since different points will have very different colors, since we use a categorical scale.
+           *   else: color of the average value of the extent
+           */
+          if (aest.color instanceof VisMEL.ColorMap) {
+            let fu = aest.color.fu;
+            if(PQL.isSplit(fu)) {
+              let dataitem = fu.field.isDiscrete() ? [data[0]] : [fu.extent];
+              trace.line.color = mapApply(dataitem, mapper.fill, fu, fu2idx)[0];
+            } else { // aggregation or density
+              if (PQL.hasDiscreteYield(fu))
+                trace.line.color = "grey"; //TODO: put into Settings
+              else
+                trace.line.color = mapApply([fu.extent], mapper.fill, fu, fu2idx)[0];
+            }
+          }
 
-          traces.push(aggr_trace);
+          traces.push(trace);
         };
 
         dfs(aggrNestedRT, attach_aggr_trace, splits.length);
@@ -205,8 +253,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           //type: modelOrData === 'model' ? 'scatter' : 'bar',
           type: 'scatter',
           showlegend: false,
-          x: select_column(data, xIdx),
-          y: select_column(data, yIdx),
+          x: selectColumn(data, xIdx),
+          y: selectColumn(data, yIdx),
           xaxis: xAxis,
           yaxis: yAxis
         };
