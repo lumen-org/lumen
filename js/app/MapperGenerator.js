@@ -4,11 +4,13 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  *
  *
- * Generators for mappers for the visual variables in what. Mappers are function that map data item to visual attributes, like a svg path, color, size and others.
+ * Generators for mappers of visual variables used in var. Mappers are function that map data item to visual attributes, like a svg path, color, size and others.
  *
  * Before mappers can be set up, the scales need to be set up. See attachScales().
  *
  * Mappers differ from scales, as scales are always functions that take a data item as input and return the value of a visual variable. Mappers can be either a function (the scale) or a scalar value.
+ *
+ * Also, mappers are for a more specific means (such as coloring the points of the aggregation visualization), whereas scales are attached to the BaseMaps of a query itself.
  */
 define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator'], function (Logger, PQL, VisMEL, ScaleGen) {
   "use strict";

@@ -165,7 +165,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     };
 
     let traces = [];
-    traces.push(...pl.tracer.aggrNew(aggrRT, query, mapper));
+    traces.push(...pl.tracer.aggr(aggrRT, query, mapper));
     traces.push(...pl.tracer.samples(dataRT, query, mapper));
     traces.push(...pl.tracer.bi(p2dRT, query, mapper));
     traces.push(...pl.tracer.uni(p1dRT, query, mapper));

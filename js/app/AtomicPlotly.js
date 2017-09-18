@@ -93,56 +93,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
      * @param query
      * @return {Array}
      */
-    tracer.aggr = function (aggrRT, query) {
-      let xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
-        traces = [];
-
-      if (aggrRT !== undefined) {
-        let xIdx = aggrRT.fu2idx.get(xfu),
-          yIdx = aggrRT.fu2idx.get(yfu);
-
-        // split into more traces by all remaining splits on discrete field
-        // i.e.: possibly details, color, shape, size
-        let splits = query.fieldUsages('layout', 'exclude')
-          .filter(PQL.isSplit)
-          .filter(split => split.field.isDiscrete());
-        let split_idxs = splits.map(split => aggrRT.fu2idx.get(split));
-
-        // build nesting function
-        let nester = d3c.nest();
-        for (let idx of split_idxs)
-          nester.key(e => e[idx]);
-
-        // nest it!
-        let aggrNestedRT = nester.map(aggrRT);
-
-        // create and attach trace for each group, i.e. each leave in the nested data
-        let attach_aggr_trace = (data) => {
-          let aggr_trace = {
-            name: 'aggregations',
-            type: 'scatter',
-            showlegend: false,
-            x: selectColumn(data, xIdx),
-            y: selectColumn(data, yIdx),
-            // TODO: support color, size and shape
-          };
-
-          // let fmap_color = qaesthetics.color;
-          // if (fmap_color instanceof VisMEL.ColorMap) {
-          //   let color = aggrRT.byFu.get(fmap_color.fu);
-          //   aggr_trace.color = color;
-          // }
-          traces.push(aggr_trace);
-        };
-
-        dfs(aggrNestedRT, attach_aggr_trace, splits.length);
-      }
-
-      return traces;
-    };
-
-    tracer.aggrNew = function (aggrRT, query, mapper) {
+    tracer.aggr = function (aggrRT, query, mapper) {
       let fu2idx = aggrRT.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
