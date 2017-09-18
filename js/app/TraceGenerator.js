@@ -6,6 +6,11 @@
  *   pane : the entire space take by a visualization
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
+ * What is a trace?
+ *
+ *  * in plotly a trace is one plotting 'act'.
+ *  * if anything is drawn as a line chart, then one line (including its marks) is represented by one trace
+ *
  * @module ViewTable
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
@@ -34,24 +39,27 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       }
     };
 
-    function row_major_RT_to_col_major_RT(dataTable) {
-      // create dataframe from it
-      let df = new dfjs.DataFrame(dataTable, dataTable.header);
+    // function row_major_RT_to_col_major_RT(dataTable) {
+    //   // create dataframe from it
+    //   let df = new dfjs.DataFrame(dataTable, dataTable.header);
+    //
+    //   // turn to column major
+    //   df = df.transpose();
+    //   let table = df.toArray();
+    //
+    //   // reattach maps
+    //   table.fu2idx = dataTable.fu2idx;
+    //   table.idx2fu = dataTable.idx2fu;
+    //
+    //   // attach direct label accessors
+    //   table.byFu = RT.getByFuAccessor(table);
+    //
+    //   return table;
+    // }
 
-      // turn to column major
-      df = df.transpose();
-      let table = df.toArray();
-
-      // reattach maps
-      table.fu2idx = dataTable.fu2idx;
-      table.idx2fu = dataTable.idx2fu;
-
-      // attach direct label accessors
-      table.byFu = RT.getByFuAccessor(table);
-
-      return table;
-    }
-
+    /**
+     * Returns column with index col_idx of row-major data table data.
+     */
     function selectColumn(data, col_idx) {
       return data.map(e => e[col_idx]);
     }
@@ -85,22 +93,84 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         tree.each( (value, key) => dfs(value, fct, max_depth, depth+1, msg+"+"));
     }
 
+    /**
+     * Utility function. Splits the result table rt into hierarchical data for traces and returns this nested data.
+     * @param query A vismel query.
+     * @param rt A result Table.
+     */
+    function splitRTIntoTraceData (rt, query) {
+      // split into more traces by all remaining splits on discrete field
+      // i.e.: possibly details, color, shape, size
+      let splits = query.fieldUsages('layout', 'exclude')
+        .filter(PQL.isSplit)
+        .filter(split => split.field.isDiscrete());
+      let split_idxs = splits.map(split => fu2idx.get(split));
+
+      // build nesting function
+      let nester = d3c.nest();
+      for (let idx of split_idxs)
+        nester.key(e => e[idx]);
+
+      // nest it!
+      return [nester.map(rt), splits.length,];
+    }
+
 
     let tracer = {};
-    /**
-     * Build and return traces for aggregation plot, grouped by splits.
-     * @param aggrRT
-     * @param query
-     * @return {Array}
-     */
-    tracer.aggr = function (aggrRT, query, mapper) {
-      let fu2idx = aggrRT.fu2idx,
+
+    tracer.aggrHeatmap = function (rt, query, mapper) {
+      let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
         traces = [];
 
-      if (aggrRT !== undefined) {
+      // this may not be used if any mapping on shape or size is present in query!
+      if (aest.shape instanceof VisMEL.ShapeMap) throw RangeError("Cannot use aggrHeatmap if shape is in use!");
+      if (aest.size instanceof VisMEL.SizeMap) throw RangeError("Cannot use aggrHeatmap if size is in use!");
+      if (!(aest.color instanceof VisMEL.ColorMap)) throw RangeError("Cannot use aggrHeatmap if color is _not_ in use!");
+
+      if (rt !== undefined) {
+        let xIdx = fu2idx.get(xfu),
+          yIdx = fu2idx.get(yfu),
+          colorIdx = fu2idx.get(aest.color.fu);
+
+        let attach_aggr_trace = (data) => {
+          let trace = {
+            name: 'aggregations',
+            type: 'heatmap',
+            showscale: true,
+            autocolorscale: true,
+            x: selectColumn(data, xIdx),
+            y: selectColumn(data, yIdx),
+            z: selectColumn(data, colorIdx), // TODO: how to use my own color scale as generated before?!?
+          };
+          traces.push(trace);
+        };
+
+        let [nestedData, depth] = splitRTIntoTraceData(rt, query);
+
+        // create and attach trace for each group, i.e. each leave in the nested data
+        dfs(nestedData, attach_aggr_trace, depth);
+      }
+
+      return traces;
+    };
+
+    /**
+     * Build and return traces for aggregation scatter plot, grouped by splits.
+     * @param rt
+     * @param query
+     * @return {Array}
+     */
+    tracer.aggr = function (rt, query, mapper) {
+      let fu2idx = rt.fu2idx,
+        aest = query.layers[0].aesthetics,
+        xfu = query.layout.cols[0],
+        yfu = query.layout.rows[0],
+        traces = [];
+
+      if (rt !== undefined) {
         let xIdx = fu2idx.get(xfu),
           yIdx = fu2idx.get(yfu);
 
@@ -117,7 +187,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           nester.key(e => e[idx]);
 
         // nest it!
-        let aggrNestedRT = nester.map(aggrRT);
+        let aggrNestedRT = nester.map(rt);
 
         // create and attach trace for each group, i.e. each leave in the nested data
         let attach_aggr_trace = (data) => {
@@ -149,6 +219,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
 
           traces.push(trace);
         };
+
+        use_refactor_of_above_here
 
         dfs(aggrNestedRT, attach_aggr_trace, splits.length);
       }
@@ -311,50 +383,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       return traces;
     };
 
-    /**
-     * Plot given data in ResultTables into pane, using the scales and mappers of the FieldUsages of the query.
-     * @param pane
-     * @param query
-     */
-    function plot(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
+    return tracer;
 
-      // empty pane
-      Plotly.purge(pane);
-
-      // build up traces
-      let traces = [];
-      traces.push(...tracer.aggr(aggrRT, query));
-      // traces.push(...tracer.samples(dataRT, query));
-      // traces.push(...tracer.uni(p1dRT, query));
-      // traces.push(...tracer.bi(p2dRT, query));
-
-      let c = config;
-
-      // create layout
-      let layout = {
-        xaxis2: {
-          domain: [0, c.layout.marginal_ratio - c.layout.margin],
-          autorange: 'reversed'
-        },
-        xaxis: {
-          domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-        },
-        yaxis2: {
-          domain: [0, c.layout.marginal_ratio - c.layout.margin],
-          autorange: 'reversed'
-        },
-        yaxis: {
-          domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-        },
-        height: c.pane.height,
-        width: c.pane.width
-      };
-
-      Plotly.plot(pane, traces, layout);
-    }
-
-    return {
-      plot,
-      tracer
-    }
   });
