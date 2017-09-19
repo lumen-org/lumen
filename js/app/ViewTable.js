@@ -273,6 +273,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
+          CONTINUE HERE!
 
         } else {
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
