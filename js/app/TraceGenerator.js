@@ -131,6 +131,9 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       if (aest.size instanceof VisMEL.SizeMap) throw RangeError("Cannot use aggrHeatmap if size is in use!");
       if (!(aest.color instanceof VisMEL.ColorMap)) throw RangeError("Cannot use aggrHeatmap if color is _not_ in use!");
 
+      // in fact no split, other than on rows and cols may be present, since we wouldn't know how to visualize the split within one heatmap tile
+      // TODO if ()
+
       if (rt !== undefined) {
         let xIdx = fu2idx.get(xfu),
           yIdx = fu2idx.get(yfu),
@@ -157,10 +160,12 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           traces.push(trace);
         };
 
-        let [nestedData, depth] = splitRTIntoTraceData(rt, query);
+        // no nesting necessary (no further splitting present)
+        // let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
         // create and attach trace for each group, i.e. each leave in the nested data
-        dfs(nestedData, attach_aggr_trace, depth);
+        //dfs(nestedData, attach_aggr_trace, depth);
+        attach_aggr_trace(rt);
       }
 
       return traces;
@@ -368,27 +373,75 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
     };
 
     /** 2d density plot trace builder.
-     * @param data
+     *
+     * The created trace depends on the data type of the fields on rows and cols:
+     *   * both numerical: greyscale contour map
+     *   * both discrete: greyscale heatmap
+     *   * mixed: no trace
+     *
+     * @param rt
      * @param query
      * @return {Array}
      */
-    tracer.bi = function (data, query, mapper) {
+    tracer.bi = function (rt, query, mapper) {
       let traces = [];
-      if (data !== undefined) {
-        let contour_trace = {
+      if (rt !== undefined) {
+
+        // note: the indexes are by convention!
+        let xfu = rt.idx2fu[0],
+         yfu = rt.idx2fu[1];
+
+        let trace = {
           name: '2d density',
-          type: 'contour',
+          // type: ,
           showlegend: false,
           showscale: false,
-          // note: the indexes are by convention!
-          x: selectColumn(data, 0),
-          y: selectColumn(data, 1),
-          z: selectColumn(data, 2),
+          x: selectColumn(rt, 0),
+          y: selectColumn(rt, 1),
+          z: selectColumn(rt, 2),
           opacity: 0.3,
           colorscale: colorscale.density,
           reversescale: true
         };
-        traces.push(contour_trace);
+
+        if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
+          trace.type = 'contour';
+          // _.extend(trace, {
+          //   type: 'contour',
+          //   colorscale: colorscale.density,
+          //   reversescale: true
+          // });
+          // let contour_trace = {
+            // name: '2d density',
+            // showlegend: false,
+            // showscale: false,
+            // x: selectColumn(rt, 0),
+            // y: selectColumn(rt, 1),
+            // z: selectColumn(rt, 2),
+            // opacity: 0.3,
+            // colorscale: colorscale.density,
+            // reversescale: true
+          // };
+          traces.push(trace);
+        }
+        else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
+          trace.type = 'heatmap';
+          // let heatmap_trace = {
+          //   name: '2d density',
+          //   type: 'heatmap',
+          //   x: selectColumn(data, 0),
+          //   y: selectColumn(data, 1),
+          //   z: selectColumn(data, 2), // TODO: how to handle discrete z data??
+          //   opacity: 0.3,
+          //   showscale: false,
+          //   autocolorscale: false,
+          //   colorscale: colorTable,
+          //   zauto: false,
+          //   zmin: colorDomain[0],
+          //   zmax: colorDomain[colorDomain.length-1],
+          // }
+          traces.push(trace);
+        }
       }
       return traces;
     };

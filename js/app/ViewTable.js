@@ -179,6 +179,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         color : aest.color instanceof VisMEL.ColorMap,
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
+        details: aest.details.length === 0,
       };
 
       // choose a neat chart type depending on data types
@@ -196,7 +197,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           // x and y are independent
           if (xSplit && ySplit) {
 
-            if (used.color && !used.shape && !used.size
+            if (used.color && !used.shape && !used.size && !used.details
               && PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               // TODO: make it possible to enable marginal plots as well
@@ -224,8 +225,27 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             traces.push(...TraceGen.aggr(aggrRT, query, mapper));
           }
         }
+        //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
+          traces.push(...TraceGen.uni(p1dRT, query, mapper));
 
+          // hard to show splits of more than rows and cols: overlap in visualization
+          // TODO: solve by creating a bubble plot/jittered plot
+
+          // hard to show samples in this case: major overlap in visualization.
+          // TODO: solve by creating a bubble plot/jittered plot
+
+          // non-discrete yield on color?
+          // TODO: add condition: no other splits
+          if (used.color && !PQL.hasDiscreteYield(aest.color.fu)) {
+            // don't show bi density in this case
+            traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper));
+          }
+          else {
+            // TODO: make it a jittered plot?
+            traces.push(...TraceGen.bi(p2dRT, query, mapper));
+            traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+          }
         }
       }
 

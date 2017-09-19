@@ -163,8 +163,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
           try {
             let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, model);
             promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY);
-          }
-          catch (e) {
+          } catch (e) {
             if (e instanceof vismel2pql.ConversionError)
               promise = Promise.resolve(undefined);
             else
