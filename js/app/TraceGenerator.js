@@ -146,7 +146,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             x: selectColumn(data, xIdx),
             y: selectColumn(data, yIdx),
             z: selectColumn(data, colorIdx), // TODO: how to handle discrete z data??
-            showscale: true,
+            showscale: false,
             autocolorscale: false,
             colorscale: colorTable,
             zauto: false,
@@ -192,7 +192,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             showlegend: false,
             x: selectColumn(data, xIdx),
             y: selectColumn(data, yIdx),
+            opacity: 0.9,
             marker: {
+              showscale: false,
+
               // sizemode: 'area',
             },
             line: {
@@ -325,6 +328,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           name: '2d density',
           type: 'contour',
           showlegend: false,
+          showscale: false,
           // note: the indexes are by convention!
           x: selectColumn(data, 0),
           y: selectColumn(data, 1),
@@ -364,14 +368,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           },
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
-          opacity: 0.8
+          opacity: 0.6,
           // TODO: support color, size and shape
         };
 
         // marker color, size and shape
         trace.marker.color = applyMap(data, mapper.markersFillColor, aest.color.fu, fu2idx);
         trace.marker.size = applyMap(data, mapper.markersSize, aest.size.fu, fu2idx);
-        trace.marker.symbol = applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx);
+        trace.marker.symbol = applyMap(data, mapper.samplesShape, aest.shape.fu, fu2idx);
         // TODO:
         // trace.marker.symbol = mapApply(data, mapper.shape, aest.shape.fu, fu2idx);
 
