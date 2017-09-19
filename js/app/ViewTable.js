@@ -225,6 +225,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             traces.push(...TraceGen.aggr(aggrRT, query, mapper));
           }
         }
+
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
           traces.push(...TraceGen.uni(p1dRT, query, mapper));
@@ -246,6 +247,18 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             traces.push(...TraceGen.bi(p2dRT, query, mapper));
             traces.push(...TraceGen.aggr(aggrRT, query, mapper));
           }
+        }
+
+        // one is discrete, the other numerical
+        else {
+          // TODO individual contour plots for each combination?
+          // for now: no 2d density plot
+
+          // TODO: individual marginal density plots for each each combination?
+          // for now: combined one
+          traces.push(...TraceGen.uni(p1dRT, query, mapper));
+          traces.push(...TraceGen.samples(dataRT, query, mapper));
+          traces.push(...TraceGen.aggr(aggrRT, query, mapper));
         }
       }
 
