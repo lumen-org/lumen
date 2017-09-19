@@ -196,12 +196,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           // x and y are independent
           if (xSplit && ySplit) {
 
-            if (used.color && !used.shape && !used.size) {
+            if (used.color && !used.shape && !used.size
+              && PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper));
               //traces.push(...TraceGen.samples(dataRT, query, mapper));
               //traces.push(...TraceGen.bi(p2dRT, query, mapper));
-              //traces.push(...TraceGen.uni(p1dRT, query, mapper)); // TODO: make it possible to enable marginal plots as well
+              // TODO: make it possible to enable marginal plots as well
+              //traces.push(...TraceGen.uni(p1dRT, query, mapper));
+
+              // TODO: plotly heatmaps do not support categorical z values, as a color scale only maps from numerical values. Either find a work around or implement cateogrical heatmaps?
             }
             else { // if (used.shape) {
               // scatter plot

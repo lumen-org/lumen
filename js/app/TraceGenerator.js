@@ -104,7 +104,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       let splits = query.fieldUsages('layout', 'exclude')
         .filter(PQL.isSplit)
         .filter(split => split.field.isDiscrete());
-      let split_idxs = splits.map(split => fu2idx.get(split));
+      let split_idxs = splits.map(split => rt.fu2idx.get(split));
 
       // build nesting function
       let nester = d3c.nest();
@@ -133,17 +133,25 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       if (rt !== undefined) {
         let xIdx = fu2idx.get(xfu),
           yIdx = fu2idx.get(yfu),
-          colorIdx = fu2idx.get(aest.color.fu);
+          colorIdx = fu2idx.get(aest.color.fu),
+          colorMap = mapper.markersFillColor;
+        if (!_.isFunction(colorMap)) throw TypeError("Didn't expect that. Implement this case!");
+        let colorTable = ScaleGen.asTable(colorMap.scale),
+          colorDomain = colorMap.scale.domain();
 
         let attach_aggr_trace = (data) => {
           let trace = {
             name: 'aggregations',
             type: 'heatmap',
-            showscale: true,
-            autocolorscale: true,
             x: selectColumn(data, xIdx),
             y: selectColumn(data, yIdx),
-            z: selectColumn(data, colorIdx), // TODO: how to use my own color scale as generated before?!?
+            z: selectColumn(data, colorIdx), // TODO: how to handle discrete z data??
+            showscale: true,
+            autocolorscale: false,
+            colorscale: colorTable,
+            zauto: false,
+            zmin: colorDomain[0],
+            zmax: colorDomain[colorDomain.length-1],
           };
           traces.push(trace);
         };
@@ -174,20 +182,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         let xIdx = fu2idx.get(xfu),
           yIdx = fu2idx.get(yfu);
 
-        // split into more traces by all remaining splits on discrete field
-        // i.e.: possibly details, color, shape, size
-        let splits = query.fieldUsages('layout', 'exclude')
-          .filter(PQL.isSplit)
-          .filter(split => split.field.isDiscrete());
-        let split_idxs = splits.map(split => fu2idx.get(split));
-
-        // build nesting function
-        let nester = d3c.nest();
-        for (let idx of split_idxs)
-          nester.key(e => e[idx]);
-
-        // nest it!
-        let aggrNestedRT = nester.map(rt);
+        let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
         // create and attach trace for each group, i.e. each leave in the nested data
         let attach_aggr_trace = (data) => {
@@ -202,7 +197,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             },
             line: {
             },
-            // TODO: support color, size and shape
           };
 
           // marker color, size and shape
@@ -215,14 +209,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;
           // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
           //trace.line.color = applyMap(data, mapper.lineColor, aest.color.fu, fu2idx);
+
+          // TODO: changing line width is possible: https://plot.ly/javascript/filled-area-animation/#multiple-trace-filled-area
           // trace.line.width = applyMap(data, mapper.size, aest.size.fu, fu2idx);
 
           traces.push(trace);
         };
 
-        use_refactor_of_above_here
-
-        dfs(aggrNestedRT, attach_aggr_trace, splits.length);
+        dfs(nestedData, attach_aggr_trace, depth);
       }
 
       return traces;
@@ -270,7 +264,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
         }
 
         let lcmap = mapper.lineColor;
-        trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;
+        trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
+
+        // TODO: add trace annotations for shape support and other?
+        // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
 
         return trace;
       }

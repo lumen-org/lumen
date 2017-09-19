@@ -8,7 +8,9 @@
  *
  * Before mappers can be set up, the scales need to be set up. See attachScales().
  *
- * Mappers differ from scales, as scales are always functions that take a data item as input and return the value of a visual variable. Mappers can be either a function (the scale) or a scalar value.
+ * Mappers differ from scales, as scales are always functions that take a data item as input and return the value of a visual variable. Mappers can be either a function (the scale) or a scalar value. Moreover, mappers can handle interval input, while scales cannot.
+ *
+ * If the mapper is a function, than the underlying d3 scale is exposed via the .scale attribute.
  *
  * Also, mappers are for a more specific means (such as coloring the points of the aggregation visualization), whereas scales are attached to the BaseMaps of a query itself.
  */
@@ -22,8 +24,10 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator'], function (Logger
     return _.isArray(val) ? val[0] + val[1] / 2 : val;
   }
 
-  function _averaged(fct) {
-    return d => fct(_valueOrAvg(d));
+  function _averaged(scale) {
+    let mapper = d => scale(_valueOrAvg(d));
+    mapper.scale = scale;
+    return mapper;
   }
 
   let gen = {};
@@ -77,7 +81,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator'], function (Logger
        scale = ScaleGen.color(color, color.fu.extent);
       if (PQL.isSplit(fu)) {
         if (fu.field.isDiscrete()) return _averaged(scale);  // compute on demand
-        else return scale(_valueOrAvg(fu.extent));  // uniform value
+        else return scale(_valueOrAvg(fu.extent));  // scalar value
       } else {
         // aggregation or density
         if (PQL.hasDiscreteYield(fu)) return "grey"; //TODO: put into Settings

@@ -132,6 +132,37 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
     return scale.domain(domain);
   };
 
+  /**
+   * Turns a d3 color scale (i.e. essentially a function mapping input data to output color) on a numerical scale into an array of 2-elements-arrays: normalized-number to color.
+   *
+   * This is needed to transform d3 scales into plotly-compatible color scales.
+   *
+   * Note: it only works for continuous scales!
+   *
+   * @param scale The color scale.
+   * @param n number of elements in the output array. Defaults to 8.
+   * @param min Minimum value to convert. Defaults to the minimum of the domain of scale.
+   * @param max Maximum value to convert. Defaults to the maximum of the domain of scale.
+   */
+  scaleGenerator.asTable = function (scale, n=8, min=undefined, max=undefined) {
+    if (min === undefined || max === undefined) {
+      let domain = scale.domain();
+      if (min === undefined) min = domain[0];
+      if (max === undefined) max = domain[domain.length-1];
+    }
+    if (max <= min) throw RangeError("max must be larger than min");
+    if (n < 2) throw RangeError("n must be at least 2");
+    let cur = min,
+      step = (max-min) / (n-1),
+      normStep = 1 / (n-1),
+      table = [];
+    for(let i=0; i<n; ++i) {
+      table.push([normStep*i, scale(cur)]);
+      cur += step;
+    }
+    return table;
+  };
+
   return scaleGenerator;
 });
 
