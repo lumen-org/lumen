@@ -25,7 +25,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
 
     // vis defaults
     let colorscale = {
-      density: 'Greys'
+      density: [[0, 'rgb(0,0,0)'], [0.9, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']]
+      // density: 'Greys'
     };
 
     let config = {
@@ -232,9 +233,39 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
      * @param query
      * @return {Array}
      */
-    tracer.uni = function(p1dRT, query, mapper) {
+    tracer.uni = function(p1dRT, query, mapper, mode="") {
 
       let aest = query.layers[0].aesthetics;
+
+      function getUniBarTrace(data, xOrY, modelOrData, fu2idx) {
+        let xIdx = (xOrY === 'x'? 1 : 2),
+          yIdx = (xOrY === 'x'? 2 : 1),
+          xAxis = (xOrY === 'x'? 'x' : 'x2'),
+          yAxis = (xOrY === 'x'? 'y2' : 'y');
+
+        let trace = {
+          name: modelOrData + ' marginal on ' + xOrY,
+          //type: modelOrData === 'model' ? 'scatter' : 'bar',
+          type: 'bar',
+          //mode: 'lines',
+          showlegend: false,
+          x: selectColumn(data, xIdx),
+          y: selectColumn(data, yIdx),
+          xaxis: xAxis,
+          yaxis: yAxis,
+          marker: {
+            line: {},
+          },
+        };
+        // if (modelOrData === 'data') {
+        //   trace.line.shape = (xOrY === 'x' ? 'hvh' : 'vhv');
+        // }
+
+        let lcmap = mapper.lineColor;
+        trace.marker.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
+
+        return trace;
+      }
 
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
@@ -250,28 +281,48 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           xAxis = (xOrY === 'x'? 'x' : 'x2'),
           yAxis = (xOrY === 'x'? 'y2' : 'y');
 
+        // is axis field usage numeric or categorical, i.e. histogram or barchar?
+        let axisFu = query.layout[xOrY === 'x'? 'cols' : 'rows'][0];
+
         let trace = {
           name: modelOrData + ' marginal on ' + xOrY,
-          //type: modelOrData === 'model' ? 'scatter' : 'bar',
-          type: 'scatter',
-          mode: 'lines',
           showlegend: false,
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
           xaxis: xAxis,
           yaxis: yAxis,
-          line: {},
         };
-        if (modelOrData === 'data') {
-          trace.line.shape = (xOrY === 'x' ? 'hvh' : 'vhv');
+        if (PQL.hasNumericYield(axisFu)) {
+          // line chart trace
+          _.extendOwn(trace, {
+            //type: modelOrData === 'model' ? 'scatter' : 'bar',
+            //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
+            type: 'scatter',
+            mode: 'lines',
+            line: {},
+          });
+          if (modelOrData === 'data') {
+            trace.line.shape = (xOrY === 'x' ? 'hvh' : 'vhv');
+          }
+          let lcmap = mapper.lineColor;
+          trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
+
+          // TODO: add trace annotations for shape support and other?
+          // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
-
-        let lcmap = mapper.lineColor;
-        trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
-
-        // TODO: add trace annotations for shape support and other?
-        // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
-
+        else {
+          // bar chart trace
+          _.extendOwn(trace, {
+            //type: modelOrData === 'model' ? 'scatter' : 'bar',
+            type: 'bar',
+            orientation: xOrY === 'x' ? 'v' : 'h',
+            opacity: 0.7,
+            marker: {
+            },
+          });
+          let lcmap = mapper.lineColor;
+          trace.marker.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
+        }
         return trace;
       }
 
@@ -304,7 +355,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
       }
 
       let traces = [];
-      let nestByMvd = d3c.nest().key(v => v[0]);
+      let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
       for (let xOrY of ['x', 'y'])
         if (p1dRT[xOrY] !== undefined) {
           let rt = nestByMvd.map(p1dRT[xOrY]);

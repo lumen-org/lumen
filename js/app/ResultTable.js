@@ -11,19 +11,19 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
   logger.setLevel(Logger.DEBUG);
 
 
-  /**
-   * Returns a direct accessor of FieldUsages to corresponding table columns.
-   * WARNING: only works if the table is column-major!!
-   * TODO: I think this is unused and can be removed
-   * @param table
-   * @return {*}
-   * @private
-   */
-  function getByFuAccessor(table, fu2idx) {
-    let byfu = new Map();
-    table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
-    return byfu;
-  }
+  // /**
+  //  * Returns a direct accessor of FieldUsages to corresponding table columns.
+  //  * WARNING: only works if the table is column-major!!
+  //  * TODO: I think this is unused and can be removed
+  //  * @param table
+  //  * @return {*}
+  //  * @private
+  //  */
+  // function getByFuAccessor(table, fu2idx) {
+  //   let byfu = new Map();
+  //   table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
+  //   return byfu;
+  // }
 
   /**
    * Attaches the extent of each column of a (row-major) result table under the attribute .extent and returns the modified table.
@@ -158,26 +158,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        let promise;
-        try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'cols', model);
-          let promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'x');
+        for(let [xOrY, colsOrRows] of [['x','cols'], ['y', 'rows']] ) {
+          let promise;
+          try {
+            let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, model);
+            promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY);
+          }
+          catch (e) {
+            if (e instanceof vismel2pql.ConversionError)
+              promise = Promise.resolve(undefined);
+            else
+              throw e;
+          }
+          fetchPromises.add(promise);
         }
-        catch (e) {
-          if (e instanceof vismel2pql.ConversionError)
-            promise = Promise.resolve(undefined);
-        }
-        fetchPromises.add(promise);
-
-        try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], 'rows', model);
-          promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, 'y');
-        }
-        catch (e) {
-          if (e instanceof vismel2pql.ConversionError)
-            promise = Promise.resolve(undefined);
-        }
-        fetchPromises.add(promise);
       }
     }
     return Promise.all(fetchPromises).then(() => collection);
@@ -218,6 +212,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
     samplesCollection,
     uniDensityCollection,
     biDensityCollection,
-    getByFuAccessor
+    // getByFuAccessor
   };
 });

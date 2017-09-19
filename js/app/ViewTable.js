@@ -170,10 +170,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         lineColor: MapperGen.lineColor(query),
       };
 
-      let traces = [];
-
-      // choose a neat chart type depending on data types
-      let aest = query.layers[0].aesthetics,
+      let traces = [],
+        aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0];
 
@@ -182,6 +180,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
       };
+
+      // choose a neat chart type depending on data types
 
       // both, x and y axis are in use
       if (xfu !== undefined && yfu !== undefined) {
@@ -229,7 +229,23 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         }
       }
 
+      // only one of x-axis and y-axis is in use
+      if (xfu !== undefined && yfu === undefined || xfu === undefined && yfu !== undefined) {
+        let [xOrY, axisFu] = xfu !== undefined ? ['x', xfu] : ['y', yfu];
 
+        // the one in use is categorical
+        if (PQL.hasDiscreteYield(axisFu)) {
+          traces.push(...TraceGen.uni(p1dRT, query, mapper));
+          // TODO: show aggregations
+        }
+        // the one in use is numeric
+        else if (PQL.hasNumericYield(axisFu)) {
+
+        } else {
+          throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
+        }
+
+      }
 
       let c = {
         pane: {
@@ -246,21 +262,28 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       let layout = {
         xaxis2: {
           domain: [0, c.layout.marginal_ratio - c.layout.margin],
-          autorange: 'reversed'
+          autorange: 'reversed',
+          tickmode: 'auto',
+          nticks: 2,
         },
         xaxis: {
           domain: [c.layout.marginal_ratio + c.layout.margin, 1]
         },
         yaxis2: {
           domain: [0, c.layout.marginal_ratio - c.layout.margin],
-          autorange: 'reversed'
+          autorange: 'reversed',
+          tickmode: 'auto',
+          nticks: 2,
         },
         yaxis: {
           domain: [c.layout.marginal_ratio + c.layout.margin, 1]
         },
         height: c.pane.height,
-        width: c.pane.width
+        width: c.pane.width,
       };
+
+      // additional layout options, that actually maybe should be generated where the traces are generated (TODO)
+      layout.barmode = 'group';
 
       Plotly.plot(paneDOM, traces, layout);
       return pane;

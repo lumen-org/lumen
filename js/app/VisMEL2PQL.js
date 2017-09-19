@@ -114,7 +114,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
       else if (PQL.isDensity(fu))
         continue;
       else
-        throw RangeError('Unknown object in field usages: ' + fu.toString());
+        throw new RangeError('Unknown object in field usages: ' + fu.toString());
 
       if (select.has(name)) {
         // don't add again but reuse the stored index
@@ -177,7 +177,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     if (!PQL.isFieldUsage(axisFieldUsage)) {
       // nothing to do! set result table to empty and return fullfilled promise
       //return Promise.resolve(_emptyResultTable());
-      throw ConversionError("empty " + rowsOrCols);
+      throw new ConversionError("empty " + rowsOrCols);
     }
 
     // collect splits from aesthetics and details
@@ -239,7 +239,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     if (!PQL.isFieldUsage(xfu) || !PQL.isFieldUsage(yfu)) {
       // nothing to do! set result table to empty and return fullfilled promise
       //return Promise.resolve(_emptyResultTable())
-      throw ConversionError("at least one empty axis");
+      throw new ConversionError("at least one empty axis");
     }
 
     let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
