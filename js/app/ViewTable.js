@@ -180,12 +180,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
         details: aest.details.length === 0,
+        x: xfu !== undefined,
+        y: yfu !== undefined,
       };
 
       // choose a neat chart type depending on data types
 
       // both, x and y axis are in use
-      if (xfu !== undefined && yfu !== undefined) {
+      if (used.x && used.y) {
         let xDiscrete = PQL.hasDiscreteYield(xfu),
           yDiscrete = PQL.hasDiscreteYield(yfu),
           xSplit = PQL.isSplit(xfu),
@@ -263,23 +265,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
 
       // only one of x-axis and y-axis is in use
-      if (xfu !== undefined && yfu === undefined || xfu === undefined && yfu !== undefined) {
-        let [xOrY, axisFu] = xfu !== undefined ? ['x', xfu] : ['y', yfu];
-
+      if (used.x && !used.y || !used.x && used.y) {
+        let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
+        traces.push(...TraceGen.uni(p1dRT, query, mapper));
         // the one in use is categorical
         if (PQL.hasDiscreteYield(axisFu)) {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper));
-          // TODO: show aggregations
+          // anything special here to do?
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          CONTINUE HERE!
-
-        } else {
+          traces.push(...TraceGen.samples(dataRT, query, mapper));
+        } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
-        }
-
+        traces.push(...TraceGen.aggr(aggrRT, query, mapper));
       }
+
 
       let c = {
         pane: {
@@ -288,33 +288,165 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         },
         layout: {
           marginal_ratio: 0.15,
+          marginal_ratio_unused: 0.5,
           margin: 0.00
         }
       };
 
-      // create layout
-      let layout = {
-        xaxis2: {
-          domain: [0, c.layout.marginal_ratio - c.layout.margin],
-          autorange: 'reversed',
-          tickmode: 'auto',
-          nticks: 2,
-        },
-        xaxis: {
-          domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-        },
-        yaxis2: {
-          domain: [0, c.layout.marginal_ratio - c.layout.margin],
-          autorange: 'reversed',
-          tickmode: 'auto',
-          nticks: 2,
-        },
-        yaxis: {
-          domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-        },
+      // flags to disable/enable marginal plot:
+      let marginal = {
+        x: true,
+        y: true,
+      };
+
+      // set layout
+
+      // // if only one axis is in use, then the other main axis and the 'opposite' small axis can be disabled
+      // let disableXY = used.x ? ['yaxis','xaxis2'] : ['xaxis','yaxis2'];
+      // for (let axis of disableXY) {
+      //   _.extend(layout[axis], {
+      //     visible: false,
+      //     showline: false,
+      //     showgrid: false
+      //   });
+      // }
+
+      let layout = {};
+
+      // disable marginal axis if y is unused
+      for (let xOrY of ['x', 'y'])
+        marginal[xOrY] = marginal[xOrY] && used[xOrY];
+
+      if (used.x && used.y) {
+        if (marginal.x) {
+          layout.yaxis = {
+            domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+          };
+          layout.yaxis2 = {
+            domain: [0, c.layout.marginal_ratio - c.layout.margin],
+            autorange: 'reversed',
+            tickmode: 'auto',
+            nticks: 2,
+          };
+        }
+        if (marginal.y) {
+          layout.xaxis = {
+            domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+          };
+          layout.xaxis2 = {
+            domain: [0, c.layout.marginal_ratio - c.layout.margin],
+            autorange: 'reversed',
+            tickmode: 'auto',
+            nticks: 2,
+          };
+        }
+      }
+      else if (!used.x && used.y) {
+        if (marginal.y) {
+          layout.xaxis = {
+            //domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+            domain: [c.layout.marginal_ratio_unused + c.layout.margin, 1],
+          };
+          layout.xaxis2 = {
+            //domain: [0, c.layout.marginal_ratio - c.layout.margin],
+            domain: [0, c.layout.marginal_ratio_unused - c.layout.margin],
+            autorange: 'reversed',
+            tickmode: 'auto',
+            nticks: 2,
+          };
+        }
+        _.extend(layout.xaxis, {
+          visible: false,
+          showline: false,
+          showgrid: false,
+          range: [-1,1],
+          fixedrange: true,
+        });
+      } else if(used.x && !used.y) {
+        if (marginal.x) {
+          layout.yaxis = {
+            //domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+            domain: [c.layout.marginal_ratio_unused + c.layout.margin, 1],
+          };
+          layout.yaxis2 = {
+            //domain: [0, c.layout.marginal_ratio - c.layout.margin],
+            domain: [0, c.layout.marginal_ratio_unused - c.layout.margin],
+            autorange: 'reversed',
+            tickmode: 'auto',
+            nticks: 2,
+          };
+        }
+        _.extend(layout.yaxis, {
+          visible: false,
+          showline: false,
+          showgrid: false,
+          range: [-1,1],
+          fixedrange: true,
+        });
+      } else {
+        // NOTHING
+      }
+
+
+      //
+      // if (used.y) {
+      //   if (marginal.y) {
+      //     _.extend(layout.xaxis,{
+      //       domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+      //     });
+      //     _.extend(layout.xaxis2, {
+      //       domain: [0, c.layout.marginal_ratio - c.layout.margin],
+      //       autorange: 'reversed',
+      //       tickmode: 'auto',
+      //       nticks: 2,
+      //     });
+      //   } else {
+      //     _.extend(layout.xaxis, {
+      //       domain: [0, 1],
+      //     });
+      //   }
+      // } else {
+      //   _.extend(layout.yaxis, {
+      //     visible: false,
+      //     showline: false,
+      //     showgrid: false,
+      //     range: [-1,1],
+      //     fixedrange: true,
+      //   });
+      //   delete layout.yaxis2;
+      // }
+      //
+      // if (used.x) {
+      //   if (marginal.x) {
+      //     _.extend(layout.yaxis,{
+      //       domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+      //     });
+      //     _.extend(layout.yaxis2, {
+      //       domain: [0, c.layout.marginal_ratio - c.layout.margin],
+      //       autorange: 'reversed',
+      //       tickmode: 'auto',
+      //       nticks: 2,
+      //     });
+      //   } else {
+      //     _.extend(layout.yaxis, {
+      //       domain: [0, 1],
+      //     });
+      //   }
+      // } else {
+      //   _.extend(layout.xaxis, {
+      //     visible: false,
+      //     showline: false,
+      //     showgrid: false,
+      //     //range: [-1,1],
+      //     fixedrange: true,
+      //   });
+      //   delete layout.xaxis2;
+      // }
+
+      _.extend(layout, {
         height: c.pane.height,
         width: c.pane.width,
-      };
+      });
 
       // additional layout options, that actually maybe should be generated where the traces are generated (TODO)
       layout.barmode = 'group';

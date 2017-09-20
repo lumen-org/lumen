@@ -60,9 +60,13 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
 
     /**
      * Returns column with index col_idx of row-major data table data.
+     *
+     * If colIdx is undefined or null then it returns an array length data.length with all values equal to deflt.
      */
-    function selectColumn(data, col_idx) {
-      return data.map(e => e[col_idx]);
+    function selectColumn(data, colIdx, deflt=0) {
+      return (colIdx== null ?
+        new Array(data.length).fill(deflt) :
+        data.map(e => e[colIdx]));
     }
 
     /**
@@ -201,7 +205,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             opacity: 0.9,
             marker: {
               showscale: false,
-
               // sizemode: 'area',
             },
             line: {
