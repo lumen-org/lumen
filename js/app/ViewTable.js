@@ -278,8 +278,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
         traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+      } else {
+        traces.push(...TraceGen.aggr(aggrRT, query, mapper));
       }
-
 
       let c = {
         pane: {
@@ -290,6 +291,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           marginal_ratio: 0.15,
           marginal_ratio_unused: 0.5,
           margin: 0.00
+        }
+      };
+
+      let template = {
+        unusedAxis : {
+          visible: false,
+          showline: false,
+          showgrid: false,
+          range: [-1,1],
+          fixedrange: true,
         }
       };
 
@@ -334,16 +345,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             nticks: 2,
           };
         }
-        _.extend(layout[unusedXY+'axis'], {
-          visible: false,
-          showline: false,
-          showgrid: false,
-          range: [-1,1],
-          fixedrange: true,
-        });
+        _.extend(layout[unusedXY+'axis'], template.unusedAxis);
       }
       else {
-        // NOTHING
+        layout.xaxis = template.unusedAxis,
+        layout.yaxis = template.unusedAxis
       }
 
       _.extend(layout, {
