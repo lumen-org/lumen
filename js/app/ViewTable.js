@@ -179,7 +179,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         color : aest.color instanceof VisMEL.ColorMap,
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
-        details: aest.details.length === 0,
+        details: aest.details.length != 0,
         x: xfu !== undefined,
         y: yfu !== undefined,
       };
@@ -203,10 +203,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
               && PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               // TODO: make it possible to enable marginal plots as well
-              //traces.push(...TraceGen.uni(p1dRT, query, mapper));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper));
               //traces.push(...TraceGen.bi(p2dRT, query, mapper));
-              //traces.push(...TraceGen.samples(dataRT, query, mapper));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper));
+              traces.push(...TraceGen.samples(dataRT, query, mapper));
               // TODO: plotly heatmaps do not support categorical z values, as a color scale only maps from numerical values. Either find a work around or implement cateogrical heatmaps?
             }
             else { // if (used.shape) {
@@ -265,7 +265,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
 
       // only one of x-axis and y-axis is in use
-      if (used.x && !used.y || !used.x && used.y) {
+      else if (used.x && !used.y || !used.x && used.y) {
         let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
         traces.push(...TraceGen.uni(p1dRT, query, mapper));
         // the one in use is categorical
