@@ -300,17 +300,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       };
 
       // set layout
-
-      // // if only one axis is in use, then the other main axis and the 'opposite' small axis can be disabled
-      // let disableXY = used.x ? ['yaxis','xaxis2'] : ['xaxis','yaxis2'];
-      // for (let axis of disableXY) {
-      //   _.extend(layout[axis], {
-      //     visible: false,
-      //     showline: false,
-      //     showgrid: false
-      //   });
-      // }
-
       let layout = {};
 
       // disable marginal axis if y is unused
@@ -318,72 +307,42 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         marginal[xOrY] = marginal[xOrY] && used[xOrY];
 
       if (used.x && used.y) {
-        if (marginal.x) {
-          layout.yaxis = {
-            domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-          };
-          layout.yaxis2 = {
-            domain: [0, c.layout.marginal_ratio - c.layout.margin],
-            autorange: 'reversed',
-            tickmode: 'auto',
-            nticks: 2,
-          };
-        }
-        if (marginal.y) {
-          layout.xaxis = {
-            domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-          };
-          layout.xaxis2 = {
-            domain: [0, c.layout.marginal_ratio - c.layout.margin],
-            autorange: 'reversed',
-            tickmode: 'auto',
-            nticks: 2,
-          };
+        for (let [xOrY, invXorY] of [['x','y'], ['y','x']]) {
+          if (marginal[xOrY]) {
+            layout[invXorY+'axis'] = {
+              domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+            };
+            layout[invXorY+'axis2'] = {
+              domain: [0, c.layout.marginal_ratio - c.layout.margin],
+              autorange: 'reversed',
+              tickmode: 'auto',
+              nticks: 2,
+            };
+          }
         }
       }
-      else if (!used.x && used.y) {
-        if (marginal.y) {
-          layout.xaxis = {
-            //domain: [c.layout.marginal_ratio + c.layout.margin, 1]
+      else if (!used.x && used.y || used.x && !used.y) {
+        let [usedXY, unusedXY] = used.x ? ['x','y'] : ['y','x'];
+        if (marginal[usedXY]) {
+          layout[unusedXY+'axis'] = {
             domain: [c.layout.marginal_ratio_unused + c.layout.margin, 1],
           };
-          layout.xaxis2 = {
-            //domain: [0, c.layout.marginal_ratio - c.layout.margin],
+          layout[unusedXY+'axis2'] = {
             domain: [0, c.layout.marginal_ratio_unused - c.layout.margin],
             autorange: 'reversed',
             tickmode: 'auto',
             nticks: 2,
           };
         }
-        _.extend(layout.xaxis, {
+        _.extend(layout[unusedXY+'axis'], {
           visible: false,
           showline: false,
           showgrid: false,
           range: [-1,1],
           fixedrange: true,
         });
-      } else if(used.x && !used.y) {
-        if (marginal.x) {
-          layout.yaxis = {
-            //domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-            domain: [c.layout.marginal_ratio_unused + c.layout.margin, 1],
-          };
-          layout.yaxis2 = {
-            //domain: [0, c.layout.marginal_ratio - c.layout.margin],
-            domain: [0, c.layout.marginal_ratio_unused - c.layout.margin],
-            autorange: 'reversed',
-            tickmode: 'auto',
-            nticks: 2,
-          };
-        }
-        _.extend(layout.yaxis, {
-          visible: false,
-          showline: false,
-          showgrid: false,
-          range: [-1,1],
-          fixedrange: true,
-        });
-      } else {
+      }
+      else {
         // NOTHING
       }
 
