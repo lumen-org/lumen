@@ -346,62 +346,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         // NOTHING
       }
 
-
-      //
-      // if (used.y) {
-      //   if (marginal.y) {
-      //     _.extend(layout.xaxis,{
-      //       domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-      //     });
-      //     _.extend(layout.xaxis2, {
-      //       domain: [0, c.layout.marginal_ratio - c.layout.margin],
-      //       autorange: 'reversed',
-      //       tickmode: 'auto',
-      //       nticks: 2,
-      //     });
-      //   } else {
-      //     _.extend(layout.xaxis, {
-      //       domain: [0, 1],
-      //     });
-      //   }
-      // } else {
-      //   _.extend(layout.yaxis, {
-      //     visible: false,
-      //     showline: false,
-      //     showgrid: false,
-      //     range: [-1,1],
-      //     fixedrange: true,
-      //   });
-      //   delete layout.yaxis2;
-      // }
-      //
-      // if (used.x) {
-      //   if (marginal.x) {
-      //     _.extend(layout.yaxis,{
-      //       domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-      //     });
-      //     _.extend(layout.yaxis2, {
-      //       domain: [0, c.layout.marginal_ratio - c.layout.margin],
-      //       autorange: 'reversed',
-      //       tickmode: 'auto',
-      //       nticks: 2,
-      //     });
-      //   } else {
-      //     _.extend(layout.yaxis, {
-      //       domain: [0, 1],
-      //     });
-      //   }
-      // } else {
-      //   _.extend(layout.xaxis, {
-      //     visible: false,
-      //     showline: false,
-      //     showgrid: false,
-      //     //range: [-1,1],
-      //     fixedrange: true,
-      //   });
-      //   delete layout.xaxis2;
-      // }
-
       _.extend(layout, {
         height: c.pane.height,
         width: c.pane.width,
