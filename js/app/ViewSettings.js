@@ -37,6 +37,5 @@ define([], function () {
         outerTickSize: -5
       }
     }
-
   });
 });

@@ -282,7 +282,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         traces.push(...TraceGen.aggr(aggrRT, query, mapper));
       }
 
-      let c = {
+      let config = {
         pane: {
           height: pane.size.height,
           width: pane.size.width
@@ -290,18 +290,41 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         layout: {
           marginal_ratio: 0.15,
           marginal_ratio_unused: 0.5,
-          margin: 0.00
+          margin_main_sub: 0.005,
+          margin: 20,
         }
       };
 
       let template = {
-        unusedAxis : {
-          visible: false,
-          showline: false,
+        unusedMainAxis : () => ({
+          visible: true,
+          mirror: true,
+          showline: true,
+          zeroline: false,
           showgrid: false,
+          showticklabels: false,
+          ticks: "",
           range: [-1,1],
           fixedrange: true,
-        }
+        }),
+        usedMainAxis: () => ({
+          showline: true,
+          linecolor: "grey",
+          linewidth: 1,
+          mirror: true, // 'all' mirrors to marginal axis as well
+          zeroline: false,
+          // zerolinewidth: 10,
+          // zerolinecolor: "black",
+        }),
+        marginalAxis: (used, xOrY='x') => ({
+          autorange: 'reversed',
+          tickmode: 'auto',
+          zeroline: !used,
+          rangemode: 'tozero',
+          domain : [0, (used ? config.layout.marginal_ratio : config.layout.marginal_ratio_unused) - config.layout.margin_main_sub],
+          nticks: 2,
+          tickangle: xOrY === 'x' ? 90 : 0,
+        }),
       };
 
       // flags to disable/enable marginal plot:
@@ -311,54 +334,56 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       };
 
       // set layout
-      let layout = {};
+      let layout = {
+        title: 'test title',
+        // additional layout options, that actually maybe should be generated where the traces are generated
+        barmode: 'group',
+      };
 
       // disable marginal axis if y is unused
       for (let xOrY of ['x', 'y'])
         marginal[xOrY] = marginal[xOrY] && used[xOrY];
 
+      // compile axes
       if (used.x && used.y) {
         for (let [xOrY, invXorY] of [['x','y'], ['y','x']]) {
+          layout[invXorY + 'axis'] = template.usedMainAxis();
           if (marginal[xOrY]) {
-            layout[invXorY+'axis'] = {
-              domain: [c.layout.marginal_ratio + c.layout.margin, 1]
-            };
-            layout[invXorY+'axis2'] = {
-              domain: [0, c.layout.marginal_ratio - c.layout.margin],
-              autorange: 'reversed',
-              tickmode: 'auto',
-              nticks: 2,
-            };
+            layout[invXorY+'axis'].domain = [config.layout.marginal_ratio + config.layout.margin_main_sub, 1];
+            layout[invXorY+'axis2'] = template.marginalAxis(true, invXorY);
           }
         }
       }
       else if (!used.x && used.y || used.x && !used.y) {
         let [usedXY, unusedXY] = used.x ? ['x','y'] : ['y','x'];
+        layout[usedXY + 'axis'] = template.usedMainAxis();
         if (marginal[usedXY]) {
           layout[unusedXY+'axis'] = {
-            domain: [c.layout.marginal_ratio_unused + c.layout.margin, 1],
+            domain: [config.layout.marginal_ratio_unused + config.layout.margin_main_sub, 1],
           };
-          layout[unusedXY+'axis2'] = {
-            domain: [0, c.layout.marginal_ratio_unused - c.layout.margin],
-            autorange: 'reversed',
-            tickmode: 'auto',
-            nticks: 2,
-          };
+          layout[unusedXY+'axis2'] = template.marginalAxis(false, unusedXY);
         }
-        _.extend(layout[unusedXY+'axis'], template.unusedAxis);
+        _.extend(layout[unusedXY+'axis'], template.unusedMainAxis());
       }
       else {
-        layout.xaxis = template.unusedAxis,
-        layout.yaxis = template.unusedAxis
+        layout.xaxis = template.unusedMainAxis();
+        layout.yaxis = template.unusedMainAxis();
+      }
+
+      // add axis names
+      for (let [xOrY, rowsOrCols] of [['x', 'cols'], ['y', 'rows']]) {
+        if (used[xOrY]) {
+          layout[xOrY + 'axis'].title = query.layout[rowsOrCols][0].yields;
+        }
       }
 
       _.extend(layout, {
-        height: c.pane.height,
-        width: c.pane.width,
+        height: config.pane.height,
+        width: config.pane.width,
+        margin: {
+          l:config.layout.margin, t:config.layout.margin, r:config.layout.margin, b:config.layout.margin
+        }
       });
-
-      // additional layout options, that actually maybe should be generated where the traces are generated (TODO)
-      layout.barmode = 'group';
 
       Plotly.plot(paneDOM, traces, layout);
       return pane;

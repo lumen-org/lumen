@@ -65,6 +65,10 @@ main {
     height: 600px;
 }
 
+.pl-plotly-atomic-div {
+    border: 1px solid lightgray;
+}
+
 #queryTextBox {
     font-size: small;
 }
