@@ -46,10 +46,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
 
   c.colorscales = {
     density: [[0, 'rgb(0,0,0)'], [0.99, 'rgb(255,255,255)'], [0.99, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']],
-    continuous: {
-      diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
-      sequential: d3chromatic.schemeYlOrBr[11] , // ohne Nulldurchgang / bis 0
-    },
+    diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
+    sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
     discrete9: d3chromatic.schemeSet1,
     discrete12: d3chromatic.schemePaired,
   };

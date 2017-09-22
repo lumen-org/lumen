@@ -42,12 +42,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], funct
    *      * d3.schemeRdBu[9] (or d3.schemeRdYlBu[9] ?) centered on 0!
    */
 
-  function paletteSelect (colorMap, domain) {
+  scaleGenerator.color = function (colorMap, domain) {
     let fu = colorMap.fu,
       palette,
       scale;
 
-    if (PQL.hasDiscreteYield()) {
+    if (PQL.hasDiscreteYield(fu)) {
       scale = d3.scale.ordinal();
       let l = domain.length;
       if (l <= 9)
@@ -95,40 +95,40 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], funct
       domain = d3.range(cnt).map(d => l + d*step);
     }
     return scale.domain(domain).range(palette);
-  }
-
-  scaleGenerator.color = function (colorMap, domain) {
-    var colorPalette = [],
-      scale = [],
-      fu = colorMap.fu;
-    switch (fu.yieldDataType) {
-      case PQL.FieldT.DataType.num:
-        scale = d3.scale.linear();
-        // usa poly-linear scale for a good approximation of the implicit color gradient. for that we need to extend the domain to also have 9 values.
-        colorPalette = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
-        let step = (domain[1]-domain[0])/(9-1);
-        domain = d3.range(9).map(d => domain[0] + d*step);
-        break;
-      case PQL.FieldT.DataType.string:
-        scale = d3.scale.ordinal();
-        let l = domain.length;
-        // colormap
-        if (l <= 2) {
-          colorPalette = cbrew.Set1[3].slice(0, l);
-        } else if (l <= 9) {
-          colorPalette = cbrew.Set1[l];
-        } else { //if (l <= 12) {
-          if (l > 12) {
-            logger.warn("the domain of the dimension " + fu.name + " has too many elements: " + l + "\n I'll just use 12, anyway.");
-            l = 12;
-          }
-          colorPalette = cbrew.Paired[l];
-        }
-        break;
-      default: throw new RangeError("invalid Field.dataType: " + fu.dataType);
-    }
-    return scale.domain(domain).range(colorPalette);
   };
+  //
+  // scaleGenerator.colorOld = function (colorMap, domain) {
+  //   var colorPalette = [],
+  //     scale = [],
+  //     fu = colorMap.fu;
+  //   switch (fu.yieldDataType) {
+  //     case PQL.FieldT.DataType.num:
+  //       scale = d3.scale.linear();
+  //       // usa poly-linear scale for a good approximation of the implicit color gradient. for that we need to extend the domain to also have 9 values.
+  //       colorPalette = cbrew.Blues["9"]; // attention: if you change the colormap, make sure to also change the 9 in the next line accordingly.
+  //       let step = (domain[1]-domain[0])/(9-1);
+  //       domain = d3.range(9).map(d => domain[0] + d*step);
+  //       break;
+  //     case PQL.FieldT.DataType.string:
+  //       scale = d3.scale.ordinal();
+  //       let l = domain.length;
+  //       // colormap
+  //       if (l <= 2) {
+  //         colorPalette = cbrew.Set1[3].slice(0, l);
+  //       } else if (l <= 9) {
+  //         colorPalette = cbrew.Set1[l];
+  //       } else { //if (l <= 12) {
+  //         if (l > 12) {
+  //           logger.warn("the domain of the dimension " + fu.name + " has too many elements: " + l + "\n I'll just use 12, anyway.");
+  //           l = 12;
+  //         }
+  //         colorPalette = cbrew.Paired[l];
+  //       }
+  //       break;
+  //     default: throw new RangeError("invalid Field.dataType: " + fu.dataType);
+  //   }
+  //   return scale.domain(domain).range(colorPalette);
+  // };
 
 
   /**
