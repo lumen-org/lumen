@@ -12,7 +12,7 @@
  */
 
 define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator'],
-  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, MapperGen, Settings, TraceGen) {
+  function (Logger, d3, PQL, VisMEL, RT, S, ScaleGen, MapperGen, config, TraceGen) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -88,9 +88,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           y: 0,
           width: width,
           height: height,
-          stroke: Settings.appearance.pane.borderColor,
+          stroke: config.appearance.pane.borderColor,
           //'stroke-width': 0,
-          'fill': Settings.appearance.pane.fill
+          'fill': config.appearance.pane.fill
           //'fill-opacity': 0
         });
       // the subpane is a collection of variables that make up a subpane, including its data marks
@@ -282,55 +282,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         traces.push(...TraceGen.aggr(aggrRT, query, mapper));
       }
 
-      let config = {
-        pane: {
-          height: pane.size.height,
-          width: pane.size.width
-        },
-        layout: {
-          marginal_ratio: 0.15,
-          marginal_ratio_unused: 0.5,
-          margin_main_sub: 0.005,
-          margin: 20,
-        }
-      };
-
-      let template = {
-        unusedMainAxis : () => ({
-          visible: true,
-          mirror: true,
-          showline: true,
-          zeroline: false,
-          showgrid: false,
-          showticklabels: false,
-          ticks: "",
-          range: [-1,1],
-          fixedrange: true,
-        }),
-        usedMainAxis: () => ({
-          showline: true,
-          linecolor: "grey",
-          linewidth: 1,
-          mirror: true, // 'all' mirrors to marginal axis as well
-          zeroline: false,
-          // zerolinewidth: 10,
-          // zerolinecolor: "black",
-        }),
-        marginalAxis: (used, xOrY='x') => ({
-          autorange: 'reversed',
-          tickmode: 'auto',
-          zeroline: !used,
-          rangemode: 'tozero',
-          domain : [0, (used ? config.layout.marginal_ratio : config.layout.marginal_ratio_unused) - config.layout.margin_main_sub],
-          nticks: 2,
-          tickangle: xOrY === 'x' ? 90 : 0,
-        }),
-      };
-
       // flags to disable/enable marginal plot:
       let marginal = {
-        x: true,
-        y: true,
+        x: config.plots.marginal.visible.x,
+        y: config.plots.marginal.visible.y
       };
 
       // set layout
@@ -347,27 +302,27 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // compile axes
       if (used.x && used.y) {
         for (let [xOrY, invXorY] of [['x','y'], ['y','x']]) {
-          layout[invXorY + 'axis'] = template.usedMainAxis();
+          layout[invXorY + 'axis'] = config.axisGenerator.main(true);
           if (marginal[xOrY]) {
-            layout[invXorY+'axis'].domain = [config.layout.marginal_ratio + config.layout.margin_main_sub, 1];
-            layout[invXorY+'axis2'] = template.marginalAxis(true, invXorY);
+            layout[invXorY+'axis'].domain = [config.plots.layout.ratio_marginal.used + config.plots.layout.margin_main_sub, 1];
+            layout[invXorY+'axis2'] = config.axisGenerator.marginal(true, invXorY);
           }
         }
       }
       else if (!used.x && used.y || used.x && !used.y) {
         let [usedXY, unusedXY] = used.x ? ['x','y'] : ['y','x'];
-        layout[usedXY + 'axis'] = template.usedMainAxis();
+        layout[usedXY + 'axis'] = config.axisGenerator.main(true);
         if (marginal[usedXY]) {
           layout[unusedXY+'axis'] = {
-            domain: [config.layout.marginal_ratio_unused + config.layout.margin_main_sub, 1],
+            domain: [config.plots.layout.ratio_marginal.unused + config.plots.layout.margin_main_sub, 1],
           };
-          layout[unusedXY+'axis2'] = template.marginalAxis(false, unusedXY);
+          layout[unusedXY+'axis2'] = config.axisGenerator.marginal(false, unusedXY);
         }
-        _.extend(layout[unusedXY+'axis'], template.unusedMainAxis());
+        _.extend(layout[unusedXY+'axis'], config.axisGenerator.main(false));
       }
       else {
-        layout.xaxis = template.unusedMainAxis();
-        layout.yaxis = template.unusedMainAxis();
+        layout.xaxis = config.axisGenerator.main();
+        layout.yaxis = config.axisGenerator.main();
       }
 
       // add axis names
@@ -378,10 +333,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
 
       _.extend(layout, {
-        height: config.pane.height,
-        width: config.pane.width,
+        height: pane.size.height,
+        width: pane.size.width,
         margin: {
-          l:config.layout.margin, t:config.layout.margin, r:config.layout.margin, b:config.layout.margin
+          l:config.plots.layout.margin, t:config.plots.layout.margin, r:config.plots.layout.margin, b:config.plots.layout.margin
         }
       });
 
@@ -437,7 +392,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         uses.set('col', {base: col});
       uses.set('hover', {});
       uses.set('opacity', {value: 1.0});  // TODO: put into settings
-      uses.set('stroke', {value: Settings.maps.stroke});  // TODO: put into settings
+      uses.set('stroke', {value: config.maps.stroke});  // TODO: put into settings
 
       // setup mapper for visual variables. draw later.
       let aggrMapper = getMapper(uses, aggr, pane.size);
@@ -450,7 +405,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         }
       );
       uses.set('opacity', {value: 0.4}); // TODO: put into settings
-      uses.set('stroke', {value: Settings.maps.fill});  // TODO: put into settings
+      uses.set('stroke', {value: config.maps.fill});  // TODO: put into settings
 
       // data marks have no fill but the fill color as stroke color instead
       // remap fill color to stroke color
@@ -503,7 +458,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         let repeat = 1; // number of times the axis of the current level has to be repeated
 
         for (let d = 0; d < templSplitStackDepth; ++d) {
-          let stackOffset = Settings.geometry.axis.size * (stackDepth - d - 1);
+          let stackOffset = config.geometry.axis.size * (stackDepth - d - 1);
           let dimUsage = templSplitDims[d];
           let elem = {};
           elem.FU = dimUsage;
@@ -513,7 +468,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           elem.axis = d3.svg.axis()
             .scale(elem.scale)
             .orient(axisType === "x axis" ? "bottom" : "left")
-            .tickSize(0, Settings.geometry.axis.outerTickSize);
+            .tickSize(0, config.geometry.axis.outerTickSize);
 
           // axis needs to be drawn multiple times
           elem.axisD3 = new Array(repeat);
@@ -538,8 +493,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             // tweak domain line: make it a bit shorter on both ends
             {
               let sign = axisType === "y axis" ? -1 : 1,
-                ots = Settings.geometry.axis.outerTickSize,
-                pad = d * Settings.geometry.axis.padding / stackDepth,
+                ots = config.geometry.axis.outerTickSize,
+                pad = d * config.geometry.axis.padding / stackDepth,
                 reducedRange = [pad, range - pad];
               if (axisType === "x axis")
                 axisG.select("path.domain").attr("d", "M" + reducedRange[0] + "," + sign * ots + "H" + reducedRange[1]);
@@ -550,7 +505,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             // tweak tick labels
             {
               axisG.selectAll("text")
-                .attr("font-size", Settings.geometry.axis.tickFontSizePx + "px");
+                .attr("font-size", config.geometry.axis.tickFontSizePx + "px");
               if (axisType === "y axis")
                 axisG.selectAll("text")
                   .attr("y", "-0.6em")
@@ -560,8 +515,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
             // add axis label
             {
-              let x = axisType === "x axis" ? canvas.size.width / repeat / 2 : -(Settings.geometry.axis.labelFontSizePx * 2 - 4),
-                y = axisType === "y axis" ? canvas.size.height / repeat / 2 : Settings.geometry.axis.labelFontSizePx * 2 + 4;
+              let x = axisType === "x axis" ? canvas.size.width / repeat / 2 : -(config.geometry.axis.labelFontSizePx * 2 - 4),
+                y = axisType === "y axis" ? canvas.size.height / repeat / 2 : config.geometry.axis.labelFontSizePx * 2 + 4;
               let labelD3 = axisG.append("text")
                 .text(elem.FU.yields)
                 .classed("axis label", true)
@@ -645,7 +600,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       axis.axis(axis.axisD3);
 
       axis.axisD3.selectAll("text")
-        .attr("font-size", Settings.geometry.axis.tickFontSizePx + "px");
+        .attr("font-size", config.geometry.axis.tickFontSizePx + "px");
 
       if (axisType === "y axis") {
         axis.axisD3.selectAll("text")
@@ -655,8 +610,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
 
       // add field usage name, i.e. label of axis
-      let x = axisType === "x axis" ? pane.size.width / 2 : -(Settings.geometry.axis.labelFontSizePx * 2 - 5),
-        y = axisType === "y axis" ? pane.size.height / 2 : Settings.geometry.axis.labelFontSizePx * 2 + 2;
+      let x = axisType === "x axis" ? pane.size.width / 2 : -(config.geometry.axis.labelFontSizePx * 2 - 5),
+        y = axisType === "y axis" ? pane.size.height / 2 : config.geometry.axis.labelFontSizePx * 2 + 2;
       axis.labelD3 = axis.axisD3.append("text")
         .text(axis.FU.yields)
         .classed("axis label", true)
@@ -839,7 +794,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       // if (aesthetics.size instanceof VisMEL.SizeMap && aesthetics.size.visScale === undefined)
       if (aesthetics.size instanceof VisMEL.SizeMap)
-        aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent, [Settings.maps.minSize, Settings.maps.maxSize]);
+        aesthetics.size.visScale = ScaleGen.size(aesthetics.size, aesthetics.size.fu.extent, [config.maps.minSize, config.maps.maxSize]);
 
       // if (aesthetics.shape instanceof VisMEL.ShapeMap && aesthetics.shape.visScale === undefined)
       if (aesthetics.shape instanceof VisMEL.ShapeMap)
@@ -848,12 +803,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       let row = query.layout.rows[0];
       // if (PQL.isFieldUsage(row) && row.visScale === undefined)
       if (PQL.isFieldUsage(row))
-        row.visScale = ScaleGen.position(row, row.extent, [paneSize.height - Settings.geometry.axis.padding, Settings.geometry.axis.padding]);
+        row.visScale = ScaleGen.position(row, row.extent, [paneSize.height - config.geometry.axis.padding, config.geometry.axis.padding]);
 
       let col = query.layout.cols[0];
       // if (PQL.isFieldUsage(col) && col.visScale === undefined)
       if (PQL.isFieldUsage(col))
-        col.visScale = ScaleGen.position(col, col.extent, [Settings.geometry.axis.padding, paneSize.width - Settings.geometry.axis.padding]);
+        col.visScale = ScaleGen.position(col, col.extent, [config.geometry.axis.padding, paneSize.width - config.geometry.axis.padding]);
 
       // else: todo: scale for dimensions? in case I decide to keep the "last dimension" in the atomic query
 
@@ -880,7 +835,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       function mapFill(fill) {
         if (fill === undefined) {
-          return Settings.maps.fill;
+          return config.maps.fill;
         } else if (fill.hasOwnProperty('base')) {
           let idx = fu2idx.get(fill.base.fu);
           return d => fill.base.visScale(_valueOrAvg(d[idx]));
@@ -895,7 +850,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       function mapStroke(stroke) {
         if (stroke === undefined) {
-          return Settings.maps.stroke;
+          return config.maps.stroke;
         } else if (stroke.hasOwnProperty('base')) {
           let idx = fu2idx.get(stroke.base.fu);
           return d => stroke.base.visScale(_valueOrAvg(d[idx]));
@@ -909,11 +864,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       mapper.stroke = mapStroke(what.get('stroke'));
 
       let opacity = what.get('opacity');
-      mapper.opacity = (opacity !== undefined ? opacity.value : Settings.maps.opacity);
+      mapper.opacity = (opacity !== undefined ? opacity.value : config.maps.opacity);
 
       function mapSize(size) {
         if (size === undefined) {
-          return Settings.maps.size;
+          return config.maps.size;
         } else if (size.hasOwnProperty('base')) {
           let idx = fu2idx.get(size.base.fu);
           return d => size.base.visScale(_valueOrAvg(d[idx]));
@@ -928,7 +883,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       function mapShape(shape) {
         if (shape === undefined) {
-          return Settings.maps.shape;
+          return config.maps.shape;
         } else if (shape.hasOwnProperty('base')) {
           let idx = fu2idx.get(shape.base.fu);
           return d => shape.base.visScale(_valueOrAvg(d[idx]));
@@ -1024,8 +979,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         0, // margin around the canvas
         {
           top: 5, right: 5,
-          bottom: query.layout.cols.stackDepth * Settings.geometry.axis.size,
-          left: query.layout.rows.stackDepth * Settings.geometry.axis.size
+          bottom: query.layout.cols.stackDepth * config.geometry.axis.size,
+          left: query.layout.rows.stackDepth * config.geometry.axis.size
         } // padding for axis
       );
 
