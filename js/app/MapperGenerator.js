@@ -38,7 +38,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     if (color instanceof VisMEL.ColorMap) {
       return _averaged(ScaleGen.color(color, color.fu.extent));
     } else {
-      return "#377eb8";
+      return c.map.aggrMarker.fill.def;
     }
   };
 
@@ -101,8 +101,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
    *
    * Generates a mapper for the color of the lines/bars in the 1d marginal density plots.
    *
-   * Note that there is a bit of "inconsistency": the passed in VisMEL query is the query for the main plot,
-   * and only implicitly describes the marginal plot.
+   * Note that there is some "inconsistency": the passed in VisMEL query is the query for the main plot,
+   * and only implicitly describes the marginal plot. TODO: In fact this is a major flaw and should be fixed.
    *
    * There are the following cases:
    *

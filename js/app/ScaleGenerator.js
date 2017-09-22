@@ -4,7 +4,7 @@
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, cbrew, PQL) {
+define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], function (Logger, d3, cbrew, PQL, c) {
   "use strict";
 
   var logger = Logger.get('pl-ScaleGenerator');
@@ -27,8 +27,76 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL'], function (Logger, d3, c
    * Creates a color scale based on a given {@link FieldUsage}.
    * @param fu A {@link FieldUsage}.
    * @returns the created color scale.
-
+   *
+   * Color Schemes are chosen as follows:
+   *
+   *  * domain is discrete:
+   *    * if (domain has at most 9 elements): d3.schemeSet1()
+   *    * else if (domain has at most 12 elements) d3.schemePaired()
+   *
+   *  * domain is continuous:
+   *    * domain is (almost) exclusively negative or non-negative:
+   *       * domain extends (close to) 0: d3.schemeYlOrBr[9] (starting/ending at 0)
+   *       * domain extents not to 0:d3.schemeYlOrBr[9] (not including 0)
+   *    * domain encloses 0:
+   *      * d3.schemeRdBu[9] (or d3.schemeRdYlBu[9] ?) centered on 0!
    */
+
+  function paletteSelect (colorMap, domain) {
+    let fu = colorMap.fu,
+      palette,
+      scale;
+
+    if (PQL.hasDiscreteYield()) {
+      scale = d3.scale.ordinal();
+      let l = domain.length;
+      if (l <= 9)
+        palette = c.colorscales.discrete9;
+      else if (l <= 12)
+        palette = c.colorscales.discrete12;
+      else {
+        logger.warn("the domain of the field " + fu.name + " has too many elements to efficiently encode them as categorical colors: " + l + "\n I'll only use 12, anyway.");
+        palette = c.colorscales.discrete12;
+        //throw new ValueError("too many categories to encode in color");
+      }
+      palette = palette.slice(0, l);
+    }
+    else {
+      scale = d3.scale.linear();
+      let [l,h] = domain,
+        size = h-l,
+        ext = size*0.05;
+
+      // check if domain is (almost) exclusively negative or non-negative:
+      if (h-ext < 0 || l+ext > 0) {
+        palette = c.colorscales.sequential;
+
+        // include 0 if closely not included
+        if (h < 0 && h+ext > 0)
+          h = 0;
+        if (l > 0 && l-ext < 0)
+          l = 0;
+
+        // invert palette if all negative
+        if (h-ext < 0) {
+          palette = palette.slice();
+          palette.reverse();
+        }
+      }
+      else {
+        palette = c.colorscales.diverging
+        // TODO: center palette on 0
+
+      }
+
+      // adopt domain
+      let cnt = palette.length;
+      let step = (h-l)/(cnt-1);
+      domain = d3.range(cnt).map(d => l + d*step);
+    }
+    return scale.domain(domain).range(palette);
+  }
+
   scaleGenerator.color = function (colorMap, domain) {
     var colorPalette = [],
       scale = [],

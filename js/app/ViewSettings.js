@@ -45,15 +45,19 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
   });
 
   c.colorscales = {
-    density: [[0, 'rgb(0,0,0)'], [0.95, 'rgb(255,255,255)'], [0.95, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']],
-    // categorical (5,10,20)
-    // continuous (mit Nulldurchgang, ohne Nulldurchgang)
+    density: [[0, 'rgb(0,0,0)'], [0.99, 'rgb(255,255,255)'], [0.99, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']],
+    continuous: {
+      diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
+      sequential: d3chromatic.schemeYlOrBr[11] , // ohne Nulldurchgang / bis 0
+    },
+    discrete9: d3chromatic.schemeSet1,
+    discrete12: d3chromatic.schemePaired,
   };
 
   c.map = {
     aggrMarker: {
       fill: {
-        def: 0,
+        def: "#377eb8",
         opacity: 0.9,
       },
       stroke: {
@@ -93,16 +97,16 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
   c.plots = {
     main: {
       background: {
-        fill: 'white',
+        fill: 'white', //TODO
       },
       grid: {
-        color: "green",
+        color: "red", //TODO
       },
       axis: {
         color: "#3D3A40",
       },
       text: {
-        color: greys(1),
+        color: greys(1.0),
         size: 12,
       }
     },

@@ -71,10 +71,16 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
     function splitRTIntoTraceData (rt, query) {
       // split into more traces by all remaining splits on discrete field
       // i.e.: possibly details, color, shape, size
-      let splits = query.fieldUsages('layout', 'exclude')
-        .filter(PQL.isSplit)
-        .filter(split => split.field.isDiscrete());
-      let split_idxs = splits.map(split => rt.fu2idx.get(split));
+      let xfu = query.layout.cols[0],
+        yfu = query.layout.rows[0],
+        splits = query.fieldUsages('layout', 'exclude')
+          .filter(PQL.isSplit).filter(split => split.field.isDiscrete());
+
+      // if there is a cont. split on both, rows and cols, then split by both!
+      if (PQL.isSplit(xfu) && PQL.hasNumericYield(xfu) && PQL.isSplit(yfu) && PQL.hasNumericYield(yfu))
+        splits.push(xfu, yfu);
+
+      let split_idxs = _.uniq(splits.map(split => rt.fu2idx.get(split)));
 
       // build nesting function
       let nester = d3c.nest();
