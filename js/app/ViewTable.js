@@ -163,13 +163,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       // build all mappers
       let mapper = {
-        markersFillColor: MapperGen.markersFillColor(query),
-        markersSize: MapperGen.markersSize(query),
+        aggrFillColor: MapperGen.markersFillColor(query),
+        aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
         aggrShape: MapperGen.markersShape(query, 'filled'),
         samplesShape: MapperGen.markersShape(query, 'open'),
+        samplesSize: MapperGen.markersSize(query, config.map.sampleMarker.size),
         lineColor: MapperGen.lineColor(query),
-        marginalColor: MapperGen.marginalColor(query),
       };
+      mapper.marginalColor = MapperGen.marginalColor(query, mapper.aggrFillColor);
 
       let traces = [],
         aest = query.layers[0].aesthetics,

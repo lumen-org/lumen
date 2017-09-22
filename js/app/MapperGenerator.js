@@ -42,13 +42,13 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     }
   };
 
-  gen.markersSize = function (query) {
+  gen.markersSize = function (query, opts) {
     let aesthetics = query.layers[0].aesthetics,
       size = aesthetics.size;
     if (size instanceof VisMEL.SizeMap) {
-      return _averaged(ScaleGen.size(size, size.fu.extent, [5, 40]));
+      return _averaged(ScaleGen.size(size, size.fu.extent, [opts.min, opts.max]));
     } else {
-      return 8;  //TODO: put into Settings
+      return opts.def;
     }
   };
 
@@ -71,8 +71,6 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
    *   else: color of the average value of the extent
    * else:
    *   some default color
-   *
-   * @param mode: Either 'main' (for a line in the main plot) or 'marginal' (for a line in the marginal plots'). Defaults to 'main'.
    */
   gen.lineColor = function (query) {
     let aesthetics = query.layers[0].aesthetics,
@@ -104,21 +102,27 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
    * Generates a mapper for the color of the lines/bars in the 1d marginal density plots.
    *
    * Note that there is a bit of "inconsistency": the passed in VisMEL query is the query for the main plot,
-   * and only implicitly describes the marginal plot. In particular, only splits on color are respected, not aggregations (as they are not represented).
+   * and only implicitly describes the marginal plot.
+   *
+   * There are the following cases:
+   *
+   *   * Color is not used: grey
+   *   * Color is used by a FieldUsage that has discrete yield: We will split the bars/lines by the discrete outcomes of that aggregation/split and encode them differently to allow visual distinction.
+   *   * TODO: Color is used by a FieldUsage that has continuous yield: Then use ColorMap for main plot and apply it to the average of the domain of the ColorMap field. This way there is a better visual correspondence. ATM: just grey. but its implemented. just uncomment.
    *
    * @param query A VisMEL query.
    */
-  gen.marginalColor = function (query) {
+  gen.marginalColor = function (query, mainColorMap) {
     let color = query.layers[0].aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       let fu = color.fu;
-      if (PQL.isSplit(fu)) {
+      if (PQL.hasDiscreteYield(fu)) {
         let scale = ScaleGen.color(color, fu.extent);
-        if (PQL.hasDiscreteYield(fu))
-          return _averaged(scale);  // compute on demand
-        else
-          return scale(_valueOrAvg(fu.extent));  // scalar value, namely color for the average of the domain.
+        return _averaged(scale);  // compute on demand
       }
+      // else {
+      //   return mainColorMap(_valueOrAvg(fu.extent)); // scalar value, namely color for the average of the domain.
+      // }
     }
     return c.map.uniDensity.color.def;
   };

@@ -107,7 +107,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         let xIdx = fu2idx.get(xfu),
           yIdx = fu2idx.get(yfu),
           colorIdx = fu2idx.get(aest.color.fu),
-          colorMap = mapper.markersFillColor;
+          colorMap = mapper.aggrFillColor;
         if (!_.isFunction(colorMap)) throw TypeError("Didn't expect that. Implement this case!");
         let colorTable = ScaleGen.asTable(colorMap.scale),
           colorDomain = colorMap.scale.domain();
@@ -151,7 +151,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
-        traces = [];
+        traces = [],
+        cfg = c.map.aggrMarker;
 
       if (rt !== undefined) {
         let xIdx = fu2idx.get(xfu),
@@ -165,9 +166,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             name: 'aggregations',
             type: 'scatter',
             showlegend: false,
+            cliponaxis: false,
             x: selectColumn(data, xIdx),
             y: selectColumn(data, yIdx),
-            opacity: 0.9,
+            opacity: cfg.fill.opacity,
             marker: {
               showscale: false,
               // sizemode: 'area',
@@ -177,9 +179,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           };
 
           // marker color, size and shape
-          trace.marker.color = applyMap(data, mapper.markersFillColor, aest.color.fu, fu2idx);
-          trace.marker.size = applyMap(data, mapper.markersSize, aest.size.fu, fu2idx);
+          trace.marker.color = applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx);
+          trace.marker.size = applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx);
           trace.marker.symbol = applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx);
+          trace.marker.line = {
+            color: cfg.stroke.color,
+            width: cfg.stroke.width
+          };
 
           // line color and width
           let lcmap = mapper.lineColor;
@@ -247,6 +253,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
             type: 'scatter',
             mode: 'lines',
+            cliponaxis: false,
             line: {
               color: color,
               width: 2, // TODO
@@ -274,7 +281,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
       }
 
       /**
-       * Splits given data into subgroups by all splits of the vismel query (but not model vs data splits). For each subgroup an appropriate trace is generated. The array of all traces is returned.
+       * Splits given data into subgroups by all splits of the vismel query (but not model vs data splits).
+       * For each subgroup an appropriate trace is generated. The array of all traces is returned.
        * @param data The data to split further.
        * @param fu2idx A map of FieldUsages to column indices in the data.
        * @param xOrY 'x' ('y') if the trace is for x (y) axis.
@@ -287,6 +295,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           .filter(PQL.isSplit)
           .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
         let split_idxs = splits.map(split => fu2idx.get(split));
+
+        // TODO: this is a larger piece of work. We should create a VisMEL uni trace query and then turn in to PQL ...
+        // split into more traces by all remaining discrete yield fields (but not model vs data splits)
+        // let splits = query.fieldUsages('layout', 'exclude')
+        //   .filter(PQL.hasDiscreteYield)
+        //   .filter(split => (split.name !== 'model vs data'));// && split.field.isDiscrete()));
+        // let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
 
         // build nesting function
         let nester = d3c.nest();
@@ -419,8 +434,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         };
 
         // marker color, size and shape
-        trace.marker.color = applyMap(data, mapper.markersFillColor, aest.color.fu, fu2idx);
-        trace.marker.size = applyMap(data, mapper.markersSize, aest.size.fu, fu2idx);
+        trace.marker.color = applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx);
+        trace.marker.size = applyMap(data, mapper.samplesSize, aest.size.fu, fu2idx);
         trace.marker.symbol = applyMap(data, mapper.samplesShape, aest.shape.fu, fu2idx);
         // TODO:
         // trace.marker.symbol = mapApply(data, mapper.shape, aest.shape.fu, fu2idx);

@@ -54,19 +54,28 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     aggrMarker: {
       fill: {
         def: 0,
+        opacity: 0.9,
+      },
+      stroke: {
+        color: greys(0.8),
+        width: 1,
       },
       size: {
-        min: 0,
-        max: 0,
-        def: 0,
-        type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
+        min: 6,
+        max: 40,
+        def: 8,
+        //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       shape: {
 
       }
     },
     sampleMarker: {
-
+      size: {
+        min: 6,
+        max: 40,
+        def: 8,
+      },
     },
     uniDensity: {
       color: {
