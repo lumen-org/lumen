@@ -14,7 +14,7 @@
  *
  * Also, mappers are for a more specific means (such as coloring the points of the aggregation visualization), whereas scales are attached to the BaseMaps of a query itself.
  */
-define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator'], function (Logger, PQL, VisMEL, ScaleGen) {
+define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings'], function (Logger, PQL, VisMEL, ScaleGen, c) {
   "use strict";
 
   var logger = Logger.get('pl-MapperGenerator');
@@ -71,6 +71,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator'], function (Logger
    *   else: color of the average value of the extent
    * else:
    *   some default color
+   *
+   * @param mode: Either 'main' (for a line in the main plot) or 'marginal' (for a line in the marginal plots'). Defaults to 'main'.
    */
   gen.lineColor = function (query) {
     let aesthetics = query.layers[0].aesthetics,
@@ -78,18 +80,47 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator'], function (Logger
 
     if (color instanceof VisMEL.ColorMap) {
       let fu = color.fu,
-       scale = ScaleGen.color(color, color.fu.extent);
+       scale = ScaleGen.color(color, fu.extent);
       if (PQL.isSplit(fu)) {
-        if (fu.field.isDiscrete()) return _averaged(scale);  // compute on demand
-        else return scale(_valueOrAvg(fu.extent));  // scalar value
+        if (PQL.hasDiscreteYield(fu))
+          return _averaged(scale);  // compute on demand
+        else
+          return scale(_valueOrAvg(fu.extent));  // scalar value
       } else {
         // aggregation or density
-        if (PQL.hasDiscreteYield(fu)) return "grey"; //TODO: put into Settings
-        else return scale(_valueOrAvg(fu.extent));
+        if (PQL.hasDiscreteYield(fu))
+          return "grey"; //TODO: put into Settings
+        else
+          return scale(_valueOrAvg(fu.extent));
       }
     } else {
-      return "#377eb8"; // TODO: put into Settings
+      return "#377eb8";  // TODO: put into Settings
     }
+  };
+
+  /**
+   * See also gen.lineColor.
+   *
+   * Generates a mapper for the color of the lines/bars in the 1d marginal density plots.
+   *
+   * Note that there is a bit of "inconsistency": the passed in VisMEL query is the query for the main plot,
+   * and only implicitly describes the marginal plot. In particular, only splits on color are respected, not aggregations (as they are not represented).
+   *
+   * @param query A VisMEL query.
+   */
+  gen.marginalColor = function (query) {
+    let color = query.layers[0].aesthetics.color;
+    if (color instanceof VisMEL.ColorMap) {
+      let fu = color.fu;
+      if (PQL.isSplit(fu)) {
+        let scale = ScaleGen.color(color, fu.extent);
+        if (PQL.hasDiscreteYield(fu))
+          return _averaged(scale);  // compute on demand
+        else
+          return scale(_valueOrAvg(fu.extent));  // scalar value, namely color for the average of the domain.
+      }
+    }
+    return c.map.uniDensity.color.def;
   };
 
   return gen;

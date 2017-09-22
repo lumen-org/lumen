@@ -16,47 +16,12 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
-  function (Logger, d3c, PQL, VisMEL, RT, S, ScaleGen, Settings) {
+define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
+  function (Logger, d3c, PQL, VisMEL, RT, S, ScaleGen, c) {
     "use strict";
 
     let logger = Logger.get('pl-ViewTable');
     logger.setLevel(Logger.DEBUG);
-
-    // vis defaults
-    let colorscale = {
-      density: [[0, 'rgb(0,0,0)'], [0.9, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']]
-      // density: 'Greys'
-    };
-
-    let config = {
-      pane : {
-        height: 600,
-        width: 800
-      },
-      layout : {
-        marginal_ratio: 0.15,
-        margin: 0.00
-      }
-    };
-
-    // function row_major_RT_to_col_major_RT(dataTable) {
-    //   // create dataframe from it
-    //   let df = new dfjs.DataFrame(dataTable, dataTable.header);
-    //
-    //   // turn to column major
-    //   df = df.transpose();
-    //   let table = df.toArray();
-    //
-    //   // reattach maps
-    //   table.fu2idx = dataTable.fu2idx;
-    //   table.idx2fu = dataTable.idx2fu;
-    //
-    //   // attach direct label accessors
-    //   table.byFu = RT.getByFuAccessor(table);
-    //
-    //   return table;
-    // }
 
     /**
      * Returns column with index col_idx of row-major data table data.
@@ -245,36 +210,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
 
       let aest = query.layers[0].aesthetics;
 
-      function getUniBarTrace(data, xOrY, modelOrData, fu2idx) {
-        let xIdx = (xOrY === 'x'? 1 : 2),
-          yIdx = (xOrY === 'x'? 2 : 1),
-          xAxis = (xOrY === 'x'? 'x' : 'x2'),
-          yAxis = (xOrY === 'x'? 'y2' : 'y');
-
-        let trace = {
-          name: modelOrData + ' marginal on ' + xOrY,
-          //type: modelOrData === 'model' ? 'scatter' : 'bar',
-          type: 'bar',
-          //mode: 'lines',
-          showlegend: false,
-          x: selectColumn(data, xIdx),
-          y: selectColumn(data, yIdx),
-          xaxis: xAxis,
-          yaxis: yAxis,
-          marker: {
-            line: {},
-          },
-        };
-        // if (modelOrData === 'data') {
-        //   trace.line.shape = (xOrY === 'x' ? 'hvh' : 'vhv');
-        // }
-
-        let lcmap = mapper.lineColor;
-        trace.marker.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
-
-        return trace;
-      }
-
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
@@ -300,6 +235,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           xaxis: xAxis,
           yaxis: yAxis,
         };
+
+        let lcmap = mapper.marginalColor;
+        // whole line gets same color, or all lines has uniform color anyway
+        let color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;
+
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
           _.extendOwn(trace, {
@@ -307,14 +247,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
             type: 'scatter',
             mode: 'lines',
-            line: {},
+            line: {
+              color: color,
+              width: 2, // TODO
+            },
           });
           if (modelOrData === 'data') {
             trace.line.shape = (xOrY === 'x' ? 'hvh' : 'vhv');
           }
-          let lcmap = mapper.lineColor;
-          trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
-
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -324,12 +264,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             //type: modelOrData === 'model' ? 'scatter' : 'bar',
             type: 'bar',
             orientation: xOrY === 'x' ? 'v' : 'h',
-            opacity: 0.7,
+            opacity: c.map.uniDensity.bar.opacity,
             marker: {
+              color: color,
             },
           });
-          let lcmap = mapper.lineColor;
-          trace.marker.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;  // whole line gets same color, or all lines has uniform color anyway
         }
         return trace;
       }
@@ -403,7 +342,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           y: selectColumn(rt, 1),
           z: selectColumn(rt, 2),
           opacity: 0.3,
-          colorscale: colorscale.density,
+          colorscale: c.map.biDensity.colorscale,
           reversescale: true
         };
 
@@ -411,7 +350,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           trace.type = 'contour';
           // _.extend(trace, {
           //   type: 'contour',
-          //   colorscale: colorscale.density,
+          //   colorscale: c.map.biDensity.colorscale,
           //   reversescale: true
           // });
           // let contour_trace = {
@@ -422,7 +361,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
             // y: selectColumn(rt, 1),
             // z: selectColumn(rt, 2),
             // opacity: 0.3,
-            // colorscale: colorscale.density,
+            // colorscale: c.map.biDensity.colorscale,
             // reversescale: true
           // };
           traces.push(trace);
@@ -438,7 +377,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ResultTable',
           //   opacity: 0.3,
           //   showscale: false,
           //   autocolorscale: false,
-          //   colorscale: colorTable,
+          //   colorscale: c.map.biDensity.colorscale,
           //   zauto: false,
           //   zmin: colorDomain[0],
           //   zmax: colorDomain[colorDomain.length-1],

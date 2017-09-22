@@ -168,6 +168,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         aggrShape: MapperGen.markersShape(query, 'filled'),
         samplesShape: MapperGen.markersShape(query, 'open'),
         lineColor: MapperGen.lineColor(query),
+        marginalColor: MapperGen.marginalColor(query),
       };
 
       let traces = [],
@@ -288,14 +289,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         y: config.plots.marginal.visible.y
       };
 
-      // set layout
+      // ### compile layout
       let layout = {
         title: 'test title',
         // additional layout options, that actually maybe should be generated where the traces are generated
         barmode: 'group',
       };
 
-      // disable marginal axis if y is unused
+      // disable marginal axis if not required
       for (let xOrY of ['x', 'y'])
         marginal[xOrY] = marginal[xOrY] && used[xOrY];
 
@@ -336,7 +337,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         height: pane.size.height,
         width: pane.size.width,
         margin: {
-          l:config.plots.layout.margin, t:config.plots.layout.margin, r:config.plots.layout.margin, b:config.plots.layout.margin
+          l:config.plots.layout.margin, t:config.plots.layout.margin,
+          r:config.plots.layout.margin, b:config.plots.layout.margin,
         }
       });
 

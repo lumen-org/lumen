@@ -13,7 +13,7 @@ require.config({
   // and that path itself is relative to the html file calling it
   baseUrl: '../js',
 
-  // rules to resolve module IDs (i.e. explizit additional rules)
+  // rules to resolve module IDs (i.e. explicit additional rules)
   paths: {
     d3: 'lib/d3.min'
   }

@@ -1,12 +1,15 @@
 /**
  * @copyright © 2015-2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define([], function () {
+//define([], function () {
+define(['d3-scale-chromatic'], function (d3chromatic) {
   "use strict";
 
-  let config = {};
+  let greys = d3chromatic.interpolateGreys;
 
-  _.extend(config, {
+  let c = {};
+
+  _.extend(c, {
     maps: {
       size: 50,
       minSize: 32,
@@ -41,28 +44,57 @@ define([], function () {
     }
   });
 
-  config.colorscales = {
+  c.colorscales = {
+    density: [[0, 'rgb(0,0,0)'], [0.95, 'rgb(255,255,255)'], [0.95, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']],
     // categorical (5,10,20)
     // continuous (mit Nulldurchgang, ohne Nulldurchgang)
   };
 
-  config.map = {
+  c.map = {
     aggrMarker: {
-      fill: 0,
+      fill: {
+        def: 0,
+      },
       size: {
         min: 0,
         max: 0,
         def: 0,
         type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
+      },
+      shape: {
+
       }
     },
-    sampleMarker: {}
+    sampleMarker: {
+
+    },
+    uniDensity: {
+      color: {
+        def: greys(0.5),
+      },
+      bar: {
+        opacity: 0.3,
+      }
+    },
+    biDensity: {
+      colorscale: c.colorscales.density
+    }
   };
 
-  config.plots = {
+  c.plots = {
     main: {
       background: {
         fill: 'white',
+      },
+      grid: {
+        color: "green",
+      },
+      axis: {
+        color: "#3D3A40",
+      },
+      text: {
+        color: greys(1),
+        size: 12,
       }
     },
 
@@ -73,7 +105,20 @@ define([], function () {
       },
       background: {
         fill: 'white'
+      },
+      grid: {
+        color: greys(0.6),
+        width: 5, //TODO
+      },
+      axis: {
+        color: greys(0.4),
+        zerolinewidth: 1,
+      },
+      text: {
+        color: greys(0.6),
+        size: 10,
       }
+
     },
 
     layout: {
@@ -81,22 +126,32 @@ define([], function () {
         used: 0.15,
         unused: 0.5,
       },
-      margin_main_sub: 0.005,
+      //margin_main_sub: 0.005,
+      margin_main_sub: 0.02,
       margin: 20,
     }
   };
 
-  config.axisGenerator = {
+
+  c.axisGenerator = {
     main: (used) => {
       if (used)
         return {
           showline: true,
-          linecolor: "grey",
+          linecolor: c.plots.main.axis.color,
           linewidth: 1,
-          mirror: true, // 'all' mirrors to marginal axis as well
-          zeroline: false,
+          mirror: false, // 'all' mirrors to marginal axis as well
+          zeroline: true,
           // zerolinewidth: 10,
           // zerolinecolor: "black",
+          tickfont: {
+            color: c.plots.main.text.color,
+            size: c.plots.main.text.size,
+          },
+          titlefont: {
+            color: c.plots.main.text.color,
+            size: c.plots.main.text.size*1.25,
+          }
         };
       else
         return {
@@ -115,13 +170,24 @@ define([], function () {
     marginal: (used, xOrY = 'x') => ({
       autorange: 'reversed',
       tickmode: 'auto',
-      zeroline: !used,
+      //zeroline: !used,
+      zeroline: true,
+      zerolinecolor: c.plots.marginal.axis.color,
+      zerolinewidth: c.plots.marginal.axis.zerolinewidth,
       rangemode: 'tozero',
-      domain: [0, (used ? config.plots.layout.ratio_marginal.used : config.plots.layout.ratio_marginal.unused) - config.plots.layout.margin_main_sub],
+      domain: [0, (used ? c.plots.layout.ratio_marginal.used : c.plots.layout.ratio_marginal.unused) - c.plots.layout.margin_main_sub],
       nticks: 2,
       tickangle: xOrY === 'x' ? 90 : 0,
+      tickfont: {
+        color: c.plots.marginal.text.color,
+        size: c.plots.marginal.text.size,
+      },
+      titlefont: {
+        color: c.plots.marginal.text.color,
+        size: c.plots.marginal.text.size,
+      }
     }),
   };
 
-  return Object.freeze(config);
+  return Object.freeze(c);
 });
