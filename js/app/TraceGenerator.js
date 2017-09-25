@@ -118,22 +118,29 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
       if (!(aest.color instanceof VisMEL.ColorMap)) throw RangeError("Cannot use aggrHeatmap if color is _not_ in use!");
 
       // in fact no split, other than on rows and cols may be present, since we wouldn't know how to visualize the split within one heatmap tile
-      // TODO if ()
-
       if (rt !== undefined) {
         if (!_.isFunction(mapper.aggrFillColor)) throw TypeError("Didn't expect that. Implement this case!");
 
         let colorFu = aest.color.fu,
           colorIdx = fu2idx.get(colorFu),
           colorTable, colorDomain, colorData;
-        // plotly heatmaps require to use a colorscale, instead of a manual color specification
+        // plotly heatmaps require to use a colorscale. It's impossible to ise a manual color specification
+
         if (PQL.hasDiscreteYield(colorFu)) {
-          // to support discrete color values: (i) use special colorsale, (ii) convert string values to ints
-          colorTable = c.colorscales.discrete12asContinuous;
-          let maxLength = colorTable.length;
-          if (colorFu.extent.length > maxLength) throw RangeError("no support for that many colors in a discrete scale.");
+          // create step-wise continuous color table
+          colorTable = [];
+          let colorMapper = mapper.aggrFillColor;
+
+          let convertMap = d3c.map();
+          colorFu.extent.forEach((v, idx) => {
+            let color = colorMapper(v);
+            colorTable.push([idx,color], [idx,color]);
+            convertMap.set(v, idx)
+          });
+
+          // convert categorial data to integer values
+          colorData = selectColumn(rt, colorIdx).map(v => convertMap.get(v));
           colorDomain = [0, colorFu.extent.length-1];
-          colorData = toIntegerLevels(selectColumn(rt, colorIdx), colorFu.extent);
         } else {
           colorTable = ScaleGen.asTable(mapper.aggrFillColor.scale);
           colorDomain = colorFu.extent;

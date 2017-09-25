@@ -24,10 +24,16 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     return _.isArray(val) ? val[0] + val[1] / 2 : val;
   }
 
-  function _averaged(scale) {
-    let mapper = d => scale(_valueOrAvg(d));
-    mapper.scale = scale;
-    return mapper;
+  function _averaged(scale, hasDiscreteDomain=false) {
+    // if the scale works on a discrete domain, we anyway can never average
+    if (hasDiscreteDomain) {
+      scale.scale = scale;
+      return scale;
+    } else {
+      let mapper = d => scale(_valueOrAvg(d));
+      mapper.scale = scale;
+      return mapper;
+    }
   }
 
   let gen = {};

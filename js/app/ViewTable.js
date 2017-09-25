@@ -201,7 +201,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           // x and y are independent
           if (xSplit && ySplit) {
 
-            if (used.color && !used.shape && !used.size && !used.details) {
+            if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               // TODO: make it possible to enable marginal plots as well

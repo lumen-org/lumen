@@ -51,8 +51,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     discrete9: d3chromatic.schemeSet1,
     discrete12: d3chromatic.schemePaired,
   };
-  c.colorscales.discrete12asContinuous = c.colorscales.discrete12.map(color => [color,color]);
-  c.colorscales.discrete9asContinuous = c.colorscales.discrete9.map(color => [color,color]);
+  // c.colorscales.discrete12asContinuous = c.colorscales.discrete12.map(color => [color,color]);
+  // c.colorscales.discrete9asContinuous = c.colorscales.discrete9.map(color => [color,color]);
 
   // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
   c.shapes = {
