@@ -201,8 +201,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           // x and y are independent
           if (xSplit && ySplit) {
 
-            if (used.color && !used.shape && !used.size && !used.details
-              && PQL.hasNumericYield(aest.color.fu)) {
+            if (used.color && !used.shape && !used.size && !used.details) {
+              //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               // TODO: make it possible to enable marginal plots as well
               traces.push(...TraceGen.uni(p1dRT, query, mapper));
@@ -335,8 +335,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
 
       _.extend(layout, {
-        height: pane.size.height,
-        width: pane.size.width,
+        height: pane.size.height*3,
+        width: pane.size.width*3,
         margin: {
           l:config.plots.layout.margin, t:config.plots.layout.margin,
           r:config.plots.layout.margin, b:config.plots.layout.margin,

@@ -212,7 +212,7 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], funct
    *
    * Note: it only works for continuous scales!
    *
-   * @param scale The color scale.
+   * @param scale The d3 color scale.
    * @param n number of elements in the output array. Defaults to 8.
    * @param min Minimum value to convert. Defaults to the minimum of the domain of scale.
    * @param max Maximum value to convert. Defaults to the maximum of the domain of scale.

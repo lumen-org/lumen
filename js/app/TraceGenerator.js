@@ -24,6 +24,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
     logger.setLevel(Logger.DEBUG);
 
     /**
+     * Converts an array of string values into an array of integer values, using the extent array as conversion array.
+     * @param arr
+     * @param extent
+     */
+    function toIntegerLevels (arr, extent) {
+      let str2int = d3c.map();
+      extent.forEach( (str, idx) => str2int.set(str, idx) );
+      return arr.map(val => str2int.get(val));
+    }
+
+    /**
      * Returns column with index col_idx of row-major data table data.
      *
      * If colIdx is undefined or null then it returns an array length data.length with all values equal to deflt.
@@ -112,35 +123,41 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
       if (rt !== undefined) {
         let xIdx = fu2idx.get(xfu),
           yIdx = fu2idx.get(yfu),
-          colorIdx = fu2idx.get(aest.color.fu),
-          colorMap = mapper.aggrFillColor;
-        if (!_.isFunction(colorMap)) throw TypeError("Didn't expect that. Implement this case!");
-        let colorTable = ScaleGen.asTable(colorMap.scale),
-          colorDomain = colorMap.scale.domain();
+          colorFu = aest.color.fu,
+          colorIdx = fu2idx.get(colorFu);
+        if (!_.isFunction(mapper.aggrFillColor)) throw TypeError("Didn't expect that. Implement this case!");
 
-        let attach_aggr_trace = (data) => {
-          let trace = {
-            name: 'aggregations',
-            type: 'heatmap',
-            x: selectColumn(data, xIdx),
-            y: selectColumn(data, yIdx),
-            z: selectColumn(data, colorIdx), // TODO: how to handle discrete z data??
-            showscale: false,
-            autocolorscale: false,
-            colorscale: colorTable,
-            zauto: false,
-            zmin: colorDomain[0],
-            zmax: colorDomain[colorDomain.length - 1],
-          };
-          traces.push(trace);
-        };
+        // plotly heatmaps require to use a colorscale, instead of a manual color specification
+        let colorTable, colorDomain, colorData;
+        if (PQL.hasDiscreteYield(colorFu)) {
+          // to support discrete color values: (i) use special colorsale, (ii) convert string values to ints
+          colorTable = c.colorscales.discrete12asContinuous;
+          let maxLength = colorTable.length;
+          if (colorFu.extent.length > maxLength) throw RangeError("no support for that many colors in a discrete scale.");
+          colorDomain = [0, colorFu.extent.length-1];
+          colorData = toIntegerLevels(selectColumn(rt, colorIdx), colorFu.extent);
+        } else {
+          colorTable = ScaleGen.asTable(mapper.aggrFillColor.scale);
+          colorDomain = colorFu.extent;
+          colorData = selectColumn(rt, colorIdx);
+        }
 
         // no nesting necessary (no further splitting present)
-        // let [nestedData, depth] = splitRTIntoTraceData(rt, query);
-
-        // create and attach trace for each group, i.e. each leave in the nested data
-        //dfs(nestedData, attach_aggr_trace, depth);
-        attach_aggr_trace(rt);
+        let trace = {
+          name: 'aggregations',
+          type: 'heatmap',
+          x: selectColumn(rt, xIdx),
+          y: selectColumn(rt, yIdx),
+          z: colorData,
+          showscale: false,
+          autocolorscale: false,
+          colorscale: colorTable,
+          zauto: false,
+          zmin: colorDomain[0],
+          zmax: colorDomain[1],
+          opacity: c.map.heatmap.opacity[PQL.hasDiscreteYield(colorFu) ? "discrete" : "continuous"],
+        };
+        traces.push(trace);
       }
 
       return traces;
