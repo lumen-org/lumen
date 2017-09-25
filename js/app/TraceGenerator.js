@@ -129,12 +129,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         if (PQL.hasDiscreteYield(colorFu)) {
           // create step-wise continuous color table
           colorTable = [];
-          let colorMapper = mapper.aggrFillColor;
+          let colorMapper = mapper.aggrFillColor,
+            len = colorFu.extent.length;
 
           let convertMap = d3c.map();
           colorFu.extent.forEach((v, idx) => {
             let color = colorMapper(v);
-            colorTable.push([idx,color], [idx,color]);
+            colorTable.push([idx/len,color], [(idx+1)/len,color]);
             convertMap.set(v, idx)
           });
 
