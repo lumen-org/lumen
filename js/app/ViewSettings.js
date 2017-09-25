@@ -45,14 +45,13 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
   });
 
   c.colorscales = {
-    density: [[0, 'rgb(0,0,0)'], [0.99, 'rgb(255,255,255)'], [0.99, 'rgb(255,255,255)'], [1, 'rgb(255,255,255)']],
+    density: [[0, 'rgb(255,255,255)'], [0.0001, 'rgb(255,255,255)'], [0.0001, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
+    //density: [[0, 'rgb(255,255,255)'], [0.01, 'rgb(255,255,255)'], [0.01, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
     diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
     sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
     discrete9: d3chromatic.schemeSet1,
     discrete12: d3chromatic.schemePaired,
   };
-  // c.colorscales.discrete12asContinuous = c.colorscales.discrete12.map(color => [color,color]);
-  // c.colorscales.discrete9asContinuous = c.colorscales.discrete9.map(color => [color,color]);
 
   // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
   c.shapes = {
@@ -100,7 +99,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       },
       fill: {
         opacity: 0.6,
-      }
+      },
+      maxDisplayed: 500,  // the maximum number of samples plotted in one trace of one atomic plot
     },
     uniDensity: {
       color: {
@@ -113,7 +113,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     biDensity: {
       colorscale: c.colorscales.density,
       opacity: 0.4,
-    }
+    },
   };
 
   c.plots = {

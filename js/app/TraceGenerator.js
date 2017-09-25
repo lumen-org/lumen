@@ -377,8 +377,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           y: selectColumn(rt, 1),
           z: selectColumn(rt, 2),  // TODO: how to handle discrete z data??
           opacity: c.map.biDensity.opacity,
+          autocolorscale: false,
           colorscale: c.map.biDensity.colorscale,
-          reversescale: true
+          zmin: 0,
+          zmax: rt.extent[1],
         };
 
         if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
@@ -427,6 +429,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             color: cfg.stroke.color,
             width: cfg.stroke.width,
           },
+          maxDisplayed: cfg.maxDisplayed
         };
         traces.push(trace);
       }
