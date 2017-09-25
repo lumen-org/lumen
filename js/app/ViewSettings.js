@@ -88,6 +88,9 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         color: greys(0.3),
         width: 1.5,
       },
+      fill: {
+        opacity: 0.6,
+      }
     },
     uniDensity: {
       color: {
@@ -98,7 +101,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       }
     },
     biDensity: {
-      colorscale: c.colorscales.density
+      colorscale: c.colorscales.density,
+      opacity: 0.4,
     }
   };
 

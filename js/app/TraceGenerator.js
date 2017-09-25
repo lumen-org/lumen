@@ -177,22 +177,19 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             y: selectColumn(data, yIdx),
             opacity: cfg.fill.opacity,
             marker: {
+              color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
+              size : applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
+              symbol : applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
+              line : {
+                color: cfg.stroke.color,
+                width: cfg.stroke.width
+              },
               showscale: false,
               // sizemode: 'area',
             },
             line: {},
           };
 
-          // marker color, size and shape
-          trace.marker.color = applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx);
-          trace.marker.size = applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx);
-          trace.marker.symbol = applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx);
-          trace.marker.line = {
-            color: cfg.stroke.color,
-            width: cfg.stroke.width
-          };
-
-          // line color and width
           let lcmap = mapper.lineColor;
           trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
           // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
@@ -355,53 +352,22 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
 
         let trace = {
           name: '2d density',
-          // type: ,
           showlegend: false,
           showscale: false,
           x: selectColumn(rt, 0),
           y: selectColumn(rt, 1),
-          z: selectColumn(rt, 2),
-          opacity: 0.3,
+          z: selectColumn(rt, 2),  // TODO: how to handle discrete z data??
+          opacity: c.map.biDensity.opacity,
           colorscale: c.map.biDensity.colorscale,
           reversescale: true
         };
 
         if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
           trace.type = 'contour';
-          // _.extend(trace, {
-          //   type: 'contour',
-          //   colorscale: c.map.biDensity.colorscale,
-          //   reversescale: true
-          // });
-          // let contour_trace = {
-          // name: '2d density',
-          // showlegend: false,
-          // showscale: false,
-          // x: selectColumn(rt, 0),
-          // y: selectColumn(rt, 1),
-          // z: selectColumn(rt, 2),
-          // opacity: 0.3,
-          // colorscale: c.map.biDensity.colorscale,
-          // reversescale: true
-          // };
           traces.push(trace);
         }
         else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
           trace.type = 'heatmap';
-          // let heatmap_trace = {
-          //   name: '2d density',
-          //   type: 'heatmap',
-          //   x: selectColumn(data, 0),
-          //   y: selectColumn(data, 1),
-          //   z: selectColumn(data, 2), // TODO: how to handle discrete z data??
-          //   opacity: 0.3,
-          //   showscale: false,
-          //   autocolorscale: false,
-          //   colorscale: c.map.biDensity.colorscale,
-          //   zauto: false,
-          //   zmin: colorDomain[0],
-          //   zmax: colorDomain[colorDomain.length-1],
-          // }
           traces.push(trace);
         }
       }
@@ -419,7 +385,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
-        traces = [];
+        traces = [],
+        cfg = c.map.sampleMarker;
 
       if (data !== undefined) {
         let xIdx = fu2idx.get(xfu),
@@ -431,16 +398,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           showlegend: false,
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
-          opacity: 0.6,
-          // TODO: support color, size and shape
+          opacity: cfg.fill.opacity,
         };
         trace.marker = {
           color: applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
           size: applyMap(data, mapper.samplesSize, aest.size.fu, fu2idx),
           symbol: applyMap(data, mapper.samplesShape, aest.shape.fu, fu2idx),
           line: {
-            color: c.map.sampleMarker.stroke.color,
-            width: c.map.sampleMarker.stroke.width,
+            color: cfg.stroke.color,
+            width: cfg.stroke.width,
           },
         };
         traces.push(trace);
