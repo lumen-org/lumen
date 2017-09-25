@@ -121,14 +121,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
       // TODO if ()
 
       if (rt !== undefined) {
-        let xIdx = fu2idx.get(xfu),
-          yIdx = fu2idx.get(yfu),
-          colorFu = aest.color.fu,
-          colorIdx = fu2idx.get(colorFu);
         if (!_.isFunction(mapper.aggrFillColor)) throw TypeError("Didn't expect that. Implement this case!");
 
+        let colorFu = aest.color.fu,
+          colorIdx = fu2idx.get(colorFu),
+          colorTable, colorDomain, colorData;
         // plotly heatmaps require to use a colorscale, instead of a manual color specification
-        let colorTable, colorDomain, colorData;
         if (PQL.hasDiscreteYield(colorFu)) {
           // to support discrete color values: (i) use special colorsale, (ii) convert string values to ints
           colorTable = c.colorscales.discrete12asContinuous;
@@ -146,8 +144,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         let trace = {
           name: 'aggregations',
           type: 'heatmap',
-          x: selectColumn(rt, xIdx),
-          y: selectColumn(rt, yIdx),
+          x: selectColumn(rt, fu2idx.get(xfu)),
+          y: selectColumn(rt, fu2idx.get(yfu)),
           z: colorData,
           showscale: false,
           autocolorscale: false,
@@ -178,9 +176,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
         cfg = c.map.aggrMarker;
 
       if (rt !== undefined) {
-        let xIdx = fu2idx.get(xfu),
-          yIdx = fu2idx.get(yfu);
-
         let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
         // create and attach trace for each group, i.e. each leave in the nested data
@@ -190,8 +185,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             type: 'scatter',
             showlegend: false,
             cliponaxis: false,
-            x: selectColumn(data, xIdx),
-            y: selectColumn(data, yIdx),
+            x: selectColumn(data, fu2idx.get(xfu)),
+            y: selectColumn(data, fu2idx.get(yfu)),
             opacity: cfg.fill.opacity,
             marker: {
               color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
