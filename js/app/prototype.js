@@ -268,7 +268,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
 
       static _makeVisualization(context) {
-        var $pane = $('<svg class="pl-visualization-svg"></svg>');
+        var $paneDiv = $('<div class="pl-visualization-pane"></div>');
+
 
         var $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
@@ -276,14 +277,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $title = $('<div>' + context.basemodel.name + '</div>');
         var $nav = $removeButton;
         return $('<div class="pl-visualization"></div>')
-          .append($title, $nav, $pane)
+          .append($title, $nav, $paneDiv)
           .click( () => activate(context, ['visualization', 'visPanel']) )
           .resizable({
             stop: (event, ui) => {
               let c = context;
 
-              // set new size
-              $pane.css({
+              // TODO / Fix
+              $paneDiv.css({
                 // TODO: what is this magic -40 ???
                 'width': ui.size.width-40,
                 'height': ui.size.height-40,
@@ -298,7 +299,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               //});
 
               // redraw
-              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.queryTable);
+              // TODO: what is visPanel, ... ?
+              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
             }
           });
       }
@@ -351,7 +353,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       static _makeGUI(context) {
         var visual = Context._makeShelvesGUI(context);
         visual.visualization = Context._makeVisualization(context);
-        visual.visPanel = $('.pl-visualization-svg', visual.visualization);
+        visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
         return visual;
       }
     }

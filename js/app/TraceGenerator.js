@@ -376,7 +376,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           showscale: false,
           x: selectColumn(rt, 0),
           y: selectColumn(rt, 1),
-          z: selectColumn(rt, 2),  // TODO: how to handle discrete z data??
+          z: selectColumn(rt, 2),
           opacity: c.map.biDensity.opacity,
           autocolorscale: false,
           colorscale: c.map.biDensity.colorscale,

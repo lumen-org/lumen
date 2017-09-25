@@ -59,7 +59,7 @@ main {
     flex-wrap: wrap;
 }
 
-.pl-visualization-svg {
+.pl-visualization-pane {
     /*margin: 1rem;*/
     width: 200px;
     height: 200px;

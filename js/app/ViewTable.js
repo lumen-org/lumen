@@ -158,8 +158,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     function drawAtomicPlotly(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
 
       // div to draw into
-      let paneDOM = document.getElementById('pl-plotly');
-      Plotly.purge(paneDOM);
+      // let paneDOM = document.getElementById('pl-plotly');
+      Plotly.purge(pane);
 
       // build all mappers
       let mapper = {
@@ -335,15 +335,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       }
 
       _.extend(layout, {
-        height: pane.size.height*3,
-        width: pane.size.width*3,
+        //height: pane.size.height,
+        //width: pane.size.width,
         margin: {
           l:config.plots.layout.margin, t:config.plots.layout.margin,
           r:config.plots.layout.margin, b:config.plots.layout.margin,
         }
       });
 
-      Plotly.plot(paneDOM, traces, layout);
+      Plotly.plot(pane, traces, layout);
       return pane;
     }
 
@@ -953,13 +953,33 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      *
      * Note that the axis are part of the {@link ViewTable}, not the ViewPanes. Also note that axis' are based on scales. And scales are attached to (almost) each {@link FieldUsage} of this query, as they are reused accross many of the sub-viewPanes.
      *
-     * @param paneD3 A <svg> element. This must already have a width and height.
+     * OLD: @param paneD3 A <svg> element. This must already have a width and height.
+     * @param pane A <div> element. This must already have a width and height.
      * @param aggrColl The {@link Collection} to visualize with this viewTable.
      * @constructor
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, uniColl, biColl, queries) {
+    ViewTable = function (paneDiv, aggrColl, dataColl, uniColl, biColl, queries) {
+
+      // clear previous content
+      $(paneDiv).empty();
+
+      // create svg to draw on
+      let $paneSvg = $('<svg class="pl-visualization-own"></svg>');
+      $paneSvg.css({
+        width: 400,
+        height: 400,
+      });
+      $paneSvg.appendTo(paneDiv);
+
+      let $panePlotly = $('<div class="pl-visualization-plotly"></div>');
+      $panePlotly.css({
+        width: 400,
+        height: 400,
+      });
+      $panePlotly.appendTo(paneDiv);
+
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
@@ -978,7 +998,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       );
 
       // init table canvas
-      this.canvas = initCanvas(d3.select(pane),
+      this.canvas = initCanvas(d3.select($paneSvg.get(0)),
         0, // margin around the canvas
         {
           top: 5, right: 5,
@@ -1028,7 +1048,55 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             subPane
           );
 
-          this.at[rIdx][cIdx] = drawAtomicPlotly(subPane, aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx]);
+
+          /**
+           *
+           * # about axis
+           *
+           * for each row of the view table one main axis is required
+           * for each col of the view table one main axis is required
+           * for each atomic plot one marginal x-axis is required, if y-axis is in use and if it is enabled
+           * for each atomic plot one marginal y-axis is required, if x-axis is in use and if it is enabled
+           *
+           * in fact, either I need a marginal x-axis (y-axis) for all atomic plots or for none. This solely depends on whether there is _any_ FU on the y-axis (x-axis) of the _templated query_
+           *
+           * initially parameterize:
+           *  * ratio of marginal to main axis size
+           *  * ratio of templated axis stack to rest (later as fixed width)
+           *
+           * # compute/implement
+           *
+           * * function that creates a single templating axis: (x,y,width,height,fu,extent, startingId (?)) -> plotly axis object
+           * * function that creates a single main axis (exists already?)
+           * * function that creates a single marginal axis (exists already?)
+           * * some tracker such that I know which axis ids are still free? If possible/enough, do that. Alternatively think about some smart pattern to encode it "intuitively".
+           *    * main axis: <100, corresponding to row (col) count
+           *    * marginal x-axis: 1xx
+           *    * marginal y-axis
+           *
+           * # in what order
+           * * compute width required for templating axis
+           * * create templating axis
+           * for rows:
+           *   create y-main axis
+           *     for cols:
+           *       create x-main axis
+           *       create marginal axis
+           *       create traces
+           *
+           * # todo: speed optimize by providing much more information to axis? is that premature opt? probably...
+           */
+
+
+
+          let subPanePlotly = addAtomicPanePlotly(
+            this.canvas.canvasD3,
+            this.subPaneSize,
+            {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
+          );
+
+          //this.at[rIdx][cIdx] = 
+          drawAtomicPlotly($panePlotly.get(0), aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx]);
 
           if (cIdx === 0)
             attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
