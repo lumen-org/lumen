@@ -28,8 +28,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      *
      * If colIdx is undefined or null then it returns an array length data.length with all values equal to deflt.
      */
-    function selectColumn(data, colIdx, deflt=0) {
-      return (colIdx== null ?
+    function selectColumn(data, colIdx, deflt = 0) {
+      return (colIdx == null ?
         new Array(data.length).fill(deflt) :
         data.map(e => e[colIdx]));
     }
@@ -54,13 +54,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param depth Current depth. Start with 0.
      * @param msg debug.
      */
-    function dfs (tree, fct, max_depth, depth=0, msg="") {
+    function dfs(tree, fct, max_depth, depth = 0, msg = "") {
       if (depth >= max_depth)
       // apply function on leave level (tree is a leave now!)
         fct(tree);
       else
       // recurse down, i.e. tree is a map
-        tree.each( (value, key) => dfs(value, fct, max_depth, depth+1, msg+"+"));
+        tree.each((value, key) => dfs(value, fct, max_depth, depth + 1, msg + "+"));
     }
 
     /**
@@ -68,7 +68,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param query A vismel query.
      * @param rt A result Table.
      */
-    function splitRTIntoTraceData (rt, query) {
+    function splitRTIntoTraceData(rt, query) {
       // split into more traces by all remaining splits on discrete field
       // i.e.: possibly details, color, shape, size
       let xfu = query.layout.cols[0],
@@ -130,7 +130,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             colorscale: colorTable,
             zauto: false,
             zmin: colorDomain[0],
-            zmax: colorDomain[colorDomain.length-1],
+            zmax: colorDomain[colorDomain.length - 1],
           };
           traces.push(trace);
         };
@@ -180,8 +180,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
               showscale: false,
               // sizemode: 'area',
             },
-            line: {
-            },
+            line: {},
           };
 
           // marker color, size and shape
@@ -195,7 +194,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
 
           // line color and width
           let lcmap = mapper.lineColor;
-          trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;
+          trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
           // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
           //trace.line.color = applyMap(data, mapper.lineColor, aest.color.fu, fu2idx);
 
@@ -218,7 +217,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param query
      * @return {Array}
      */
-    tracer.uni = function(p1dRT, query, mapper, mode="") {
+    tracer.uni = function (p1dRT, query, mapper, mode = "") {
 
       let aest = query.layers[0].aesthetics;
 
@@ -231,13 +230,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
        * @return Object: A trace.
        */
       function getUniTrace(data, xOrY, modelOrData, fu2idx) {
-        let xIdx = (xOrY === 'x'? 1 : 2),
-          yIdx = (xOrY === 'x'? 2 : 1),
-          xAxis = (xOrY === 'x'? 'x' : 'x2'),
-          yAxis = (xOrY === 'x'? 'y2' : 'y');
+        let xIdx = (xOrY === 'x' ? 1 : 2),
+          yIdx = (xOrY === 'x' ? 2 : 1),
+          xAxis = (xOrY === 'x' ? 'x' : 'x2'),
+          yAxis = (xOrY === 'x' ? 'y2' : 'y');
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
-        let axisFu = query.layout[xOrY === 'x'? 'cols' : 'rows'][0];
+        let axisFu = query.layout[xOrY === 'x' ? 'cols' : 'rows'][0];
 
         let trace = {
           name: modelOrData + ' marginal on ' + xOrY,
@@ -250,7 +249,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
 
         let lcmap = mapper.marginalColor;
         // whole line gets same color, or all lines has uniform color anyway
-        let color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]): lcmap;
+        let color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
@@ -352,7 +351,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
 
         // note: the indexes are by convention!
         let xfu = rt.idx2fu[0],
-         yfu = rt.idx2fu[1];
+          yfu = rt.idx2fu[1];
 
         let trace = {
           name: '2d density',
@@ -375,15 +374,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           //   reversescale: true
           // });
           // let contour_trace = {
-            // name: '2d density',
-            // showlegend: false,
-            // showscale: false,
-            // x: selectColumn(rt, 0),
-            // y: selectColumn(rt, 1),
-            // z: selectColumn(rt, 2),
-            // opacity: 0.3,
-            // colorscale: c.map.biDensity.colorscale,
-            // reversescale: true
+          // name: '2d density',
+          // showlegend: false,
+          // showscale: false,
+          // x: selectColumn(rt, 0),
+          // y: selectColumn(rt, 1),
+          // z: selectColumn(rt, 2),
+          // opacity: 0.3,
+          // colorscale: c.map.biDensity.colorscale,
+          // reversescale: true
           // };
           traces.push(trace);
         }
@@ -430,22 +429,20 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           type: 'scatter',
           mode: 'markers',
           showlegend: false,
-          marker: {
-            symbol: "circle-open"
-          },
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
           opacity: 0.6,
           // TODO: support color, size and shape
         };
-
-        // marker color, size and shape
-        trace.marker.color = applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx);
-        trace.marker.size = applyMap(data, mapper.samplesSize, aest.size.fu, fu2idx);
-        trace.marker.symbol = applyMap(data, mapper.samplesShape, aest.shape.fu, fu2idx);
-        // TODO:
-        // trace.marker.symbol = mapApply(data, mapper.shape, aest.shape.fu, fu2idx);
-
+        trace.marker = {
+          color: applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
+          size: applyMap(data, mapper.samplesSize, aest.size.fu, fu2idx),
+          symbol: applyMap(data, mapper.samplesShape, aest.shape.fu, fu2idx),
+          line: {
+            color: c.map.sampleMarker.stroke.color,
+            width: c.map.sampleMarker.stroke.width,
+          },
+        };
         traces.push(trace);
       }
       return traces;

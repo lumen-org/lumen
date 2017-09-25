@@ -65,16 +65,17 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], funct
       scale = d3.scale.linear();
       let [l,h] = domain,
         size = h-l,
-        ext = size*0.05;
+        ext_to_zero = size * 0.25,  // if 25% extension is enough to reach zero, then use sequential, "from-zero" scale
+        ext = size*0.05;  // if zero is included, and if less than 5% of range is on one side, then use "from-zero-scale"
 
       // check if domain is (almost) exclusively negative or non-negative:
       if (h-ext < 0 || l+ext > 0) {
         palette = c.colorscales.sequential;
 
         // include 0 if closely not included
-        if (h < 0 && h+ext > 0)
+        if (h < 0 && h+ext_to_zero > 0)
           h = 0;
-        if (l > 0 && l-ext < 0)
+        if (l > 0 && l-ext_to_zero < 0)
           l = 0;
 
         // invert palette if all negative
@@ -84,9 +85,12 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], funct
         }
       }
       else {
-        palette = c.colorscales.diverging
-        // TODO: center palette on 0
-
+        palette = c.colorscales.diverging;
+        // center scale on 0. Note: it is not necessarily h>0 and l<0 (but almost. See above)
+        if (Math.abs(h) > Math.abs(l))
+          l = -Math.abs(h);
+        else
+          h = Math.abs(l);
       }
 
       // adopt domain
@@ -166,7 +170,8 @@ define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], funct
         throw new RangeError("continuous shapes not yet implemented.");
       case PQL.FieldT.DataType.string:
         scale = d3.scale.ordinal()
-          .range(d3.svg.symbolTypes)
+          // .range(d3.svg.symbolTypes)
+          .range(c.shapes[mode])
           .domain(domain);
         if (domain.length > d3.svg.symbolTypes.length) {
           logger.warn("the domain/extend of '" + fu.name + "' has too many elements. I can only encode " +

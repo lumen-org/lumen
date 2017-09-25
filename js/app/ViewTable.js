@@ -166,7 +166,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         aggrFillColor: MapperGen.markersFillColor(query),
         aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
         aggrShape: MapperGen.markersShape(query, 'filled'),
-        samplesShape: MapperGen.markersShape(query, 'open'),
+        samplesShape: MapperGen.markersShape(query, 'filled'),
         samplesSize: MapperGen.markersSize(query, config.map.sampleMarker.size),
         lineColor: MapperGen.lineColor(query),
       };

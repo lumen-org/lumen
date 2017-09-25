@@ -52,6 +52,12 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     discrete12: d3chromatic.schemePaired,
   };
 
+  // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
+  c.shapes = {
+    open: _.range(100,144),
+    filled: _.range(44),
+  };
+
   c.map = {
     aggrMarker: {
       fill: {
@@ -60,7 +66,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       },
       stroke: {
         color: greys(0.8),
-        width: 1,
+        width: 1.5,
       },
       size: {
         min: 6,
@@ -77,6 +83,10 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         min: 6,
         max: 40,
         def: 8,
+      },
+      stroke: {
+        color: greys(0.3),
+        width: 1.5,
       },
     },
     uniDensity: {
