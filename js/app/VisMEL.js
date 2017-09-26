@@ -241,7 +241,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         excluded = new Set(what);
       else if (mode === 'include') {
         const all = ['layout', 'details', 'filters', 'aesthetics'];
-        excluded = new Set(_.without(all, what));
+        // excluded = new Set(_.without(all, what));
+        excluded = new Set(_.difference(all, what));
       } else
         throw RangeError("mode must be 'exclude' or 'include'");
       let layer = this.layers[0],
