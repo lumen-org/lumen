@@ -149,17 +149,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       });
     }
 
-
-    /**
-     * Plot given data in ResultTables into pane, using the scales and mappers of the FieldUsages of the query.
-     * @param pane
-     * @param query
-     */
-    function drawAtomicPlotly(pane, aggrRT, dataRT, p1dRT, p2dRT, query) {
-
-      // div to draw into
-      // let paneDOM = document.getElementById('pl-plotly');
-      Plotly.purge(pane);
+    // function drawAtomicPlotly(aggrRT, dataRT, p1dRT, p2dRT, query, id={x:0,y:0}, size={x:1,y:1}, offset={x:0,y:0} ) {
+    function drawAtomicPlotly(aggrRT, dataRT, p1dRT, p2dRT, query, id, size, offset) {
 
       // build all mappers
       let mapper = {
@@ -291,11 +282,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       };
 
       // ### compile layout
-      let layout = {
-        title: 'test title',
-        // additional layout options, that actually maybe should be generated where the traces are generated
-        barmode: 'group',
-      };
+      let layout = {}, mainId = {}, marginalId = {};
 
       // disable marginal axis if not required
       for (let xOrY of ['x', 'y'])
@@ -304,14 +291,32 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // compile axes
       if (used.x && used.y) {
         for (let [xOrY, invXorY] of [['x','y'], ['y','x']]) {
-          layout[invXorY + 'axis'] = config.axisGenerator.main(true);
+          let mainAxis = config.axisGenerator.main(true);
           if (marginal[xOrY]) {
-            layout[invXorY+'axis'].domain = [config.plots.layout.ratio_marginal.used + config.plots.layout.margin_main_sub, 1];
-            layout[invXorY+'axis2'] = config.axisGenerator.marginal(true, invXorY);
+            mainAxis.domain = [
+              offset[invXorY] + size[invXorY] * config.plots.layout.ratio_marginal.used,
+              offset[invXorY]  + size[invXorY] * 1
+            ];
+
+            // [config.plots.layout.ratio_marginal.used + config.plots.layout.margin_main_sub, 1];
+            let marginalAxis = config.axisGenerator.marginal(true, invXorY);
+            marginalAxis.domain = [
+              offset[invXorY],
+              offset[invXorY] + size[invXorY] * config.plots.layout.ratio_marginal.used
+            ];
+
+            marginalId[invXorY] = invXorY + 'axis' + id[invXorY]++;  // generate id
+            layout[marginalId[invXorY]] = marginalAxis;  // assign id and add axis to layout
+            //layout[invXorY+'axis2'] = config.axisGenerator.marginal(true, invXorY);
+          } else {
+            mainAxis.domain = [offset[invXorY], offset[invXorY]  + size[invXorY]];
           }
+          mainId[invXorY] = invXorY + 'axis' + id[invXorY]++;  // generate id
+          layout[mainId[invXorY]] = mainAxis;  // assign id and add axis to layout
         }
       }
       else if (!used.x && used.y || used.x && !used.y) {
+        // TODO: adapt for generic position and offset and id
         let [usedXY, unusedXY] = used.x ? ['x','y'] : ['y','x'];
         layout[usedXY + 'axis'] = config.axisGenerator.main(true);
         if (marginal[usedXY]) {
@@ -323,6 +328,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         _.extend(layout[unusedXY+'axis'], config.axisGenerator.main(false));
       }
       else {
+        // TODO: adapt for generic position and offset and id
         layout.xaxis = config.axisGenerator.main();
         layout.yaxis = config.axisGenerator.main();
       }
@@ -330,21 +336,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // add axis names
       for (let [xOrY, rowsOrCols] of [['x', 'cols'], ['y', 'rows']]) {
         if (used[xOrY]) {
-          layout[xOrY + 'axis'].title = query.layout[rowsOrCols][0].yields;
+          layout[mainId[xOrY]].title = query.layout[rowsOrCols][0].yields;
         }
       }
 
-      _.extend(layout, {
-        //height: pane.size.height,
-        //width: pane.size.width,
-        margin: {
-          l:config.plots.layout.margin, t:config.plots.layout.margin,
-          r:config.plots.layout.margin, b:config.plots.layout.margin,
-        }
-      });
-
-      Plotly.plot(pane, traces, layout);
-      return pane;
+      return [traces, layout];
     }
 
     /**
@@ -1103,10 +1099,32 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // todo: implement
       // find a nice way to create the stack of them. somehow matches the result of the table algebra stuff ... ?!
 
-      let axes = {};
       let axisy = createTemplatingAxis({x:0, y:0}, {x:0.2, y:1}, query.layout.rows, 'y', {x:100,y:100});
-      let axisx = createTemplatingAxis({x:0, y:0}, {x:1, y:0.2}, query.layout.cols, 'x', {x:200,y:200});
-      Object.assign(axes, axisy, axisx);
+      let axisx = createTemplatingAxis({x:0, y:0}, {x:1, y:0.2}, query.layout.cols, 'x', {x:500,y:500});
+
+      // single atomic plot
+      let [traces, layout] = drawAtomicPlotly(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], {x:800,y:800}, {x:0.8,y:0.8}, {x:0.2,y:0.2});
+
+      //Object.assign(layout, axisy, axisx);
+
+      // add 'global' layout options
+      Object.assign(layout, {
+        //height: pane.size.height,
+        //width: pane.size.width,
+        title: 'test title',
+        barmode: 'group',
+        margin: {
+          l:config.plots.layout.margin, t:config.plots.layout.margin,
+          r:config.plots.layout.margin, b:config.plots.layout.margin,
+        }
+      });
+
+      // plot everything
+      Plotly.purge($panePlotly.get(0));
+      Plotly.plot($panePlotly.get(0), traces, layout);
+
+
+
 
       // create table of ViewPanes
       this.at = new Array(this.size.rows);
@@ -1126,27 +1144,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           //   this.dataCollection[rIdx][cIdx],
           //   subPane
           // );
-          //
-          // {
-          //   'SPLIT BY'
-          // :
-          //   [ {'args': [], 'name': 'model vs data', 'split': 'identity'},
-          //     {'args': [25],'name': 'FL','split': 'equiinterval'},
-          //     {'args': [], 'name': 'sex', 'split': 'identity'}],
-          //
-          //     'PREDICT'
-          // :
-          //   ['model vs data',
-          //     'FL',
-          //     {'name': ['sex', 'FL'], 'aggregation': 'density'},
-          //     'sex'],
-          //
-          //     'FROM'
-          // :
-          //   'cgw_crabs', 'WHERE'
-          // :
-          //   [{'value': 'model', 'name': 'model vs data', 'operator': 'equals'}]
-          // }
 
 
           /**
@@ -1189,7 +1186,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
 
           //this.at[rIdx][cIdx] = 
-          drawAtomicPlotly($panePlotly.get(0), aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx]);
+          // drawAtomicPlotly($panePlotly.get(0), aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx], axes);
 
           // if (cIdx === 0)
           //   attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');

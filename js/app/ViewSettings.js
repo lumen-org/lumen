@@ -210,7 +210,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       zerolinecolor: c.plots.marginal.axis.color,
       zerolinewidth: c.plots.marginal.axis.zerolinewidth,
       rangemode: 'tozero',
-      domain: [0, (used ? c.plots.layout.ratio_marginal.used : c.plots.layout.ratio_marginal.unused) - c.plots.layout.margin_main_sub],
+      // domain: [0, (used ? c.plots.layout.ratio_marginal.used : c.plots.layout.ratio_marginal.unused) - c.plots.layout.margin_main_sub],
       nticks: 2,
       tickangle: xOrY === 'x' ? 90 : 0,
       tickfont: {
