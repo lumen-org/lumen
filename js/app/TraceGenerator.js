@@ -105,7 +105,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
 
     let tracer = {};
 
-    tracer.aggrHeatmap = function (rt, query, mapper) {
+    tracer.aggrHeatmap = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -155,6 +155,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           x: selectColumn(rt, fu2idx.get(xfu)),
           y: selectColumn(rt, fu2idx.get(yfu)),
           z: colorData,
+          xaxis: axisId.x,
+          yaxis: axisId.y,
           showscale: false,
           autocolorscale: false,
           colorscale: colorTable,
@@ -175,7 +177,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param query
      * @return {Array}
      */
-    tracer.aggr = function (rt, query, mapper) {
+    tracer.aggr = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -195,6 +197,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             cliponaxis: false,
             x: selectColumn(data, fu2idx.get(xfu)),
             y: selectColumn(data, fu2idx.get(yfu)),
+            xaxis: axisId.x,
+            yaxis: axisId.y,
             opacity: cfg.fill.opacity,
             marker: {
               color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
@@ -234,7 +238,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param query
      * @return {Array}
      */
-    tracer.uni = function (p1dRT, query, mapper, mode = "") {
+    tracer.uni = function (p1dRT, query, mapper, mainAxisId={x:'x', y:'y'}, marginalAxisId={x:'x2', y:'y2'}) {
 
       let aest = query.layers[0].aesthetics;
 
@@ -248,12 +252,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
        */
       function getUniTrace(data, xOrY, modelOrData, fu2idx) {
         let xIdx = (xOrY === 'x' ? 1 : 2),
-          yIdx = (xOrY === 'x' ? 2 : 1),
-          xAxis = (xOrY === 'x' ? 'x' : 'x2'),
-          yAxis = (xOrY === 'x' ? 'y2' : 'y');
+          yIdx = (xOrY === 'x' ? 2 : 1);
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
         let axisFu = query.layout[xOrY === 'x' ? 'cols' : 'rows'][0];
+
+        let xAxis = (xOrY === 'x' ? mainAxisId.x : marginalAxisId.x),
+          yAxis = (xOrY === 'x' ? marginalAxisId.y : mainAxisId.y);
+        // let xAxis = (xOrY === 'x' ? 'x' : 'x2'),
+        //   yAxis = (xOrY === 'x' ? 'y2' : 'y');
 
         let trace = {
           name: modelOrData + ' marginal on ' + xOrY,
@@ -362,7 +369,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param query
      * @return {Array}
      */
-    tracer.bi = function (rt, query, mapper) {
+    tracer.bi = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
       let traces = [];
       if (rt !== undefined) {
 
@@ -377,6 +384,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           x: selectColumn(rt, 0),
           y: selectColumn(rt, 1),
           z: selectColumn(rt, 2),
+          xaxis: axisId.x,
+          yaxis: axisId.y,
           opacity: c.map.biDensity.opacity,
           autocolorscale: false,
           colorscale: c.map.biDensity.colorscale,
@@ -402,7 +411,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
      * @param query
      * @return {Array}
      */
-    tracer.samples = function (data, query, mapper) {
+    tracer.samples = function (data, query, mapper, axisId) {
       let fu2idx = data.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -420,6 +429,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           showlegend: false,
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
+          xaxis: axisId.x,
+          yaxis: axisId.y,
           opacity: cfg.fill.opacity,
         };
         trace.marker = {

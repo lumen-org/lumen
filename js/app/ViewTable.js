@@ -150,7 +150,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     }
 
     // function drawAtomicPlotly(aggrRT, dataRT, p1dRT, p2dRT, query, id={x:0,y:0}, size={x:1,y:1}, offset={x:0,y:0} ) {
-    function drawAtomicPlotly(aggrRT, dataRT, p1dRT, p2dRT, query, id, size, offset) {
+    // function drawAtomicPlotly(aggrRT, dataRT, p1dRT, p2dRT, query, id, size, offset) {
+    function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis) {
 
       // build all mappers
       let mapper = {
@@ -169,7 +170,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         yfu = query.layout.rows[0];
 
       let used = {
-        color : aest.color instanceof VisMEL.ColorMap,
+        color: aest.color instanceof VisMEL.ColorMap,
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
         details: aest.details.length != 0,
@@ -196,28 +197,28 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               // TODO: make it possible to enable marginal plots as well
-              traces.push(...TraceGen.uni(p1dRT, query, mapper));
-              //traces.push(...TraceGen.bi(p2dRT, query, mapper));
-              traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper));
-              traces.push(...TraceGen.samples(dataRT, query, mapper));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+              //traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
               // TODO: plotly heatmaps do not support categorical z values, as a color scale only maps from numerical values. Either find a work around or implement cateogrical heatmaps?
             }
             else { // if (used.shape) {
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
-              traces.push(...TraceGen.uni(p1dRT, query, mapper));
-              traces.push(...TraceGen.bi(p2dRT, query, mapper));
-              traces.push(...TraceGen.samples(dataRT, query, mapper));
-              traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
 
           }
           // at least on is dependent -> line chart
           else {
-            traces.push(...TraceGen.uni(p1dRT, query, mapper));
-            traces.push(...TraceGen.bi(p2dRT, query, mapper));
-            traces.push(...TraceGen.samples(dataRT, query, mapper));
-            traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+            traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
           }
         }
 
@@ -251,29 +252,45 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
           // TODO: individual marginal density plots for each each combination?
           // for now: combined one
-          traces.push(...TraceGen.uni(p1dRT, query, mapper));
-          traces.push(...TraceGen.samples(dataRT, query, mapper));
-          traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+          traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
         }
       }
 
       // only one of x-axis and y-axis is in use
       else if (used.x && !used.y || !used.x && used.y) {
         let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
-        traces.push(...TraceGen.uni(p1dRT, query, mapper));
+        traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
         // the one in use is categorical
         if (PQL.hasDiscreteYield(axisFu)) {
           // anything special here to do?
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.samples(dataRT, query, mapper));
+          traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
-        traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+        traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
       } else {
-        traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+        traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
       }
+
+      return traces;
+    }
+
+    function atomicPlotlyMainAxis (size, offset, xOrY, used, id) {
+      let mainAxis = config.axisGenerator.main(true);
+      mainAxis.domain = [offset, offset + size];
+      let
+    }
+
+
+    function atomicPlotlyAllAxis (size, offset, xOrY) {
+
+      // create xOrY main axis for given fieldUsage fu (?)
+
+
 
       // flags to disable/enable marginal plot:
       let marginal = {
@@ -281,8 +298,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         y: config.plots.marginal.visible.y
       };
 
-      // ### compile layout
-      let layout = {}, mainId = {}, marginalId = {};
+      // ### compile axes
+      let axes = {}, mainId = {}, marginalId = {};
 
       // disable marginal axis if not required
       for (let xOrY of ['x', 'y'])
@@ -306,41 +323,41 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             ];
 
             marginalId[invXorY] = invXorY + 'axis' + id[invXorY]++;  // generate id
-            layout[marginalId[invXorY]] = marginalAxis;  // assign id and add axis to layout
+            axes[marginalId[invXorY]] = marginalAxis;  // assign id and add axis to layout
             //layout[invXorY+'axis2'] = config.axisGenerator.marginal(true, invXorY);
           } else {
             mainAxis.domain = [offset[invXorY], offset[invXorY]  + size[invXorY]];
           }
           mainId[invXorY] = invXorY + 'axis' + id[invXorY]++;  // generate id
-          layout[mainId[invXorY]] = mainAxis;  // assign id and add axis to layout
+          axes[mainId[invXorY]] = mainAxis;  // assign id and add axis to layout
         }
       }
       else if (!used.x && used.y || used.x && !used.y) {
         // TODO: adapt for generic position and offset and id
         let [usedXY, unusedXY] = used.x ? ['x','y'] : ['y','x'];
-        layout[usedXY + 'axis'] = config.axisGenerator.main(true);
+        axes[usedXY + 'axis'] = config.axisGenerator.main(true);
         if (marginal[usedXY]) {
-          layout[unusedXY+'axis'] = {
+          axes[unusedXY+'axis'] = {
             domain: [config.plots.layout.ratio_marginal.unused + config.plots.layout.margin_main_sub, 1],
           };
-          layout[unusedXY+'axis2'] = config.axisGenerator.marginal(false, unusedXY);
+          axes[unusedXY+'axis2'] = config.axisGenerator.marginal(false, unusedXY);
         }
-        _.extend(layout[unusedXY+'axis'], config.axisGenerator.main(false));
+        _.extend(axes[unusedXY+'axis'], config.axisGenerator.main(false));
       }
       else {
         // TODO: adapt for generic position and offset and id
-        layout.xaxis = config.axisGenerator.main();
-        layout.yaxis = config.axisGenerator.main();
+        axes.xaxis = config.axisGenerator.main();
+        axes.yaxis = config.axisGenerator.main();
       }
 
       // add axis names
       for (let [xOrY, rowsOrCols] of [['x', 'cols'], ['y', 'rows']]) {
         if (used[xOrY]) {
-          layout[mainId[xOrY]].title = query.layout[rowsOrCols][0].yields;
+          axes[mainId[xOrY]].title = query.layout[rowsOrCols][0].yields;
         }
       }
 
-      return [traces, layout];
+      return axes;
     }
 
     /**
@@ -1021,32 +1038,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (paneDiv, aggrColl, dataColl, uniColl, biColl, queries) {
-
-      let $pane = $(paneDiv),
-        paneSize = {
-          x: $pane.width(),
-          y: $pane.height()
-        };
-
-      // clear previous content
-      $pane.empty();
-
-      // create svg to draw on
-      // let $paneSvg = $('<svg class="pl-visualization-own"></svg>');
-      // $paneSvg.css({
-      //   width: 400,
-      //   height: 400,
-      // });
-      // $paneSvg.appendTo(paneDiv);
-
-      let $panePlotly = $('<div class="pl-visualization-plotly"></div>');
-      $panePlotly.css({
-        width: 400,
-        height: 400,
-      });
-      $panePlotly.appendTo(paneDiv);
-
+    ViewTable = function (pane, aggrColl, dataColl, uniColl, biColl, queries) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
@@ -1056,16 +1048,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
-
-      // axis stack depth
-      // [query.layout.rows, query.layout.cols].forEach(
-      //   rc => {
-      //     rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
-      //   }
-      // );
-
-
-
 
       // init table canvas
       // this.canvas = initCanvas(d3.select($paneSvg.get(0)),
@@ -1089,61 +1071,56 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       attachExtents(queries, this.dataCollection);
       normalizeExtents(queries);
 
-      // create scales
-      // todo: move scales outside of atomic panes, like extents
+      // compute ratio of templating axis to plotting area
+      let templAxisRatio = {
+        x: 0.2,
+        y: 0.2
+      };
 
-      // create visuals mappers
-      // todo: move mappers outside of atomic panes, like extents
+      let atomicPaneSize = {
+        x: (1 - templAxisRatio.x) / this.size.cols,
+        y: (1 - templAxisRatio.y) / this.size.rows,
+      };  // in normalized coordinates
 
-      // create axis
-      // todo: implement
-      // find a nice way to create the stack of them. somehow matches the result of the table algebra stuff ... ?!
+      // init layout and traces of plotly plotting specification
+      let layout = {}, traces = [];
 
-      let axisy = createTemplatingAxis({x:0, y:0}, {x:0.2, y:1}, query.layout.rows, 'y', {x:100,y:100});
-      let axisx = createTemplatingAxis({x:0, y:0}, {x:1, y:0.2}, query.layout.cols, 'x', {x:500,y:500});
+      // {x:800,y:800}, {x:0.8,y:0.8}, {x:0.2,y:0.2}
 
-      // single atomic plot
-      let [traces, layout] = drawAtomicPlotly(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], {x:800,y:800}, {x:0.8,y:0.8}, {x:0.2,y:0.2});
-
-      //Object.assign(layout, axisy, axisx);
-
-      // add 'global' layout options
-      Object.assign(layout, {
-        //height: pane.size.height,
-        //width: pane.size.width,
-        title: 'test title',
-        barmode: 'group',
-        margin: {
-          l:config.plots.layout.margin, t:config.plots.layout.margin,
-          r:config.plots.layout.margin, b:config.plots.layout.margin,
-        }
-      });
-
-      // plot everything
-      Plotly.purge($panePlotly.get(0));
-      Plotly.plot($panePlotly.get(0), traces, layout);
-
-
-
+      let mainAxis = {
+        x: [],
+        y: []
+      };
 
       // create table of ViewPanes
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
+
+        let [yid, yaxis] = atomicPlotlyMainAxis(atomicPaneSize.y, atomicPaneSize.y * rIdx, 'y', used);
+        mainAxis.y.push(yid);
+        Object.assign(layout, yaxis);
+
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
 
+          let xaxis, xid;
+          if (rIdx === 0) {
+            [xid, xaxis] = atomicPlotlyMainAxis(atomicPaneSize.x, atomicPaneSize.x * cIdx, 'x', used);
+            mainAxis.x.push(xaxis);
+            Object.assign(layout, xaxis);
+          } else {
+            xid = mainAxis.x[cIdx];
+          }
+
+          let atomicTraces = atomicPlotlyTraces(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], mainAxisId, marginalAxisId);
+
+          traces.extent(atomicTraces);
           // let subPane = addAtomicPane(
           //   this.canvas.canvasD3,
           //   this.subPaneSize,
           //   {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
           // );
 
-          // this.at[rIdx][cIdx] = drawAtomicPane(
-          //   this.queries.at[rIdx][cIdx],
-          //   this.aggrCollection[rIdx][cIdx],
-          //   this.dataCollection[rIdx][cIdx],
-          //   subPane
-          // );
 
 
           /**
@@ -1195,7 +1172,26 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         }
       }
 
-      //setupTemplatingAxis(query, this.canvas);
+      // add templating axis
+      let temply = createTemplatingAxis({x:0, y:0}, {x:templAxisRatio.x, y:1}, query.layout.rows, 'y', {x:100,y:100});
+      let templx = createTemplatingAxis({x:0, y:0}, {x:1, y:templAxisRatio.y}, query.layout.cols, 'x', {x:500,y:500});
+      //Object.assign(layout, templx, temply);
+
+      // add 'global' layout options
+      Object.assign(layout, {
+        //height: pane.size.height,
+        //width: pane.size.width,
+        title: 'test title',
+        barmode: 'group',
+        margin: {
+          l:config.plots.layout.margin, t:config.plots.layout.margin,
+          r:config.plots.layout.margin, b:config.plots.layout.margin,
+        }
+      });
+
+      // plot everything
+      Plotly.purge(pane);
+      Plotly.plot(pane, traces, layout);
     };
 
     return ViewTable;
