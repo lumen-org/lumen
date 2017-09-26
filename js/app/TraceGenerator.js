@@ -84,7 +84,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
       // i.e.: possibly details, color, shape, size
       let xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
-        splits = query.fieldUsages('layout', 'exclude')
+        splits = query.fieldUsages(['layout'], 'exclude')
           .filter(PQL.isSplit).filter(split => split.field.isDiscrete());
 
       // if there is a cont. split on both, rows and cols, then split by both!
@@ -313,14 +313,14 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
        */
       function getSplittedUniTraces(data, fu2idx, xOrY, modelOrData) {
         // split into more traces by all remaining splits (but not model vs data splits)
-        let splits = query.fieldUsages('layout', 'exclude')
+        let splits = query.fieldUsages(['layout'], 'exclude')
           .filter(PQL.isSplit)
           .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
         let split_idxs = splits.map(split => fu2idx.get(split));
 
         // TODO: this is a larger piece of work. We should create a VisMEL uni trace query and then turn in to PQL ...
         // split into more traces by all remaining discrete yield fields (but not model vs data splits)
-        // let splits = query.fieldUsages('layout', 'exclude')
+        // let splits = query.fieldUsages(['layout'], 'exclude')
         //   .filter(PQL.hasDiscreteYield)
         //   .filter(split => (split.name !== 'model vs data'));// && split.field.isDiscrete()));
         // let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );

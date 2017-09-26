@@ -946,6 +946,71 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
 
     /**
+     * @offset: .x (.y) is the offset in normalized coordinates for the templating axes
+     * @size: .x (.y) is the size in normalized coordinates for the templating axes
+     * @fus the stack of field usages that make up the templating axes
+     * @xOrY 'x' ('y') if its an x-axis (y-axis)
+     * @id .x (.y) is the first free axis integer index for x (y) axis
+     * @returns {} An array of axis objects for the layout part of a plotly plot configuration.
+     */
+    function createTemplatingAxis(offset, size, fus, xOrY, id) {
+      let invXorY = (xOrY === 'x'?'y':'x');
+
+      // the number of stacked axis equals the number of splits in fus, reduced by one if there is no aggregation/density (since the last split then is part of an atomic plots axes)
+      let levelSplits = fus.filter(PQL.isSplit);
+      if (!fus.some(PQL.isAggregationOrDensity))
+        levelSplits.pop();
+
+      // available width (height) per axis level
+      let levelSize = size[invXorY] / levelSplits.length;
+      let axes = {}; // object of plotly axes objects
+      let repeat = 1;
+
+      levelSplits.forEach((split, d) => {
+        let stackOffset = offset[xOrY] + levelSize * d; // the y (x) offset of axes in this level
+        let majorSize = size[xOrY] / repeat; // the width (height) of major axes in this level
+        let minorId = id[invXorY]++;
+
+        // only one minor axis per stack level is needed
+        let minor = {
+          domain: [stackOffset, stackOffset + levelSize],
+          anchor: xOrY + id[xOrY],  // anchor with the first major of this level (to be generated)
+          visible: false,
+        };
+
+        let ticks = split.extent; // TODO. don't think that works.
+
+        // multiple major axis are needed
+        for (let r = 0; r < repeat; ++r) {
+
+          let majorId = id[xOrY]++,
+            majorOffset = offset[invXorY] + majorSize*r;
+
+          // new major axis (i.e. x axis for xOrY === x)
+          let major = {
+            anchor: invXorY + minorId,
+            domain: [majorOffset, majorOffset + majorSize],
+            visible: true,
+            showline: true,
+            showgrid: false,
+            ticklen: 5,
+            type: 'category',
+            range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
+            tickvals: _.range(ticks.length),
+            ticktext: ticks,
+          };
+
+          axes[xOrY + 'axis' + majorId] = major;
+        }
+        repeat *= ticks.length;
+        axes[invXorY + 'axis' + minorId] = minor;
+      });
+
+      return axes;
+    }
+
+
+    /**
      * A ViewTable takes a ResultTable and turns it into an actual visual representation.
      * This visualization is attached to the DOM, as it is created within the limits of a given <svg> element.
      *
@@ -962,16 +1027,22 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
     var ViewTable;
     ViewTable = function (paneDiv, aggrColl, dataColl, uniColl, biColl, queries) {
 
+      let $pane = $(paneDiv),
+        paneSize = {
+          x: $pane.width(),
+          y: $pane.height()
+        };
+
       // clear previous content
-      $(paneDiv).empty();
+      $pane.empty();
 
       // create svg to draw on
-      let $paneSvg = $('<svg class="pl-visualization-own"></svg>');
-      $paneSvg.css({
-        width: 400,
-        height: 400,
-      });
-      $paneSvg.appendTo(paneDiv);
+      // let $paneSvg = $('<svg class="pl-visualization-own"></svg>');
+      // $paneSvg.css({
+      //   width: 400,
+      //   height: 400,
+      // });
+      // $paneSvg.appendTo(paneDiv);
 
       let $panePlotly = $('<div class="pl-visualization-plotly"></div>');
       $panePlotly.css({
@@ -991,27 +1062,30 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       /// todo: is this actually "redo on canvas size change" ?
 
       // axis stack depth
-      [query.layout.rows, query.layout.cols].forEach(
-        rc => {
-          rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
-        }
-      );
+      // [query.layout.rows, query.layout.cols].forEach(
+      //   rc => {
+      //     rc.stackDepth = rc.filter(PQL.isSplit).length + !rc.filter(PQL.isAggregationOrDensity).empty();
+      //   }
+      // );
+
+
+
 
       // init table canvas
-      this.canvas = initCanvas(d3.select($paneSvg.get(0)),
-        0, // margin around the canvas
-        {
-          top: 5, right: 5,
-          bottom: query.layout.cols.stackDepth * config.geometry.axis.size,
-          left: query.layout.rows.stackDepth * config.geometry.axis.size
-        } // padding for axis
-      );
+      // this.canvas = initCanvas(d3.select($paneSvg.get(0)),
+      //   0, // margin around the canvas
+      //   {
+      //     top: 5, right: 5,
+      //     bottom: query.layout.cols.stackDepth * config.geometry.axis.size,
+      //     left: query.layout.rows.stackDepth * config.geometry.axis.size
+      //   } // padding for axis
+      // );
 
       // infer size of atomic plots
-      this.subPaneSize = {
-        height: this.canvas.size.height / this.size.rows,
-        width: this.canvas.size.width / this.size.cols
-      };
+      // this.subPaneSize = {
+      //   height: this.canvas.size.height / this.size.rows,
+      //   width: this.canvas.size.width / this.size.cols
+      // };
 
       // extents
       initEmptyExtents(queries);
@@ -1029,24 +1103,50 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // todo: implement
       // find a nice way to create the stack of them. somehow matches the result of the table algebra stuff ... ?!
 
+      let axes = {};
+      let axisy = createTemplatingAxis({x:0, y:0}, {x:0.2, y:1}, query.layout.rows, 'y', {x:100,y:100});
+      let axisx = createTemplatingAxis({x:0, y:0}, {x:1, y:0.2}, query.layout.cols, 'x', {x:200,y:200});
+      Object.assign(axes, axisy, axisx);
+
       // create table of ViewPanes
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
 
-          let subPane = addAtomicPane(
-            this.canvas.canvasD3,
-            this.subPaneSize,
-            {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
-          );
+          // let subPane = addAtomicPane(
+          //   this.canvas.canvasD3,
+          //   this.subPaneSize,
+          //   {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
+          // );
 
-          this.at[rIdx][cIdx] = drawAtomicPane(
-            this.queries.at[rIdx][cIdx],
-            this.aggrCollection[rIdx][cIdx],
-            this.dataCollection[rIdx][cIdx],
-            subPane
-          );
+          // this.at[rIdx][cIdx] = drawAtomicPane(
+          //   this.queries.at[rIdx][cIdx],
+          //   this.aggrCollection[rIdx][cIdx],
+          //   this.dataCollection[rIdx][cIdx],
+          //   subPane
+          // );
+          //
+          // {
+          //   'SPLIT BY'
+          // :
+          //   [ {'args': [], 'name': 'model vs data', 'split': 'identity'},
+          //     {'args': [25],'name': 'FL','split': 'equiinterval'},
+          //     {'args': [], 'name': 'sex', 'split': 'identity'}],
+          //
+          //     'PREDICT'
+          // :
+          //   ['model vs data',
+          //     'FL',
+          //     {'name': ['sex', 'FL'], 'aggregation': 'density'},
+          //     'sex'],
+          //
+          //     'FROM'
+          // :
+          //   'cgw_crabs', 'WHERE'
+          // :
+          //   [{'value': 'model', 'name': 'model vs data', 'operator': 'equals'}]
+          // }
 
 
           /**
@@ -1088,24 +1188,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
            */
 
 
-
-          let subPanePlotly = addAtomicPanePlotly(
-            this.canvas.canvasD3,
-            this.subPaneSize,
-            {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
-          );
-
           //this.at[rIdx][cIdx] = 
           drawAtomicPlotly($panePlotly.get(0), aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx]);
 
-          if (cIdx === 0)
-            attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
-          if (rIdx === (this.size.rows - 1))
-            attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
+          // if (cIdx === 0)
+          //   attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
+          // if (rIdx === (this.size.rows - 1))
+          //   attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
         }
       }
 
-      setupTemplatingAxis(query, this.canvas);
+      //setupTemplatingAxis(query, this.canvas);
     };
 
     return ViewTable;
