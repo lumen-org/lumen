@@ -1059,12 +1059,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       //   } // padding for axis
       // );
 
-      // infer size of atomic plots
-      // this.subPaneSize = {
-      //   height: this.canvas.size.height / this.size.rows,
-      //   width: this.canvas.size.width / this.size.cols
-      // };
-
       // extents
       initEmptyExtents(queries);
       attachExtents(queries, this.aggrCollection);
@@ -1083,21 +1077,31 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       };  // in normalized coordinates
 
       // init layout and traces of plotly plotting specification
-      let layout = {}, traces = [];
+      let layout = {}, traces = [], mainAxis = {x: [], y: []};
 
       // {x:800,y:800}, {x:0.8,y:0.8}, {x:0.2,y:0.2}
 
-      let mainAxis = {
-        x: [],
-        y: []
+      let used = {
+        x: query.layout.cols[0] !== undefined,
+        y: query.layout.rows[0] !== undefined,
       };
+
+      let marginal = {
+        x: config.plots.marginal.visible.y && used.y,
+        y: config.plots.marginal.visible.x && used.x
+      };
+
+      let mainAxisSize = {
+        x: marginal.x ? (config.plots.layout.ratio_marginal(used.x))
+      }
+      CONTINUE HERE:
 
       // create table of ViewPanes
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
 
-        let [yid, yaxis] = atomicPlotlyMainAxis(atomicPaneSize.y, atomicPaneSize.y * rIdx, 'y', used);
+        let [yid, yaxis] = atomicPlotlyMainAxis(atomicPaneSize.y, atomicPaneSize.y * rIdx, 'y', used.y);
         mainAxis.y.push(yid);
         Object.assign(layout, yaxis);
 
@@ -1105,12 +1109,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
           let xaxis, xid;
           if (rIdx === 0) {
-            [xid, xaxis] = atomicPlotlyMainAxis(atomicPaneSize.x, atomicPaneSize.x * cIdx, 'x', used);
+            [xid, xaxis] = atomicPlotlyMainAxis(atomicPaneSize.x, atomicPaneSize.x * cIdx, 'x', used.x);
             mainAxis.x.push(xaxis);
             Object.assign(layout, xaxis);
           } else {
             xid = mainAxis.x[cIdx];
           }
+
+
 
           let atomicTraces = atomicPlotlyTraces(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], mainAxisId, marginalAxisId);
 
