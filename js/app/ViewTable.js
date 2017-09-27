@@ -1115,7 +1115,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       let layout = {}, traces = [], mainAxes = {x: [], y: []};
 
       // offset of a specific atomic pane
-      let paneOffset;
+      let paneOffset = {};
 
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
@@ -1124,8 +1124,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
         let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, used.y),
           yid = idgen.main.y++;
-        mainAxes.y.push(yid);
-        layout[yid] = yaxis;
+        mainAxes.y.push("y" + yid);
+        layout["yaxis" + yid] = yaxis;
 
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
           paneOffset.x = atomicPaneSize.x * cIdx;
@@ -1134,25 +1134,26 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           if (rIdx === 0) {
             xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, used.x);
             xid = idgen.main.x++;
-            mainAxes.x.push(xid);
-            layout[xid] = xaxis;
+            mainAxes.x.push("x"+xid);
+            layout["xaxis" + xid] = xaxis;
           } else {
             xid = mainAxes.x[cIdx];
           }
 
           // create marginal axes as needed
-          let marginalAxisId;
+          let marginalAxisId = {};
           for (let xy of ['x','y']) {
             if (marginal[xy]) {
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], xy);
               marginalAxisId[xy] = idgen.marginal[xy]++;
-              layout[marginalAxisId[xy]] = axis;
+              layout[xy + "axis" + marginalAxisId[xy]] = axis;
             }
           }
 
+          // create traces for one atomic plot
           let atomicTraces = atomicPlotlyTraces(aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx], {x:xid,y:yid}, marginalAxisId);
 
-          traces.extent(atomicTraces);
+          traces.push(...atomicTraces);
 
           /**
            *
@@ -1193,6 +1194,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
            */
         }
       }
+
+      this.mainAxes = mainAxes;
 
       // add templating axis
       let temply = createTemplatingAxis({x:0, y:0}, {x:templAxisRatio.x, y:1}, query.layout.rows, 'y', {x:100,y:100});

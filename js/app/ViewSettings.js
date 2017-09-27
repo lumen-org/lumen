@@ -157,12 +157,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     },
 
     layout: {
-      // ratio_marginal: {
-      //   used: 0.15,
-      //   unused: 0.5,
-      // },
-      ratio_marginal: used => used ? 0.15 : 0.4,
-      //margin_main_sub: 0.005,
+      ratio_marginal: used => (used ? 0.15 : 0.4),
       margin_main_sub: 0.02,
       margin: 20,
     }
@@ -205,7 +200,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         };
     },
 
-    marginal: (offset, length, xOrY) => ({
+    marginal: (offset, length, xy) => ({
       autorange: 'reversed',
       tickmode: 'auto',
       //zeroline: !used,
@@ -213,9 +208,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       zerolinecolor: c.plots.marginal.axis.color,
       zerolinewidth: c.plots.marginal.axis.zerolinewidth,
       rangemode: 'tozero',
-      // domain: [0, (used ? c.plots.layout.ratio_marginal.used : c.plots.layout.ratio_marginal.unused) - c.plots.layout.margin_main_sub],
       nticks: 2,
-      tickangle: xOrY === 'x' ? 90 : 0,
+      tickangle: xy === 'x' ? 90 : 0,
       tickfont: {
         color: c.plots.marginal.text.color,
         size: c.plots.marginal.text.size,

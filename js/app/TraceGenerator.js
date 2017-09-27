@@ -245,25 +245,25 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
-       * @param xOrY 'x' ('y') if the trace is for x (y) axis.
+       * @param xy 'x' ('y') if the trace is for x (y) axis.
        * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @param fu2idx
        * @return Object: A trace.
        */
-      function getUniTrace(data, xOrY, modelOrData, fu2idx) {
-        let xIdx = (xOrY === 'x' ? 1 : 2),
-          yIdx = (xOrY === 'x' ? 2 : 1);
+      function getUniTrace(data, xy, modelOrData, fu2idx) {
+        let xIdx = (xy === 'x' ? 1 : 2),
+          yIdx = (xy === 'x' ? 2 : 1);
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
-        let axisFu = query.layout[xOrY === 'x' ? 'cols' : 'rows'][0];
+        let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
 
-        let xAxis = (xOrY === 'x' ? mainAxisId.x : marginalAxisId.x),
-          yAxis = (xOrY === 'x' ? marginalAxisId.y : mainAxisId.y);
-        // let xAxis = (xOrY === 'x' ? 'x' : 'x2'),
-        //   yAxis = (xOrY === 'x' ? 'y2' : 'y');
+        let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
+          yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
+        // let xAxis = (xy === 'x' ? 'x' : 'x2'),
+        //   yAxis = (xy === 'x' ? 'y2' : 'y');
 
         let trace = {
-          name: modelOrData + ' marginal on ' + xOrY,
+          name: modelOrData + ' marginal on ' + xy,
           showlegend: false,
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
@@ -289,7 +289,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
             },
           });
           if (modelOrData === 'data') {
-            trace.line.shape = (xOrY === 'x' ? 'hvh' : 'vhv');
+            trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
           }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
@@ -299,7 +299,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './
           _.extendOwn(trace, {
             //type: modelOrData === 'model' ? 'scatter' : 'bar',
             type: 'bar',
-            orientation: xOrY === 'x' ? 'v' : 'h',
+            orientation: xy === 'x' ? 'v' : 'h',
             opacity: c.map.uniDensity.bar.opacity,
             marker: {
               color: color,
