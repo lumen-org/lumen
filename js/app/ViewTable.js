@@ -103,12 +103,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           // TODO: add condition: no other splits
           if (used.color && !PQL.hasDiscreteYield(aest.color.fu)) {
             // don't show bi density in this case
-            traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper));
+            traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, query, mapper));
-            traces.push(...TraceGen.aggr(aggrRT, query, mapper));
+            traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
           }
         }
 
@@ -459,6 +459,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let major = {
             anchor: invXy + minorId,
             domain: [majorOffset, majorOffset + majorLength],
+            position: stackOffset,
             visible: true,
             showline: true,
             showgrid: false,

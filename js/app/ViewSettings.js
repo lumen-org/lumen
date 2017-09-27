@@ -159,7 +159,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     layout: {
       ratio_marginal: used => (used ? 0.85 : 0.6),
       margin_main_sub: 0.02,
-      margin: 20,
+      margin: 60,
     }
   };
 
