@@ -279,10 +279,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       return traces;
     }
 
-    function atomicPlotlyMainAxis (size, offset, xOrY, used, id) {
+    function atomicPlotlyMainAxis (length, offset, xOrY, used, id) {
       let mainAxis = config.axisGenerator.main(true);
-      mainAxis.domain = [offset, offset + size];
-      let
+      mainAxis.domain = [offset, offset + length];
     }
 
 
@@ -1065,69 +1064,95 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       attachExtents(queries, this.dataCollection);
       normalizeExtents(queries);
 
-      // compute ratio of templating axis to plotting area
-      let templAxisRatio = {
-        x: 0.2,
-        y: 0.2
-      };
-
-      let atomicPaneSize = {
-        x: (1 - templAxisRatio.x) / this.size.cols,
-        y: (1 - templAxisRatio.y) / this.size.rows,
-      };  // in normalized coordinates
-
-      // init layout and traces of plotly plotting specification
-      let layout = {}, traces = [], mainAxis = {x: [], y: []};
-
       // {x:800,y:800}, {x:0.8,y:0.8}, {x:0.2,y:0.2}
 
+      // flag whether or not in an atomic plot the x axis (.x) (y axis (.y)) is in use, i.e. encodes some fieldusage of the model
       let used = {
         x: query.layout.cols[0] !== undefined,
         y: query.layout.rows[0] !== undefined,
       };
 
+      // flag whether or not in an atomic plot a marginal axis will be drawn. .x (.y) is the flag for the marginal x axis (y axis)
       let marginal = {
-        x: config.plots.marginal.visible.y && used.y,
-        y: config.plots.marginal.visible.x && used.x
+        x: config.plots.marginal.visible.x && used.y,  // we need a marginal plot, iff the opposite letter axis is used!
+        y: config.plots.marginal.visible.y && used.x
       };
 
-      let mainAxisSize = {
-        x: marginal.x ? (config.plots.layout.ratio_marginal(used.x))
-      }
-      CONTINUE HERE:
+      // compute ratio of templating axis to plots area
+      let templAxisRatio = {
+        x: 0.2,
+        y: 0.2
+      };
+
+      // width and heights of a single atomic pane in normalized coordinates
+      let atomicPaneSize = {
+        x: (1 - templAxisRatio.x) / this.size.cols,
+        y: (1 - templAxisRatio.y) / this.size.rows,
+      };
+
+      // ratio of pane width (height) used for main x (y) axis in an atomic plot
+      let mainAxisRatio = {
+        x: marginal.x ? config.plots.layout.ratio_marginal(used.x) : 1,
+        y: marginal.y ? config.plots.layout.ratio_marginal(used.y) : 1,
+      };
+
+      // length of the main x axis (y axis) of an atomic plot in normalized coordinates
+      let axisLength = {
+        main: {
+          x: atomicPaneSize.x * mainAxisRatio.x,
+          y: atomicPaneSize.y * mainAxisRatio.y,
+        },
+        marginal: {
+          x: atomicPaneSize.x * (1 - mainAxisRatio.x),
+          y: atomicPaneSize.y * (1 - mainAxisRatio.y),
+        }
+
+      };
+
+      // init layout and traces of plotly plotting specification
+      let layout = {}, traces = [], mainAxes = {x: [], y: []};
+
+      // offset of a specific atomic pane
+      let paneOffset;
 
       // create table of ViewPanes
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
+        paneOffset.y = atomicPaneSize.y * rIdx;
 
-        let [yid, yaxis] = atomicPlotlyMainAxis(atomicPaneSize.y, atomicPaneSize.y * rIdx, 'y', used.y);
-        mainAxis.y.push(yid);
+        let [yid, yaxis] = atomicPlotlyMainAxis(axisLength.main.y, paneOffset.y + axisLength.marginal.y, 'y', used.y);
+        mainAxes.y.push(yid);
         Object.assign(layout, yaxis);
 
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
+          paneOffset.x = atomicPaneSize.x * cIdx;
 
           let xaxis, xid;
           if (rIdx === 0) {
-            [xid, xaxis] = atomicPlotlyMainAxis(atomicPaneSize.x, atomicPaneSize.x * cIdx, 'x', used.x);
-            mainAxis.x.push(xaxis);
+            [xid, xaxis] = atomicPlotlyMainAxis(axisLength.main.x, paneOffset.x + axisLength.marginal.x, 'x', used.x);
+            mainAxes.x.push(xaxis);
             Object.assign(layout, xaxis);
           } else {
-            xid = mainAxis.x[cIdx];
+            xid = mainAxes.x[cIdx];
           }
 
+          // create marignal axes as needed
+          let marginalAxisId;
+          for (let xy of ['x','y']) {
+            if (marginal[xy]) {
+              let [id, axis] = config.axisGenerator.marginal(false, xy); // TODO: remove unneeded used paramter
+              axis.domain = [paneOffset[xy], paneOffset[xy] + axisLength.marginal[xy]];
 
+              // todo: save axis id at atomic plot?
+              Object.assign(layout, {[id]: axis});
+              marginalAxisId[xy] = id;
+            }
+          }
 
-          let atomicTraces = atomicPlotlyTraces(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], mainAxisId, marginalAxisId);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], {x:xid,y:yid}, marginalAxisId);
 
           traces.extent(atomicTraces);
-          // let subPane = addAtomicPane(
-          //   this.canvas.canvasD3,
-          //   this.subPaneSize,
-          //   {x: cIdx * this.subPaneSize.width, y: rIdx * this.subPaneSize.height}
-          // );
-
-
 
           /**
            *
