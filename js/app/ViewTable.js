@@ -279,11 +279,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       return traces;
     }
 
-    function atomicPlotlyMainAxis (length, offset, xOrY, used, id) {
-      let mainAxis = config.axisGenerator.main(true);
-      mainAxis.domain = [offset, offset + length];
-    }
-
 
     function atomicPlotlyAllAxis (size, offset, xOrY) {
 
@@ -1109,48 +1104,53 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       };
 
+      // starting ids for the axis of different types. id determines z-order.
+      let idgen = {
+        main: {x:2000, y:3000},
+        marginal: {x:4000, y:5000},
+        templating: {x:0, y:1000}
+      };
+
       // init layout and traces of plotly plotting specification
       let layout = {}, traces = [], mainAxes = {x: [], y: []};
 
       // offset of a specific atomic pane
       let paneOffset;
 
-      // create table of ViewPanes
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
         paneOffset.y = atomicPaneSize.y * rIdx;
 
-        let [yid, yaxis] = atomicPlotlyMainAxis(axisLength.main.y, paneOffset.y + axisLength.marginal.y, 'y', used.y);
+        let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, used.y),
+          yid = idgen.main.y++;
         mainAxes.y.push(yid);
-        Object.assign(layout, yaxis);
+        layout[yid] = yaxis;
 
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
           paneOffset.x = atomicPaneSize.x * cIdx;
 
           let xaxis, xid;
           if (rIdx === 0) {
-            [xid, xaxis] = atomicPlotlyMainAxis(axisLength.main.x, paneOffset.x + axisLength.marginal.x, 'x', used.x);
-            mainAxes.x.push(xaxis);
-            Object.assign(layout, xaxis);
+            xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, used.x);
+            xid = idgen.main.x++;
+            mainAxes.x.push(xid);
+            layout[xid] = xaxis;
           } else {
             xid = mainAxes.x[cIdx];
           }
 
-          // create marignal axes as needed
+          // create marginal axes as needed
           let marginalAxisId;
           for (let xy of ['x','y']) {
             if (marginal[xy]) {
-              let [id, axis] = config.axisGenerator.marginal(false, xy); // TODO: remove unneeded used paramter
-              axis.domain = [paneOffset[xy], paneOffset[xy] + axisLength.marginal[xy]];
-
-              // todo: save axis id at atomic plot?
-              Object.assign(layout, {[id]: axis});
-              marginalAxisId[xy] = id;
+              let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], xy);
+              marginalAxisId[xy] = idgen.marginal[xy]++;
+              layout[marginalAxisId[xy]] = axis;
             }
           }
 
-          let atomicTraces = atomicPlotlyTraces(aggrColl[0][0], dataColl[0][0], uniColl[0][0], biColl[0][0], queries.at[0][0], {x:xid,y:yid}, marginalAxisId);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx], {x:xid,y:yid}, marginalAxisId);
 
           traces.extent(atomicTraces);
 
@@ -1191,22 +1191,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
            *
            * # todo: speed optimize by providing much more information to axis? is that premature opt? probably...
            */
-
-
-          //this.at[rIdx][cIdx] = 
-          // drawAtomicPlotly($panePlotly.get(0), aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx], axes);
-
-          // if (cIdx === 0)
-          //   attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'y axis');
-          // if (rIdx === (this.size.rows - 1))
-          //   attachAtomicAxis(this.at[rIdx][cIdx], this.queries.at[rIdx][cIdx], this.canvas.size, 'x axis');
         }
       }
 
       // add templating axis
       let temply = createTemplatingAxis({x:0, y:0}, {x:templAxisRatio.x, y:1}, query.layout.rows, 'y', {x:100,y:100});
       let templx = createTemplatingAxis({x:0, y:0}, {x:1, y:templAxisRatio.y}, query.layout.cols, 'x', {x:500,y:500});
-      //Object.assign(layout, templx, temply);
+      // Object.assign(layout, templx, temply);
 
       // add 'global' layout options
       Object.assign(layout, {

@@ -170,7 +170,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
 
 
   c.axisGenerator = {
-    main: (used) => {
+    main: (offset, length, used) => {
       if (used)
         return {
           showline: true,
@@ -187,7 +187,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
           titlefont: {
             color: c.plots.main.text.color,
             size: c.plots.main.text.size*1.25,
-          }
+          },
+          domain: [offset, offset + length],
         };
       else
         return {
@@ -200,10 +201,11 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
           ticks: "",
           range: [-1, 1],
           fixedrange: true,
+          domain: [offset, offset + length],
         };
     },
 
-    marginal: (used, xOrY = 'x') => ({
+    marginal: (offset, length, xOrY) => ({
       autorange: 'reversed',
       tickmode: 'auto',
       //zeroline: !used,
@@ -221,7 +223,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       titlefont: {
         color: c.plots.marginal.text.color,
         size: c.plots.marginal.text.size,
-      }
+      },
+      domain: [offset, offset + length],
     }),
   };
 
