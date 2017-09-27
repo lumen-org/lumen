@@ -65,9 +65,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               // -> heatmap
               // TODO: make it possible to enable marginal plots as well
               traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
-              //traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+              // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+              //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
               // TODO: plotly heatmaps do not support categorical z values, as a color scale only maps from numerical values. Either find a work around or implement cateogrical heatmaps?
             }
             else { // if (used.shape) {
@@ -91,7 +92,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper));
+          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
 
           // hard to show splits of more than rows and cols: overlap in visualization
           // TODO: solve by creating a bubble plot/jittered plot
@@ -447,7 +448,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           visible: false,
         };
 
-        let ticks = split.extent; // TODO. don't think that works.
+        let ticks = split.extent;
 
         // multiple major axis are needed
         for (let r = 0; r < repeat; ++r) {
@@ -457,6 +458,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
           // new major axis (i.e. x axis for xy === x)
           let major = {
+            // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
             anchor: invXy + minorId,
             domain: [majorOffset, majorOffset + majorLength],
             position: stackOffset,

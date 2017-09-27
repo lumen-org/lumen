@@ -108,6 +108,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     let tracer = {};
 
     tracer.aggrHeatmap = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+      if (!axisId) throw RangeError("invalid axisId");
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -180,6 +181,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @return {Array}
      */
     tracer.aggr = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+      if (!axisId) throw RangeError("invalid axisId");
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -241,7 +243,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @return {Array}
      */
     tracer.uni = function (p1dRT, query, mapper, mainAxisId={x:'x', y:'y'}, marginalAxisId={x:'x2', y:'y2'}) {
-
+      if (!mainAxisId) throw RangeError("invalid mainAxisId");
+      if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
       let aest = query.layers[0].aesthetics;
 
       /**
@@ -372,6 +375,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @return {Array}
      */
     tracer.bi = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+      if (!axisId) throw RangeError("invalid axisId");
       let traces = [];
       if (rt !== undefined) {
 
@@ -414,6 +418,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @return {Array}
      */
     tracer.samples = function (data, query, mapper, axisId) {
+      if (!axisId) throw RangeError("invalid axisId");
       let fu2idx = data.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
