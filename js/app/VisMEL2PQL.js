@@ -131,7 +131,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     let query = {
       'type': 'select',
       'select': Array.from(select.keys()),
-      //'where': filters
+      'where': filters
     };
     return {query, fu2idx, idx2fu}
   }
