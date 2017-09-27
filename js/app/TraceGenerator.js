@@ -11,13 +11,15 @@
  *  * in plotly a trace is one plotting 'act'.
  *  * if anything is drawn as a line chart, then one line (including its marks) is represented by one trace
  *
+ *  todo: speed optimize by providing much more information to axis? is that premature opt? probably...
+ *
  * @module ViewTable
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ResultTable', './SplitSample', './ScaleGenerator', './ViewSettings'],
-  function (Logger, d3c, PQL, VisMEL, RT, S, ScaleGen, c) {
+define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings'],
+  function (Logger, d3c, PQL, VisMEL, ScaleGen, c) {
     "use strict";
 
     let logger = Logger.get('pl-ViewTable');

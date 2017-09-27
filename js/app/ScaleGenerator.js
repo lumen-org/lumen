@@ -4,7 +4,7 @@
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger', 'd3', 'lib/colorbrewer', './PQL', './ViewSettings'], function (Logger, d3, cbrew, PQL, c) {
+define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQL, c) {
   "use strict";
 
   var logger = Logger.get('pl-ScaleGenerator');
