@@ -956,12 +956,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
      * @offset: .x (.y) is the offset in normalized coordinates for the templating axes
      * @size: .x (.y) is the size in normalized coordinates for the templating axes
      * @fus the stack of field usages that make up the templating axes
-     * @xOrY 'x' ('y') if its an x-axis (y-axis)
+     * @xy 'x' ('y') if its an x-axis (y-axis)
      * @id .x (.y) is the first free axis integer index for x (y) axis
      * @returns {} An array of axis objects for the layout part of a plotly plot configuration.
      */
-    function createTemplatingAxis(offset, size, fus, xOrY, id) {
-      let invXorY = (xOrY === 'x'?'y':'x');
+    function createTemplatingAxis(offset, size, fus, xy, id) {
+      let invXy = (xy === 'x'?'y':'x');
 
       // the number of stacked axis equals the number of splits in fus, reduced by one if there is no aggregation/density (since the last split then is part of an atomic plots axes)
       let levelSplits = fus.filter(PQL.isSplit);
@@ -969,19 +969,19 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         levelSplits.pop();
 
       // available width (height) per axis level
-      let levelSize = size[invXorY] / levelSplits.length;
+      let levelSize = size[invXy] / levelSplits.length;
       let axes = {}; // object of plotly axes objects
       let repeat = 1;
 
       levelSplits.forEach((split, d) => {
-        let stackOffset = offset[xOrY] + levelSize * d; // the y (x) offset of axes in this level
-        let majorSize = size[xOrY] / repeat; // the width (height) of major axes in this level
-        let minorId = id[invXorY]++;
+        let stackOffset = offset[xy] + levelSize * d; // the y (x) offset of axes in this level
+        let majorSize = size[xy] / repeat; // the width (height) of major axes in this level
+        let minorId = id[invXy]++;
 
         // only one minor axis per stack level is needed
         let minor = {
           domain: [stackOffset, stackOffset + levelSize],
-          anchor: xOrY + id[xOrY],  // anchor with the first major of this level (to be generated)
+          anchor: xy + id[xy],  // anchor with the first major of this level (to be generated)
           visible: false,
         };
 
@@ -990,12 +990,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
         // multiple major axis are needed
         for (let r = 0; r < repeat; ++r) {
 
-          let majorId = id[xOrY]++,
-            majorOffset = offset[invXorY] + majorSize*r;
+          let majorId = id[xy]++,
+            majorOffset = offset[invXy] + majorSize*r;
 
-          // new major axis (i.e. x axis for xOrY === x)
+          // new major axis (i.e. x axis for xy === x)
           let major = {
-            anchor: invXorY + minorId,
+            anchor: invXy + minorId,
             domain: [majorOffset, majorOffset + majorSize],
             visible: true,
             showline: true,
@@ -1007,10 +1007,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
             ticktext: ticks,
           };
 
-          axes[xOrY + 'axis' + majorId] = major;
+          axes[xy + 'axis' + majorId] = major;
         }
         repeat *= ticks.length;
-        axes[invXorY + 'axis' + minorId] = minor;
+        axes[invXy + 'axis' + minorId] = minor;
       });
 
       return axes;
@@ -1106,9 +1106,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
       // starting ids for the axis of different types. id determines z-order.
       let idgen = {
-        main: {x:2000, y:3000},
-        marginal: {x:4000, y:5000},
-        templating: {x:0, y:1000}
+        main: {x:200, y:300},
+        marginal: {x:400, y:500},
+        templating: {x:0, y:100}
       };
 
       // init layout and traces of plotly plotting specification
@@ -1124,8 +1124,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
 
         let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, used.y),
           yid = idgen.main.y++;
-        mainAxes.y.push("y" + yid);
         layout["yaxis" + yid] = yaxis;
+        yid = "y"+yid;
+        mainAxes.y.push(yid);
 
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
           paneOffset.x = atomicPaneSize.x * cIdx;
@@ -1134,8 +1135,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
           if (rIdx === 0) {
             xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, used.x);
             xid = idgen.main.x++;
-            mainAxes.x.push("x"+xid);
             layout["xaxis" + xid] = xaxis;
+            xid = "x" + xid;
+            mainAxes.x.push(xid);
           } else {
             xid = mainAxes.x[cIdx];
           }
@@ -1147,6 +1149,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], xy);
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
+              marginalAxisId[xy] = xy + marginalAxisId[xy];
             }
           }
 
@@ -1198,8 +1201,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       this.mainAxes = mainAxes;
 
       // add templating axis
-      let temply = createTemplatingAxis({x:0, y:0}, {x:templAxisRatio.x, y:1}, query.layout.rows, 'y', {x:100,y:100});
-      let templx = createTemplatingAxis({x:0, y:0}, {x:1, y:templAxisRatio.y}, query.layout.cols, 'x', {x:500,y:500});
+      let temply = createTemplatingAxis({x:0, y:0}, {x:templAxisRatio.x, y:1}, query.layout.rows, 'y', idgen.templating);
+      let templx = createTemplatingAxis({x:0, y:0}, {x:1, y:templAxisRatio.y}, query.layout.cols, 'x', idgen.templating);
       // Object.assign(layout, templx, temply);
 
       // add 'global' layout options
@@ -1217,6 +1220,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './ResultTable', './SplitSample
       // plot everything
       Plotly.purge(pane);
       Plotly.plot(pane, traces, layout);
+      //Plotly.plot(pane, [{x:[1,2,4,3]}], /*{height:400, width:400}*/);
     };
 
     return ViewTable;
