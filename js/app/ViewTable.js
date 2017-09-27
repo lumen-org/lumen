@@ -422,7 +422,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @id .x (.y) is the first free axis integer index for x (y) axis
      * @returns {} An array of axis objects for the layout part of a plotly plot configuration.
      */
-    function createTemplatingAxis(offset, size, fus, xy, id) {
+    function createTemplatingAxis(xy, offset, size, fus, id) {
       let invXy = (xy === 'x'?'y':'x');
 
       // the number of stacked axis equals the number of splits in fus, reduced by one if there is no aggregation/density (since the last split then is part of an atomic plots axes)
@@ -430,14 +430,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       if (!fus.some(PQL.isAggregationOrDensity))
         levelSplits.pop();
 
-      // available width (height) per axis level
+      // available height (if xy === x) (width if xy === y) per axis level
       let levelSize = size[invXy] / levelSplits.length;
       let axes = {}; // object of plotly axes objects
       let repeat = 1;
 
       levelSplits.forEach((split, d) => {
-        let stackOffset = offset[xy] + levelSize * d; // the y (x) offset of axes in this level
-        let majorSize = size[xy] / repeat; // the width (height) of major axes in this level
+        let stackOffset = offset[invXy] + levelSize * d; // the y (x) offset of axes in this level (this is identical for all axis of this level)
+        let majorLength = size[xy] / repeat; // the width (height) of (a single) major axes in this level
         let minorId = id[invXy]++;
 
         // only one minor axis per stack level is needed
@@ -453,12 +453,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         for (let r = 0; r < repeat; ++r) {
 
           let majorId = id[xy]++,
-            majorOffset = offset[invXy] + majorSize*r;
+            majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
           let major = {
             anchor: invXy + minorId,
-            domain: [majorOffset, majorOffset + majorSize],
+            domain: [majorOffset, majorOffset + majorLength],
             visible: true,
             showline: true,
             showgrid: false,
@@ -520,19 +520,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         y: config.plots.marginal.visible.y && used.x
       };
 
-      // compute ratio of templating axis to plots area
-      let templAxisRatio = {
+      // size of templating axis to plots area in normalized coordinates
+      // TODO: set to 0 if no templ. axis present.
+      let templAxisSize = {
         x: 0.2,
         y: 0.2
       };
 
       // width and heights of a single atomic pane in normalized coordinates
       let atomicPaneSize = {
-        x: (1 - templAxisRatio.x) / this.size.cols,
-        y: (1 - templAxisRatio.y) / this.size.rows,
+        x: (1 - templAxisSize.x) / this.size.cols,
+        y: (1 - templAxisSize.y) / this.size.rows,
       };
 
-      // ratio of pane width (height) used for main x (y) axis in an atomic plot
+      // part of pane width (height) used for main x (y) axis in an atomic plot
       let mainAxisRatio = {
         x: marginal.x ? config.plots.layout.ratio_marginal(used.x) : 1,
         y: marginal.y ? config.plots.layout.ratio_marginal(used.y) : 1,
@@ -541,12 +542,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // length of the main x axis (y axis) of an atomic plot in normalized coordinates
       let axisLength = {
         main: {
-          x: atomicPaneSize.x * (1 - mainAxisRatio.x),
-          y: atomicPaneSize.y * (1 - mainAxisRatio.y),
-        },
-        marginal: {
           x: atomicPaneSize.x * mainAxisRatio.x,
           y: atomicPaneSize.y * mainAxisRatio.y,
+        },
+        marginal: {
+          x: atomicPaneSize.x * (1 - mainAxisRatio.x),
+          y: atomicPaneSize.y * (1 - mainAxisRatio.y),
         }
 
       };
@@ -567,20 +568,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       this.at = new Array(this.size.rows);
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
-        paneOffset.y = atomicPaneSize.y * rIdx;
+        paneOffset.y = templAxisSize.y + atomicPaneSize.y * rIdx;
 
-        let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, used.y),
+        let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
         layout["yaxis" + yid] = yaxis;
         yid = "y"+yid;
         mainAxes.y.push(yid);
 
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
-          paneOffset.x = atomicPaneSize.x * cIdx;
+          paneOffset.x = templAxisSize.x + atomicPaneSize.x * cIdx;
 
           let xaxis, xid;
           if (rIdx === 0) {
-            xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, used.x);
+            xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             layout["xaxis" + xid] = xaxis;
             xid = "x" + xid;
@@ -591,9 +592,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
           // create marginal axes as needed
           let marginalAxisId = {};
-          for (let xy of ['x','y']) {
+          for (let [xy, yx] of [['x','y'], ['y','x']]) {
             if (marginal[xy]) {
-              let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], xy);
+              let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
               marginalAxisId[xy] = xy + marginalAxisId[xy];
@@ -608,8 +609,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       }
 
       // add templating axis
-      let temply = createTemplatingAxis({x:0, y:0}, {x:templAxisRatio.x, y:1}, query.layout.rows, 'y', idgen.templating);
-      let templx = createTemplatingAxis({x:0, y:0}, {x:1, y:templAxisRatio.y}, query.layout.cols, 'x', idgen.templating);
+      let templx = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, query.layout.cols, idgen.templating);
+
+      let temply = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, query.layout.rows, idgen.templating);
+
       Object.assign(layout, templx, temply);
 
       // add 'global' layout options

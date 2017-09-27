@@ -157,7 +157,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     },
 
     layout: {
-      ratio_marginal: used => (used ? 0.15 : 0.4),
+      ratio_marginal: used => (used ? 0.85 : 0.6),
       margin_main_sub: 0.02,
       margin: 20,
     }
@@ -165,7 +165,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
 
 
   c.axisGenerator = {
-    main: (offset, length, used) => {
+    main: (offset, length, position, used) => {
       if (used)
         return {
           showline: true,
@@ -184,6 +184,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
             size: c.plots.main.text.size*1.25,
           },
           domain: [offset, offset + length],
+          position: position,
         };
       else
         return {
@@ -197,10 +198,11 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
           range: [-1, 1],
           fixedrange: true,
           domain: [offset, offset + length],
+          position: position,
         };
     },
 
-    marginal: (offset, length, xy) => ({
+    marginal: (offset, length, position, xy) => ({
       autorange: 'reversed',
       tickmode: 'auto',
       //zeroline: !used,
@@ -219,6 +221,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         size: c.plots.marginal.text.size,
       },
       domain: [offset, offset + length],
+      position: position,
     }),
   };
 
