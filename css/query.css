@@ -155,20 +155,28 @@ body {
 }
 
 .pl-fu-density {
-    background-color: #9DBBB7;
+    /*background-color: #9DBBB7;*/
+    /*background-color: #91BCCC;*/
+    background-color: #A9CCDA;
 }
 
 
 .pl-fu-aggregation {
-    background-color: #F2B950;
+    /*background-color: #F2B950;*/
+    /*background-color: #FAD6AF;*/
+    background-color: #FFE2C3;
 }
 
 .pl-fu-split {
-    background-color: #F25D50;
+    /*background-color: #F25D50;*/
+    /*background-color: #FABCAF;*/
+    background-color: #FFCDC3;
 }
 
 .pl-fu-filter {
-    background-color: #F2E6D8;
+    /*background-color: #F2E6D8;*/
+    /*background-color: #97D8AF;*/
+    background-color: #AEE4C2;
 }
 
 .pl-density-button, .pl-aggregation-button, .pl-split-button {

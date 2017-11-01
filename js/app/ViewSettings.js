@@ -44,6 +44,10 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     }
   });
 
+  // c.shelves = {
+  //   density.color
+  // };
+
   c.colorscales = {
     density: [[0, 'rgb(255,255,255)'], [0.0001, 'rgb(255,255,255)'], [0.0001, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
     //density: [[0, 'rgb(255,255,255)'], [0.01, 'rgb(255,255,255)'], [0.01, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
@@ -107,7 +111,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         def: greys(0.5),
       },
       bar: {
-        opacity: 0.3,
+        opacity: 0.7,
       }
     },
     biDensity: {
@@ -157,9 +161,19 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     },
 
     layout: {
-      ratio_marginal: used => (used ? 0.85 : 0.6),
+      ratio_marginal: used => (used ? 0.85 : 0.4),
       margin_main_sub: 0.02,
-      margin: 60,
+      //margin: 30,
+      margin: {
+        l: 40, t: 30,
+        r: 30, b: 40,
+        pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
+      },
+      // ratio of plotting area reserved for the templating axis (if any)
+      templ_axis_size: {
+        x: 0.2,
+        y: 0.2
+      }
     }
   };
 
@@ -210,8 +224,10 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       zerolinecolor: c.plots.marginal.axis.color,
       zerolinewidth: c.plots.marginal.axis.zerolinewidth,
       rangemode: 'tozero',
+      fixedrange: true,
       nticks: 2,
-      tickangle: xy === 'x' ? 90 : 0,
+      side: xy === 'y' ? 'right' : 'top',
+      //tickangle: xy === 'x' ? 90 : 0,
       tickfont: {
         color: c.plots.marginal.text.color,
         size: c.plots.marginal.text.size,

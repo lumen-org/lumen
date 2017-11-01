@@ -414,6 +414,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return mapper;
     }
 
+    /**
+     * Returns the split usages that make up templating axis level splits, from outermost to innermost templating axis split.
+     * @fus the stack of field usages that make up the templating axes
+     */
+    function getLevelSplits(fus) {
+      let levelSplits = fus.filter(PQL.isSplit);
+      if (!fus.some(PQL.isAggregationOrDensity))
+        levelSplits.pop();
+      return levelSplits;
+    }
 
     /**
      * @offset: .x (.y) is the offset in normalized coordinates for the templating axes
@@ -427,9 +437,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       let invXy = (xy === 'x'?'y':'x');
 
       // the number of stacked axis equals the number of splits in fus, reduced by one if there is no aggregation/density (since the last split then is part of an atomic plots axes)
-      let levelSplits = fus.filter(PQL.isSplit);
-      if (!fus.some(PQL.isAggregationOrDensity))
-        levelSplits.pop();
+      let levelSplits = getLevelSplits(fus);
 
       // available height (if xy === x) (width if xy === y) per axis level
       let levelSize = size[invXy] / levelSplits.length;
@@ -511,10 +519,19 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       attachExtents(queries, this.dataCollection);
       normalizeExtents(queries);
 
+      // shortcut to the queries layout attributes
+      // accessor to the layout fields usage for a certain row(y)/col(x) in the view table
+      let getFieldUsage = (idx, xy) => {
+        return xy === 'x' ? queries.at[0][idx].layout.cols[0] : queries.at[idx][0].layout.rows[0];
+      };
+
+      let qx = query.layout.cols,
+       qy = query.layout.rows;
+
       // flag whether or not in an atomic plot the x axis (.x) (y axis (.y)) is in use, i.e. encodes some fieldusage of the model
       let used = {
-        x: query.layout.cols[0] !== undefined,
-        y: query.layout.rows[0] !== undefined,
+        x: qx[0] !== undefined,
+        y: qy[0] !== undefined,
       };
 
       // flag whether or not in an atomic plot a marginal axis will be drawn. .x (.y) is the flag for the marginal x axis (y axis)
@@ -526,8 +543,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // size of templating axis to plots area in normalized coordinates
       // TODO: set to 0 if no templ. axis present.
       let templAxisSize = {
-        x: 0.2,
-        y: 0.2
+        x: getLevelSplits(qx).length > 0 ? config.plots.layout.templ_axis_size.x : 0,
+        y: getLevelSplits(qy).length > 0 ? config.plots.layout.templ_axis_size.y : 0
       };
 
       // width and heights of a single atomic pane in normalized coordinates
@@ -563,34 +580,41 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       };
 
       // init layout and traces of plotly plotting specification
-      let layout = {}, traces = [], mainAxes = {x: [], y: []};
-
+      let layout = {}, traces = [];
+      // array of main axis along atomic plots of view table, for both, x and y axis. The values are axis ids.
+      let mainAxes = {x: [], y: []};
       // offset of a specific atomic pane
       let paneOffset = {};
+      // indexing over x and y
+      let idx = {x:0, y:0};
 
       this.at = new Array(this.size.rows);
-      for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
-        this.at[rIdx] = new Array(this.size.cols);
-        paneOffset.y = templAxisSize.y + atomicPaneSize.y * rIdx;
+      for (idx.y = 0; idx.y < this.size.rows; ++idx.y) {
+        this.at[idx.y] = new Array(this.size.cols);
+        paneOffset.y = templAxisSize.y + atomicPaneSize.y * idx.y;
 
         let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
+        if (used.y)
+          yaxis.title = getFieldUsage(idx.y, 'y').yields;
         layout["yaxis" + yid] = yaxis;
         yid = "y"+yid;
         mainAxes.y.push(yid);
 
-        for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
-          paneOffset.x = templAxisSize.x + atomicPaneSize.x * cIdx;
+        for (idx.x = 0; idx.x < this.size.cols; ++idx.x) {
+          paneOffset.x = templAxisSize.x + atomicPaneSize.x * idx.x;
 
           let xaxis, xid;
-          if (rIdx === 0) {
+          if (idx.y === 0) {
             xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
+            if (used.x)
+              xaxis.title = getFieldUsage(idx.x, 'x').yields;
             layout["xaxis" + xid] = xaxis;
             xid = "x" + xid;
             mainAxes.x.push(xid);
           } else {
-            xid = mainAxes.x[cIdx];
+            xid = mainAxes.x[idx.x];
           }
 
           // create marginal axes as needed
@@ -598,6 +622,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           for (let [xy, yx] of [['x','y'], ['y','x']]) {
             if (marginal[xy]) {
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
+              // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
+              axis.anchor = mainAxes[yx][idx[yx]];
+
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
               marginalAxisId[xy] = xy + marginalAxisId[xy];
@@ -605,27 +632,24 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[rIdx][cIdx], dataColl[rIdx][cIdx], uniColl[rIdx][cIdx], biColl[rIdx][cIdx], queries.at[rIdx][cIdx], {x:xid,y:yid}, marginalAxisId);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId);
 
           traces.push(...atomicTraces);
         }
       }
 
       // add templating axis
-      let templx = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, query.layout.cols, idgen.templating);
+      let templx = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, qx, idgen.templating);
 
-      let temply = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, query.layout.rows, idgen.templating);
+      let temply = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
 
       Object.assign(layout, templx, temply);
 
       // add 'global' layout options
       Object.assign(layout, {
-        title: 'test title',
+        //title: 'test title',
         barmode: 'group',
-        margin: {
-          l:config.plots.layout.margin, t:config.plots.layout.margin,
-          r:config.plots.layout.margin, b:config.plots.layout.margin,
-        }
+        margin: config.plots.layout.margin,
       });
 
       // TODO: // add axis names
