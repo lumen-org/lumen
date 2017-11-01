@@ -450,23 +450,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         let minorId = id[invXy]++;
 
         // only one minor axis per stack level is needed
-        let minor = {
-          domain: [stackOffset, stackOffset + levelSize],
-          anchor: xy + id[xy],  // anchor with the first major of this level (to be generated)
-          visible: false,
-        };
+        let anchor = xy + id[xy]; // anchor with the first major of this level (to be generated)
+        let minor = config.axisGenerator.templating_minor(stackOffset, levelSize, anchor);
 
-        let ticks = split.extent;
+        console.log(levelSize)
 
         // multiple major axis are needed
+        let ticks = split.extent;
         for (let r = 0; r < repeat; ++r) {
 
           let majorId = id[xy]++,
             majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
-          let major = config.axisGenerator.templating_major(majorOffset, majorLength, stackOffset, ticks, invXy + minorId);
-          // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
+          let major = config.axisGenerator.templating_major(majorOffset, majorLength, ticks, invXy + minorId);
+          major.title = split.yields;
           axes[xy + 'axis' + majorId] = major;
         }
         repeat *= ticks.length;

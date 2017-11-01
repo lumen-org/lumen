@@ -162,8 +162,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
 
     layout: {
       ratio_marginal: used => (used ? 0.85 : 0.4),
-      margin_main_sub: 0.02,
-      //margin: 30,
+      //margin_main_sub: 0.02,
       margin: {
         l: 40, t: 30,
         r: 30, b: 40,
@@ -171,8 +170,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       },
       // ratio of plotting area reserved for the templating axis (if any)
       templ_axis_size: {
-        x: 0.2,
-        y: 0.2
+        x: 0.3,
+        y: 0.3
       }
     }
   };
@@ -240,19 +239,28 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       position: position,
     }),
 
-    templating_major: (offset, length, position, ticks, anchor) => ({
+    templating_major: (offset, length, ticks, anchor) => ({
       // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
       anchor: anchor,
       domain: [offset, offset + length],
-      position: position,
       visible: true,
       showline: true,
-      showgrid: false,
+      showgrid: true,
+      // showgrid: false,
       ticklen: 5,
       type: 'category',
       range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
       tickvals: _.range(ticks.length),
       ticktext: ticks,
+      fixedrange: true,
+    }),
+
+    templating_minor: (offset, length, anchor) => ({
+      domain: [offset, offset + length],
+      anchor: anchor,
+      visible: true,
+      // visible: false,
+      fixedrange: true,
     }),
   };
 
