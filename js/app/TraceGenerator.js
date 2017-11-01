@@ -264,8 +264,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
-        // let xAxis = (xy === 'x' ? 'x' : 'x2'),
-        //   yAxis = (xy === 'x' ? 'y2' : 'y');
 
         let trace = {
           name: modelOrData + ' marginal on ' + xy,

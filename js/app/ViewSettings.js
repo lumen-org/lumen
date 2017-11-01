@@ -239,6 +239,21 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       domain: [offset, offset + length],
       position: position,
     }),
+
+    templating_major: (offset, length, position, ticks, anchor) => ({
+      // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
+      anchor: anchor,
+      domain: [offset, offset + length],
+      position: position,
+      visible: true,
+      showline: true,
+      showgrid: false,
+      ticklen: 5,
+      type: 'category',
+      range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
+      tickvals: _.range(ticks.length),
+      ticktext: ticks,
+    }),
   };
 
   return Object.freeze(c);

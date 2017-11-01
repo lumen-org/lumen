@@ -465,21 +465,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
-          let major = {
-            // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
-            anchor: invXy + minorId,
-            domain: [majorOffset, majorOffset + majorLength],
-            position: stackOffset,
-            visible: true,
-            showline: true,
-            showgrid: false,
-            ticklen: 5,
-            type: 'category',
-            range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
-            tickvals: _.range(ticks.length),
-            ticktext: ticks,
-          };
-
+          let major = config.axisGenerator.templating_major(majorOffset, majorLength, stackOffset, ticks, invXy + minorId);
+          // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
           axes[xy + 'axis' + majorId] = major;
         }
         repeat *= ticks.length;
@@ -541,10 +528,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       };
 
       // size of templating axis to plots area in normalized coordinates
-      // TODO: set to 0 if no templ. axis present.
       let templAxisSize = {
-        x: getLevelSplits(qx).length > 0 ? config.plots.layout.templ_axis_size.x : 0,
-        y: getLevelSplits(qy).length > 0 ? config.plots.layout.templ_axis_size.y : 0
+        x: getLevelSplits(qy).length > 0 ? config.plots.layout.templ_axis_size.y : 0,
+        y: getLevelSplits(qx).length > 0 ? config.plots.layout.templ_axis_size.x : 0,
       };
 
       // width and heights of a single atomic pane in normalized coordinates
@@ -576,7 +562,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       let idgen = {
         main: {x:2000, y:3000},
         marginal: {x:4000, y:5000},
-        templating: {x:0, y:1000}
+        templating: {x:1, y:1000}
       };
 
       // init layout and traces of plotly plotting specification
@@ -651,13 +637,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         barmode: 'group',
         margin: config.plots.layout.margin,
       });
-
-      // TODO: // add axis names
-      // for (let [xOrY, rowsOrCols] of [['x', 'cols'], ['y', 'rows']]) {
-      //   if (used[xOrY]) {
-      //     axes[mainId[xOrY]].title = query.layout[rowsOrCols][0].yields;
-      //   }
-      // }
 
       // plot everything
       Plotly.purge(pane);
