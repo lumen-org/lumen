@@ -164,7 +164,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       ratio_marginal: used => (used ? 0.85 : 0.4),
       //margin_main_sub: 0.02,
       margin: {
-        l: 40, t: 30,
+        l: 70, t: 30,
         r: 30, b: 40,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
@@ -172,7 +172,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       templ_axis_level_size: {
         x: 0.08,
         y: 0.08
-      }
+      },
     }
   };
 
@@ -242,7 +242,6 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       fixedrange: true,
       nticks: 2,
       side: xy === 'y' ? 'right' : 'top',
-      //tickangle: xy === 'x' ? 90 : 0,
       tickfont: {
         color: c.plots.marginal.text.color,
         size: c.plots.marginal.text.size,
@@ -261,8 +260,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       domain: [offset, offset + length],
       visible: true,
       showline: true,
-      showgrid: true,
-      // showgrid: false,
+      showgrid: false,
       ticklen: 5,
       type: 'category',
       range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
