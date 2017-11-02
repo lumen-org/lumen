@@ -169,13 +169,29 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)
-      templ_axis_size: {
-        x: 0.3,
-        y: 0.3
+      templ_axis_level_size: {
+        x: 0.08,
+        y: 0.08
       }
     }
   };
 
+  c.annotationGenerator = {
+    templ_level_title: (title, xy, refId) => {
+      let yx = xy === 'x' ? 'y' : 'x';
+      let anno = {
+        text: title,
+        showarrow: false,
+        textangle: xy === 'y' ? -90 : 0,
+      };
+      anno[xy+'ref'] = 'paper';
+      anno[xy] = 1; // right most / up most
+      anno[yx+'ref'] = yx + refId;
+      anno[yx] = 0;
+      anno[yx+'shift'] = -10;
+      return anno;
+    },
+  };
 
   c.axisGenerator = {
     main: (offset, length, position, used) => {
@@ -258,8 +274,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     templating_minor: (offset, length, anchor) => ({
       domain: [offset, offset + length],
       anchor: anchor,
-      visible: true,
-      // visible: false,
+      range: [0,1],
+      visible: false,
       fixedrange: true,
     }),
   };

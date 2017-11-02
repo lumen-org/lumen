@@ -442,6 +442,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // available height (if xy === x) (width if xy === y) per axis level
       let levelSize = size[invXy] / levelSplits.length;
       let axes = {}; // object of plotly axes objects
+      let annotations = []; // annotations for level titles
       let repeat = 1;
 
       levelSplits.forEach((split, d) => {
@@ -453,7 +454,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         let anchor = xy + id[xy]; // anchor with the first major of this level (to be generated)
         let minor = config.axisGenerator.templating_minor(stackOffset, levelSize, anchor);
 
-        console.log(levelSize)
+        console.log(levelSize);
 
         // multiple major axis are needed
         let ticks = split.extent;
@@ -464,15 +465,41 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
           // new major axis (i.e. x axis for xy === x)
           let major = config.axisGenerator.templating_major(majorOffset, majorLength, ticks, invXy + minorId);
-          major.title = split.yields;
           axes[xy + 'axis' + majorId] = major;
         }
+
         repeat *= ticks.length;
         axes[invXy + 'axis' + minorId] = minor;
+
+        // add title once per level
+        // exemplary for x-axis level-label
+
+        let annotation = {
+          text: split.yields,
+          xref: "paper", // relative to paper
+          x: 1, // then right most
+          yref: "y" + minorId, // anchor to minor axis of this level
+          y: 0, // set to lowest position, i.e. where the major axis is drawn
+          yshift: -10,
+          showarrow: false,
+        };
+        annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId, )
+        annotations.push(annotation);
       });
 
-      return axes;
+      return [axes, annotations];
     }
+
+    /**
+     * Using annotations to title templating axis:
+     *
+     * Templating axis need only one titel per level, however the axes themselves may be duplicated several times within one level. Moreover we cannot control where exactly normal titles are shown. Hence we use annotations to generate proper per-level-titles for them.
+     *
+     * For a x-axis (analogous for y-axis):
+     *
+     *  * horizontal position: relative to canvas and 100% to the right (whatever width the templating level has)
+     *  * vertical position: relative to y-axis of that level and at position 0 (it has range [0,1])
+     */
 
 
     /**
@@ -527,8 +554,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // size of templating axis to plots area in normalized coordinates
       let templAxisSize = {
-        x: getLevelSplits(qy).length > 0 ? config.plots.layout.templ_axis_size.y : 0,
-        y: getLevelSplits(qx).length > 0 ? config.plots.layout.templ_axis_size.x : 0,
+        x: getLevelSplits(qy).length * config.plots.layout.templ_axis_level_size.y,
+        y: getLevelSplits(qx).length * config.plots.layout.templ_axis_level_size.x,
       };
 
       // width and heights of a single atomic pane in normalized coordinates
@@ -623,9 +650,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       }
 
       // add templating axis
-      let templx = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, qx, idgen.templating);
+      let [templx, annotationsx] = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, qx, idgen.templating);
 
-      let temply = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
+      let [temply, annotationsy] = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
 
       Object.assign(layout, templx, temply);
 
@@ -634,6 +661,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         //title: 'test title',
         barmode: 'group',
         margin: config.plots.layout.margin,
+        annotations: [...annotationsx, ...annotationsy],
       });
 
       // plot everything
