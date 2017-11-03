@@ -130,6 +130,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       },
       axis: {
         color: "#3D3A40",
+        zerolinewidth: 1,
       },
       text: {
         color: greys(1.0),
@@ -147,14 +148,14 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       },
       grid: {
         color: greys(0.6),
-        width: 5, //TODO
+       // width: 5, //TODO
       },
       axis: {
         color: greys(0.4),
         zerolinewidth: 1,
       },
       text: {
-        color: greys(0.6),
+        color: greys(0.5),
         size: 10,
       }
 
@@ -200,7 +201,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
           showline: true,
           linecolor: c.plots.main.axis.color,
           linewidth: 1,
-          mirror: false, // 'all' mirrors to marginal axis as well
+          mirror: false, // 'all' mirrors to marginal axis as well. Note that this cannot work if I use position and not anchor.
           zeroline: true,
           // zerolinewidth: 10,
           // zerolinecolor: "black",
@@ -232,15 +233,14 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
     },
 
     marginal: (offset, length, position, xy) => ({
-      autorange: 'reversed',
-      tickmode: 'auto',
       //zeroline: !used,
       zeroline: true,
-      zerolinecolor: c.plots.marginal.axis.color,
-      zerolinewidth: c.plots.marginal.axis.zerolinewidth,
-      rangemode: 'tozero',
+      zerolinecolor: c.plots.main.axis.color,
+      zerolinewidth: c.plots.main.axis.zerolinewidth,
+      autorange: 'false',
       fixedrange: true,
-      nticks: 2,
+      tickmode: 'auto', // TODO: use tickmode="array" and tickvals and ticktext to set exactly 2 ticks as I want
+      nticks: 3,
       side: xy === 'y' ? 'right' : 'top',
       tickfont: {
         color: c.plots.marginal.text.color,

@@ -18,6 +18,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     var logger = Logger.get('pl-ViewTable');
     logger.setLevel(Logger.DEBUG);
 
+    function _invXY(xy) {
+      return (xy === 'x'?'y':'x');
+    }
+
     function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis) {
 
       // build all mappers
@@ -287,6 +291,30 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         _normalizeExtent(qa.size.fu);
     }
 
+    /**
+     * @param coll The collection to extract the extent of. An 3 dimensional array, where the first two dimensions represent 'y' and  'x' and the last dimension contains the values.
+     * @param xy Get row-wise (xy === 'y') or column-wise (xy === 'x') extents.
+     * @param accessor Accessor function to extract the wanted attribute from a value of the collection.
+     */
+    function xyCollectionExtent(coll, xy, accessor) {
+      let yx = _invXY(xy),
+        extents = [],
+        len = {
+          x: coll.size.cols,
+          y: coll.size.rows
+        },
+        idx = {};
+      for (idx[xy] = 0; idx[xy] < len[xy]; ++idx[xy]) {
+        let xyExtent = []; // extent across one row or column
+        for (idx[yx] = 0; idx[yx] < len[yx]; ++idx[yx]) {
+          let cellExtent = accessor(coll[idx.y][idx.x]); // extent of selected attribute for one atomic plot (of given collection)
+          xyExtent = d3.extent([...xyExtent, ...cellExtent]);
+        }
+        extents.push(xyExtent);
+      }
+      return extents;
+    }
+
 
     /**
      * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path, color, size and others. Mappers are used in D3 to bind data to visuals.
@@ -434,21 +462,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @returns {} An array of axis objects for the layout part of a plotly plot configuration.
      */
     function createTemplatingAxis(xy, offset, size, fus, id) {
-      let invXy = (xy === 'x'?'y':'x');
+      let yx = _invXY(xy);
 
       // the number of stacked axis equals the number of splits in fus, reduced by one if there is no aggregation/density (since the last split then is part of an atomic plots axes)
       let levelSplits = getLevelSplits(fus);
 
       // available height (if xy === x) (width if xy === y) per axis level
-      let levelSize = size[invXy] / levelSplits.length;
+      let levelSize = size[yx] / levelSplits.length;
       let axes = {}; // object of plotly axes objects
       let annotations = []; // annotations for level titles
       let repeat = 1;
 
       levelSplits.forEach((split, d) => {
-        let stackOffset = offset[invXy] + levelSize * d; // the y (x) offset of axes in this level (this is identical for all axis of this level)
+        let stackOffset = offset[yx] + levelSize * d; // the y (x) offset of axes in this level (this is identical for all axis of this level)
         let majorLength = size[xy] / repeat; // the width (height) of (a single) major axes in this level
-        let minorId = id[invXy]++;
+        let minorId = id[yx]++;
 
         // only one minor axis per stack level is needed
         let anchor = xy + id[xy]; // anchor with the first major of this level (to be generated)
@@ -464,12 +492,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
-          let major = config.axisGenerator.templating_major(majorOffset, majorLength, ticks, invXy + minorId);
+          let major = config.axisGenerator.templating_major(majorOffset, majorLength, ticks, yx + minorId);
           axes[xy + 'axis' + majorId] = major;
         }
 
         repeat *= ticks.length;
-        axes[invXy + 'axis' + minorId] = minor;
+        axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
         // exemplary for x-axis level-label
@@ -520,6 +548,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       this.dataCollection = dataColl;
       this.queries = queries;
       this.size = aggrColl.size;
+      this.size.x = this.size.cols;
+      this.size.y = this.size.rows;
       let query = queries.base;
 
       /// one time on init:
@@ -599,20 +629,29 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // indexing over x and y
       let idx = {x:0, y:0};
 
+      // need some additional statistics on 1d density: row and column wise extent
+      uniColl.extent = {};
+      for (let xy of ['x','y']) {
+        let yx = _invXY(xy);
+        if (uniColl[0][0][yx])
+          uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
+      }
+
       this.at = new Array(this.size.rows);
-      for (idx.y = 0; idx.y < this.size.rows; ++idx.y) {
-        this.at[idx.y] = new Array(this.size.cols);
+      for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
+        this.at[idx.y] = new Array(this.size.x);
         paneOffset.y = templAxisSize.y + atomicPaneSize.y * idx.y;
 
         let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
+        //yaxis = // set anchor to left most main axis
         if (used.y)
           yaxis.title = getFieldUsage(idx.y, 'y').yields;
         layout["yaxis" + yid] = yaxis;
         yid = "y"+yid;
         mainAxes.y.push(yid);
 
-        for (idx.x = 0; idx.x < this.size.cols; ++idx.x) {
+        for (idx.x = 0; idx.x < this.size.x; ++idx.x) {
           paneOffset.x = templAxisSize.x + atomicPaneSize.x * idx.x;
 
           let xaxis, xid;
@@ -633,8 +672,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           for (let [xy, yx] of [['x','y'], ['y','x']]) {
             if (marginal[xy]) {
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
+              // TODO: do not use anchoring anymore but position. Then disable tick labels for all but one of the marginal axis of one row / col
               // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.anchor = mainAxes[yx][idx[yx]];
+              //if (idx.x != 0 || idx.y != 0)
+              if (idx[xy] != this.size[yx] - 1)
+                axis.showticklabels = false;
+
+              // if (idx.x+1 != this.size.cols || idx.y+1 != this.size.rows)
+              //   axis.showticklabels = false;
+              // NOTE: this is a reversed range
+              axis.range = [uniColl.extent[xy][idx[xy]][1], 0]; // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range
 
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
