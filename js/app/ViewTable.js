@@ -367,8 +367,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         let anchor = xy + id[xy]; // anchor with the first major of this level (to be generated)
         let minor = config.axisGenerator.templating_minor(stackOffset, levelSize, anchor);
 
-        console.log(levelSize);
-
         // multiple major axis are needed
         let ticks = split.extent;
         for (let r = 0; r < repeat; ++r) {
@@ -491,7 +489,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       let idgen = {
         main: {x:2000, y:3000},
         marginal: {x:4000, y:5000},
-        templating: {x:1, y:1000}
+        templating: {x:2, y:1000}
       };
 
       // init layout and traces of plotly plotting specification
@@ -507,7 +505,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       uniColl.extent = {};
       for (let xy of ['x','y']) {
         let yx = _invXY(xy);
-        if (uniColl[0][0][yx]) {
+        if (uniColl[0][0] && uniColl[0][0][yx]) {
           uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
           uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
         }
@@ -582,6 +580,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         margin: config.plots.layout.margin,
         annotations: [...annotationsx, ...annotationsy],
       });
+
+      console.log(layout);
 
       // plot everything
       Plotly.purge(pane);

@@ -253,7 +253,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     let query = {
       'type': 'predict',
       'predict': [xSplit.name, ySplit.name, densityFu],
-      //'where': model.filter,
+      //'where': vismelQuery.filter,
       'splitby': [xSplit, ySplit]
     };
 

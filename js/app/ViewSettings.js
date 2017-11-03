@@ -190,12 +190,24 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         textangle: xy === 'y' ? -90 : 0,
       };
       anno[xy+'ref'] = 'paper';
-      anno[xy] = 1; // right most / up most
+      anno[xy] = 1; // right most
       anno[yx+'ref'] = yx + refId;
-      anno[yx] = 0;
+      anno[yx] = 0; // up most (by convention minor templ axis have suitable range)
       anno[yx+'shift'] = -10; // shift below/left of axis line (axis line not over axis title)
       anno[xy+'shift'] =  c.plots.layout.margin[xy === 'x' ? 'r' : 't'] - 20; // shift right/up off axis line (tick labels not over axis title)
       return anno;
+    },
+
+    custom_axis_title: (title, xy, id) => {
+      let yx = xy === 'x' ? 'y' : 'x';
+      let anno = {
+        text: title,
+        showarrow: false,
+        textangle: xy === 'y' ? -90 : 0,
+      };
+
+      anno[yx+'ref'] = yx + refId;
+      anno[yx] = 0; // up most (by convention minor templ axis have suitable range)
     },
   };
 
@@ -262,7 +274,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     templating_major: (offset, length, ticks, anchor) => ({
       // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
       anchor: anchor,
-      domain: [offset + 0.02*length, offset + 0.98*length],
+      domain: [offset + 0.03*length, offset + 0.97*length],
       visible: true,
       showline: true,
       showgrid: false,

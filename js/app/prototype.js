@@ -324,8 +324,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         shelves.shape.beVisual({label: 'Shape'}).beInteractable();
         shelves.size.beVisual({label: 'Size'}).beInteractable();
         shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-        shelves.row.beVisual({label: 'Row', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-        shelves.column.beVisual({label: 'Column', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+        shelves.row.beVisual({label: 'Y-Axis', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+        shelves.column.beVisual({label: 'X-Axis', direction: vis.DirectionTypeT.horizontal}).beInteractable();
 
         var visual = {};
 
@@ -389,7 +389,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           });
 
         this.$visual = $('<div class="pl-model-selector"></div>')
-          .append($('<div>load new model:</div>'))
+          .append($('<div>Load Model:</div>'))
           .append($modelInput);
 
         if(context !== undefined)
