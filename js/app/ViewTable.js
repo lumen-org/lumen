@@ -328,132 +328,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
 
     /**
-     * Setup mappers for the given query. Mappers are function that map data item to visual attributes, like a svg path, color, size and others. Mappers are used in D3 to bind data to visuals.
-     *
-     * Before mappers can be set up, the scales need to be set up. See attachScales().
-     *
-     * @param what {Map} a map of identifier to BaseMap s.
-     * @param data {Array} the ResultTable to be mapped by the mapper.
-     * @param paneSize {Object} {width, height} Size of pane to draw in, measuered in pixel.
-     */
-    function getMapper(what, data, paneSize) {
-      // todo: performance: improve test for interval vs value? e.g. don't test single data items, but decide for each variable
-      function _valueOrAvg(val) {
-        return _.isArray(val) ? val[0] + val[1] / 2 : val;
-      }
-
-      let fu2idx = data.fu2idx;
-      let mapper = {};
-
-      function mapFill(fill) {
-        if (fill === undefined) {
-          return config.maps.fill;
-        } else if (fill.hasOwnProperty('base')) {
-          let idx = fu2idx.get(fill.base.fu);
-          return d => fill.base.visScale(_valueOrAvg(d[idx]));
-        } else if (fill.hasOwnProperty('value')) {
-          return fill.value;
-        } else {
-          throw RangeError();
-        }
-      }
-
-      mapper.fill = mapFill(what.get('fill'));
-
-      function mapStroke(stroke) {
-        if (stroke === undefined) {
-          return config.maps.stroke;
-        } else if (stroke.hasOwnProperty('base')) {
-          let idx = fu2idx.get(stroke.base.fu);
-          return d => stroke.base.visScale(_valueOrAvg(d[idx]));
-        } else if (stroke.hasOwnProperty('value')) {
-          return stroke.value;
-        } else {
-          throw RangeError();
-        }
-      }
-
-      mapper.stroke = mapStroke(what.get('stroke'));
-
-      let opacity = what.get('opacity');
-      mapper.opacity = (opacity !== undefined ? opacity.value : config.maps.opacity);
-
-      function mapSize(size) {
-        if (size === undefined) {
-          return config.maps.size;
-        } else if (size.hasOwnProperty('base')) {
-          let idx = fu2idx.get(size.base.fu);
-          return d => size.base.visScale(_valueOrAvg(d[idx]));
-        } else if (size.hasOwnProperty('value')) {
-          return size.value;
-        } else {
-          throw RangeError();
-        }
-      }
-
-      mapper.size = mapSize(what.get('size'));
-
-      function mapShape(shape) {
-        if (shape === undefined) {
-          return config.maps.shape;
-        } else if (shape.hasOwnProperty('base')) {
-          let idx = fu2idx.get(shape.base.fu);
-          return d => shape.base.visScale(_valueOrAvg(d[idx]));
-        } else if (shape.hasOwnProperty('value')) {
-          return shape.value;
-        } else {
-          throw RangeError();
-        }
-      }
-
-      mapper.shape = mapShape(what.get('shape'));
-
-      if (what.has('hover'))
-        mapper.hover = (d) => d.reduce(
-          (prev, di, i) => prev + data.header[i] + ": " + di + "\n", "");
-
-      let col = what.get('col'),
-        row = what.get('row');
-      let xPos = paneSize.width / 2,
-        yPos = paneSize.height / 2;
-
-      if (col !== undefined) col = col.base;
-      if (row !== undefined) row = row.base;
-
-      if (col !== undefined && row !== undefined) {
-        let colIdx = fu2idx.get(col),
-          rowIdx = fu2idx.get(row);
-        mapper.transform = function (d) {
-          return 'translate(' +
-            col.visScale(d[colIdx]) + ',' +
-            row.visScale(d[rowIdx]) + ')';
-        };
-      }
-      else if (col !== undefined && row === undefined) {
-        let colIdx = fu2idx.get(col);
-        mapper.transform = function (d) {
-          return 'translate(' +
-            col.visScale(d[colIdx]) + ',' +
-            yPos + ')';
-        };
-      }
-      else if (col === undefined && row !== undefined) {
-        let rowIdx = fu2idx.get(row);
-        mapper.transform = function (d) {
-          return 'translate(' +
-            xPos + ',' +
-            row.visScale(d[rowIdx]) + ')';
-        };
-      }
-      else {
-        // todo: jitter?
-        mapper.transform = 'translate(' + xPos + ',' + yPos + ')';
-      }
-
-      return mapper;
-    }
-
-    /**
      * Returns the split usages that make up templating axis level splits, from outermost to innermost templating axis split.
      * @fus the stack of field usages that make up the templating axes
      */
@@ -676,7 +550,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
-              axis.range = [uniColl.extent[xy][idx[xy]][1], 0]; // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range. NOTE: this is a reversed range
+              let extent = uniColl.extent[xy][idx[xy]];
+              axis.range = [extent[1], 0]; // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range. NOTE: this is a reversed range
+              axis.tickmode = "array"; // use exactly 2 ticks as I want:
+              axis.tickvals = [0, (extent[1]*0.8).toPrecision(1)]; // draw a line at 0 and ~80%
 
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;

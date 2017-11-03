@@ -2,7 +2,7 @@
  * @copyright © 2015-2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 //define([], function () {
-define(['d3-scale-chromatic'], function (d3chromatic) {
+define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   "use strict";
 
   let greys = d3chromatic.interpolateGreys;
@@ -166,7 +166,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       //margin_main_sub: 0.02,
       margin: {
         l: 70, t: 60,
-        r: 40, b: 40,
+        r: 60, b: 40,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)
@@ -174,7 +174,11 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         x: 0.08,
         y: 0.15
       },
-    }
+    },
+
+    // label: {
+    //   formatter: d3f.format(".3") // three significant digits, no trailing zeros
+    // }
   };
 
   c.annotationGenerator = {
@@ -240,7 +244,7 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       zerolinewidth: c.plots.main.axis.zerolinewidth,
       autorange: 'false',
       fixedrange: true,
-      tickmode: 'auto', // TODO: use tickmode="array" and tickvals and ticktext to set exactly 2 ticks as I want
+      tickmode: 'auto', // TODO:
       nticks: 3,
       side: xy === 'y' ? 'right' : 'top',
       tickfont: {
