@@ -165,14 +165,14 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       ratio_marginal: used => (used ? 0.85 : 0.4),
       //margin_main_sub: 0.02,
       margin: {
-        l: 70, t: 30,
-        r: 30, b: 40,
+        l: 70, t: 60,
+        r: 40, b: 40,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)
       templ_axis_level_size: {
         x: 0.08,
-        y: 0.08
+        y: 0.15
       },
     }
   };
@@ -189,7 +189,8 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
       anno[xy] = 1; // right most / up most
       anno[yx+'ref'] = yx + refId;
       anno[yx] = 0;
-      anno[yx+'shift'] = -10;
+      anno[yx+'shift'] = -10; // shift below/left of axis line (axis line not over axis title)
+      anno[xy+'shift'] =  c.plots.layout.margin[xy === 'x' ? 'r' : 't'] - 20; // shift right/up off axis line (tick labels not over axis title)
       return anno;
     },
   };
@@ -251,13 +252,13 @@ define(['d3-scale-chromatic'], function (d3chromatic) {
         size: c.plots.marginal.text.size,
       },
       domain: [offset, offset + length],
-      position: position,
+      //position: position,
     }),
 
     templating_major: (offset, length, ticks, anchor) => ({
       // TODO: what is this anchor? and why does the positioning not work correctly if stacked on rows.
       anchor: anchor,
-      domain: [offset, offset + length],
+      domain: [offset + 0.02*length, offset + 0.98*length],
       visible: true,
       showline: true,
       showgrid: false,

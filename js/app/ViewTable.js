@@ -246,29 +246,40 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       }
     };
 
+    /**
+     * Tweaks the given (continuous) extents of a given FieldUsage (for nicer displaying).  Note that it modifies the provided extent _and_ returns the modfied extent!
+     * (1) non-singular extent: add pct*extent to upper and lower bound of extent
+     * (2) singular extent and singular !== 0: upper = singular+pct*singular, lower = singular-pct*singular
+     * (3) singular extent and singular === 0: upper = 1 , lower = -1
+     * @param extent
+     * @param pct percentage to add/substract. See above.
+     */
+    function normalizeContinuousExtent(extent, pct=0.05) {
+      if (extent[0] === extent[1]) { // if singular
+        let singular = extent[0];
+        if (singular === 0) {
+          extent[0] = -1;
+          extent[1] =  1;
+        }
+        else {
+          extent[0] = singular - pct * singular;
+          extent[1] = singular + pct * singular;
+        }
+      } else {
+        let relOff = pct * (extent[1] - extent[0]);
+        extent[0] -= relOff;
+        extent[1] += relOff;
+      }
+      return extent;
+    }
+
     function normalizeExtents(queries) {
       /**
-       * Tweaks the (continuous) extents of a given FieldUsage for nicer displaying. For discrete FieldUsages it leaves
-       * the extent unchanged.
-       * (1) non-singular extent: add 5% of extent to upper and lower bound of extent
-       * (2) singular extent and singular !== 0: upper = singular+5%*singular, lower = singular-5%*singular
-       * (3) singular extent and singular === 0: upper = 1 , lower = -1
+       * Tweaks the given (continuous) extents of a given FieldUsage (for nicer displaying). For discrete FieldUsages it leaves the extent unchanged.
        */
       function _normalizeExtent(fu) {
-        if (PQL.hasDiscreteYield(fu))
-          return;
-        let extent = fu.extent;
-        if (extent[0] === extent[1]) { // if singular
-          let singular = extent[0];
-          if (singular === 0)
-            extent = [-1, 1];
-          else
-            extent = [singular - 0.05 * singular, singular + 0.05 * singular];
-        } else {
-          let relOff = 0.05 * (extent[1] - extent[0]);
-          extent = [extent[0] - relOff, extent[1] + relOff];
-        }
-        fu.extent = extent;
+        if (!PQL.hasDiscreteYield(fu))
+          normalizeContinuousExtent(fu.extent);
       }
 
       for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
@@ -500,18 +511,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        // exemplary for x-axis level-label
-
-        let annotation = {
-          text: split.yields,
-          xref: "paper", // relative to paper
-          x: 1, // then right most
-          yref: "y" + minorId, // anchor to minor axis of this level
-          y: 0, // set to lowest position, i.e. where the major axis is drawn
-          yshift: -10,
-          showarrow: false,
-        };
-        annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId, )
+        let annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId);
         annotations.push(annotation);
       });
 
@@ -633,8 +633,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       uniColl.extent = {};
       for (let xy of ['x','y']) {
         let yx = _invXY(xy);
-        if (uniColl[0][0][yx])
+        if (uniColl[0][0][yx]) {
           uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
+          uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
+        }
       }
 
       this.at = new Array(this.size.rows);
@@ -672,17 +674,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           for (let [xy, yx] of [['x','y'], ['y','x']]) {
             if (marginal[xy]) {
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
-              // TODO: do not use anchoring anymore but position. Then disable tick labels for all but one of the marginal axis of one row / col
-              // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
-              axis.anchor = mainAxes[yx][idx[yx]];
-              //if (idx.x != 0 || idx.y != 0)
-              if (idx[xy] != this.size[yx] - 1)
-                axis.showticklabels = false;
-
-              // if (idx.x+1 != this.size.cols || idx.y+1 != this.size.rows)
-              //   axis.showticklabels = false;
-              // NOTE: this is a reversed range
-              axis.range = [uniColl.extent[xy][idx[xy]][1], 0]; // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range
+              axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
+              axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+              axis.range = [uniColl.extent[xy][idx[xy]][1], 0]; // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range. NOTE: this is a reversed range
 
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
