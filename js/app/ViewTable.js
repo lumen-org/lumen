@@ -575,7 +575,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // add 'global' layout options
       Object.assign(layout, {
-        //title: 'test title',
+        title: "Model: " + query.sources[0].name,
         barmode: 'group',
         margin: config.plots.layout.margin,
         annotations: [...annotationsx, ...annotationsy],

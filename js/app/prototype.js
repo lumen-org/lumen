@@ -29,6 +29,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       //drop(shelves.size, shelves.meas.at(2));
       //drop(shelves.row, shelves.dim.at(0));
       drop(shelves.column, shelves.meas.at(1));
+      drop(shelves.row, shelves.meas.at(2));
 
       // drop(shelves.color, shelves.meas.at(0));
       // drop(shelves.row, shelves.dim.at(0));
@@ -37,7 +38,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
       // drop(shelves.row, shelves.dim.at(0));
       drop(shelves.column, shelves.dim.at(0));
-      drop(shelves.column, shelves.dim.at(1));
+      drop(shelves.color, shelves.dim.at(1));
       // drop(shelves.color, shelves.meas.at(2));
       // drop(shelves.detail, shelves.meas.at(2));
       // drop(shelves.color, shelves.dim.at(1));
@@ -275,29 +276,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
 
-        var $title = $('<div>' + context.basemodel.name + '</div>');
         var $nav = $removeButton;
         return $('<div class="pl-visualization"></div>')
-          .append($title, $nav, $paneDiv)
+          .append($paneDiv, $nav)
           .click( () => activate(context, ['visualization', 'visPanel']) )
           .resizable({
             stop: (event, ui) => {
               let c = context;
-
-              // TODO / Fix
-              $paneDiv.css({
-                // TODO: what is this magic -40 ???
-                'width': ui.size.width-40,
-                'height': ui.size.height-40,
-              });
-
-              // size change
-              //let widthChange = ui.size.width - ui.originalSize.width,
-              //heightChange = ui.size.height - ui.originalSize.height;
-              //$pane.css({
-              //  'width': parseInt( $pane.css('width'), 10) + widthChange + "px",
-              //  'height': parseInt( $pane.css('height'), 10) + heightChange + "px"
-              //});
 
               // redraw
               // TODO: what is visPanel, ... ?

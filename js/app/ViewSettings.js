@@ -123,14 +123,15 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   c.plots = {
     main: {
       background: {
-        fill: 'white', //TODO
+        fill: 'white', //unused
       },
       grid: {
-        color: "red", //TODO
+        color: greys(0.1),
       },
       axis: {
         color: "#3D3A40",
-        zerolinewidth: 1,
+        zerolinewidth: 1.5,
+        zerolinecolor: greys(0.3),
       },
       text: {
         color: greys(1.0),
@@ -144,14 +145,13 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         y: true
       },
       background: {
-        fill: 'white'
+        fill: 'white', //unused
       },
       grid: {
         color: greys(0.6),
-       // width: 5, //TODO
       },
       axis: {
-        color: greys(0.4),
+        color: greys(0.9),
         zerolinewidth: 1,
       },
       text: {
@@ -220,8 +220,9 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
           linewidth: 1,
           mirror: false, // 'all' mirrors to marginal axis as well. Note that this cannot work if I use position and not anchor.
           zeroline: true,
-          // zerolinewidth: 10,
-          // zerolinecolor: "black",
+          zerolinecolor: c.plots.main.axis.zerolinecolor,
+          zerolinewidth: c.plots.main.axis.zerolinewidth,
+          gridcolor: c.plots.main.grid.color,
           tickfont: {
             color: c.plots.main.text.color,
             size: c.plots.main.text.size,
@@ -252,8 +253,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     marginal: (offset, length, position, xy) => ({
       //zeroline: !used,
       zeroline: true,
-      zerolinecolor: c.plots.main.axis.color,
-      zerolinewidth: c.plots.main.axis.zerolinewidth,
+      zerolinecolor: c.plots.main.axis.color, // 'main' because visually this represent the main axis
+      zerolinewidth: c.plots.main.axis.width,
       autorange: 'false',
       fixedrange: true,
       tickmode: 'auto', // TODO:

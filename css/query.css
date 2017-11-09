@@ -41,7 +41,8 @@ body {
 .pl-field {
     /*min-width: 200px;*/
     border-radius: 0.3em;
-    background-color: #cfcfcf;
+    /*background-color: #cfcfcf;*/
+    background-color: #efefef;
     display: flex;
     justify-content: center;
     padding: 0.2rem;

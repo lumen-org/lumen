@@ -277,7 +277,9 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
      */
     static DefaultSplit (field, mode = "layout-split") {
       let split_cnt = 5;
-      if (mode === 'aggregation' || mode === 'density')
+      if (mode === 'density')
+        split_cnt = 75;
+      else if (mode === 'aggregation')
         split_cnt = 25;
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
