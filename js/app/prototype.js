@@ -45,6 +45,17 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       // drop(shelves.shape, shelves.dim.at(2));
     }
 
+    function staticConfig () {
+      return {
+        traces: {
+          aggr: true,
+          data: true,
+          p1d: true, // TODO: disable doesn't work
+          p2d: true,
+        }
+      }
+    }
+
     /**
      * An info box receives messages that it shows.
      */
@@ -99,6 +110,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               c.model = c.basemodel.localCopy();
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model, mode);
               c.query.rebase(c.model);  // important! rebase on the basemodel's copy to prevent modification of basemodel
+              c.config = staticConfig();
               c.queryTable = new QueryTable(c.query);
               c.modelTable = new ModelTable(c.queryTable);
             }
@@ -108,20 +120,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             }
             c.modelTable.model()
               .then(() => infoBox.hide())
-              .then(() => RT.aggrCollection(c.queryTable, c.modelTable))
+              .then(() => RT.aggrCollection(c.queryTable, c.modelTable, c.config.traces.aggr))
               .then(res => c.aggrRT = res)
-              .then(() => RT.samplesCollection(c.queryTable, c.model))
+              .then(() => RT.samplesCollection(c.queryTable, c.model, c.config.traces.data))
               .then(res => c.dataRT = res)
-              .then(() => RT.uniDensityCollection(c.queryTable, c.model))
+              .then(() => RT.uniDensityCollection(c.queryTable, c.model, c.config.traces.p1d))
               .then(res => c.uniDensityRT = res)
-              .then(() => RT.biDensityCollection(c.queryTable, c.model))
+              .then(() => RT.biDensityCollection(c.queryTable, c.model, c.config.traces.p2d))
               .then(res => c.biDensityRT = res)
               .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
-              // try visualize the first atomic plotly plot
-              // .then(() => {
-              //   AtomicPlotly.plot(document.getElementById('pl-plotly'),
-              //     c.aggrRT[0][0], c.dataRT[0][0], c.uniDensityRT[0][0], c.biDensityRT[0][0], c.queryTable.at[0][0]);
-              // })
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!

@@ -109,6 +109,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     tracer.aggrHeatmap = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
+
+      if (rt == undefined)  // means 'disable this trace type'
+        return []
+
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -182,6 +186,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      */
     tracer.aggr = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
+
+      if (rt == undefined)  // means 'disable this trace type'
+        return [];
+
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
@@ -189,48 +197,46 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         traces = [],
         cfg = c.map.aggrMarker;
 
-      if (rt !== undefined) {
-        let [nestedData, depth] = splitRTIntoTraceData(rt, query);
+      let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
-        // create and attach trace for each group, i.e. each leave in the nested data
-        let attach_aggr_trace = (data) => {
-          let trace = {
-            name: 'aggregations',
-            type: 'scatter',
-            showlegend: false,
-            cliponaxis: false,
-            x: selectColumn(data, fu2idx.get(xfu)),
-            y: selectColumn(data, fu2idx.get(yfu)),
-            xaxis: axisId.x,
-            yaxis: axisId.y,
-            opacity: cfg.fill.opacity,
-            marker: {
-              color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
-              size : applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
-              symbol : applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
-              line : {
-                color: cfg.stroke.color,
-                width: cfg.stroke.width
-              },
-              showscale: false,
-              // sizemode: 'area',
+      // create and attach trace for each group, i.e. each leave in the nested data
+      let attach_aggr_trace = (data) => {
+        let trace = {
+          name: 'aggregations',
+          type: 'scatter',
+          showlegend: false,
+          cliponaxis: false,
+          x: selectColumn(data, fu2idx.get(xfu)),
+          y: selectColumn(data, fu2idx.get(yfu)),
+          xaxis: axisId.x,
+          yaxis: axisId.y,
+          opacity: cfg.fill.opacity,
+          marker: {
+            color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
+            size : applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
+            symbol : applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
+            line : {
+              color: cfg.stroke.color,
+              width: cfg.stroke.width
             },
-            line: {},
-          };
-
-          let lcmap = mapper.lineColor;
-          trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
-          // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
-          //trace.line.color = applyMap(data, mapper.lineColor, aest.color.fu, fu2idx);
-
-          // TODO: changing line width is possible: https://plot.ly/javascript/filled-area-animation/#multiple-trace-filled-area
-          // trace.line.width = applyMap(data, mapper.size, aest.size.fu, fu2idx);
-
-          traces.push(trace);
+            showscale: false,
+            // sizemode: 'area',
+          },
+          line: {},
         };
 
-        dfs(nestedData, attach_aggr_trace, depth);
-      }
+        let lcmap = mapper.lineColor;
+        trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
+        // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
+        //trace.line.color = applyMap(data, mapper.lineColor, aest.color.fu, fu2idx);
+
+        // TODO: changing line width is possible: https://plot.ly/javascript/filled-area-animation/#multiple-trace-filled-area
+        // trace.line.width = applyMap(data, mapper.size, aest.size.fu, fu2idx);
+
+        traces.push(trace);
+      };
+
+      dfs(nestedData, attach_aggr_trace, depth);
 
       return traces;
     };
@@ -245,6 +251,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     tracer.uni = function (p1dRT, query, mapper, mainAxisId={x:'x', y:'y'}, marginalAxisId={x:'x2', y:'y2'}) {
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
+
+      if (p1dRT == undefined)  // means 'disable this trace type'
+        return [];
+
       let aest = query.layers[0].aesthetics;
 
       /**
@@ -328,7 +338,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
         let split_idxs = splits.map(split => fu2idx.get(split));
 
-        // TODO: this is a larger piece of work. We should create a VisMEL uni trace query and then turn in to PQL ...
+        // TODO: this is a larger piece of work. We should create a __VisMEL__ uni trace query and then turn in to PQL ...
         // split into more traces by all remaining discrete yield fields (but not model vs data splits)
         // let splits = query.fieldUsages(['layout'], 'exclude')
         //   .filter(PQL.hasDiscreteYield)
@@ -374,83 +384,82 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      */
     tracer.bi = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
-      let traces = [];
-      if (rt !== undefined) {
 
-        // note: the indexes are by convention!
-        let xfu = rt.idx2fu[0],
-          yfu = rt.idx2fu[1];
+      if (rt == undefined)  // means 'disable this trace type'
+        return [];
 
-        let trace = {
-          name: '2d density',
-          showlegend: false,
-          showscale: false,
-          x: selectColumn(rt, 0),
-          y: selectColumn(rt, 1),
-          z: selectColumn(rt, 2),
-          xaxis: axisId.x,
-          yaxis: axisId.y,
-          opacity: c.map.biDensity.opacity,
-          autocolorscale: false,
-          colorscale: c.map.biDensity.colorscale,
-          zmin: 0,
-          zmax: rt.extent[1],
-        };
+      // note: the indexes are by convention!
+      let xfu = rt.idx2fu[0],
+        yfu = rt.idx2fu[1];
 
-        if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
-          trace.type = 'contour';
-          traces.push(trace);
-        }
-        else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
-          trace.type = 'heatmap';
-          traces.push(trace);
-        }
+      let trace = {
+        name: '2d density',
+        showlegend: false,
+        showscale: false,
+        x: selectColumn(rt, 0),
+        y: selectColumn(rt, 1),
+        z: selectColumn(rt, 2),
+        xaxis: axisId.x,
+        yaxis: axisId.y,
+        opacity: c.map.biDensity.opacity,
+        autocolorscale: false,
+        colorscale: c.map.biDensity.colorscale,
+        zmin: 0,
+        zmax: rt.extent[1],
+      };
+
+      if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
+        trace.type = 'contour';
       }
-      return traces;
+      else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
+        trace.type = 'heatmap';
+      }
+      return [trace]
     };
 
     /**
      * samples trace builder.
-     * @param data
+     * @param rt
      * @param query
      * @return {Array}
      */
-    tracer.samples = function (data, query, mapper, axisId) {
+    tracer.samples = function (rt, query, mapper, axisId) {
       if (!axisId) throw RangeError("invalid axisId");
-      let fu2idx = data.fu2idx,
+
+      if (rt == undefined)  // means 'disable this trace type'
+        return [];
+
+      let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
         traces = [],
         cfg = c.map.sampleMarker;
 
-      if (data !== undefined) {
-        let xIdx = fu2idx.get(xfu),
-          yIdx = fu2idx.get(yfu);
-        let trace = {
-          name: 'samples',
-          type: 'scatter',
-          mode: 'markers',
-          showlegend: false,
-          x: selectColumn(data, xIdx),
-          y: selectColumn(data, yIdx),
-          xaxis: axisId.x,
-          yaxis: axisId.y,
-          opacity: cfg.fill.opacity,
-        };
-        trace.marker = {
-          color: applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
-          size: applyMap(data, mapper.samplesSize, aest.size.fu, fu2idx),
-          symbol: applyMap(data, mapper.samplesShape, aest.shape.fu, fu2idx),
-          line: {
-            color: cfg.stroke.color,
-            width: cfg.stroke.width,
-          },
-          maxDisplayed: cfg.maxDisplayed
-        };
-        traces.push(trace);
-      }
-      return traces;
+      let xIdx = fu2idx.get(xfu),
+        yIdx = fu2idx.get(yfu);
+      let trace = {
+        name: 'samples',
+        type: 'scatter',
+        mode: 'markers',
+        showlegend: false,
+        x: selectColumn(rt, xIdx),
+        y: selectColumn(rt, yIdx),
+        xaxis: axisId.x,
+        yaxis: axisId.y,
+        opacity: cfg.fill.opacity,
+      };
+      trace.marker = {
+        color: applyMap(rt, mapper.aggrFillColor, aest.color.fu, fu2idx),
+        size: applyMap(rt, mapper.samplesSize, aest.size.fu, fu2idx),
+        symbol: applyMap(rt, mapper.samplesShape, aest.shape.fu, fu2idx),
+        line: {
+          color: cfg.stroke.color,
+          width: cfg.stroke.width,
+        },
+        maxDisplayed: cfg.maxDisplayed
+      };
+      return [trace];
     };
 
     return tracer;

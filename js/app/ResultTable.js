@@ -11,20 +11,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
   logger.setLevel(Logger.DEBUG);
 
 
-  // /**
-  //  * Returns a direct accessor of FieldUsages to corresponding table columns.
-  //  * WARNING: only works if the table is column-major!!
-  //  * TODO: I think this is unused and can be removed
-  //  * @param table
-  //  * @return {*}
-  //  * @private
-  //  */
-  // function getByFuAccessor(table, fu2idx) {
-  //   let byfu = new Map();
-  //   table.fu2idx.forEach((idx, fu) => byfu.set(fu, table[idx]));
-  //   return byfu;
-  // }
-
   /**
    * Attaches the extent of each column of a (row-major) result table under the attribute .extent and returns the modified table.
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
@@ -70,6 +56,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
   }
 
 
+  function getEmptyCollection (size) {
+    let collection = new Array(size.rows);
+    collection.size = size;
+    for (let rIdx = 0; rIdx < size.rows; ++rIdx)
+      collection[rIdx] = new Array(size.cols);
+    return collection;
+  }
+
   /**
    * Derives for each VisMEL query and each model in the given collection the corresponding PQL
    * query, executes it and stores both, the query and its result, in a 2d array collection. A call to this function returns a promise to the collection.
@@ -88,13 +82,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param modelCollection
    * @return {Promise.<Array>}
    */
-  function aggrCollection(queryCollection, modelCollection) {
+  function aggrCollection(queryCollection, modelCollection, enabled=true) {
     let size = queryCollection.size;
-    let collection = new Array(size.rows);
-    collection.size = size;
-    let fetchPromises = new Set(); //.add(Promise.resolve());
+    let collection = getEmptyCollection(size);
+    if (!enabled)  // quit early if disabled
+      return Promise.resolve(collection);
+
+    let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
-      collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         // generate and run PQL query
         let promise;
@@ -104,6 +99,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         } catch (e) {
           if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
+          else
+            throw e;
         }
         fetchPromises.add(promise);
       }
@@ -117,13 +114,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param model
    * @return {Promise.<Array>}
    */
-  function samplesCollection(queryCollection, model) {
+  function samplesCollection(queryCollection, model, enabled=true) {
     let size = queryCollection.size;
-    let collection = new Array(size.rows);
-    collection.size = size;
-    let fetchPromises = new Set(); //.add(Promise.resolve());
+    let collection = getEmptyCollection(size);
+    if (!enabled)  // quit early if disabled
+      return Promise.resolve(collection);
+
+    let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
-      collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         let promise;
         try {
@@ -132,6 +130,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         } catch (e) {
           if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
+          else
+            throw e;
         }
         fetchPromises.add(promise);
       }
@@ -150,13 +150,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param model
    * @return {Promise.<Array>}
    */
-  function uniDensityCollection(queryCollection, model) {
+  function uniDensityCollection(queryCollection, model, enabled=true) {
     let size = queryCollection.size;
-    let collection = new Array(size.rows);
-    collection.size = size;
-    let fetchPromises = new Set(); //.add(Promise.resolve());
+    let collection = getEmptyCollection(size);
+    if (!enabled)  // quit early if disabled
+      return Promise.resolve(collection);
+
+    let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
-      collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         for(let [xOrY, colsOrRows] of [['x','cols'], ['y', 'rows']] ) {
           let promise;
@@ -182,14 +183,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param model
    * @return {Promise.<Array>}
    */
-  function biDensityCollection(queryCollection, model) {
+  function biDensityCollection(queryCollection, model, enabled=true) {
     let size = queryCollection.size;
-    let collection = new Array(size.rows);
-    collection.size = size;
-    //let pql, fu2idx, idx2fu;
-    let fetchPromises = new Set(); //.add(Promise.resolve());
+    let collection = getEmptyCollection(size);
+    if (!enabled)  // quit early if disabled
+      return Promise.resolve(collection);
+
+    let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
-      collection[rIdx] = new Array(size.cols);
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         let promise;
         try {
@@ -199,6 +200,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         catch (e) {
           if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
+          else
+            throw e;
         }
         fetchPromises.add(promise);
       }
@@ -211,6 +214,5 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
     samplesCollection,
     uniDensityCollection,
     biDensityCollection,
-    // getByFuAccessor
   };
 });

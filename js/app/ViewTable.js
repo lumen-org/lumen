@@ -230,6 +230,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let rt = results[rIdx][cIdx],
             q = queries.at[rIdx][cIdx];
 
+          if (rt == undefined)
+            continue;
+
           // aesthetics extents
           for (let fu of aes.values())
             fu.extent = _extentUnion(fu.extent, rt.extent[rt.fu2idx.get(fu)], PQL.hasDiscreteYield(fu));
@@ -430,6 +433,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // extents
       initEmptyExtents(queries);
       attachExtents(queries, this.aggrCollection);
+      //if (dataenabled)
       attachExtents(queries, this.dataCollection);
       normalizeExtents(queries);
 
