@@ -182,6 +182,34 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   };
 
   c.annotationGenerator = {
+
+    axis_title: (title, xy, offset, length, position, position_shift=0, offset_shift=0) => {
+      /**
+       * xy ... x or y axis
+       * offset ... x offset of if x-axis, y offset if y-axis
+       * length ... length of axis in paper coordinates
+       * xshift ... shifts label along x by number of pixels
+       * yshift ... shifts label along y by number of pixels
+       * @type {string}
+       */
+      const align = 'rightup'; // allowed: 'leftbottom', 'center', 'rightup'
+      if (align !== 'rightup')
+        throw "NotImplemented";
+      return {
+        text: title,
+        showarrow: false,
+        textangle: xy === 'y' ? -90 : 0,
+        xref:'paper',
+        yref: 'paper',
+        x: xy === 'x'? offset + length : position,
+        y: xy === 'y'? offset + length : position,
+        xanchor: xy === 'y' ? 'right' : 'left',
+        yanchor: xy === 'y' ? 'bottom' : 'top',
+        xshift: xy === 'x'? offset_shift : position_shift,
+        yshift: xy === 'y'? offset_shift : position_shift,
+      };
+    },
+
     templ_level_title: (title, xy, refId) => {
       let yx = xy === 'x' ? 'y' : 'x';
       let anno = {
@@ -191,7 +219,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       };
       anno[xy+'ref'] = 'paper';
       anno[xy] = 1; // right most
-      anno[yx+'ref'] = yx + refId;
+      anno[yx+'ref'] = yx + refId; // if referencing an axis (say an 'x' axis) the position along that axis is specified in axis coordinates.
       anno[yx] = 0; // up most (by convention minor templ axis have suitable range)
       anno[yx+'shift'] = -10; // shift below/left of axis line (axis line not over axis title)
       anno[xy+'shift'] =  c.plots.layout.margin[xy === 'x' ? 'r' : 't'] - 20; // shift right/up off axis line (tick labels not over axis title)

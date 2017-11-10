@@ -49,7 +49,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       return {
         traces: {
           aggr: true,
-          data: true,
+          data: false,
           p1d: true, // TODO: disable doesn't work
           p2d: true,
         }

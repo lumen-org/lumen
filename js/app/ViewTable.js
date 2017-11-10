@@ -500,6 +500,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       let layout = {}, traces = [];
       // array of main axis along atomic plots of view table, for both, x and y axis. The values are axis ids.
       let mainAxes = {x: [], y: []};
+      // custom titles for axis
+      let axis_titles = [];
       // offset of a specific atomic pane
       let paneOffset = {};
       // indexing over x and y
@@ -522,9 +524,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
-        //yaxis = // set anchor to left most main axis
-        if (used.y)
-          yaxis.title = getFieldUsage(idx.y, 'y').yields;
+        if (used.y) {
+          let axis_anno = config.annotationGenerator.axis_title(getFieldUsage(idx.y, 'y').yields, 'y', paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x);
+          axis_titles.push(axis_anno);
+        }
         layout["yaxis" + yid] = yaxis;
         yid = "y"+yid;
         mainAxes.y.push(yid);
@@ -536,8 +539,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           if (idx.y === 0) {
             xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
-            if (used.x)
-              xaxis.title = getFieldUsage(idx.x, 'x').yields;
+
+            if (used.x) {
+              let axis_anno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', paneOffset.x + axisLength.marginal.x, axisLength.main.x, templAxisSize.y);
+              axis_titles.push(axis_anno);
+            }
             layout["xaxis" + xid] = xaxis;
             xid = "x" + xid;
             mainAxes.x.push(xid);
@@ -575,6 +581,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       let [temply, annotationsy] = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
 
+
       Object.assign(layout, templx, temply);
 
       // add 'global' layout options
@@ -582,7 +589,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         title: "Model: " + query.sources[0].name,
         barmode: 'group',
         margin: config.plots.layout.margin,
-        annotations: [...annotationsx, ...annotationsy],
+        annotations: [...axis_titles, ...annotationsx, ...annotationsy],
       });
 
       console.log(layout);
