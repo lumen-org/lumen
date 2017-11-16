@@ -163,6 +163,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
 
     layout: {
       ratio_marginal: used => (used ? 0.85 : 0.4),
+
       //margin_main_sub: 0.02,
       margin: {
         l: 70, t: 60,
@@ -170,9 +171,14 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)
-      templ_axis_level_size: {
+      templ_axis_level_ratio: {
         x: 0.08,
         y: 0.15
+      },
+      // width in [px] reserved for one axis
+      templ_axis_level_width: {
+        x: 60, // for a x-axis (i.e. it's the available height)
+        y: 100, // for a y-axis (i.e. it's the available width)
       },
     },
 

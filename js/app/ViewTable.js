@@ -458,11 +458,27 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         y: config.plots.marginal.visible.y && used.x
       };
 
-      // size of templating axis to plots area in normalized coordinates
-      let templAxisSize = {
-        x: getLevelSplits(qy).length * config.plots.layout.templ_axis_level_size.y,
-        y: getLevelSplits(qx).length * config.plots.layout.templ_axis_level_size.x,
+      // get absolute pane size in px
+      let paneSize = {
+        x: pane.clientWidth,
+        y: pane.clientHeight,
       };
+
+      // size of templating axis to plots area in normalized coordinates
+      templAxisSize = {};
+      {
+        // TODO: new mode: infer from label length
+        let fixedAxisWidth = true, // TODO: set as configuration value
+          xlen = getLevelSplits(qx).length,
+          ylen = getLevelSplits(qy).length;
+        if (fixedAxisWidth) {
+          templAxisSize.x = ylen===0?0:1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSize.x);
+          templAxisSize.y = xlen===0?0:1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSize.y);
+        } else {
+          templAxisSize.x = getLevelSplits(qy).length * config.plots.layout.templ_axis_level_ratio.y;
+          templAxisSize.y = getLevelSplits(qx).length * config.plots.layout.templ_axis_level_ratio.x;
+        }
+      }
 
       // width and heights of a single atomic pane in normalized coordinates
       let atomicPaneSize = {
@@ -486,8 +502,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           x: atomicPaneSize.x * (1 - mainAxisRatio.x),
           y: atomicPaneSize.y * (1 - mainAxisRatio.y),
         }
-
       };
+
+
 
       // starting ids for the axis of different types. id determines z-order.
       let idgen = {
