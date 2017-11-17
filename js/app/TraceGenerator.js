@@ -404,12 +404,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         opacity: c.map.biDensity.opacity,
         autocolorscale: false,
         colorscale: c.map.biDensity.colorscale,
+        zauto: false,
         zmin: 0,
         zmax: rt.extent[1],
       };
 
       if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
         trace.type = 'contour';
+        trace.autocontour = false;
+        trace.ncontours = 6;
       }
       else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
         trace.type = 'heatmap';

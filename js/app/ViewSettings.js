@@ -44,13 +44,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     }
   });
 
-  // c.shelves = {
-  //   density.color
-  // };
-
   c.colorscales = {
-    density: [[0, 'rgb(255,255,255)'], [0.0001, 'rgb(255,255,255)'], [0.0001, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
-    //density: [[0, 'rgb(255,255,255)'], [0.01, 'rgb(255,255,255)'], [0.01, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
+    density: [[0, 'rgb(255,255,255)'], [0.000001, 'rgb(255,255,255)'], [0.000001, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
     diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
     sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
     discrete9: d3chromatic.schemeSet1,

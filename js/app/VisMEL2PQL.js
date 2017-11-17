@@ -103,7 +103,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     let filters = [];
     for (let fu of vismelQuery.fieldUsages()) {
       let name;
-      if (PQL.isFilter(fu)) {
+      if (PQL.isFilter(fu) && fu.field.name !== "model vs data") {
         filters.push(fu);
         continue;
       }
@@ -201,8 +201,9 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     // find mvd filter
     let filters = vismelQuery.fieldUsages(['filters'], 'include');
     let mvd_filter = filters.find(elem => elem.name === 'model vs data');
+    // TODO: there could be more than one mvd filter
 
-    // if there is no filter on model vs data and no split split on model vs data ...
+    // if there is no filter on model vs data and no split on model vs data ...
     if (mvd_filter === undefined && mvd_split_idx == -1) {
       // .. then add a (new) filter on model vs data == model
       filters.push(PQL.Filter.ModelVsDataFilter(model, 'model'));
@@ -252,10 +253,13 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     let fu2idx = new Map();
     idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
+    // respect any filters but mvd_filter s
+    let filters = vismelQuery.fieldUsages(['filters'], 'include').filter( f => f.field.name !== "model vs data");
+
     let query = {
       'type': 'predict',
       'predict': [xSplit.name, ySplit.name, densityFu],
-      //'where': vismelQuery.filter,
+      'where': filters,
       'splitby': [xSplit, ySplit]
     };
 
