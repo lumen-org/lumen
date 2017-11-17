@@ -84,18 +84,43 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     function splitRTIntoTraceData(rt, query) {
       // split into more traces by all remaining splits on discrete field
       // i.e.: possibly details, color, shape, size
-      let xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let fu = {
+          x: query.layout.cols[0],
+          y: query.layout.rows[0],
+        },
         splits = query.fieldUsages(['layout'], 'exclude')
-          .filter(PQL.isSplit).filter(split => split.field.isDiscrete());
+          .filter(PQL.isSplit); // TODO: should be: isOrdered()
 
-      // OLD: I think its wrong, because there is no reason to connect the dot's if neither x-coordinate depends on y-coordinate, nor vice versa
-      // if there is a cont. split on both, rows and cols, then split by both!
-      // if (PQL.isSplit(xfu) && PQL.hasNumericYield(xfu) && PQL.isSplit(yfu) && PQL.hasNumericYield(yfu))
-      //   splits.push(xfu, yfu);
+      let num_splits = splits.filter(s => PQL.hasNumericYield(s)),
+        cat_splits = splits.filter(s => PQL.hasDiscreteYield(s));
+      splits = []; // reset. splits are kepts in num_spits and cat_splits.
+
+      let isSplit = {
+        x: PQL.isSplit(fu.x),
+        y: PQL.isSplit(fu.y),
+      };
+
       // if three is a split on both (rows and cols), split on both
-      if (PQL.isSplit(xfu) && PQL.isSplit(yfu))
-        splits.push(xfu, yfu);
+      if (isSplit.x && isSplit.y) {
+        splits.push(fu.x, fu.y);
+      } else if (isSplit.x || isSplit.y) {
+        let xy = isSplit.x ? 'x' : 'y';
+        // we can make a line out of _one_ split (made of the points for the implicit conditions of that split).
+        // If a layout split is a numerical split, we should make a line out of that layout split rather out of color, shape, size or detail splits. i.e. do not add  the numerical split to splits, but all other
+        if(PQL.hasNumericYield(fu[xy])) { // should be  isOrdered())
+          // splits.push(...cat_splits, ...num_splits); // done below
+        }
+        // however, if the layout split is a categorical split, we should rather make a line out of a color, shape, size or detail splits. i.e. add the discrete split to splits, but remove one other numerical
+        else {
+          splits.push(fu[xy]);
+          // splits.push(...cat_splits, ...num_splits); // done below
+        }
+      } else {
+        // we can keep one numerical split!
+        num_splits = num_splits.slice(1); // and simply remove first split in list of splits
+        // splits.push(...cat_splits, ...num_splits); // done below
+      }
+      splits.push(...cat_splits, ...num_splits);
 
       let split_idxs = _.uniq(splits.map(split => rt.fu2idx.get(split)));
 
