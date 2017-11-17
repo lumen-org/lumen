@@ -44,7 +44,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         color: aest.color instanceof VisMEL.ColorMap,
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
-        details: aest.details.length != 0,
+        details:  aest.details.filter( s => s.method === 'identity').length > 0, // identity splits can be ignored. OLD: aest.details.length != 0,
         x: xfu !== undefined,
         y: yfu !== undefined,
       };
@@ -67,7 +67,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
-              // TODO: make it possible to enable marginal plots as well
               traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
@@ -105,8 +104,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           // TODO: solve by creating a bubble plot/jittered plot
 
           // non-discrete yield on color?
-          // TODO: add condition: no other splits
-          if (used.color && !PQL.hasDiscreteYield(aest.color.fu)) {
+          if (used.color && !PQL.hasDiscreteYield(aest.color.fu)
+            // TODO: the next line is new, test it! should disallow other splits
+            && !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
             // don't show bi density in this case
             traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
           }

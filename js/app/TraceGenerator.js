@@ -89,8 +89,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         splits = query.fieldUsages(['layout'], 'exclude')
           .filter(PQL.isSplit).filter(split => split.field.isDiscrete());
 
+      // OLD: I think its wrong, because there is no reason to connect the dot's if neither x-coordinate depends on y-coordinate, nor vice versa
       // if there is a cont. split on both, rows and cols, then split by both!
-      if (PQL.isSplit(xfu) && PQL.hasNumericYield(xfu) && PQL.isSplit(yfu) && PQL.hasNumericYield(yfu))
+      // if (PQL.isSplit(xfu) && PQL.hasNumericYield(xfu) && PQL.isSplit(yfu) && PQL.hasNumericYield(yfu))
+      //   splits.push(xfu, yfu);
+      // if three is a split on both (rows and cols), split on both
+      if (PQL.isSplit(xfu) && PQL.isSplit(yfu))
         splits.push(xfu, yfu);
 
       let split_idxs = _.uniq(splits.map(split => rt.fu2idx.get(split)));
@@ -227,7 +231,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         let lcmap = mapper.lineColor;
         trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
-        // TODO: problem: I cannot (easily) draw lines with changing color. Also no changing width ... :-(
+        // TODO: problem: I cannot (easily) draw lines with changing color.
         //trace.line.color = applyMap(data, mapper.lineColor, aest.color.fu, fu2idx);
 
         // TODO: changing line width is possible: https://plot.ly/javascript/filled-area-animation/#multiple-trace-filled-area
