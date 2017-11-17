@@ -386,7 +386,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        let annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId);
+        //let annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId);
+        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
         annotations.push(annotation);
       });
 
@@ -465,7 +466,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       };
 
       // size of templating axis to plots area in normalized coordinates
-      templAxisSize = {};
+      let templAxisSize = {};
       {
         // TODO: new mode: infer from label length
         let fixedAxisWidth = true, // TODO: set as configuration value
@@ -607,13 +608,28 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         barmode: 'group',
         margin: config.plots.layout.margin,
         annotations: [...axis_titles, ...annotationsx, ...annotationsy],
+        editable: true,
       });
+
+      // and global config options.
+      // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
+      let plConfig = {
+        edits: {
+          annotationPosition: true,
+          colorbarPosition: true,
+          legendPosition: true,
+        },
+        scrollZoom: true,
+        displaylogo: false,
+        // modeBarButtonsToRemove: [],
+        // modeBarButtonsToAdd: [],
+      };
 
       console.log(layout);
 
       // plot everything
       Plotly.purge(pane);
-      Plotly.plot(pane, traces, layout);
+      Plotly.plot(pane, traces, layout, plConfig);
     };
 
     return ViewTable;

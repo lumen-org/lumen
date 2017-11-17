@@ -121,6 +121,26 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   };
 
   c.plots = {
+
+    styled_text: (title, style) => {
+      if (style === "")
+        return title;
+      return "<" + style + ">" + title +"</" + style + ">";
+    },
+    axis: {
+      title_style: "em",
+      title_font: {
+        family: "Droid Sans",
+        size: 16,
+        color: "#b3b3b3",
+      },
+      label_style: "",
+      label_font: {
+        family: "Droid Sans",
+        size: 11,
+        color: "#232323",
+      },
+    },
     main: {
       background: {
         fill: 'white', //unused
@@ -167,7 +187,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       //margin_main_sub: 0.02,
       margin: {
         l: 70, t: 60,
-        r: 60, b: 40,
+        r: 60, b: 50,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)
@@ -198,50 +218,56 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
        * yshift ... shifts label along y by number of pixels
        * @type {string}
        */
-      const align = 'rightup'; // allowed: 'leftbottom', 'center', 'rightup'
-      if (align !== 'rightup')
-        throw "NotImplemented";
-      return {
-        text: title,
+      const align = 'center'; // allowed: 'leftbottom', 'center', 'rightup'
+      let anno = {
+        text: c.plots.styled_text(title, c.plots.axis.title_style),
+        font: c.plots.axis.title_font,
         showarrow: false,
         textangle: xy === 'y' ? -90 : 0,
-        xref:'paper',
+        xref: 'paper',
         yref: 'paper',
-        x: xy === 'x'? offset + length : position,
-        y: xy === 'y'? offset + length : position,
-        xanchor: xy === 'y' ? 'right' : 'left',
-        yanchor: xy === 'y' ? 'bottom' : 'top',
-        xshift: xy === 'x'? offset_shift : position_shift,
-        yshift: xy === 'y'? offset_shift : position_shift,
       };
+      if (align === 'rightup') {
+        Object.assign(anno, {
+          x: xy === 'x' ? offset + length : position,
+          y: xy === 'y' ? offset + length : position,
+          xanchor: xy === 'y' ? 'right' : 'left',
+          yanchor: xy === 'y' ? 'bottom' : 'top',
+          xshift: xy === 'x' ? offset_shift : position_shift,
+          yshift: xy === 'y' ? offset_shift : position_shift,
+        });
+      } else if (align === 'center') {
+        Object.assign(anno, {
+          x: xy === 'x' ? offset + length*0.5 : position,
+          y: xy === 'y' ? offset + length*0.5 : position,
+          xanchor: xy === 'y' ? 'right' : 'center',
+          yanchor: xy === 'y' ? 'center' : 'top',
+          xshift: xy === 'x' ? offset_shift : position_shift-25, // -15 is to shift off labels
+          yshift: xy === 'y' ? offset_shift : position_shift-22,
+        });
+      } else {
+        throw RangeError("not allowed");
+      }
+      return anno;
     },
 
     templ_level_title: (title, xy, refId) => {
       let yx = xy === 'x' ? 'y' : 'x';
       let anno = {
-        text: title,
-        showarrow: false,
+        text: c.plots.styled_text(title, c.plots.axis.title_style),
         textangle: xy === 'y' ? -90 : 0,
+        font: c.plots.axis.title_font,
+        showarrow: false,
       };
+      anno[xy+'anchor'] = 'center';
+      // anno[yx+'anchor'] = 'center';
       anno[xy+'ref'] = 'paper';
-      anno[xy] = 1; // right most
+      anno[xy] = 1; // 1 = right most
       anno[yx+'ref'] = yx + refId; // if referencing an axis (say an 'x' axis) the position along that axis is specified in axis coordinates.
       anno[yx] = 0; // up most (by convention minor templ axis have suitable range)
       anno[yx+'shift'] = -10; // shift below/left of axis line (axis line not over axis title)
       anno[xy+'shift'] =  c.plots.layout.margin[xy === 'x' ? 'r' : 't'] - 20; // shift right/up off axis line (tick labels not over axis title)
       return anno;
-    },
-
-    custom_axis_title: (title, xy, id) => {
-      let yx = xy === 'x' ? 'y' : 'x';
-      let anno = {
-        text: title,
-        showarrow: false,
-        textangle: xy === 'y' ? -90 : 0,
-      };
-
-      anno[yx+'ref'] = yx + refId;
-      anno[yx] = 0; // up most (by convention minor templ axis have suitable range)
     },
   };
 
@@ -261,10 +287,10 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
             color: c.plots.main.text.color,
             size: c.plots.main.text.size,
           },
-          titlefont: {
-            color: c.plots.main.text.color,
-            size: c.plots.main.text.size*1.25,
-          },
+          // titlefont: { unused, since we use custom axis label
+          //   color: c.plots.main.text.color,
+          //   size: c.plots.main.text.size*1.25,
+          // },
           domain: [offset, offset + length],
           position: position,
         };
@@ -298,10 +324,10 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         color: c.plots.marginal.text.color,
         size: c.plots.marginal.text.size,
       },
-      titlefont: {
-        color: c.plots.marginal.text.color,
-        size: c.plots.marginal.text.size,
-      },
+      // titlefont: {
+      //   color: c.plots.marginal.text.color,
+      //   size: c.plots.marginal.text.size,
+      // },
       domain: [offset, offset + length],
       //position: position,
     }),
