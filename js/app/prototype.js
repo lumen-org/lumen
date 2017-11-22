@@ -5,8 +5,8 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './ViewSettings'],
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Config) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -43,17 +43,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       // drop(shelves.detail, shelves.meas.at(2));
       // drop(shelves.color, shelves.dim.at(1));
       // drop(shelves.shape, shelves.dim.at(2));
-    }
-
-    function staticConfig () {
-      return {
-        traces: {
-          aggr: true,
-          data: false,
-          p1d: true, // TODO: disable doesn't work
-          p2d: true,
-        }
-      }
     }
 
     /**
@@ -110,7 +99,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               c.model = c.basemodel.localCopy();
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model, mode);
               c.query.rebase(c.model);  // important! rebase on the basemodel's copy to prevent modification of basemodel
-              c.config = staticConfig();
+              //c.config = staticConfig();
               c.queryTable = new QueryTable(c.query);
               c.modelTable = new ModelTable(c.queryTable);
             }
@@ -120,13 +109,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             }
             c.modelTable.model()
               .then(() => infoBox.hide())
-              .then(() => RT.aggrCollection(c.queryTable, c.modelTable, c.config.traces.aggr))
+
+              .then(() => RT.aggrCollection(c.queryTable, c.modelTable, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
-              .then(() => RT.samplesCollection(c.queryTable, c.model, c.config.traces.data))
+              .then(() => RT.samplesCollection(c.queryTable, c.model, c.config.visConfig.data.active))
               .then(res => c.dataRT = res)
-              .then(() => RT.uniDensityCollection(c.queryTable, c.model, c.config.traces.p1d))
+              .then(() => RT.uniDensityCollection(c.queryTable, c.model, c.config.visConfig.marginals.active))
               .then(res => c.uniDensityRT = res)
-              .then(() => RT.biDensityCollection(c.queryTable, c.model, c.config.traces.p2d))
+              .then(() => RT.biDensityCollection(c.queryTable, c.model, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
               .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
               .then(() => {
@@ -166,6 +156,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           this.shelves = shelves;
         else
           this.shelves = sh.construct();
+
+        // other configuration
+        this.config = {
+          visConfig: {},
+        };
+        Object.assign(this.config.visConfig, Config.views); // set initial config
 
         // the stages of the pipeline: query -> ... -> visualization
         this.query = {};
@@ -222,6 +218,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
         $('#pl-visualization-container').append($visuals.visualization);
+        $('#pl-config-container').append($visuals.visConfig);
       }
 
       /**
@@ -268,8 +265,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
 
       /**
+       * Returns the visualization config according to the state of the GUI.
+       */
+      getVisConfig () {
+        this.$visuals.visConfig
+      }
+
+      /**
        * Creates a deep copy of this context. This means a new (local view on the) model is created, as well as a copy of the shelves and their contents.  As the standard new context it is already "visual" (i.e. attachVisuals is called), but its "hidden" before (i.e. hideVisuals() is called).
-       * Note that the pipeline including the visualization is not copied, but rerun (i.e. query, querytable, modelTable)
+       * Note that the pipeline including the visualization is not copied, but rerun.
        */
       copy () {
         // TODO: undo/redo states are lost on copy
@@ -307,6 +311,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var shelves = context.shelves;
 
         // make all shelves visual and interactable
+        // i.e. creates DOM elements that are attach in .$visual of each shelf
         shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Measures'}).beInteractable();
         shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
@@ -331,10 +336,45 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
 
         // Enables user querying for shelves
+        // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves))
           shelves[key].on(Emitter.ChangedEvent, context.update);
 
         return visual;
+      }
+
+      /**
+       * Creates and returns GUI for visualization config.
+       *
+       * An context update is triggered, if the state of the config is changed.
+       *
+       * @param context
+       * @return {void|*|jQuery}
+       * @private
+       */
+      static _makeVisConfig (context) {
+
+        let title = $('<div class="shelf-title">VisConfig</div>');
+        // create checkboxes
+        let checkBoxes = ['aggregations', 'data', 'marginals', 'contour'].map(
+          what => {
+            // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
+            let $checkBox = $('<input type="checkbox">' + what + '</input>')
+              .prop("checked", Config.views[what].active)
+              .change( (e) => {
+                // update the config and ...
+                context.config.visConfig[what].active = e.target.checked;
+                // ... trigger an update
+                context.update()
+              });
+            return $('<div class="pl-config-onoff">  </div>').append($checkBox);
+          }
+        );
+        let $visConfig = $('<div class="pl-config-visualization shelf vertical"></div>').append(
+          title,
+          ...checkBoxes
+        );
+        return $visConfig;
       }
 
       /**
@@ -345,6 +385,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       static _makeGUI(context) {
         var visual = Context._makeShelvesGUI(context);
+        visual.visConfig = Context._makeVisConfig(context);
         visual.visualization = Context._makeVisualization(context);
         visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
         return visual;

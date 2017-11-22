@@ -132,7 +132,7 @@ main {
 
 .shelf.vertical {
     flex-direction: column;
-    /*min-width: 240px;*/
+    min-width: 130px;
 }
 
 .shelf-list {

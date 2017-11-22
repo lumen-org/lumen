@@ -9,6 +9,23 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
 
   let c = {};
 
+  // set of default config options for the visualization
+  // beware when you add more
+  c.views = {
+    aggregations : {
+      active: true,
+    },
+    data: {
+      active: true,
+    },
+    marginals: {
+      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
+    },
+    contour: {
+      active: true,
+    },
+  };
+
   _.extend(c, {
     maps: {
       size: 50,
