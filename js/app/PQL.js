@@ -558,6 +558,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     Aggregation: Aggregation,
     Density: Density,
     Split: Split,
+    SplitMethod: SplitMethod,
     Filter: Filter,
     FilterMethodT: FilterMethodT,
     isAggregation: isAggregation,

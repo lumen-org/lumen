@@ -22,6 +22,43 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
    */
   class ConversionError extends utils.ExtendableError {}
 
+
+  function _cleanFieldUsages(fus) {
+
+    // there may be no two Splits on the same Field. Exception: one has split method 'identity'
+    let cleanedFus = [],
+      usedSplits = new Map();
+
+    for (let fu of fus) {
+      if (PQL.isSplit(fu) && (fu.method !== PQL.SplitMethod.identity)) {
+        let name = fu.field.name,
+          used = usedSplits.get(name);
+        if (used == undefined) {
+          usedSplits.set(name, fu);
+          cleanedFus.push(fu);
+        }
+        else {
+          // TODO: I'm not entirely sure if this is a sane way of dealing with the underlying problem...
+          // TODO: no it's not. Instead the two identical splits should actually be the same...
+          // Problem is, for example: if we change the split count in one - which one will be used?
+          if (used.method !== fu.method) {
+            // turn into identity split if methods equal the one saved
+            throw ConversionError("Conflicting splits of the same field, i.e. splits with unequal")
+          }
+          // else {
+          //   same method. simply remove it from the field usages, i.e. don't push it to cleanedFus
+          // }
+        }
+      } else {
+        cleanedFus.push(fu);
+      }
+    }
+
+    // TODO: more checks for correctness of query
+
+    return cleanedFus;
+  }
+
   /**
    * Translates a VisMEL query into a PQL query of the aggregations requested in the VisMEL query.
    * @param vismelQuery
@@ -38,7 +75,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     //  field usages, as duplicate dimensions won't show up in dimensions
     // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
 
-    let fieldUsages = vismelQuery.fieldUsages(),
+    let fieldUsages = _cleanFieldUsages(vismelQuery.fieldUsages()),
       dimensions = [],
       fu2idx = new Map(),
       idx2fu = [],
@@ -101,7 +138,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
       fu2idx = new Map(),
       select = new Map();  // map of <field-name to select> to <index of column in result-table>
     let filters = [];
-    for (let fu of vismelQuery.fieldUsages()) {
+    for (let fu of _cleanFieldUsages(vismelQuery.fieldUsages())) {
       let name;
       if (PQL.isFilter(fu) && fu.field.name !== "model vs data") {
         filters.push(fu);
@@ -181,7 +218,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     }
 
     // collect splits from aesthetics and details
-    let splits = vismelQuery.fieldUsages(['layout', 'filters'], 'exclude')
+    let splits = _cleanFieldUsages(vismelQuery.fieldUsages(['layout', 'filters'], 'exclude'))
       .filter(PQL.isSplit)
       .filter(split => split.field.isDiscrete());
 
@@ -199,7 +236,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     let densityUsage = new PQL.Density(fields4density);
 
     // find mvd filter
-    let filters = vismelQuery.fieldUsages(['filters'], 'include');
+    let filters = _cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include'));
     let mvd_filter = filters.find(elem => elem.name === 'model vs data');
     // TODO: there could be more than one mvd filter
 
@@ -254,7 +291,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
     // respect any filters but mvd_filter s
-    let filters = vismelQuery.fieldUsages(['filters'], 'include').filter( f => f.field.name !== "model vs data");
+    let filters = _cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
 
     let query = {
       'type': 'predict',

@@ -255,7 +255,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         excluded.has('filters') ? undefined : layer.filters,
         excluded.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
       );
-      return usedVars.filter(PQL.isFieldUsage);
+      let fus = usedVars.filter(PQL.isFieldUsage);
+      return fus;
     }
 
     /**
