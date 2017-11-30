@@ -16,7 +16,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       active: true,
     },
     data: {
-      active: true,
+      active: false,
     },
     marginals: {
       active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
@@ -129,6 +129,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     biDensity: {
       colorscale: c.colorscales.density,
       opacity: 0.4,
+      levels: 8,
+      resolution: 50 // the number computed points along one axis
     },
   };
 
@@ -291,7 +293,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
           linecolor: c.plots.main.axis.color,
           linewidth: 1,
           mirror: false, // 'all' mirrors to marginal axis as well. Note that this cannot work if I use position and not anchor.
-          zeroline: true,
+          zeroline: false,  // TODO: enable back on?
           zerolinecolor: c.plots.main.axis.zerolinecolor,
           zerolinewidth: c.plots.main.axis.zerolinewidth,
           gridcolor: c.plots.main.grid.color,
@@ -328,7 +330,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       zerolinecolor: c.plots.main.axis.color, // 'main' because visually this represent the main axis
       zerolinewidth: c.plots.main.axis.width,
       autorange: 'false',
-      fixedrange: true,
+      //fixedrange: true,
       tickmode: 'auto', // TODO:
       nticks: 3,
       side: xy === 'y' ? 'right' : 'top',

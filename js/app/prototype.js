@@ -10,8 +10,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     // the default model to be loaded on startup
-    const DEFAULT_MODEL = 'mcg_crabs';
-    // const DEFAULT_MODEL = 'cgw_iris';
+    //const DEFAULT_MODEL = 'mcg_crabs';
+    const DEFAULT_MODEL = 'cluster';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
@@ -28,8 +28,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       // drop(shelves.shape, shelves.dim.at(0));
       //drop(shelves.size, shelves.meas.at(2));
       //drop(shelves.row, shelves.dim.at(0));
-      drop(shelves.column, shelves.meas.at(1));
-      drop(shelves.row, shelves.meas.at(2));
+
+      drop(shelves.column, shelves.meas.at(0));
+      drop(shelves.row, shelves.meas.at(1));
 
       // drop(shelves.color, shelves.meas.at(0));
       // drop(shelves.row, shelves.dim.at(0));
@@ -37,8 +38,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
 
       // drop(shelves.row, shelves.dim.at(0));
-      drop(shelves.column, shelves.dim.at(0));
-      drop(shelves.color, shelves.dim.at(1));
+
+      //drop(shelves.column, shelves.dim.at(0));
+      drop(shelves.color, shelves.dim.at(0));
+
       // drop(shelves.color, shelves.meas.at(2));
       // drop(shelves.detail, shelves.meas.at(2));
       // drop(shelves.color, shelves.dim.at(1));

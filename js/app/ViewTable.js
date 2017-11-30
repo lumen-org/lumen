@@ -577,7 +577,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
               let extent = uniColl.extent[xy][idx[xy]];
-              axis.range = [extent[1], 0]; // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range. NOTE: this is a reversed range
+              // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range. NOTE: this is a reversed range
+              axis.range = [extent[1], Math.min(0, -0.02*extent[1])]; // hack, because zero line tends to be not drawn...
               axis.tickmode = "array"; // use exactly 2 ticks as I want:
               axis.tickvals = [0, (extent[1]*0.8).toPrecision(1)]; // draw a line at 0 and ~80%
 

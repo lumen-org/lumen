@@ -11,7 +11,7 @@
  *
  * If it is for some reason impossible to generate a valid query from given VisMEL query a
  */
-define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
+define(['lib/logger', './utils', './PQL', './ViewSettings'], function (Logger, utils, PQL, c) {
   "use strict";
 
   var logger = Logger.get('pl-vismel2pql');
@@ -283,7 +283,7 @@ define(['lib/logger', './utils', './PQL'], function (Logger, utils, PQL) {
     let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
     let ySplit = PQL.Split.FromFieldUsage(yfu, 'density');
     for (let s of [xSplit, ySplit])
-      s.args[0] = 30;
+      s.args[0] = c.map.biDensity.resolution;
     let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
 
     let idx2fu = [xSplit, ySplit, densityFu];
