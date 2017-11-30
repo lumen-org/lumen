@@ -508,8 +508,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         }
       };
 
-
-
       // starting ids for the axis of different types. id determines z-order.
       let idgen = {
         main: {x:2000, y:3000},
@@ -522,7 +520,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // array of main axis along atomic plots of view table, for both, x and y axis. The values are axis ids.
       let mainAxes = {x: [], y: []};
       // custom titles for axis
-      let axis_titles = [];
+      let axisTitles = [];
       // offset of a specific atomic pane
       let paneOffset = {};
       // indexing over x and y
@@ -542,29 +540,32 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       this.at = new Array(this.size.rows);
       for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
         this.at[idx.y] = new Array(this.size.x);
-        paneOffset.y = templAxisSize.y + atomicPaneSize.y * idx.y;
 
-        let yaxis = config.axisGenerator.main(paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x, used.y),
+        paneOffset.y = templAxisSize.y + atomicPaneSize.y * idx.y;
+        let yAxisOffset = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0),
+          yaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
         if (used.y) {
-          let axis_anno = config.annotationGenerator.axis_title(getFieldUsage(idx.y, 'y').yields, 'y', paneOffset.y + axisLength.marginal.y, axisLength.main.y, templAxisSize.x);
-          axis_titles.push(axis_anno);
+          let axisTitleAnno = config.annotationGenerator.axis_title(
+            getFieldUsage(idx.y, 'y').yields, 'y', yAxisOffset, axisLength.main.y, templAxisSize.x);
+          axisTitles.push(axisTitleAnno);
         }
         layout["yaxis" + yid] = yaxis;
         yid = "y"+yid;
         mainAxes.y.push(yid);
 
         for (idx.x = 0; idx.x < this.size.x; ++idx.x) {
+
           paneOffset.x = templAxisSize.x + atomicPaneSize.x * idx.x;
 
           let xaxis, xid;
           if (idx.y === 0) {
-            xaxis = config.axisGenerator.main(paneOffset.x + axisLength.marginal.x, axisLength.main.x, templAxisSize.y, used.x);
+            let yAxisOffset = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
+            xaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
-
             if (used.x) {
-              let axis_anno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', paneOffset.x + axisLength.marginal.x, axisLength.main.x, templAxisSize.y);
-              axis_titles.push(axis_anno);
+              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', yAxisOffset, axisLength.main.x, templAxisSize.y);
+              axisTitles.push(axisTitleAnno);
             }
             layout["xaxis" + xid] = xaxis;
             xid = "x" + xid;
@@ -577,12 +578,23 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let marginalAxisId = {};
           for (let [xy, yx] of [['x','y'], ['y','x']]) {
             if (marginal[xy]) { // marginal activate?
-              let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
+
+              // let axisOffset = paneOffset[yx] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[yx] - axisLength.marginal[xy]);
+
+              let axisOffset = paneOffset[yx] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : (1 - templAxisSize[yx] - axisLength.marginal[xy]));
+
+              if (axisOffset > 1 || xy == 'y')
+                console.log("ff");
+
+              let axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
+
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
               let extent = uniColl.extent[xy][idx[xy]];
-              // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range. NOTE: this is a reversed range
-              axis.range = [extent[1], Math.min(0, -0.02*extent[1])]; // hack, because zero line tends to be not drawn...
+              // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range.
+              axis.range = [Math.min(0, -0.02*extent[1]), extent[1]]; // hack, because zero line tends to be not drawn...
+              if (config.plots.marginal.position[yx] === 'bottomleft') // reverse range if necessary reversed range
+                axis.range = axis.range.reverse();
               axis.tickmode = "array"; // use exactly 2 ticks as I want:
               axis.tickvals = [0, (extent[1]*0.8).toPrecision(1)]; // draw a line at 0 and ~80%
 
@@ -612,7 +624,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         title: "Model: " + query.sources[0].name,
         barmode: 'group',
         margin: config.plots.layout.margin,
-        annotations: [...axis_titles, ...annotationsx, ...annotationsy],
+        annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
       });
 

@@ -12,54 +12,52 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   // set of default config options for the visualization
   // beware when you add more
   c.views = {
-    aggregations : {
+    aggregations: {
       active: true,
     },
     data: {
       active: false,
     },
     marginals: {
-      active: false, // true if the view is active (i.e.. computed and visible) by default, false if not
+      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
     },
     contour: {
-      active: true,
+      active: false,
     },
   };
 
-  _.extend(c, {
-    maps: {
-      size: 50,
-      minSize: 32,
-      maxSize: 2048,
-      fill: "#377eb8",
-      stroke: "#222222",
-      opacity: 0.3,
-      shape: "circle"
-    },
+  c.maps = {
+    size: 50,
+    minSize: 32,
+    maxSize: 2048,
+    fill: "#377eb8",
+    stroke: "#222222",
+    opacity: 0.3,
+    shape: "circle"
+  };
 
-    appearance: {
-      pane: {
-        borderColor: "#d4d4d4",
-        fill: 'none'
-      }
-    },
-
-    geometry: {
-      // TODO: is that actually used?
-      axis: {
-        // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
-        size: 35,
-        // [px] font size of tick marks of axis
-        tickFontSizePx: 11,
-        // [px] font size of axis label (i.e. name of axis)
-        labelFontSizePx: 11,
-        // [px] padding at the beginning and end of an axis
-        padding: 5,
-        // [px] outer tick size of axis tick marks
-        outerTickSize: -5
-      }
+  c.appearance = {
+    pane: {
+      borderColor: "#d4d4d4",
+      fill: 'none'
     }
-  });
+  };
+
+  c.geometry = {
+    // TODO: is that actually used?
+    axis: {
+      // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
+      size: 35,
+      // [px] font size of tick marks of axis
+      tickFontSizePx: 11,
+      // [px] font size of axis label (i.e. name of axis)
+      labelFontSizePx: 11,
+      // [px] padding at the beginning and end of an axis
+      padding: 5,
+      // [px] outer tick size of axis tick marks
+      outerTickSize: -5
+    }
+  };
 
   c.colorscales = {
     density: [[0, 'rgb(255,255,255)'], [0.000001, 'rgb(255,255,255)'], [0.000001, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
@@ -118,6 +116,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       },
       maxDisplayed: 500,  // the maximum number of samples plotted in one trace of one atomic plot
     },
+
     uniDensity: {
       color: {
         def: greys(0.5),
@@ -126,6 +125,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         opacity: 0.7,
       }
     },
+
     biDensity: {
       colorscale: c.colorscales.density,
       opacity: 0.4,
@@ -187,8 +187,11 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       text: {
         color: greys(0.5),
         size: 10,
-      }
-
+      },
+      position: {
+        x: 'bottomleft', // bottomleft or topright
+        y: 'bottomleft', // bottomleft or topright
+      },
     },
 
     layout: {
