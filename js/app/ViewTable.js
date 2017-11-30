@@ -454,9 +454,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       };
 
       // flag whether or not in an atomic plot a marginal axis will be drawn. .x (.y) is the flag for the marginal x axis (y axis)
+      //  * we need a marginal plot, iff the opposite letter axis is used!
+      //  * but only if it is generally visible
+      //  * and if there was any data passed in for marginals
       let marginal = {
-        x: config.plots.marginal.visible.x && used.y,  // we need a marginal plot, iff the opposite letter axis is used!
-        y: config.plots.marginal.visible.y && used.x
+        x: config.views.marginals.active && used.y && uniColl[0][0] && uniColl[0][0].y,
+        y: config.views.marginals.active && used.x && uniColl[0][0] && uniColl[0][0].x
       };
 
       // get absolute pane size in px
@@ -473,8 +476,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           xlen = getLevelSplits(qx).length,
           ylen = getLevelSplits(qy).length;
         if (fixedAxisWidth) {
-          templAxisSize.x = ylen===0?0:1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSize.x);
-          templAxisSize.y = xlen===0?0:1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSize.y);
+          templAxisSize.x = ylen=== 0 ? 0 : 1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSize.x);
+          templAxisSize.y = xlen=== 0 ? 0 : 1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSize.y);
         } else {
           templAxisSize.x = getLevelSplits(qy).length * config.plots.layout.templ_axis_level_ratio.y;
           templAxisSize.y = getLevelSplits(qx).length * config.plots.layout.templ_axis_level_ratio.x;
@@ -529,12 +532,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       uniColl.extent = {};
       for (let xy of ['x','y']) {
         let yx = _invXY(xy);
-        if (uniColl[0][0] && uniColl[0][0][yx]) {
+        if (marginal[xy]) {  // marginal active?
           uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
           uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
         }
       }
 
+      // loops over view cells
       this.at = new Array(this.size.rows);
       for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
         this.at[idx.y] = new Array(this.size.x);
@@ -572,7 +576,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           // create marginal axes as needed
           let marginalAxisId = {};
           for (let [xy, yx] of [['x','y'], ['y','x']]) {
-            if (marginal[xy]) {
+            if (marginal[xy]) { // marginal activate?
               let axis = config.axisGenerator.marginal(paneOffset[xy], axisLength.marginal[xy], templAxisSize[yx], xy);
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col

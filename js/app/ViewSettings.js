@@ -19,7 +19,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       active: false,
     },
     marginals: {
-      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
+      active: false, // true if the view is active (i.e.. computed and visible) by default, false if not
     },
     contour: {
       active: true,
@@ -174,10 +174,6 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     },
 
     marginal: {
-      visible: {
-        x: true,
-        y: true
-      },
       background: {
         fill: 'white', //unused
       },
