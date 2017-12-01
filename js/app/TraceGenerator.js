@@ -25,6 +25,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     let logger = Logger.get('pl-ViewTable');
     logger.setLevel(Logger.DEBUG);
 
+    function makeOpaque(hexColorString, opacity) {
+      let clr = d3.rgb(hexColorString);
+      return "rgba("+clr.r+","+clr.g+","+clr.b+","+opacity+")"
+    }
+
     /**
      * Converts an array of string values into an array of integer values, using the extent array as conversion array.
      * @param arr
@@ -314,7 +319,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         };
 
         let lcmap = mapper.marginalColor;
-        // whole line gets same color, or all lines has uniform color anyway
+        // whole line gets same color, or all lines have uniform color anyway
         let color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
 
         if (PQL.hasNumericYield(axisFu)) {
@@ -327,8 +332,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             cliponaxis: false,
             line: {
               color: color,
-              width: 2, // TODO
+              width: c.map.uniDensity.line.width,
             },
+            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x'?'y':'x')) : 'none',
+            fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
           if (modelOrData === 'data') {
             trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');

@@ -81,12 +81,13 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       },
       stroke: {
         color: greys(0.8),
-        width: 1.5,
+        //width: 1.5,
+        width: 1,
       },
       size: {
-        min: 6,
+        min: 8,
         max: 40,
-        def: 8,
+        def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       shape: {
@@ -112,7 +113,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         width: 1.5,
       },
       fill: {
-        opacity: 0.6,
+        opacity: 0.8,
       },
       maxDisplayed: 500,  // the maximum number of samples plotted in one trace of one atomic plot
     },
@@ -123,14 +124,19 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       },
       bar: {
         opacity: 0.7,
+      },
+      line: {
+        width: 2,
+        fill: true,
+        fillopacity: 0.06,
       }
     },
 
     biDensity: {
       colorscale: c.colorscales.density,
-      opacity: 0.4,
+      opacity: 0. ,
       levels: 8,
-      resolution: 50 // the number computed points along one axis
+      resolution: 25 // the number computed points along one axis
     },
   };
 
@@ -181,15 +187,15 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         color: greys(0.6),
       },
       axis: {
-        color: greys(0.9),
-        zerolinewidth: 1,
+        color: greys(0.4),
+        width: 2,
       },
       text: {
         color: greys(0.5),
         size: 10,
       },
       position: {
-        x: 'bottomleft', // bottomleft or topright
+        x: 'topright', // bottomleft or topright
         y: 'bottomleft', // bottomleft or topright
       },
     },
@@ -305,6 +311,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
           //   size: c.plots.main.text.size*1.25,
           // },
           domain: [offset, offset + length],
+          anchor: 'free',
           position: position,
         };
       else
@@ -319,6 +326,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
           range: [-1, 1],
           fixedrange: true,
           domain: [offset, offset + length],
+          anchor: 'free',
           position: position,
         };
     },
@@ -326,8 +334,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     marginal: (offset, length, position, xy) => ({
       //zeroline: !used,
       zeroline: true,
-      zerolinecolor: c.plots.main.axis.color, // 'main' because visually this represent the main axis
-      zerolinewidth: c.plots.main.axis.width,
+      zerolinecolor: c.plots.marginal.axis.color, // 'main' because visually this represent the main axis
+      zerolinewidth: c.plots.marginal.axis.width,
       autorange: 'false',
       //fixedrange: true,
       tickmode: 'auto', // TODO:
