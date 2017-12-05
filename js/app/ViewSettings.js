@@ -29,7 +29,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       active: false,
     },
     accuMarginals: {
-      possible: false
+      possible: true
     }
   };
 

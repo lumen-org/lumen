@@ -434,6 +434,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         x.push(currentX);
         px.push(sumPX);
 
+        // hack for fast exit: if the accumulation actually does not accumulate, then don't draw another trace for it
+        if (x.length === data.length)
+          return [];
+
         // TODO: merge this with getUniTrace again?
         // return getUniTrace(xOrY, modelOrData, );
 
