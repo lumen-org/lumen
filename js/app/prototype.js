@@ -11,7 +11,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     // the default model to be loaded on startup
     // const DEFAULT_MODEL = 'mcg_crabs';
-    const DEFAULT_MODEL = 'cluster';
+    const DEFAULT_MODEL = 'mcg_crabs';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
@@ -162,9 +162,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // other configuration
         this.config = {
-          visConfig: {},
+          visConfig: {
+            aggregations: { active: Config.views.aggregations.active },
+            data: { active: Config.views.data.active, },
+            marginals: { active: Config.views.marginals.active },
+            contour: { active: Config.views.contour.active },
+          },
         };
-        Object.assign(this.config.visConfig, Config.views); // set initial config
+        // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
+        // Object.assign(this.config.visConfig, configCopy); // set initial config
 
         // the stages of the pipeline: query -> ... -> visualization
         this.query = {};

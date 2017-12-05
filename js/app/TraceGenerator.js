@@ -297,9 +297,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * @param xy 'x' ('y') if the trace is for x (y) axis.
        * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @param fu2idx
+       * @param fixedColor: optional. sets a color regardless of query specifications.
        * @return Object: A trace.
        */
-      function getUniTrace(data, xy, modelOrData, fu2idx) {
+      function getUniTrace(data, xy, modelOrData, fu2idx, fixedColor=undefined) {
         let xIdx = (xy === 'x' ? 1 : 2),
           yIdx = (xy === 'x' ? 2 : 1);
 
@@ -318,9 +319,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yaxis: yAxis,
         };
 
-        let lcmap = mapper.marginalColor;
-        // whole line gets same color, or all lines have uniform color anyway
-        let color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
+        let color = fixedColor;
+        if (color === undefined) {
+          let lcmap = mapper.marginalColor;
+          // whole line gets same color, or all lines have uniform color anyway
+          color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
+        }
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
@@ -394,14 +398,116 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         return traces;
       }
 
+      /**
+       * Aggregates the density values in data and thus calculates the true marginal density along the xOrY axis.
+       *
+       * @param datam
+       */
+      function getAccumulatedUniTrace (data, fu2idx, xy, modelOrData) {
+        // TODO: merge this with getUniTrace again?
+        if (modelOrData === "data") {
+          logger.warning("accumulated traces for data are not implemented!");
+          return [];
+        }
+
+        if (data.length === 0)
+          return [];
+
+        // accumulate density values
+        const xIdx = 1, yIdx = 2;
+        let x = [], // the value of which the density is computed
+          px = [], // the density
+          currentX = data[0][xIdx], // [1] is by convention the column of which the density is computed
+          sumPX = 0;
+        for (let item of data) {
+          if (item[1] === currentX) {
+            sumPX += item[yIdx];
+          } else {
+            // push sum for that x
+            x.push(currentX);
+            px.push(sumPX);
+            // start sum of new x
+            currentX = item[xIdx];
+            sumPX = item[yIdx];
+          }
+        }
+        x.push(currentX);
+        px.push(sumPX);
+
+        // TODO: merge this with getUniTrace again?
+        // return getUniTrace(xOrY, modelOrData, );
+
+        // is axis field usage numeric or categorical, i.e. histogram or barchar?
+        let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
+
+        let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
+          yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
+
+        let trace = {
+          name: modelOrData + ' marginal on ' + xy,
+          showlegend: false,
+          x: xy === 'x'? x : px, //selectColumn(data, xIdx),
+          y: xy === 'x'? px : x, //selectColumn(data, yIdx),
+          xaxis: xAxis,
+          yaxis: yAxis,
+        };
+
+        let color = c.map.uniDensity.color.def;
+        // let color = fixedColor;
+        // if (color === undefined) {
+        //   let lcmap = mapper.marginalColor;
+        //   // whole line gets same color, or all lines have uniform color anyway
+        //   color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
+        // }
+
+        if (PQL.hasNumericYield(axisFu)) {
+          // line chart trace
+          _.extendOwn(trace, {
+            //type: modelOrData === 'model' ? 'scatter' : 'bar',
+            //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
+            type: 'scatter',
+            mode: 'lines',
+            cliponaxis: false,
+            line: {
+              color: color,
+              width: c.map.uniDensity.line.width,
+            },
+            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x'?'y':'x')) : 'none',
+            fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
+          });
+          if (modelOrData === 'data') {
+            trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
+          }
+          // TODO: add trace annotations for shape support and other?
+          // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
+        }
+        else {
+          // bar chart trace
+          _.extendOwn(trace, {
+            //type: modelOrData === 'model' ? 'scatter' : 'bar',
+            type: 'bar',
+            orientation: xy === 'x' ? 'v' : 'h',
+            opacity: c.map.uniDensity.bar.opacity,
+            marker: {
+              color: color,
+            },
+          });
+        }
+        return [trace];
+      }
+
       let traces = [];
       let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
-      for (let xOrY of ['x', 'y'])
+      for (let xOrY of ['x', 'y']) // adds seperate traces for x and y uni-marginals
         if (p1dRT[xOrY] !== undefined) {
           let rt = nestByMvd.map(p1dRT[xOrY]);
-          for (let modelOrData of ['model', 'data']) {
-            if (rt.get(modelOrData) !== undefined)
-              traces.push(...getSplittedUniTraces(rt.get(modelOrData), p1dRT[xOrY].fu2idx, xOrY, modelOrData));
+          for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
+            let data = rt.get(modelOrData);
+            if (data !== undefined) {
+              traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
+              if (c.views.accuMarginals.possible)
+                traces.push(...getAccumulatedUniTrace(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
+            }
           }
         }
       return traces;

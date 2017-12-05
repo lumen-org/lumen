@@ -13,17 +13,24 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   // beware when you add more
   c.views = {
     aggregations: {
-      active: false,
+      possible: true, // true iff the view should be made accessible to the user at all, false else
+      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
     },
     data: {
-      active: false,
-    },
-    marginals: {
-      active: false, // true if the view is active (i.e.. computed and visible) by default, false if not
-    },
-    contour: {
+      possible: true,
       active: true,
     },
+    marginals: {
+      possible: true,
+      active: true,
+    },
+    contour: {
+      possible: true,
+      active: false,
+    },
+    accuMarginals: {
+      possible: false
+    }
   };
 
   c.maps = {
@@ -337,8 +344,9 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       zeroline: true,
       zerolinecolor: c.plots.marginal.axis.color, // 'main' because visually this represent the main axis
       zerolinewidth: c.plots.marginal.axis.width,
+      // autorange: 'false',
       autorange: 'false',
-      fixedrange: true,
+      fixedrange: false,
       tickmode: 'auto', // TODO:
       nticks: 3,
       side: xy === 'y' ? 'right' : 'top',

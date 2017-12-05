@@ -72,7 +72,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-              // TODO: plotly heatmaps do not support categorical z values, as a color scale only maps from numerical values. Either find a work around or implement cateogrical heatmaps?
             }
             else { // if (used.shape) {
               // scatter plot
@@ -455,11 +454,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // flag whether or not in an atomic plot a marginal axis will be drawn. .x (.y) is the flag for the marginal x axis (y axis)
       //  * we need a marginal plot, iff the opposite letter axis is used!
-      //  * but only if it is generally visible
+      //  * but only if it is generally enabled in the config
       //  * and if there was any data passed in for marginals
       let marginal = {
-        x: config.views.marginals.active && used.y && uniColl[0][0] && uniColl[0][0].y,
-        y: config.views.marginals.active && used.x && uniColl[0][0] && uniColl[0][0].x
+        x: config.views.marginals.possible && used.y && uniColl[0][0] && uniColl[0][0].y,
+        y: config.views.marginals.possible && used.x && uniColl[0][0] && uniColl[0][0].x
       };
 
       // get absolute pane size in px
