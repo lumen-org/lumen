@@ -338,7 +338,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       zerolinecolor: c.plots.marginal.axis.color, // 'main' because visually this represent the main axis
       zerolinewidth: c.plots.marginal.axis.width,
       autorange: 'false',
-      //fixedrange: true,
+      fixedrange: true,
       tickmode: 'auto', // TODO:
       nticks: 3,
       side: xy === 'y' ? 'right' : 'top',
@@ -346,6 +346,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         color: c.plots.marginal.text.color,
         size: c.plots.marginal.text.size,
       },
+      tickangle: xy === 'x' ? -90 : 0,
       // titlefont: {
       //   color: c.plots.marginal.text.color,
       //   size: c.plots.marginal.text.size,
