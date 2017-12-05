@@ -73,35 +73,21 @@
 <!-- main content -->
 <div id="pl-toolbar-container"></div>
 <main>
-    <div>
-        <!--<div id="pl-datavsmodel-container">
-            <div class="shelf vertical">
-                <div class="shelf-title">Model vs Data</div>
-                <form id="pl-datavsmodel-form">
-                        <input type="radio" checked name="datavsmodel" value="model" id="datavsmodel_model" class="pl_datavsmodel_radio">
-                        <label for="datavsmodel_model">model</label>
-                        <input type="radio" name="datavsmodel" value="both" id="datavsmodel_both" class="pl_datavsmodel_radio">
-                        <label for="datavsmodel_both">both</label>
-                        <input type="radio" name="datavsmodel" value="data" id="datavsmodel_data" class="pl_datavsmodel_radio">
-                        <label for="datavsmodel_data">data</label>
-                </form>
-            </div>
-            <hr>
-        </div>-->
+    <div class="pl-column pl-schema">
+        <div class="pl-column-title">Schema</div>
         <div id="pl-model-container"> </div>
         <div id="pl-config-container"></div>
     </div>
-    <div>
-        <div id="pl-mappings-container"> </div>
-    </div>
-    <div>
+    <div class="pl-column pl-spec">
+        <div class="pl-column-title">Specification</div>
         <div id="pl-layout-container"></div>
-        <div class="shelf-title">Visualization</div>
+        <div id="pl-mappings-container"></div>
+    </div>
+    <div class="pl-column pl-dashboard">
+        <!--<div class="shelf-title">Dash Board</div>-->
+        <div class="pl-column-title">Dash Board</div>
         <div id="pl-visualization-container">
             <!--<div id="pl-plotly" class="pl-plotly-atomic-div"> </div>-->
-        </div>
-        <div id="pl-plotly-container">
-            <div id="pl-plotly" class="pl-plotly-atomic-div"> </div>
         </div>
         <div id="debug-stuff"></div>
     </div>

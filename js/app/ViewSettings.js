@@ -13,16 +13,16 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   // beware when you add more
   c.views = {
     aggregations: {
-      active: true,
+      active: false,
     },
     data: {
       active: false,
     },
     marginals: {
-      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
+      active: false, // true if the view is active (i.e.. computed and visible) by default, false if not
     },
     contour: {
-      active: false,
+      active: true,
     },
   };
 
@@ -134,9 +134,9 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
 
     biDensity: {
       colorscale: c.colorscales.density,
-      opacity: 0. ,
-      levels: 8,
-      resolution: 25 // the number computed points along one axis
+      opacity: 0.8,
+      levels: 15,
+      resolution: 50 // the number computed points along one axis
     },
   };
 
@@ -166,7 +166,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         fill: 'white', //unused
       },
       grid: {
-        color: greys(0.1),
+        color: greys(0.3),
       },
       axis: {
         color: "#3D3A40",
@@ -184,7 +184,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         fill: 'white', //unused
       },
       grid: {
-        color: greys(0.6),
+        color: greys(0.15),
       },
       axis: {
         color: greys(0.4),
@@ -301,6 +301,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
           zeroline: false,  // TODO: enable back on?
           zerolinecolor: c.plots.main.axis.zerolinecolor,
           zerolinewidth: c.plots.main.axis.zerolinewidth,
+          showgrid: false,
           gridcolor: c.plots.main.grid.color,
           tickfont: {
             color: c.plots.main.text.color,

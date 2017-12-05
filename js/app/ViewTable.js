@@ -580,12 +580,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (marginal[xy]) { // marginal activate?
 
               let axisOffset = paneOffset[xy] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[xy]);
-              // let axisOffset = paneOffset[yx] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[yx] - axisLength.marginal[xy]);
-
-              // let axisOffset = paneOffset[yx] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : (1 - templAxisSize[yx] - axisLength.marginal[xy]));
-
-              if (axisOffset > 1 || xy == 'y')
-                console.log("ff");
 
               let axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 

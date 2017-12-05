@@ -10,8 +10,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     // the default model to be loaded on startup
-    const DEFAULT_MODEL = 'mcg_crabs';
-    // const DEFAULT_MODEL = 'cluster';
+    // const DEFAULT_MODEL = 'mcg_crabs';
+    const DEFAULT_MODEL = 'cluster';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
@@ -316,16 +316,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
         shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
-        shelves.meas.beVisual({label: 'Measures'}).beInteractable();
-        shelves.dim.beVisual({label: 'Dimensions'}).beInteractable();
+        shelves.meas.beVisual({label: 'Quantitative'}).beInteractable();
+        shelves.dim.beVisual({label: 'Categorical'}).beInteractable();
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
         shelves.shape.beVisual({label: 'Shape'}).beInteractable();
         shelves.size.beVisual({label: 'Size'}).beInteractable();
         shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-        shelves.column.beVisual({label: 'X-Axis', direction: vis.DirectionTypeT.horizontal}).beInteractable();
-        shelves.row.beVisual({label: 'Y-Axis', direction: vis.DirectionTypeT.horizontal}).beInteractable();
+        // shelves.column.beVisual({label: 'X-Axis', direction: vis.DirectionTypeT.vertical}).beInteractable();
+        // shelves.row.beVisual({label: 'Y-Axis', direction: vis.DirectionTypeT.vertical}).beInteractable();
+        shelves.column.beVisual({label: 'X-Axis'}).beInteractable();
+        shelves.row.beVisual({label: 'Y-Axis'}).beInteractable();
 
         var visual = {};
 
@@ -336,7 +338,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
-        visual.layout = $('<div class="pl-layout"></div>').append( shelves.row.$visual, $('<hr>'), shelves.column.$visual, $('<hr>'));
+        visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
 
         // Enables user querying for shelves
         // shelves emit ChangedEvent. Now we bind to it.
@@ -357,9 +359,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       static _makeVisConfig (context) {
 
-        let title = $('<div class="shelf-title">VisConfig</div>');
+        let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
-        let checkBoxes = ['aggregations', 'data', 'marginals', 'contour'].map(
+        let checkBoxes = ['aggregations', 'marginals', 'contour', 'data'].map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + what + '</input>')
