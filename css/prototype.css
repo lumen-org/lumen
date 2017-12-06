@@ -34,6 +34,7 @@ main {
 
 .pl-spec {
     background-color: #f3f3f3;
+    min-width: 235px; /* for constant minimal width*/
 }
 
 .pl-dashboard {

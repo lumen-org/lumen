@@ -25,10 +25,10 @@
 /**
  * The following is the internal PQL query structure:
  *
- * * A PQL query is a object that has at least a property "type", with one of the following values:
+ * * A PQL query is a object (i.e. of type Object!) that has at least a property "type", with one of the following values:
  *   'predict', 'select', 'model', 'header', 'copy', 'drop'
  *
- *  Depending on the value of "type" it may have more properties, which in turn contain FieldUsages, Fields or names of fields, as appropriate:
+ * Depending on the value of "type" it may have more properties, which in turn contain FieldUsages, Fields or names of fields, as appropriate:
  *
  * Predictions, i.e. type === 'predict':
  *    predict
@@ -45,6 +45,7 @@
  *   model
  *   where
  *   as
+ *
  */
 
 define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) {
@@ -551,6 +552,53 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     }
   };
 
+  /**
+   * Returns concise string representation of the query.
+   *
+   * It is not clear how to do this in a good way. Here we chose to make it as concise as possible, while loosing
+   * some precision. Concretely, we omit all the covariates that occur as a column in the result table.
+   *
+   * E.g.:
+   *    predict: sex, p(sex), splitby: sex, from: <mymodel>
+   * yields
+   *    p(sex)
+   * instead of:
+   *   sex, p(sex)
+   *
+   * @param query
+   */
+  function toString (query) {
+    // TODO: implement more: // 'predict', 'select', 'model', 'header', 'copy', 'drop'
+    switch (query.type) {
+      case 'predict':
+
+        // return "fff";
+
+        let splits = _.unique((query.predict ? query.predict : []).filter(isSplit).map(s => s.name)), // names of unique splits or []
+          filters = _.unique((query.where ? query.where : []).map(s => s.name)), // names of unique filters or []
+          variates = [];
+        for (let variate of query.predict) {
+          let str = undefined;
+          if (isAggregation(variate)) {
+            if (variate.names.length > 1)
+              logger.warning("aggregation.toString string is imprecise because it aggregates over multiple variables.");
+            let conditionPart = (splits.length + filters.length === 0) ? "" : ("|" + splits.concat(filters).join());
+            str = "m(" + variate.yields + conditionPart + ")";
+            console.log(str);
+            variates.push(str);
+          } else if (isDensity(variate)) {
+            let conditionPart = filters.length === 0 ? "" : ("|" + filters.join());
+            str = "p(" + variate.names + conditionPart + ")";
+            console.log(str);
+            variates.push(str);
+          }
+        }
+        return variates.join();
+      default:
+        throw "Not Implemented";
+    }
+  }
+
   return {
     Field: Field,
     FieldT: FieldT,
@@ -570,7 +618,8 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
     fields: fields,
     hasDiscreteYield: hasDiscreteYield,
     hasNumericYield: hasNumericYield,
-    toJSON: toJSON
+    toJSON: toJSON,
+    toString: toString,
   };
 
 });

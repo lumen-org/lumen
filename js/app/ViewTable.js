@@ -120,6 +120,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         else {
           // TODO individual contour plots for each combination?
           // for now: no 2d density plot
+          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis));
 
           // TODO: individual marginal density plots for each each combination?
           // for now: combined one

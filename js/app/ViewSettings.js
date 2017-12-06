@@ -18,7 +18,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     },
     data: {
       possible: true,
-      active: true,
+      active: false,
     },
     marginals: {
       possible: true,
@@ -26,7 +26,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     },
     contour: {
       possible: true,
-      active: false,
+      active: true,
     },
     accuMarginals: {
       possible: true
@@ -106,7 +106,9 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       opacity: {
         discrete: 0.6,
         continuous: 0.9,
-      }
+      },
+      xgap: 1,
+      ygap: 1,
     },
 
     sampleMarker: {
@@ -308,7 +310,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
           zeroline: false,  // TODO: enable back on?
           zerolinecolor: c.plots.main.axis.zerolinecolor,
           zerolinewidth: c.plots.main.axis.zerolinewidth,
-          showgrid: false,
+          showgrid: false, // !!!
           gridcolor: c.plots.main.grid.color,
           tickfont: {
             color: c.plots.main.text.color,

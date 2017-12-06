@@ -21,28 +21,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-      //drop(shelves.dim, shelves.meas.at(0));
-      //drop(shelves.column, shelves.meas.at(1));
-      //drop(shelves.filter, shelves.meas.at(1));
-      //drop(shelves.detail, shelves.dim.at(0));
-      // drop(shelves.shape, shelves.dim.at(0));
-      //drop(shelves.size, shelves.meas.at(2));
-      //drop(shelves.row, shelves.dim.at(0));
-
       drop(shelves.column, shelves.meas.at(0));
-      drop(shelves.row, shelves.meas.at(1));
+      drop(shelves.row, shelves.dim.at(0));
 
-      // drop(shelves.color, shelves.meas.at(0));
-      // drop(shelves.row, shelves.dim.at(0));
-      // drop(shelves.row, shelves.dim.at(1));
-
-
-      // drop(shelves.row, shelves.dim.at(0));
-
-      //drop(shelves.column, shelves.dim.at(0));
-      drop(shelves.color, shelves.dim.at(0));
-
-      // drop(shelves.color, shelves.meas.at(2));
+      //drop(shelves.filter, shelves.meas.at(1));
       // drop(shelves.detail, shelves.meas.at(2));
       // drop(shelves.color, shelves.dim.at(1));
       // drop(shelves.shape, shelves.dim.at(2));
@@ -83,6 +65,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       /**
        * Creates an new context. If no parameters are given, the context is empty.
        * However, you can also specify the server, or the server and the modelName, or the server, the modelname and existing shelves for these.
+       *
+       * Note that the context is not immediately visual when instanciated. Call this.makeGUI for that.
        */
       constructor (server, modelName, shelves) {
 
@@ -186,12 +170,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // update is not an instance method that needs to be called with a proper this. it always knows its context.
         this.update = _.debounce(makeContextedUpdateFct(this), 200);
         this.unredoer = new UnRedo(20);
-
-        // this creates all GUI elements
-        this.$visuals = Context._makeGUI(this);
-
-        this.displayVisuals(false);
-        this.attachVisuals();
       }
 
       /**
@@ -286,7 +264,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       copy () {
         // TODO: undo/redo states are lost on copy
-        return new Context(this.server, this.basemodel.name, this.copyShelves());
+        let copiedContext = new Context(this.server, this.basemodel.name, this.copyShelves());
+
+        // additional stuff to copy
+        copiedContext.config = JSON.parse(JSON.stringify(this.config));
+
+        // now make it visual
+        copiedContext.makeGUI();
+
+        return copiedContext;
       }
 
       static _makeVisualization(context) {
@@ -371,7 +357,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + what + '</input>')
-              .prop("checked", Config.views[what].active)
+              .prop("checked", context.config.visConfig[what].active)
               .change( (e) => {
                 // update the config and ...
                 context.config.visConfig[what].active = e.target.checked;
@@ -401,6 +387,17 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
         return visual;
       }
+
+      /* Creates, hides and attaches GUI elements for this context to the DOM
+      **/
+      makeGUI() {
+        // this creates all GUI elements
+        this.$visuals = Context._makeGUI(this);
+
+        this.displayVisuals(false);
+        this.attachVisuals();
+        return this;
+      }
     }
 
     /**
@@ -418,7 +415,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             if (event.keyCode === 13) {
 
               // create new context and visualization with that model if it exists
-              var context = new Context(DEFAULT_SERVER_ADDRESS, modelName);
+              var context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
 
               // fetch model
               context.basemodel.update()
@@ -569,10 +566,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       start: function () {
         // create initial context with model
-        var context = new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL);
-        // var context = new Context(DEFAULT_SERVER_ADDRESS, 'categorical_dummy');
-        // var context = new Context(DEFAULT_SERVER_ADDRESS, 'iris');
-        // var context = new Context(DEFAULT_SERVER_ADDRESS, 'mvg4');
+        let context = new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL).makeGUI();
 
         // activate that context
         activate(context, ['visualization', 'visPanel']);

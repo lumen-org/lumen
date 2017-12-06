@@ -191,7 +191,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         // no nesting necessary (no further splitting present)
         let trace = {
-          name: 'aggregations',
+          name: PQL.toString(rt.query),
           type: 'heatmap',
           x: selectColumn(rt, fu2idx.get(xfu)),
           y: selectColumn(rt, fu2idx.get(yfu)),
@@ -205,6 +205,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           zmin: colorDomain[0],
           zmax: colorDomain[1],
           opacity: c.map.heatmap.opacity[PQL.hasDiscreteYield(colorFu) ? "discrete" : "continuous"],
+          xgap: c.map.heatmap.xgap,
+          ygap: c.map.heatmap.ygap,
         };
         traces.push(trace);
       }
@@ -229,14 +231,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
         traces = [],
-        cfg = c.map.aggrMarker;
+        cfg = c.map.aggrMarker,
+        traceName = PQL.toString(rt.query);
 
       let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
       // create and attach trace for each group, i.e. each leave in the nested data
       let attach_aggr_trace = (data) => {
         let trace = {
-          name: 'aggregations',
+          name: traceName,
           type: 'scatter',
           showlegend: false,
           cliponaxis: false,
@@ -289,7 +292,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       if (p1dRT == undefined)  // means 'disable this trace type'
         return [];
 
-      let aest = query.layers[0].aesthetics;
+      let aest = query.layers[0].aesthetics,
+        traceName = {"x":"setMe","y":"setMe"};
 
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
@@ -311,7 +315,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
 
         let trace = {
-          name: modelOrData + ' marginal on ' + xy,
+          name: traceName[xy],
           showlegend: false,
           x: selectColumn(data, xIdx),
           y: selectColumn(data, yIdx),
@@ -448,7 +452,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
 
         let trace = {
-          name: modelOrData + ' marginal on ' + xy,
+          name: traceName[xy], // modelOrData + ' marginal on ' + xy,
           showlegend: false,
           x: xy === 'x'? x : px, //selectColumn(data, xIdx),
           y: xy === 'x'? px : x, //selectColumn(data, yIdx),
@@ -500,14 +504,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         return [trace];
       }
 
+      // code (not function defs) for tracer.uni starts here
       let traces = [];
       let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
       for (let xOrY of ['x', 'y']) // adds seperate traces for x and y uni-marginals
         if (p1dRT[xOrY] !== undefined) {
-          let rt = nestByMvd.map(p1dRT[xOrY]);
+          let rt = nestByMvd.map(p1dRT[xOrY]); // FAIL HERE
+          traceName[xOrY] =  PQL.toString(p1dRT[xOrY].query);
           for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
             let data = rt.get(modelOrData);
             if (data !== undefined) {
+              data.query = p1dRT[xOrY].query; // attach query to data, beacuse we might need it later
               traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
               if (c.views.accuMarginals.possible)
                 traces.push(...getAccumulatedUniTrace(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
@@ -539,7 +546,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         yfu = rt.idx2fu[1];
 
       let trace = {
-        name: '2d density',
+        name: PQL.toString(rt.query),
+        // name: '2d density',
         showlegend: false,
         showscale: false,
         x: selectColumn(rt, 0),
@@ -562,8 +570,61 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       }
       else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
         trace.type = 'heatmap';
+        trace.xgap = c.map.heatmap.xgap;
+        trace.ygap = c.map.heatmap.ygap;
       }
       return [trace]
+    };
+
+    /**
+     * 2d density plot trace builder for the case when one positional axis is quantitative and one is categorical.
+     * @param rt
+     * @param query
+     * @param mapper
+     * @param axisId
+     * @return {{}}
+     */
+    tracer.biQC = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+      if (!axisId) throw RangeError("invalid axisId");
+
+      if (rt == undefined)  // means 'disable this trace type'
+        return [];
+
+      // note: the indexes are by convention!
+      let xfu = rt.idx2fu[0],
+        yfu = rt.idx2fu[1];
+
+      let traces = [];
+
+      // try one: simply use gray scale heat map style encoding
+
+      // very simple one: encode with size
+      // compute scaled p values
+      let p = selectColumn(rt, 2),
+        scaleFactor = 30/Math.max(...p), // 30 = max width of circles // dirty!!
+        pscaled = p.map(x => x*scaleFactor);
+
+      let trace = {
+        name: PQL.toString(rt.query),
+        type: 'scatter',
+        mode: 'markers',
+        showlegend: false,
+        x: selectColumn(rt, 0),
+        y: selectColumn(rt, 1),
+        xaxis: axisId.x,
+        yaxis: axisId.y,
+        marker: {
+          size: pscaled,
+          color: c.map.uniDensity.color.def,
+          opacity: 0.4,
+          line: {
+            width: 0,
+          },
+        },
+      };
+
+      traces.push(trace);
+      return traces;
     };
 
     /**
