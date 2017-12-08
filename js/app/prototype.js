@@ -99,11 +99,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
               .then(() => RT.aggrCollection(c.queryTable, c.modelTable, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
-              .then(() => RT.samplesCollection(c.queryTable, c.model, c.config.visConfig.data.active))
+              //.then(() => RT.samplesCollection(c.queryTable, c.model, c.config.visConfig.data.active))
+              .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.data.active))
               .then(res => c.dataRT = res)
-              .then(() => RT.uniDensityCollection(c.queryTable, c.model, c.config.visConfig.marginals.active))
+              .then(() => RT.uniDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.marginals.active))
               .then(res => c.uniDensityRT = res)
-              .then(() => RT.biDensityCollection(c.queryTable, c.model, c.config.visConfig.contour.active))
+              .then(() => RT.biDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
               .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
               .then(() => {
@@ -287,6 +288,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           .append($paneDiv, $nav)
           .click( () => activate(context, ['visualization', 'visPanel']) )
           .resizable({
+            ghost: true,
+            helper: "pl-resizing",
             stop: (event, ui) => {
               let c = context;
 

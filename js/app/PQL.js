@@ -48,8 +48,11 @@
  *
  */
 
-define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) {
+define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, Logger, domain, utils) {
   "use strict";
+
+  var logger = Logger.get('pl-PQL');
+  logger.setLevel(Logger.DEBUG);
 
   /**
    * Type definitions of a Field.
@@ -581,7 +584,7 @@ define(['lib/emitter','./Domain', './utils'], function (Emitter, domain, utils) 
           let str = undefined;
           if (isAggregation(variate)) {
             if (variate.names.length > 1)
-              logger.warning("aggregation.toString string is imprecise because it aggregates over multiple variables.");
+              logger.warn("aggregation.toString string is imprecise because it aggregates over multiple variables.");
             let conditionPart = (splits.length + filters.length === 0) ? "" : ("|" + splits.concat(filters).join());
             str = "m(" + variate.yields + conditionPart + ")";
             console.log(str);

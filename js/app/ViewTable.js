@@ -496,7 +496,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         y: marginal.y ? config.plots.layout.ratio_marginal(used.y) : 1,
       };
 
-      // length of the main x axis (y axis) of an atomic plot in normalized coordinates
+      // length of the main x axis (y axis) of an atomic plot in normalized coordinates. (includes padding!)
       let axisLength = {
         main: {
           x: atomicPaneSize.x * mainAxisRatio.x,
@@ -506,6 +506,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           x: atomicPaneSize.x * (1 - mainAxisRatio.x),
           y: atomicPaneSize.y * (1 - mainAxisRatio.y),
         }
+      };
+
+      // padding between neighboring main axes in relative coordiantes
+      // padding is always applied on the right/up side of an axis.
+      // we don't need padding if we have marginal plots, as they separate the main axis anyway...
+      // TODO: do we rather want it in fixed pixel?
+      axisLength.padding = {
+        x: axisLength.main.x * config.plots.layout.main_axis_padding * !marginal.x,
+        y: axisLength.main.y * config.plots.layout.main_axis_padding * !marginal.y,
       };
 
       // starting ids for the axis of different types. id determines z-order.
@@ -543,7 +552,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         paneOffset.y = templAxisSize.y + atomicPaneSize.y * idx.y;
         let yAxisOffset = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0),
-          yaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.y, templAxisSize.x, used.y),
+          yaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
         if (used.y) {
           let axisTitleAnno = config.annotationGenerator.axis_title(
@@ -561,7 +570,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let xaxis, xid;
           if (idx.y === 0) {
             let yAxisOffset = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
-            xaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.x, templAxisSize.y, used.x);
+            xaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
               let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', yAxisOffset, axisLength.main.x, templAxisSize.y);

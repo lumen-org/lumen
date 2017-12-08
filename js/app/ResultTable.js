@@ -114,7 +114,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param model
    * @return {Promise.<Array>}
    */
-  function samplesCollection(queryCollection, model, enabled=true) {
+  function samplesCollection(queryCollection, modelTable, enabled=true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -126,7 +126,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         let promise;
         try {
           let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
-          promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+          promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         } catch (e) {
           if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
@@ -150,7 +150,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param model
    * @return {Promise.<Array>}
    */
-  function uniDensityCollection(queryCollection, model, enabled=true) {
+  function uniDensityCollection(queryCollection, modelTable, enabled=true) {
+  //function uniDensityCollection(queryCollection, model, enabled=true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -162,8 +163,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         for(let [xOrY, colsOrRows] of [['x','cols'], ['y', 'rows']] ) {
           let promise;
           try {
-            let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, model);
-            promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY);
+            let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, modelTable.at[rIdx][cIdx]);
+            promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY);
           } catch (e) {
             if (e instanceof vismel2pql.ConversionError)
               promise = Promise.resolve(undefined);
@@ -183,7 +184,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
    * @param model
    * @return {Promise.<Array>}
    */
-  function biDensityCollection(queryCollection, model, enabled=true) {
+  function biDensityCollection(queryCollection, modelTable, enabled=true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -195,7 +196,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3, PQL,
         let promise;
         try {
           let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.biDensity(queryCollection.at[rIdx][cIdx]);
-          promise = _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+          promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         }
         catch (e) {
           if (e instanceof vismel2pql.ConversionError)

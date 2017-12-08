@@ -50,21 +50,21 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     }
   };
 
-  c.geometry = {
-    // TODO: is that actually used?
-    axis: {
-      // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
-      size: 35,
-      // [px] font size of tick marks of axis
-      tickFontSizePx: 11,
-      // [px] font size of axis label (i.e. name of axis)
-      labelFontSizePx: 11,
-      // [px] padding at the beginning and end of an axis
-      padding: 5,
-      // [px] outer tick size of axis tick marks
-      outerTickSize: -5
-    }
-  };
+  // c.geometry = {
+  //   // TODO: is that actually used?
+  //   axis: {
+  //     // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
+  //     size: 35,
+  //     // [px] font size of tick marks of axis
+  //     tickFontSizePx: 11,
+  //     // [px] font size of axis label (i.e. name of axis)
+  //     labelFontSizePx: 11,
+  //     // [px] padding at the beginning and end of an axis
+  //     padding: 5,
+  //     // [px] outer tick size of axis tick marks
+  //     outerTickSize: -5
+  //   }
+  //};
 
   c.colorscales = {
     density: [[0, 'rgb(255,255,255)'], [0.000001, 'rgb(255,255,255)'], [0.000001, 'rgb(255,255,255)'], [1, 'rgb(0,0,0)']],
@@ -83,13 +83,14 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
   c.map = {
     aggrMarker: {
       fill: {
-        def: "#377eb8",
+        //def: "#377eb8",
+        //def: greys(0.75),
+        def: greys(0.05),
         opacity: 0.9,
       },
       stroke: {
-        color: greys(0.8),
-        //width: 1.5,
-        width: 1,
+        color: greys(0.9),
+        width: 1.5,
       },
       size: {
         min: 8,
@@ -135,7 +136,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         opacity: 0.7,
       },
       line: {
-        width: 2,
+        width: 2.5,
+        opacity: 0.7, // line opacity
         fill: true,
         fillopacity: 0.06,
       }
@@ -184,7 +186,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       },
       text: {
         color: greys(1.0),
-        size: 12,
+        size: 13,
       }
     },
 
@@ -193,7 +195,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         fill: 'white', //unused
       },
       grid: {
-        color: greys(0.15),
+        color: greys(0.2),
       },
       axis: {
         color: greys(0.4),
@@ -201,16 +203,16 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       },
       text: {
         color: greys(0.5),
-        size: 10,
+        size: 12,
       },
       position: {
         x: 'topright', // bottomleft or topright
-        y: 'bottomleft', // bottomleft or topright
+        y: 'topright', // bottomleft or topright
       },
     },
 
     layout: {
-      ratio_marginal: used => (used ? 0.85 : 0.1),
+      ratio_marginal: used => (used ? 0.75 : 0.1),
 
       //margin_main_sub: 0.02,
       margin: {
@@ -226,8 +228,10 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
       // width in [px] reserved for one axis
       templ_axis_level_width: {
         x: 60, // for a x-axis (i.e. it's the available height)
-        y: 100, // for a y-axis (i.e. it's the available width)
+        y: 120, // for a y-axis (i.e. it's the available width)
       },
+
+      main_axis_padding: 0.05, // padding between neighboring used main axis in relative coordinates length
     },
 
     // label: {

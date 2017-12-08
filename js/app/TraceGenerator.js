@@ -341,6 +341,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             line: {
               color: color,
               width: c.map.uniDensity.line.width,
+              opacity: c.map.uniDensity.line.opacity,
             },
             fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x'?'y':'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
@@ -410,7 +411,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       function getAccumulatedUniTrace (data, fu2idx, xy, modelOrData) {
         // TODO: merge this with getUniTrace again?
         if (modelOrData === "data") {
-          logger.warning("accumulated traces for data are not implemented!");
+          logger.warn("accumulated traces for data are not implemented!");
           return [];
         }
 
@@ -514,10 +515,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
             let data = rt.get(modelOrData);
             if (data !== undefined) {
-              data.query = p1dRT[xOrY].query; // attach query to data, beacuse we might need it later
-              traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
               if (c.views.accuMarginals.possible)
                 traces.push(...getAccumulatedUniTrace(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
+              //data.query = p1dRT[xOrY].query; // attach query to data, beacuse we might need it later
+              traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
             }
           }
         }

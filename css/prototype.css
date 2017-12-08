@@ -241,3 +241,7 @@ main {
 .pl-model-selector > div {
     margin-right: 1rem;
 }
+
+.pl-resizing {
+    border: solid 2px rgba(56,172,221,0.8);
+}
