@@ -86,8 +86,7 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         //def: "#377eb8",
         //def: greys(0.75),
         def: greys(0.05),
-        //opacity: 0.9,
-        opacity: 0.4,
+        opacity: 0.9,
       },
       stroke: {
         color: greys(0.9),

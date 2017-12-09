@@ -22,6 +22,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return (xy === 'x'?'y':'x');
     }
 
+    function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
+      let axis = {};
+      axis.range = [Math.min(0, -0.02 * extent[1]), extent[1]*cfg.maxPrct]; // hack, because zero line tends to be not drawn...
+      if (config.plots.marginal.position[_invXY(xy)] === 'bottomleft') // reverse range if necessary reversed range
+        axis.range = axis.range.reverse();
+      axis.tickmode = "array"; // use exactly 2 ticks as I want:
+      axis.tickvals = [0, (extent[1] * cfg.linePrct).toPrecision(1)]; // draw a line at 0 and ~maxPrct%
+      return axis
+    }
+
     // function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, axes) {
     function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds) {
 
@@ -497,7 +507,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // part of pane width (height) used for main x (y) axis in an atomic plot
       // size of main plot [in normalized coordinates]
-      let mainPlotSize = {
+      let mainPlotRatio = {
         x: marginal.x ? config.plots.layout.ratio_marginal(used.x) : 1,
         y: marginal.y ? config.plots.layout.ratio_marginal(used.y) : 1,
       };
@@ -506,12 +516,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // includes padding!
       let axisLength = {
         main: {
-          x: cellSize.x * mainPlotSize.x,
-          y: cellSize.y * mainPlotSize.y,
+          x: cellSize.x * mainPlotRatio.x,
+          y: cellSize.y * mainPlotRatio.y,
         },
         marginal: {
-          x: cellSize.x * (1 - mainPlotSize.x),
-          y: cellSize.y * (1 - mainPlotSize.y),
+          x: cellSize.x * (1 - mainPlotRatio.x),
+          y: cellSize.y * (1 - mainPlotRatio.y),
         }
       };
 
@@ -604,13 +614,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
-              let extent = uniColl.extent[xy][idx[xy]];
+
               // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range.
-              axis.range = [Math.min(0, -0.02*extent[1]), extent[1]]; // hack, because zero line tends to be not drawn...
-              if (config.plots.marginal.position[yx] === 'bottomleft') // reverse range if necessary reversed range
-                axis.range = axis.range.reverse();
-              axis.tickmode = "array"; // use exactly 2 ticks as I want:
-              axis.tickvals = [0, (extent[1]*0.8).toPrecision(1)]; // draw a line at 0 and ~80%
+              let extent = uniColl.extent[xy][idx[xy]];
+              Object.assign(axis, getRangeAndTickMarks(extent, xy));
 
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
@@ -630,21 +637,29 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               catXY = (fuType.x === "string" ? 'x' : (fuType.y === "string" ? 'y' : undefined)),
               quantXY = (fuType.x === "numerical" ? 'x' : (fuType.y === "numerical" ? 'y' : undefined));
             if (catXY && quantXY) {
-              let quantField = fu[quantXY].yieldField,
+              let //quantField = fu[quantXY].yieldField,
                 catField = fu[catXY].yieldField;
 
               // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
               let n = catField.extent.length,
-                d = mainPlotSize[catXY] / n;
+                d = axisLength.main[catXY] / n;
 
               // build additional axes along categorial dimension, i.e. the axes that will encode density
               // need as many axis as there is categories!
               for (let i=0; i<n; ++i) {
+                const r = 2.0; // sets position of axis
                 // offset of axis (i.e. along the categorical dimension)
-                let o = mainOffset[catXY] + i*d + d/4.0,
+                let o = mainOffset[catXY] + i*d + d/r,
                   id_ = idgen.bicatquant[catXY]++,
-                  axis = config.axisGenerator.marginal(o, d/2.0, mainOffset[quantXY], catXY);
+                  axis = config.axisGenerator.marginal(o, d*(r-1)/r, mainOffset[quantXY], catXY);
                 axis.anchor = mainAxes[quantXY][idx[quantXY]];
+
+                // set axis labels and tick marks
+                let extent = biColl[idx.y][idx.x].extent[2];
+                Object.assign(axis, getRangeAndTickMarks(extent,catXY));
+                //axis.ticks = "inside";
+                //axis.side  = (catXY === 'y' ? "left" : "bottom");
+
                 catQuantAxisIds.push(catXY + id_); // store for later reuse
                 layout[catXY + "axis" + id_] = axis; // add to layout
               }
@@ -675,7 +690,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
         paper_bgcolor: "rgba(0,0,0,0)",
-        plot_bgcolor: 'rgba(0,0,0,0)'
+        plot_bgcolor: 'rgba(0,0,0,0)',
       });
 
       // and global config options.

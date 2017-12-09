@@ -628,20 +628,14 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           [catXy==='x'?'y':'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
           xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
           yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-          opacity: 0.4,
+          //opacity: 0.4, // TODO?
           line: {
             width: 2,
             color: c.map.uniDensity.color.def,
           },
           fill: c.map.uniDensity.line.fill ? ('tozero' + catXy) : 'none',
+          //fill: 'none',
           fillcolor: makeOpaque(c.map.uniDensity.color.def, c.map.uniDensity.line.fillopacity),
-          // marker: {
-          //   size: 10,
-          //   color: c.map.uniDensity.color.def,
-          //   // line: {
-          //   //   width: 1,
-          //   // },
-          // },
         };
 
         traces.push(trace);
