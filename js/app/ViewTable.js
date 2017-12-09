@@ -674,6 +674,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         margin: config.plots.layout.margin,
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: 'rgba(0,0,0,0)'
       });
 
       // and global config options.
