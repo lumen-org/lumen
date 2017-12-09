@@ -642,9 +642,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               for (let i=0; i<n; ++i) {
                 // offset of axis (i.e. along the categorical dimension)
                 let o = mainOffset[catXY] + i*d + d/4.0,
-                  axis = config.axisGenerator.marginal(o, d/2.0, mainOffset[quantXY], catXY),
-                  id_ = idgen.bicatquant[catXY]++;
-                catQuantAxisIds.push(id_); // store for later reuse
+                  id_ = idgen.bicatquant[catXY]++,
+                  axis = config.axisGenerator.marginal(o, d/2.0, mainOffset[quantXY], catXY);
+                axis.anchor = mainAxes[quantXY][idx[quantXY]];
+                catQuantAxisIds.push(catXY + id_); // store for later reuse
                 layout[catXY + "axis" + id_] = axis; // add to layout
               }
             }
