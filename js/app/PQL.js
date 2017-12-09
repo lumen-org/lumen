@@ -246,6 +246,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
 
     get yieldDataType() {return this.field.dataType;}
 
+    get yieldField() {return this.field;}
+
     get yields() {return this.field.name;}
 
     toJSON() {
@@ -342,7 +344,11 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
     }
 
     get yieldDataType() {
-      return _.find(this.fields, f => f.name === this.yields).dataType;
+      return this.yieldField.dataType;
+    }
+
+    get yieldField() {
+      return _.find(this.fields, f => f.name === this.yields);
     }
 
     toJSON() {

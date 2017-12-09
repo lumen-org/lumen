@@ -579,14 +579,19 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     /**
      * 2d density plot trace builder for the case when one positional axis is quantitative and one is categorical.
+     *
+     * Creates a density line plot for each categorical value of the categorical dimension.
+     *
      * @param rt
      * @param query
      * @param mapper
      * @param axisId
+     * @param cqAxisIds
      * @return {{}}
      */
-    tracer.biQC = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+    tracer.biQC = function (rt, query, mapper, axisId, cqAxisIds) {
       if (!axisId) throw RangeError("invalid axisId");
+      if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
@@ -595,36 +600,75 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let xfu = rt.idx2fu[0],
         yfu = rt.idx2fu[1];
 
+      let catIdx = PQL.hasDiscreteYield(xfu) ? 0 : 1,
+       numIdx = 1 - catIdx;
+
       let traces = [];
 
-      // try one: simply use gray scale heat map style encoding
+      // groupby values of categorical dimension
+      let groupedData = d3c.nest().key(e => e[catIdx]).map(rt);
 
-      // very simple one: encode with size
-      // compute scaled p values
-      let p = selectColumn(rt, 2),
-        scaleFactor = 30/Math.max(...p), // 30 = max width of circles // dirty!!
-        pscaled = p.map(x => x*scaleFactor);
+      // get extent of categorical field usage
+      // let catFu = PQL.hasDiscreteYield(xfu) ? xfu : yfu;
+      let extent= (PQL.hasDiscreteYield(xfu) ? xfu : yfu).extent;
 
-      let trace = {
-        name: PQL.toString(rt.query),
-        type: 'scatter',
-        mode: 'markers',
-        showlegend: false,
-        x: selectColumn(rt, 0),
-        y: selectColumn(rt, 1),
-        xaxis: axisId.x,
-        yaxis: axisId.y,
-        marker: {
-          size: pscaled,
-          color: c.map.uniDensity.color.def,
-          opacity: 0.4,
-          line: {
-            width: 0,
+      if (extent.length != cqAxisIds.length) 
+        throw RangeError("this should not happen. See trace.biQC.");
+
+      // then iterate over groups in same order like given in extent
+      for (let i=0; i<cqAxisIds.length; ++i) {
+        let data = groupedData[extent[i]];
+        let trace = {
+          name: PQL.toString(rt.query),
+          type: 'scatter',
+          mode: 'markers',
+          showlegend: false,
+          x: selectColumn(data, 0),
+          y: selectColumn(data, 1),
+          xaxis: PQL.hasDiscreteYield(xfu) ? cqAxisIds[i] : axisId.x,
+          yaxis: PQL.hasDiscreteYield(yfu) ? cqAxisIds[i] : axisId.y,
+          marker: {
+            size: 10,
+            color: c.map.uniDensity.color.def,
+            opacity: 0.4,
+            line: {
+              width: 1,
+            },
           },
-        },
-      };
+        };
 
-      traces.push(trace);
+        traces.push(trace);
+      }
+
+      // // OLD:
+      // // try one: simply use gray scale heat map style encoding
+      //
+      // // very simple one: encode with size
+      // // compute scaled p values
+      // let p = selectColumn(rt, 2),
+      //   scaleFactor = 30/Math.max(...p), // 30 = max width of circles // dirty!!
+      //   pscaled = p.map(x => x*scaleFactor);
+      //
+      // let trace = {
+      //   name: PQL.toString(rt.query),
+      //   type: 'scatter',
+      //   mode: 'markers',
+      //   showlegend: false,
+      //   x: selectColumn(rt, 0),
+      //   y: selectColumn(rt, 1),
+      //   xaxis: axisId.x,
+      //   yaxis: axisId.y,
+      //   marker: {
+      //     size: pscaled,
+      //     color: c.map.uniDensity.color.def,
+      //     opacity: 0.4,
+      //     line: {
+      //       width: 0,
+      //     },
+      //   },
+      // };
+      //
+      // traces.push(trace);
       return traces;
     };
 

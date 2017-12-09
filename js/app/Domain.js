@@ -83,6 +83,10 @@ define(['./utils'], function (utils) {
       return new DiscreteDomain(this.values);
     }
 
+    get length() {
+      return this.isUnbounded() ? -1 : this.values.length;
+    }
+
   }
 
   class NumericDomain extends Domain {

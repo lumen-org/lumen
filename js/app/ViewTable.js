@@ -22,7 +22,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return (xy === 'x'?'y':'x');
     }
 
-    function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis) {
+    // function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, axes) {
+    function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds) {
+
+      // let mainAxis = axes.main,
+      //   marginalAxis = axis.marginal,
+      //   catQuantAxis = axis.catquant;
 
       // build all mappers
       let mapper = {
@@ -120,7 +125,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         else {
           // TODO individual contour plots for each combination?
           // for now: no 2d density plot
-          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
 
           // TODO: individual marginal density plots for each each combination?
           // for now: combined one
@@ -462,13 +467,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         y: config.views.marginals.possible && used.x && uniColl[0][0] && uniColl[0][0].x
       };
 
-      // get absolute pane size in px
-      let paneSize = {
+      // get absolute pane size [in px]
+      let paneSizePx = {
         x: pane.clientWidth,
         y: pane.clientHeight,
       };
 
-      // size of templating axis to plots area in normalized coordinates
+      // size of templating axis to plots area [in normalized coordinates]
       let templAxisSize = {};
       {
         // TODO: new mode: infer from label length
@@ -476,35 +481,37 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           xlen = getLevelSplits(qx).length,
           ylen = getLevelSplits(qy).length;
         if (fixedAxisWidth) {
-          templAxisSize.x = ylen=== 0 ? 0 : 1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSize.x);
-          templAxisSize.y = xlen=== 0 ? 0 : 1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSize.y);
+          templAxisSize.x = ylen=== 0 ? 0 : 1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSizePx.x);
+          templAxisSize.y = xlen=== 0 ? 0 : 1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSizePx.y);
         } else {
           templAxisSize.x = getLevelSplits(qy).length * config.plots.layout.templ_axis_level_ratio.y;
           templAxisSize.y = getLevelSplits(qx).length * config.plots.layout.templ_axis_level_ratio.x;
         }
       }
 
-      // width and heights of a single atomic pane in normalized coordinates
-      let atomicPaneSize = {
+      // width and heights of a single view cell in normalized coordinates
+      let cellSize = {
         x: (1 - templAxisSize.x) / this.size.cols,
         y: (1 - templAxisSize.y) / this.size.rows,
       };
 
       // part of pane width (height) used for main x (y) axis in an atomic plot
-      let mainAxisRatio = {
+      // size of main plot [in normalized coordinates]
+      let mainPlotSize = {
         x: marginal.x ? config.plots.layout.ratio_marginal(used.x) : 1,
         y: marginal.y ? config.plots.layout.ratio_marginal(used.y) : 1,
       };
 
-      // length of the main x axis (y axis) of an atomic plot in normalized coordinates. (includes padding!)
+      // length of the main x axis (y axis) of an atomic plot [in normalized coordinates]
+      // includes padding!
       let axisLength = {
         main: {
-          x: atomicPaneSize.x * mainAxisRatio.x,
-          y: atomicPaneSize.y * mainAxisRatio.y,
+          x: cellSize.x * mainPlotSize.x,
+          y: cellSize.y * mainPlotSize.y,
         },
         marginal: {
-          x: atomicPaneSize.x * (1 - mainAxisRatio.x),
-          y: atomicPaneSize.y * (1 - mainAxisRatio.y),
+          x: cellSize.x * (1 - mainPlotSize.x),
+          y: cellSize.y * (1 - mainPlotSize.y),
         }
       };
 
@@ -517,21 +524,24 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         y: axisLength.main.y * config.plots.layout.main_axis_padding * !marginal.y,
       };
 
-      // starting ids for the axis of different types. id determines z-order.
+      // starting ids for the axis of different types. id determines z-order!
       let idgen = {
-        main: {x:2000, y:3000},
-        marginal: {x:4000, y:5000},
-        templating: {x:2, y:1000}
+        templating: {x:2, y:1000},
+        bicatquant: {x: 2000, y: 3000},
+        main: {x:4000, y:5000},
+        marginal: {x:6000, y:7000},
       };
 
       // init layout and traces of plotly plotting specification
       let layout = {}, traces = [];
-      // array of main axis along atomic plots of view table, for both, x and y axis. The values are axis ids.
+      // array of main axis along view cell of view table, for both, x and y axis. The values are axis ids.
       let mainAxes = {x: [], y: []};
       // custom titles for axis
       let axisTitles = [];
-      // offset of a specific atomic pane
+      // offset to origin of a view cell
       let paneOffset = {};
+      // offset of main plot relative to view cell origin
+      let mainOffset = {};
       // indexing over x and y
       let idx = {x:0, y:0};
 
@@ -550,13 +560,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
         this.at[idx.y] = new Array(this.size.x);
 
-        paneOffset.y = templAxisSize.y + atomicPaneSize.y * idx.y;
-        let yAxisOffset = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0),
-          yaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
+        paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
+        mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
+        let yaxis = config.axisGenerator.main(mainOffset.y, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;
+
         if (used.y) {
           let axisTitleAnno = config.annotationGenerator.axis_title(
-            getFieldUsage(idx.y, 'y').yields, 'y', yAxisOffset, axisLength.main.y, templAxisSize.x);
+            getFieldUsage(idx.y, 'y').yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
           axisTitles.push(axisTitleAnno);
         }
         layout["yaxis" + yid] = yaxis;
@@ -564,16 +575,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         mainAxes.y.push(yid);
 
         for (idx.x = 0; idx.x < this.size.x; ++idx.x) {
+          paneOffset.x = templAxisSize.x + cellSize.x * idx.x;
 
-          paneOffset.x = templAxisSize.x + atomicPaneSize.x * idx.x;
-
+          // create main axis
           let xaxis, xid;
           if (idx.y === 0) {
-            let yAxisOffset = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
-            xaxis = config.axisGenerator.main(yAxisOffset, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
+            mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
+            xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
-              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', yAxisOffset, axisLength.main.x, templAxisSize.y);
+              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
               axisTitles.push(axisTitleAnno);
             }
             layout["xaxis" + xid] = xaxis;
@@ -588,9 +599,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           for (let [xy, yx] of [['x','y'], ['y','x']]) {
             if (marginal[xy]) { // marginal activate?
 
-              let axisOffset = paneOffset[xy] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[xy]);
-
-              let axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
+              let axisOffset = paneOffset[xy] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[xy]),
+               axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
@@ -608,8 +618,41 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             }
           }
 
+          // special case: quantitative-categorical: create additional axis for that.
+          // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
+          let catQuantAxisIds = [];
+          //OLD: dictionary of special cat-quant axis. Key is axis id, value is axis configuration.
+          //let catQuantAxes = {x: {}, y:{}};
+          if (used.x && used.y) {
+            // build up helper variables needed later and to check if we are in the quant-categorical case
+            let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
+              fuType = {x: fu.x.yieldDataType, y: fu.y.yieldDataType},
+              catXY = (fuType.x === "string" ? 'x' : (fuType.y === "string" ? 'y' : undefined)),
+              quantXY = (fuType.x === "numerical" ? 'x' : (fuType.y === "numerical" ? 'y' : undefined));
+            if (catXY && quantXY) {
+              let quantField = fu[quantXY].yieldField,
+                catField = fu[catXY].yieldField;
+
+              // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
+              let n = catField.extent.length,
+                d = mainPlotSize[catXY] / n;
+
+              // build additional axes along categorial dimension, i.e. the axes that will encode density
+              // need as many axis as there is categories!
+              for (let i=0; i<n; ++i) {
+                // offset of axis (i.e. along the categorical dimension)
+                let o = mainOffset[catXY] + i*d + d/4.0,
+                  axis = config.axisGenerator.marginal(o, d/2.0, mainOffset[quantXY], catXY),
+                  id_ = idgen.bicatquant[catXY]++;
+                catQuantAxisIds.push(id_); // store for later reuse
+                layout[catXY + "axis" + id_] = axis; // add to layout
+              }
+            }
+          }
+
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds
+            );
 
           traces.push(...atomicTraces);
         }
