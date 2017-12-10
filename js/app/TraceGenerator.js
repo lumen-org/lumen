@@ -236,7 +236,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
-      // create and attach trace for each group, i.e. each leave in the nested data
+      // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {
         let trace = {
           name: traceName,
@@ -285,7 +285,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param query
      * @return {Array}
      */
-    tracer.uni = function (p1dRT, query, mapper, mainAxisId={x:'x', y:'y'}, marginalAxisId={x:'x2', y:'y2'}) {
+    tracer.uni = function (p1dRT, query, mapper, mainAxisId, marginalAxisId, fixedColor=undefined) {
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
 
@@ -304,7 +304,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * @param fixedColor: optional. sets a color regardless of query specifications.
        * @return Object: A trace.
        */
-      function getUniTrace(data, xy, modelOrData, fu2idx, fixedColor=undefined) {
+      function getUniTrace(data, xy, modelOrData, fu2idx) {
         let xIdx = (xy === 'x' ? 1 : 2),
           yIdx = (xy === 'x' ? 2 : 1);
 
@@ -561,7 +561,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         colorscale: c.map.biDensity.colorscale,
         zauto: false,
         zmin: 0,
-        zmax: rt.extent[1],
+        zmax: rt.extent[1], // TODO: is that valid for c-c heat maps? NO!
       };
 
       if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
@@ -628,14 +628,14 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           [catXy==='x'?'y':'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
           xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
           yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-          //opacity: 0.4, // TODO?
+          //opacity: c.map.biDensity.mark.opacity,
           line: {
-            width: 2,
-            color: c.map.uniDensity.color.def,
+            width: c.map.biDensity.line.width,
+            color: c.map.biDensity.line.color,
           },
-          fill: c.map.uniDensity.line.fill ? ('tozero' + catXy) : 'none',
+          fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
           //fill: 'none',
-          fillcolor: makeOpaque(c.map.uniDensity.color.def, c.map.uniDensity.line.fillopacity),
+          fillcolor: makeOpaque(c.map.biDensity.line.color, c.map.biDensity.line.fillopacity),
         };
 
         traces.push(trace);

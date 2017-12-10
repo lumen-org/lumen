@@ -10,8 +10,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     // the default model to be loaded on startup
-    // const DEFAULT_MODEL = 'mcg_crabs';
-    const DEFAULT_MODEL = 'mcg_crabs';
+    const DEFAULT_MODEL = 'mcg_mpg_chris_map';
+    //const DEFAULT_MODEL = 'mcg_crabs';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
@@ -354,12 +354,21 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       static _makeVisConfig (context) {
 
+        // TODO: clean up. this is a quick hack for the paper only.
+        let nameMap = {
+          'aggregations': 'aggregation',
+          'marginals': 'marginal',
+          'contour': 'density',
+          'data': 'data',
+        };
+
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
-        let checkBoxes = ['aggregations', 'marginals', 'contour', 'data'].map(
+        // let checkBoxes = ['contour', 'marginals', 'aggregations', 'data'].map( // TODO: HACK for paper
+        let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
-            let $checkBox = $('<input type="checkbox">' + what + '</input>')
+            let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')
               .prop("checked", context.config.visConfig[what].active)
               .change( (e) => {
                 // update the config and ...

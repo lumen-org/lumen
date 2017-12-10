@@ -2,12 +2,42 @@
  * @copyright © 2015-2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 //define([], function () {
-define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
+define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function (d3chromatic, d3f, ss, Domain) {
   "use strict";
 
   let greys = d3chromatic.interpolateGreys;
+  let blues = d3chromatic.interpolateBlues;
 
   let c = {};
+
+  function makeDensityScale(colorArray) {
+    const threshhold = 0.000001;
+    let colorScale = [[0, 'rgba(255,255,255,0)'], [threshhold, 'rgba(255,255,255,0)']];  // to make sure very small values are drawn in white
+    let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
+    split.push(1)
+    split[0] = threshhold;
+    for (let i=0; i < colorArray.length; ++i) {
+      colorScale.push([ split[i], colorArray[i]]);
+    }
+    return colorScale;
+  }
+
+  c.densityColor = {
+    single: d3chromatic.interpolateBlues(0.7),
+    scale: makeDensityScale(d3chromatic.schemeBlues[9]),
+    //scale: d3chromatic.schemeBlues[9], ==  "#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b"]
+  };
+
+  c.marginalColor = {
+    single: d3chromatic.interpolateGreys(0.5),
+    //scale: d3chromatic.schemeGreys,
+  };
+
+  c.aggrColor = {
+    single:  d3chromatic.interpolateReds(0.6),
+    //scale: d3chromatic.schemeReds,
+  };
+
 
   // set of default config options for the visualization
   // beware when you add more
@@ -37,7 +67,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     size: 50,
     minSize: 32,
     maxSize: 2048,
-    fill: "#377eb8",
+    fill: c.aggrColor.single,
+//    fill: "#377eb8", prepaper
     stroke: "#222222",
     opacity: 0.3,
     shape: "circle"
@@ -50,24 +81,9 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     }
   };
 
-  // c.geometry = {
-  //   // TODO: is that actually used?
-  //   axis: {
-  //     // [px] size (height for horizontal axis, width for vertical axis) reserved for an axis, including 'axis line', tick marks and labels
-  //     size: 35,
-  //     // [px] font size of tick marks of axis
-  //     tickFontSizePx: 11,
-  //     // [px] font size of axis label (i.e. name of axis)
-  //     labelFontSizePx: 11,
-  //     // [px] padding at the beginning and end of an axis
-  //     padding: 5,
-  //     // [px] outer tick size of axis tick marks
-  //     outerTickSize: -5
-  //   }
-  //};
-
   c.colorscales = {
     density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
+    density2: d3chromatic.schemeBlues[9],
     diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
     sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
     discrete9: d3chromatic.schemeSet1,
@@ -80,39 +96,36 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     filled: _.range(44),
   };
 
-  // HACK: paper only
-  let sizeFactor = 4;
+  // TODO HACK: paper only
+  c.sizeFactor = 4;
 
   c.map = {
     aggrMarker: {
       fill: {
         //def: "#377eb8",
-        //def: greys(0.75),
-        def: greys(0.05),
-        opacity: 0.9,
+        def: c.aggrColor.single,
+        //def: greys(0.05), // prepaper
+        opacity: 1,
       },
       stroke: {
         color: greys(0.9),
-        width: 1.5,
+        width: 1,
       },
       size: {
         min: 2, // HACK: used to be 8.
-        max: 40*sizeFactor,
-        def: 12,
+        max: 40*c.sizeFactor,
+        def: 14,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
-      },
-      shape: {
-
       },
     },
 
     heatmap: {
       opacity: {
-        discrete: 0.6,
+        discrete: 0.5,
         continuous: 0.9,
       },
-      xgap: 1,
-      ygap: 1,
+      xgap: 2,
+      ygap: 2,
     },
 
     sampleMarker: {
@@ -133,7 +146,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
 
     uniDensity: {
       color: {
-        def: greys(0.5),
+        //def: greys(0.5),
+        def: c.densityColor.single,
       },
       bar: {
         opacity: 0.7,
@@ -147,8 +161,19 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     },
 
     biDensity: {
-      colorscale: c.colorscales.density,
-      opacity: 0.8,
+      //colorscale: c.colorscales.density, // prepaper
+      colorscale: c.densityColor.scale, // color scale to use for heat maps / contour plots
+      mark: {
+        color: c.densityColor.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+        opacity: 0.8,
+      },
+      line: {
+        width: 2,
+        color: c.densityColor.single,
+        fill: true,
+        fillopacity: 0.06,
+      },
+//      opacity: 0.8,
       levels: 15,
       resolution: 50 // the number computed points along one axis
     },
@@ -396,5 +421,6 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     }),
   };
 
-  return Object.freeze(c);
+  // TODO: HACK FOR PAPER return Object.freeze(c);
+  return c;
 });
