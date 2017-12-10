@@ -24,7 +24,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
     function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
       let axis = {};
-      axis.range = [Math.min(0, -0.02 * extent[1]), extent[1]*cfg.maxPrct]; // hack, because zero line tends to be not drawn...
+      //axis.range = [Math.min(0, -0.02 * extent[1]), extent[1]*cfg.maxPrct]; // hack, because zero line tends to be not drawn... TODO: apparently this is not a problem anymore. but lets keep this for a while.
+      axis.range = [0, extent[1]*cfg.maxPrct];
       if (config.plots.marginal.position[_invXY(xy)] === 'bottomleft') // reverse range if necessary reversed range
         axis.range = axis.range.reverse();
       axis.tickmode = "array"; // use exactly 2 ticks as I want:
@@ -136,13 +137,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         // one is discrete, the other numerical
         else {
-          // TODO individual contour plots for each combination?
-          // for now: no 2d density plot
-          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
-
-          // TODO: individual marginal density plots for each each combination?
-          // for now: combined one
           traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis, config.marginalColor.single));
+          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
           traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
         }
@@ -616,7 +612,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
-              axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+              if (xy === 'x')
+                axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+              else
+                axis.showticklabels = idx[yx] == 0; // disables tick labels for all but one of the marginal
+
+              if (axis.side === 'right')
+                axis.side = 'left';
 
               // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range.
               let extent = uniColl.extent[xy][idx[xy]];
@@ -660,7 +662,24 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 // set axis labels and tick marks
                 let extent = biColl[idx.y][idx.x].extent[2];
                 Object.assign(axis, getRangeAndTickMarks(extent,catXY));
-                //axis.ticks = "inside";
+                //axis.showticklabels = false;
+                //axis.tickcolor
+                //axis.ticklen = -210;
+                axis.color = config.densityColor.single;
+                axis.tickfont = {
+                  color: config.densityColor.single,
+                };
+
+                // hack to shorten inside axis // doesn't really work, because the tick at 0 is special...
+                axis.ticks = "inside";
+                axis.ticklen = 12;
+                axis.tickwidth = 2;
+                axis.tickcolor = "#FFFFFF";
+                axis.mirror = "ticks";
+
+                axis.zerolinecolor = "#878787";
+                //axis.tickcolor = "#FF0000";
+
                 //axis.side  = (catXY === 'y' ? "left" : "bottom");
 
                 catQuantAxisIds.push(catXY + id_); // store for later reuse

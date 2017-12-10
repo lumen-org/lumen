@@ -25,7 +25,7 @@ body {
 
 .pl-fu {
     border: 1px solid;
-    min-width:12em;
+    min-width:9em;
     height:67px;
     display: flex;
     justify-content: center;
@@ -107,7 +107,7 @@ body {
     top: 37px;
     font-size: .8em;
     height: 1.4em;
-    /*width: 130px;*/
+    width: 130px;
     margin: 0;
     padding: 0;
 }

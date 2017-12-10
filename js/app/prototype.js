@@ -310,7 +310,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
-        shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
+        //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable();
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable();
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
@@ -318,9 +318,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
         shelves.shape.beVisual({label: 'Shape'}).beInteractable();
         shelves.size.beVisual({label: 'Size'}).beInteractable();
-        shelves.remove.beVisual({label: 'Drag here to remove'}).beInteractable();
-        // shelves.column.beVisual({label: 'X-Axis', direction: vis.DirectionTypeT.vertical}).beInteractable();
-        // shelves.row.beVisual({label: 'Y-Axis', direction: vis.DirectionTypeT.vertical}).beInteractable();
+        shelves.remove.beVisual({label: 'Drop here to remove'}).beInteractable();
         shelves.column.beVisual({label: 'X-Axis'}).beInteractable();
         shelves.row.beVisual({label: 'Y-Axis'}).beInteractable();
 
@@ -329,10 +327,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
           //shelves.modeldata.$visual, $('<hr>'),
-          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), $('<hr>'), shelves.remove.$visual, $('<hr>'));
+
+        // old:
+        // visual.mappings = $('<div class="pl-mappings"></div>').append(
+        //   shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+        //   $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, );
+        // TODO HACK for paper
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
-          $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
+          shelves.filter.$visual, $('<hr>'));
+
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
 
         // Enables user querying for shelves

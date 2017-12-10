@@ -4,11 +4,13 @@
 //define([], function () {
 define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function (d3chromatic, d3f, ss, Domain) {
   "use strict";
-
   let greys = d3chromatic.interpolateGreys;
-  let blues = d3chromatic.interpolateBlues;
-
   let c = {};
+
+  // TODO HACK: paper only
+  let hideAggregations = true;
+  c.sizeFactor = 4;
+  c.printFactor = 1.5; // factor for width of almost all lines // TODO
 
   function makeDensityScale(colorArray) {
     const threshhold = 0.000001;
@@ -34,10 +36,24 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   };
 
   c.aggrColor = {
-    single:  d3chromatic.interpolateReds(0.6),
+    single:  d3chromatic.interpolateGreens(0.6),
+    //single:  d3chromatic.interpolateReds(0.7),
     //scale: d3chromatic.schemeReds,
   };
 
+  // // one place to quickly set the encoding for the main design choices that are reused at various places
+  // c.abstract = {
+  //   spikemode: {
+  //
+  //   },
+  //   // OK for now.
+  //   // grid: {
+  //   //   color: ,
+  //   //   width: ,
+  //   // },
+  //
+  //
+  // };
 
   // set of default config options for the visualization
   // beware when you add more
@@ -96,16 +112,13 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
     filled: _.range(44),
   };
 
-  // TODO HACK: paper only
-  c.sizeFactor = 4;
-
   c.map = {
     aggrMarker: {
       fill: {
         //def: "#377eb8",
         def: c.aggrColor.single,
         //def: greys(0.05), // prepaper
-        opacity: 1,
+        opacity: 1 * !hideAggregations,
       },
       stroke: {
         color: greys(0.9),
@@ -205,7 +218,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         fill: 'white', //unused
       },
       grid: {
-        color: greys(0.3),
+        color: greys(0.4),
       },
       axis: {
         color: "#3D3A40",
@@ -223,11 +236,16 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         fill: 'white', //unused
       },
       grid: {
-        color: greys(0.2),
+        color: greys(0.3),
       },
+      // prepaper
+      // axis: {
+      //   color: greys(0.4),
+      //   width: 2,
+      // },
       axis: {
-        color: greys(0.4),
-        width: 2,
+        color: greys(0.8),
+        width: 1,
       },
       text: {
         color: greys(0.5),
@@ -240,12 +258,12 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
     },
 
     layout: {
-      ratio_marginal: used => (used ? 0.75 : 0.1),
+      ratio_marginal: used => (used ? 0.75 : 0.05),
 
       //margin_main_sub: 0.02,
       margin: {
-        l: 70, t: 60,
-        r: 60, b: 50,
+        l: 100, t: 50,
+        r: 40, b: 50,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)
@@ -259,7 +277,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         y: 120, // for a y-axis (i.e. it's the available width)
       },
 
-      main_axis_padding: 0.05, // padding between neighboring used main axis in relative coordinates length
+      main_axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
     },
 
     // label: {
@@ -344,6 +362,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
           zerolinewidth: c.plots.main.axis.zerolinewidth,
           showgrid: false, // !!!
           gridcolor: c.plots.main.grid.color,
+          ticklen: 5,
           tickfont: {
             color: c.plots.main.text.color,
             size: c.plots.main.text.size,
@@ -360,7 +379,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         return {
           visible: true,
           mirror: true,
-          showline: true,
+          showline: false,
           zeroline: false,
           showgrid: false,
           showticklabels: false,

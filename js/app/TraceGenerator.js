@@ -619,26 +619,29 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       // then iterate over groups in same order like given in extent
       for (let i=0; i<cqAxisIds.length; ++i) {
         let data = groupedData["$"+catExtent[i]];
-        let trace = {
-          name: PQL.toString(rt.query),
-          type: 'scatter',
-          mode: 'lines',
-          showlegend: false,
-          [catXy]: selectColumn(data, 2), // the axis that encodes the categorical dimension, encodes the density on the new axis.
-          [catXy==='x'?'y':'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
-          xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
-          yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-          //opacity: c.map.biDensity.mark.opacity,
-          line: {
-            width: c.map.biDensity.line.width,
-            color: c.map.biDensity.line.color,
-          },
-          fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
-          //fill: 'none',
-          fillcolor: makeOpaque(c.map.biDensity.line.color, c.map.biDensity.line.fillopacity),
-        };
+        // TODO: this is a hack. If a filter is applied on the categorical dimension, the above lookup fails because the fields extent wasn't updated
+        if (data !== undefined) {
+            let trace = {
+              name: PQL.toString(rt.query),
+              type: 'scatter',
+              mode: 'lines',
+              showlegend: false,
+              [catXy]: selectColumn(data, 2), // the axis that encodes the categorical dimension, encodes the density on the new axis.
+              [catXy==='x'?'y':'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
+              xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
+              yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
+              //opacity: c.map.biDensity.mark.opacity,
+              line: {
+                width: c.map.biDensity.line.width,
+                color: c.map.biDensity.line.color,
+              },
+              fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
+              //fill: 'none',
+              fillcolor: makeOpaque(c.map.biDensity.line.color, c.map.biDensity.line.fillopacity),
+            };
 
-        traces.push(trace);
+            traces.push(trace);    
+        }       
       }
       return traces;
     };

@@ -34,7 +34,7 @@ main {
 
 .pl-spec {
     background-color: #f3f3f3;
-    min-width: 235px; /* for constant minimal width*/
+    min-width: 200px; /* for constant minimal width*/
 }
 
 .pl-dashboard {
@@ -90,6 +90,11 @@ main {
 #pl-visualization-container {
     display: flex;
     flex-wrap: wrap;
+}
+
+#pl-mappings-container {
+    /*TODO HACK for paper*
+    display: none;*/
 }
 
 .pl-visualization-pane {
@@ -210,6 +215,7 @@ main {
 }
 .axis line {
     fill: none;
+    stroke: grey;
     stroke: grey;
     shape-rendering: crispEdges;
     stroke-opacity: 0.3;

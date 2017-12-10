@@ -75,8 +75,10 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    */
   function populate(model, dimShelf, measShelf, modeldataShelf) {
     for (let field of model.fields.values()) {
-//      if ()
-      if (field.dataType === PQL.FieldT.DataType.num)
+      // TODO: HACK for paper
+      if (field.name === 'model vs data') {
+        // nothing
+      } else if (field.dataType === PQL.FieldT.DataType.num)
         measShelf.append(field);
       else if (field.dataType === PQL.FieldT.DataType.string)
         dimShelf.append(field);
