@@ -102,7 +102,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               //.then(() => RT.samplesCollection(c.queryTable, c.model, c.config.visConfig.data.active))
               .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.data.active))
               .then(res => c.dataRT = res)
-              .then(() => RT.uniDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.marginals.active))
+              .then(() => RT.uniDensityCollection(c.queryTable, c.modelTable,
+                c.config.visConfig.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
+              )
               .then(res => c.uniDensityRT = res)
               .then(() => RT.biDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)

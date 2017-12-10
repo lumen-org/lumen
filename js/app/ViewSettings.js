@@ -8,7 +8,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   let c = {};
 
   // TODO HACK: paper only
-  let hideAggregations = true;
+  let hideAggregations = false;
   c.sizeFactor = 4;
   c.printFactor = 1.5; // factor for width of almost all lines // TODO
 
@@ -40,20 +40,6 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
     //single:  d3chromatic.interpolateReds(0.7),
     //scale: d3chromatic.schemeReds,
   };
-
-  // // one place to quickly set the encoding for the main design choices that are reused at various places
-  // c.abstract = {
-  //   spikemode: {
-  //
-  //   },
-  //   // OK for now.
-  //   // grid: {
-  //   //   color: ,
-  //   //   width: ,
-  //   // },
-  //
-  //
-  // };
 
   // set of default config options for the visualization
   // beware when you add more
