@@ -630,7 +630,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let catQuantAxisIds = [];
           //OLD: dictionary of special cat-quant axis. Key is axis id, value is axis configuration.
           //let catQuantAxes = {x: {}, y:{}};
-          if (used.x && used.y) {
+          if (used.x && used.y && biColl[0][0] != undefined) {
             // build up helper variables needed later and to check if we are in the quant-categorical case
             let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
               fuType = {x: fu.x.yieldDataType, y: fu.y.yieldDataType},

@@ -80,6 +80,9 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
     filled: _.range(44),
   };
 
+  // HACK: paper only
+  let sizeFactor = 4;
+
   c.map = {
     aggrMarker: {
       fill: {
@@ -93,8 +96,8 @@ define(['d3-scale-chromatic','d3-format'], function (d3chromatic, d3f) {
         width: 1.5,
       },
       size: {
-        min: 8,
-        max: 40,
+        min: 2, // HACK: used to be 8.
+        max: 40*sizeFactor,
         def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },

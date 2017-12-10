@@ -590,11 +590,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @return {{}}
      */
     tracer.biQC = function (rt, query, mapper, axisId, cqAxisIds) {
-      if (!axisId) throw RangeError("invalid axisId");
-      if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
-
       if (rt == undefined)  // means 'disable this trace type'
         return [];
+
+      if (!axisId) throw RangeError("invalid axisId");
+      if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
 
       // note: the indexes are by convention!
       let xfu = rt.idx2fu[0],
