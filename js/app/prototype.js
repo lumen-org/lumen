@@ -70,6 +70,23 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       constructor (server, modelName, shelves) {
 
+        // function convertToTraceSemantic(c) {
+        //   let q = c.query;
+        //   //q.layout.rows;
+        //
+        //   let facets = c.config.visConfig;
+        //
+        //   // traces
+        //   let facets = {
+        //     density: ,
+        //     marginal: ,
+        //     aggregation: ,
+        //     data: ,
+        //   };
+        //
+        //   return facets;
+        // }
+
         /**
          * Creates and returns a function to update a context. _On calling this function the
          * context does not need to be provided again!_
@@ -360,7 +377,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       static _makeVisConfig (context) {
 
-        // TODO: clean up. this is a quick hack for the paper only.
+        // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
         let nameMap = {
           'aggregations': 'aggregation',
           'marginals': 'marginal',
