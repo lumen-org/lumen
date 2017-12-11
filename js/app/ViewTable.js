@@ -636,17 +636,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           //OLD: dictionary of special cat-quant axis. Key is axis id, value is axis configuration.
           //let catQuantAxes = {x: {}, y:{}};
           if (used.x && used.y && biColl[0][0] != undefined) {
+            let rt = biColl[idx.y][idx.x];
             // build up helper variables needed later and to check if we are in the quant-categorical case
             let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
               fuType = {x: fu.x.yieldDataType, y: fu.y.yieldDataType},
               catXY = (fuType.x === "string" ? 'x' : (fuType.y === "string" ? 'y' : undefined)),
               quantXY = (fuType.x === "numerical" ? 'x' : (fuType.y === "numerical" ? 'y' : undefined));
             if (catXY && quantXY) {
-              let //quantField = fu[quantXY].yieldField,
-                catField = fu[catXY].yieldField;
-
               // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
-              let n = catField.extent.length,
+              let catExtent = rt.extent[catXY === 'x' ? 0 : 1],
+                n = catExtent.length,
                 d = axisLength.main[catXY] / n;
 
               // build additional axes along categorial dimension, i.e. the axes that will encode density
@@ -660,8 +659,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 axis.anchor = mainAxes[quantXY][idx[quantXY]];
 
                 // set axis labels and tick marks
-                let extent = biColl[idx.y][idx.x].extent[2];
-                Object.assign(axis, getRangeAndTickMarks(extent,catXY));
+                let pExtent = biColl[idx.y][idx.x].extent[2];
+                Object.assign(axis, getRangeAndTickMarks(pExtent,catXY));
                 //axis.showticklabels = false;
                 //axis.tickcolor
                 //axis.ticklen = -210;

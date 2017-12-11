@@ -611,7 +611,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // get extent of categorical field usage
       let catFu = xYieldsCat ? xfu : yfu, // the field usage with categorical yield
-       catExtent= catFu.yieldField.extent.value;
+       catExtent= rt.extent[catIdx];
 
       if (catExtent.length != cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");

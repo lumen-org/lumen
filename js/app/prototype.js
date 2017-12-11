@@ -10,7 +10,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     // the default model to be loaded on startup
-    const DEFAULT_MODEL = 'mcg_mpg_chris_map';
+    const DEFAULT_MODEL = 'Auto_MPG';
     //const DEFAULT_MODEL = 'mcg_crabs';
 
     // the default model server
@@ -329,7 +329,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
           //shelves.modeldata.$visual, $('<hr>'),
-          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), $('<hr>'), shelves.remove.$visual, $('<hr>'));
+          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         // old:
         // visual.mappings = $('<div class="pl-mappings"></div>').append(
