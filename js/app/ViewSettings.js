@@ -46,7 +46,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   c.views = {
     aggregations: {
       possible: true, // true iff the view should be made accessible to the user at all, false else
-      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
+      active: false, // true if the view is active (i.e.. computed and visible) by default, false if not
     },
     data: {
       possible: true,
@@ -174,7 +174,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
       },
 //      opacity: 0.8,
       levels: 16,
-      resolution: 20 // the number computed points along one axis
+      resolution: 25 // the number computed points along one axis
     },
   };
 
@@ -248,8 +248,8 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
 
       //margin_main_sub: 0.02,
       margin: {
-        l: 100, t: 50,
-        r: 40, b: 50,
+        l: 60, t: 20,
+        r: 30, b: 50,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)

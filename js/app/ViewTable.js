@@ -705,12 +705,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // add 'global' layout options
       Object.assign(layout, {
-        title: "Model: " + query.sources[0].name,
+        title: "", //"Model: " + query.sources[0].name,
         barmode: 'group',
         margin: config.plots.layout.margin,
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
-        paper_bgcolor: "rgba(0,0,0,0)",
+        paper_bgcolor: "rgba(255,255,255,0.9)",
         plot_bgcolor: 'rgba(0,0,0,0)',
       });
 
