@@ -360,6 +360,9 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
           domain: [offset, offset + length],
           anchor: 'free',
           position: position,
+          spikemode: "across",
+          showspikes: true,
+          spikethickness: 2,
         };
       else
         return {
@@ -375,6 +378,9 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
           domain: [offset, offset + length],
           anchor: 'free',
           position: position,
+          spikemode: "across",
+          showspikes: true,
+          spikethickness: 2,
         };
     },
 
@@ -396,6 +402,9 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         size: c.plots.marginal.text.size,
       },
       tickangle: xy === 'x' ? -90 : 0,
+      spikemode: "across",
+      showspikes: true,
+      spikethickness: 2,
       // titlefont: {
       //   color: c.plots.marginal.text.color,
       //   size: c.plots.marginal.text.size,

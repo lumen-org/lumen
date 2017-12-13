@@ -710,6 +710,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         margin: config.plots.layout.margin,
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
+        hovermode: 'closest',
         paper_bgcolor: "rgba(255,255,255,0.9)",
         plot_bgcolor: 'rgba(0,0,0,0)',
       });
