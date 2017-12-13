@@ -171,7 +171,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             data: { active: Config.views.data.active, },
             marginals: { active: Config.views.marginals.active },
             contour: { active: Config.views.contour.active },
-          },
+          }
         };
         // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
         // Object.assign(this.config.visConfig, configCopy); // set initial config
@@ -292,18 +292,24 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // now make it visual
         copiedContext.makeGUI();
 
+        // size of visualization
+        copiedContext.$visuals.visualization.css({
+          width: this.$visuals.visualization.css('width'),
+          height: this.$visuals.visualization.css('height'),
+        });
+
         return copiedContext;
       }
 
       static _makeVisualization(context) {
-        var $paneDiv = $('<div class="pl-visualization-pane"></div>');
+        let $paneDiv = $('<div class="pl-visualization-pane"></div>');
 
 
-        var $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
+        let $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
 
-        var $nav = $removeButton;
-        return $('<div class="pl-visualization"></div>')
+        let $nav = $removeButton;
+        let $vis = $('<div class="pl-visualization"></div>')
           .append($paneDiv, $nav)
           .click( () => activate(context, ['visualization', 'visPanel']) )
           .resizable({
@@ -317,6 +323,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
             }
           });
+        $vis.draggable(); // yeah, that was easy. just made it draggable!
+        return $vis;
       }
 
       /**

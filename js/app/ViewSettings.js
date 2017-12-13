@@ -36,8 +36,8 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   };
 
   c.aggrColor = {
-    single:  d3chromatic.interpolateGreens(0.6),
-    //single:  d3chromatic.interpolateReds(0.7),
+    //single:  d3chromatic.interpolateGreens(0.6),
+    single:  d3chromatic.interpolateReds(0.6),
     //scale: d3chromatic.schemeReds,
   };
 
@@ -173,8 +173,8 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         fillopacity: 0.06,
       },
 //      opacity: 0.8,
-      levels: 15,
-      resolution: 50 // the number computed points along one axis
+      levels: 16,
+      resolution: 20 // the number computed points along one axis
     },
   };
 

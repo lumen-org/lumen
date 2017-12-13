@@ -63,6 +63,7 @@ main {
     height: 500px;
     border-radius: .5em;
     border: 4px solid #fafafa;
+    cursor: move;
 }
 
 .pl-visualization.pl-active {
