@@ -324,6 +324,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             }
           });
         $vis.draggable(); // yeah, that was easy. just made it draggable!
+        $vis.css( "position", "absolute" ); // we want absolute position!
         return $vis;
       }
 

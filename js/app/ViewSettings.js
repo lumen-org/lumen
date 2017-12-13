@@ -383,6 +383,8 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
       zeroline: true,
       zerolinecolor: c.plots.marginal.axis.color, // 'main' because visually this represent the main axis
       zerolinewidth: c.plots.marginal.axis.width,
+      tickformat: '.2f',
+      hoverformat: '.2f',
       // autorange: 'false',
       autorange: 'false',
       fixedrange: false,

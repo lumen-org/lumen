@@ -546,6 +546,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let xfu = rt.idx2fu[0],
         yfu = rt.idx2fu[1];
 
+      let formatter = d3.format(".2f"),
+        zdata = selectColumn(rt, 2),
+        ztext = zdata.map(formatter);
+
       let trace = {
         name: PQL.toString(rt.query),
         // name: '2d density',
@@ -553,7 +557,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         showscale: false,
         x: selectColumn(rt, 0),
         y: selectColumn(rt, 1),
-        z: selectColumn(rt, 2),
+        z: zdata,
         xaxis: axisId.x,
         yaxis: axisId.y,
         opacity: c.map.biDensity.opacity,
@@ -562,6 +566,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         zauto: false,
         zmin: 0,
         zmax: rt.extent[1], // TODO: is that valid for c-c heat maps? NO!
+        hoverinfo: 'text',
+        text: ztext,
+        //labelformat:'.2f',
       };
 
       if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {

@@ -56,7 +56,7 @@ main {
 }
 
 .pl-visualization {
-    position: relative;
+    position: absolute;
     /*padding: 0.5rem;*/
     margin: .5rem;
     width: 500px; /* initial width and height */
