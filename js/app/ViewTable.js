@@ -86,7 +86,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis, config.marginalColor.single));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
@@ -95,7 +95,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             else { // if (used.shape) {
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis, config.marginalColor.single));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
               traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
@@ -104,7 +104,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
           // at least on is dependent -> line chart
           else {
-            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis, config.marginalColor.single));
+            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
             traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
             traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
@@ -113,7 +113,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis, config.marginalColor.single));
+          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
 
           // hard to show splits of more than rows and cols: overlap in visualization
           // TODO: solve by creating a bubble plot/jittered plot
@@ -137,7 +137,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         // one is discrete, the other numerical
         else {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis, config.marginalColor.single));
+          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
           traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
           traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));

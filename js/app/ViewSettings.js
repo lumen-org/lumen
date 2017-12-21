@@ -177,7 +177,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
       },
 //      opacity: 0.8,
       levels: 16,
-      resolution: 25 // the number computed points along one axis
+      resolution: 30 // the number computed points along one axis
     },
   };
 
