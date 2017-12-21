@@ -252,7 +252,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
             size : applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
             symbol : applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
-            line : {
+            line : { // configures the line bounding the marker points
               color: cfg.stroke.color,
               width: cfg.stroke.width
             },

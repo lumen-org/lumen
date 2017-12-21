@@ -95,13 +95,14 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       } else {
         // aggregation or density
         if (PQL.hasDiscreteYield(fu))
-          return "grey"; //TODO: put into Settings
+          return c.map.aggrMarker.line.color; // TODO: we could color the line different from grey, if all markers on the line have same hue
         else
           return scale(_valueOrAvg(fu.extent));
       }
     } else {
-      return "#377eb8";  // TODO: put into Settings
+      return c.map.aggrMarker.line.color;
     }
+
   };
 
   /**

@@ -357,13 +357,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           //shelves.modeldata.$visual, $('<hr>'),
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
-        // old:
-        // visual.mappings = $('<div class="pl-mappings"></div>').append(
-        //   shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
-        //   $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, );
-        // TODO HACK for paper
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'));
+          shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+          $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, );
+        // HACK for paper
+        // visual.mappings = $('<div class="pl-mappings"></div>').append(
+        //  shelves.filter.$visual, $('<hr>'));
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
 
@@ -396,8 +395,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
-        // let checkBoxes = ['contour', 'marginals', 'aggregations', 'data'].map( // TODO: HACK for paper
-        let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
+        let checkBoxes = ['contour', 'marginals', 'aggregations', 'data'].map( // TODO: HACK for paper
+        //let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')

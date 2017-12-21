@@ -10,7 +10,6 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   // TODO HACK: paper only
   let hideAggregations = false;
   c.sizeFactor = 4;
-  c.printFactor = 1.5; // factor for width of almost all lines // TODO
 
   function makeDensityScale(colorArray) {
     const threshhold = 0.000001;
@@ -116,6 +115,10 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         def: 14,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
+      line: { // the line connecting the marker points
+        //color: c.aggrColor.single,
+        color: greys(0.7),
+      }
     },
 
     heatmap: {

@@ -70,12 +70,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     return row;
   }
 
-  // TODO HACK for paper
-  // function HACKwidenExtent(extent, factor=2) {
-  //   let range = extent[1] - extent[0];
-  //   let extension = factor/2.0*range;
-  //   return [extent[0]-extension, extent[1]+extension];
-  // }
 
   /**
    * A RemoteModel is a local representation of / proxy to a remote Probability Model. It holds a local copy of the header
@@ -113,8 +107,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
             field.name,
             field.dtype,
             (field.dtype === 'numerical' ? new Domain.Numeric(field.domain) : new Domain.Discrete(field.domain)),
-            // TODO HACK for paper: increased extent to increase the range where queries are answered
-            //(field.dtype === 'numerical' ? new Domain.Numeric(HACKwidenExtent(field.extent)) : new Domain.Discrete(field.extent)),
             (field.dtype === 'numerical' ? new Domain.Numeric(field.extent) : new Domain.Discrete(field.extent)),
             this));
       }
