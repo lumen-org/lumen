@@ -359,7 +359,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
-          $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, );
+          $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual);
         // HACK for paper
         // visual.mappings = $('<div class="pl-mappings"></div>').append(
         //  shelves.filter.$visual, $('<hr>'));
