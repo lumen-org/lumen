@@ -11,7 +11,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'Iris_map';
+    const DEFAULT_MODEL = 'mcg_crabs_map';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
@@ -21,8 +21,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-      drop(shelves.column, shelves.meas.at(0));
-      drop(shelves.row, shelves.dim.at(0));
+      drop(shelves.column, shelves.dim.at(0));
+      drop(shelves.column, shelves.dim.at(1));
+      //drop(shelves.row, shelves.dim.at(0));
 
       //drop(shelves.filter, shelves.meas.at(1));
       // drop(shelves.detail, shelves.meas.at(2));

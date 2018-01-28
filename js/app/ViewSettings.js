@@ -251,7 +251,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
 
       //margin_main_sub: 0.02,
       margin: {
-        l: 60, t: 20,
+        l: 120, t: 40,
         r: 30, b: 50,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },

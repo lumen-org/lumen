@@ -711,7 +711,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         editable: true,
         hovermode: 'closest',
         paper_bgcolor: "rgba(255,255,255,0.9)",
-        plot_bgcolor: 'rgba(255,255,255,1)',
+        plot_bgcolor: 'rgba(255,255,255,0)',
       });
 
       // and global config options.
