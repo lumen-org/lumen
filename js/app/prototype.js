@@ -10,8 +10,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     'use strict';
 
     // the default model to be loaded on startup
-    const DEFAULT_MODEL = 'Auto_MPG';
-    //const DEFAULT_MODEL = 'mcg_crabs';
+    //const DEFAULT_MODEL = 'Auto_MPG';
+    const DEFAULT_MODEL = 'Iris_map';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';

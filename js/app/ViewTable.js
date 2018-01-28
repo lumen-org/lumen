@@ -234,7 +234,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       if (qa.size instanceof VisMEL.SizeMap)
         aes.set('size', qa.size.fu);
 
-
       /// iterate over results for each atomic query
       // all aesthetics of all atomic queries simply refer to the base query one.
       let row = new Array(queries.size.rows);
