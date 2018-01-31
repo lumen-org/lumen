@@ -26,8 +26,9 @@ body {
 .pl-fu {
     border: 1px solid;
     min-width:9em;
-    /*height:67px;*/ /* prepaper*/
+    /*height:67px;*/ /* prepaper kdd*/
     height:33px;
+    transition: height 200ms;
     display: flex;
     justify-content: center;
     position: relative;
@@ -63,7 +64,7 @@ body {
 .pl-fields-in-fu {
     position: absolute;
     top: 0.3rem;
-/*     top: 0.8rem; */
+    transition: top 200ms;
     max-width: 170px;
     display: flex;
     flex-direction: row;
@@ -143,19 +144,8 @@ body {
 
 .pl-fu:hover > .pl-fields-in-fu {
     top: 0.8rem;
-    transition: height 200ms;
+    transition: top 200ms;
 }
-
-/*.pl-fu:hover > .pl-field {*/
-    /*top: 15px;*/
-    /*transition: top 200ms;*/
-/*}
-
-/*
-.pl-fu {
-    height: 30px;
-    transition: height 200ms;
-}*/
 
 .pl-fu > .pl-field {
     top: 15px;
