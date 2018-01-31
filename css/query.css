@@ -26,7 +26,8 @@ body {
 .pl-fu {
     border: 1px solid;
     min-width:9em;
-    height:67px;
+    /*height:67px;*/ /* prepaper*/
+    height:33px;
     display: flex;
     justify-content: center;
     position: relative;
@@ -61,7 +62,8 @@ body {
 
 .pl-fields-in-fu {
     position: absolute;
-    top: 0.8rem;
+    top: 0.3rem;
+/*     top: 0.8rem; */
     max-width: 170px;
     display: flex;
     flex-direction: row;
@@ -134,10 +136,15 @@ body {
 
 /* resizing / rearranging on hover */
 
-/*.pl-fu:hover {*/
-    /*height: 67px;*/
-    /*transition: height 200ms;*/
-/*}*/
+.pl-fu:hover {
+    height: 67px;
+    transition: height 200ms;
+}
+
+.pl-fu:hover > .pl-fields-in-fu {
+    top: 0.8rem;
+    transition: height 200ms;
+}
 
 /*.pl-fu:hover > .pl-field {*/
     /*top: 15px;*/

@@ -1,4 +1,5 @@
 /**
+/**
  * Nomenclature
  *   .*D3 : a variable that is a D3 selection
  *   .*DOM : a variable that is a DOM element
@@ -24,7 +25,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
     function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
       let axis = {};
-      //axis.range = [Math.min(0, -0.02 * extent[1]), extent[1]*cfg.maxPrct]; // hack, because zero line tends to be not drawn... TODO: apparently this is not a problem anymore. but lets keep this for a while.
       axis.range = [0, extent[1]*cfg.maxPrct];
       if (config.plots.marginal.position[_invXY(xy)] === 'bottomleft') // reverse range if necessary reversed range
         axis.range = axis.range.reverse();
