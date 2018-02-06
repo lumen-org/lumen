@@ -112,7 +112,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
     equidist: 'equidist',
     identity: 'identity',
     elements: 'elements',
-    equiinterval: 'equiinterval'
+    equiinterval: 'equiinterval',
+    data: 'data'
   });
   var isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
 
@@ -613,7 +614,9 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
     FieldT: FieldT,
     isField: isField,
     Aggregation: Aggregation,
+    AggrMethod: AggregationMethods,
     Density: Density,
+    DensityMethod: DensityMethodT,
     Split: Split,
     SplitMethod: SplitMethod,
     Filter: Filter,

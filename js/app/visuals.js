@@ -199,7 +199,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Aggregation.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))
+        .append(methodSelector(that, Object.keys(PQL.AggrMethod)))
         .append(multiFieldDiv(that, record))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
@@ -215,7 +215,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Density.prototype.makeVisual = function (record) {
    function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))
+        .append(methodSelector(that, Object.keys(PQL.DensityMethod)))
         .append(multiFieldDiv(that, record))
         .append(conversionButtons(record))
         .append(removeButton(record));
@@ -230,7 +230,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Split.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))
+      // .append(methodSelector(that, Object.keys(PQL.SplitMethod)))  // TODO: this should be the way
+        .append(methodSelector(that, ['equiinterval', 'data']))
         .append(singleFieldDiv([that.name], record))
         .append(conversionButtons(record))
         .append(argumentsEditField(that))
@@ -246,7 +247,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   PQL.Filter.prototype.makeVisual = function (record) {
     function _updateVisual () {
       $visual.html('')
-        .append(methodSelector(that))
+        .append(methodSelector(that, Object.keys(PQL.FilterMethodT)))
         .append(singleFieldDiv([that.name], record))
         .append(argumentsEditField_Filter(that))
         .append(removeButton(record));
@@ -258,8 +259,18 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     return $visual;
   };
 
-  function methodSelector (fu) {
-    return($('<div class="pl-method noselect pl-hidden">' + fu.method + '</div>'));
+  function methodSelector (fu, options) {
+    let $methodDiv = $('<div class="pl-method noselect pl-hidden">' + fu.method + '</div>');
+    $methodDiv.click( () => {
+      // clicking on it selects the next option
+      let curValue = $methodDiv.html();
+      let newIdx = (options.indexOf(curValue) + 1) % options.length;
+      $methodDiv.html(options[newIdx]);
+      fu.method = options[newIdx];
+      fu.emit(Emitter.InternalChangedEvent);
+      // fu.emit(Emitter.ChangedEvent);
+    });
+    return($methodDiv);
   }
 
   function removeButton (record) {
