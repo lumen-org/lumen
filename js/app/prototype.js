@@ -21,8 +21,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-      drop(shelves.column, shelves.dim.at(0));
-      drop(shelves.column, shelves.dim.at(1));
+//       drop(shelves.column, shelves.dim.at(0));
+//       drop(shelves.column, shelves.dim.at(1));
+        drop(shelves.column, shelves.meas.at(0));
+        drop(shelves.row, shelves.meas.at(1));
       //drop(shelves.row, shelves.dim.at(0));
 
       //drop(shelves.filter, shelves.meas.at(1));
@@ -388,7 +390,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
         let nameMap = {
-          'aggregations': 'aggregation',
+          'aggregations': 'prediction',
           'marginals': 'marginal',
           'contour': 'density',
           'data': 'data',

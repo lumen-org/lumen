@@ -42,7 +42,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // build all mappers
       let mapper = {
-        aggrFillColor: MapperGen.markersFillColor(query),
+        aggrFillColor: MapperGen.markersFillColor(query, 'aggr'),
+        dataFillColor: MapperGen.markersFillColor(query, 'data'),
         aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
         aggrShape: MapperGen.markersShape(query, 'filled'),
         samplesShape: MapperGen.markersShape(query, 'filled'),
@@ -69,8 +70,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // both, x and y axis are in use
       if (used.x && used.y) {
-
-
 
         let xDiscrete = PQL.hasDiscreteYield(xfu),
           yDiscrete = PQL.hasDiscreteYield(yfu),
@@ -443,6 +442,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
+
+      // select color for density
+      if (config.densityColor.adapt_to_color_usage) {
+        let colorused = queries.base.layers[0].aesthetics.color instanceof VisMEL.ColorMap;
+        let dc = config.densityColor;
+        config.densityColor.single = colorused ? dc.grey_single : dc.color_single;
+        config.densityColor.scale = colorused ? dc.grey_scale : dc.color_scale;
+      }
 
       // extents
       initEmptyExtents(queries);

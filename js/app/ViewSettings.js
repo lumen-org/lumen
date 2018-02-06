@@ -2,7 +2,7 @@
  * @copyright © 2015-2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 //define([], function () {
-define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function (d3chromatic, d3f, ss, Domain) {
+define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain'], function (d3chromatic, d3f, d3color, ss, Domain) {
   "use strict";
   let greys = d3chromatic.interpolateGreys;
   let c = {};
@@ -15,7 +15,7 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
     const threshhold = 0.000001;
     let colorScale = [[0, 'rgba(255,255,255,0)'], [threshhold, 'rgba(255,255,255,0)']];  // to make sure very small values are drawn in white
     let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
-    split.push(1)
+    split.push(1);
     split[0] = threshhold;
     for (let i=0; i < colorArray.length; ++i) {
       colorScale.push([ split[i], colorArray[i]]);
@@ -24,20 +24,32 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   }
 
   c.densityColor = {
-    single: d3chromatic.interpolateBlues(0.7),
-    scale: makeDensityScale(d3chromatic.schemeBlues[9]),
-    //scale: d3chromatic.schemeBlues[9], ==  "#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b"]
+    adapt_to_color_usage: false,
+    single: d3chromatic.interpolateGreys(0.7), // the default
+    scale: makeDensityScale(d3chromatic.schemeGreys[9]), // the default
+    // single: d3chromatic.interpolateBlues(0.7), // the default
+    // scale: makeDensityScale(d3chromatic.schemeBlues[9]), // the default
+    color_single: d3chromatic.interpolateBlues(0.7),
+    color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
+    grey_single: d3chromatic.interpolateGreys(0.7),
+    grey_scale: makeDensityScale(d3chromatic.schemeGreys[9]),
   };
 
   c.marginalColor = {
     single: d3chromatic.interpolateGreys(0.5),
-    //scale: d3chromatic.schemeGreys,
   };
 
   c.aggrColor = {
-    //single:  d3chromatic.interpolateGreens(0.6),
-    single:  d3chromatic.interpolateReds(0.6),
-    //scale: d3chromatic.schemeReds,
+    // single:  d3chromatic.interpolateReds(0.55),
+    // single:  d3chromatic.schemeSet1[6],
+    //single:  d3chromatic.schemeSet1[5],
+    single: d3chromatic.schemePaired[7],
+  };
+
+  c.dataColor = {
+    //single: d3chromatic.interpolateBlues(0.7),
+    //single: d3chromatic.schemeSet1[7],
+    single: d3chromatic.schemePaired[6],
   };
 
   // set of default config options for the visualization
@@ -45,11 +57,11 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
   c.views = {
     aggregations: {
       possible: true, // true iff the view should be made accessible to the user at all, false else
-      active: false, // true if the view is active (i.e.. computed and visible) by default, false if not
+      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
     },
     data: {
       possible: true,
-      active: false,
+      active: true,
     },
     marginals: {
       possible: true,
@@ -89,6 +101,10 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
     sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
     discrete9: d3chromatic.schemeSet1,
     discrete12: d3chromatic.schemePaired,
+    discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
+    discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
+    discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
+    discrete9dark: d3chromatic.schemeSet1,
   };
 
   // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
@@ -101,23 +117,24 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
     aggrMarker: {
       fill: {
         //def: "#377eb8",
-        def: c.aggrColor.single,
+        def: () => c.aggrColor.single,
         //def: greys(0.05), // prepaper
         opacity: 1 * !hideAggregations,
       },
       stroke: {
-        color: greys(0.9),
-        width: 1,
+        color: greys(0.95),
+        // color: greys(0.1),
+        width: 1.5,
       },
       size: {
-        min: 2, // HACK: used to be 8.
+        min: 3, // HACK: used to be 8.
         max: 40*c.sizeFactor,
         def: 14,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
         //color: c.aggrColor.single,
-        color: greys(0.7),
+        color: greys(0.8),
       }
     },
 
@@ -137,19 +154,21 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
         def: 8,
       },
       stroke: {
-        color: greys(0.3),
-        width: 1.5,
+        color: greys(0.0),
+        width: 1,
       },
       fill: {
-        opacity: 0.8,
+        def: () => c.dataColor.single,
+        opacity: 0.9,
+        // opacity: 0.8,
       },
-      maxDisplayed: 500,  // the maximum number of samples plotted in one trace of one atomic plot
+      maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
     },
 
     uniDensity: {
       color: {
         //def: greys(0.5),
-        def: c.densityColor.single,
+        def: () => c.densityColor.single,
       },
       bar: {
         opacity: 0.7,
@@ -164,14 +183,14 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
 
     biDensity: {
       //colorscale: c.colorscales.density, // prepaper
-      colorscale: c.densityColor.scale, // color scale to use for heat maps / contour plots
+      colorscale: () => c.densityColor.scale, // color scale to use for heat maps / contour plots
       mark: {
-        color: c.densityColor.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+        color: () => c.densityColor.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
         opacity: 0.8,
       },
       line: {
         width: 2,
-        color: c.densityColor.single,
+        color: () => c.densityColor.single,
         fill: true,
         fillopacity: 0.06,
       },
@@ -251,8 +270,11 @@ define(['d3-scale-chromatic','d3-format', './SplitSample', './Domain'], function
 
       //margin_main_sub: 0.02,
       margin: {
-        l: 120, t: 40,
-        r: 30, b: 50,
+        l: 70,
+        //l: 120,
+        t: 15,
+        r: 15,
+        b: 60,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
       // ratio of plotting area reserved for the templating axis (if any)

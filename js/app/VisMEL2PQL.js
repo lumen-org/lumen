@@ -11,7 +11,7 @@
  *
  * If it is for some reason impossible to generate a valid query from given VisMEL query a
  */
-define(['lib/logger', './utils', './PQL', './ViewSettings'], function (Logger, utils, PQL, c) {
+define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], function (Logger, utils, PQL, VisMEL, c) {
   "use strict";
 
   var logger = Logger.get('pl-vismel2pql');
@@ -80,6 +80,9 @@ define(['lib/logger', './utils', './PQL', './ViewSettings'], function (Logger, u
       fu2idx = new Map(),
       idx2fu = [],
       idx = 0;
+
+    // HACK FOR PAPER: do never split on mvd for aggregations.
+    //fieldUsages = fieldUsages.filter( fu => !(PQL.isSplit(fu) && fu.name === 'model vs data'));
 
     fieldUsages.filter(PQL.isSplit).forEach(fu => {
       // todo: this kind of comparison is ugly and slow for the case of many dimensions
@@ -302,7 +305,51 @@ define(['lib/logger', './utils', './PQL', './ViewSettings'], function (Logger, u
 
     return {query, fu2idx, idx2fu}
   }
-
+  // function biDensity(vismelQuery) {
+  //   // this version of biDensity splits by color as well! However, currently I cannot map that into a visualization...
+  //   // one idea to achieve this is create one contour trace for each value of the split, make them opaque and map very small values to None such that they are not drawn at all. See also: https://plot.ly/~etpinard/7415/heatmap-with-custom-nan-layer.py
+  //
+  //   // can only get density if there is something on rows and cols
+  //   let xfu = vismelQuery.layout.cols[0];
+  //   let yfu = vismelQuery.layout.rows[0];
+  //   if (!PQL.isFieldUsage(xfu) || !PQL.isFieldUsage(yfu)) {
+  //     // nothing to do! set result table to empty and return fullfilled promise
+  //     //return Promise.resolve(_emptyResultTable())
+  //     throw new ConversionError("at least one empty axis");
+  //   }
+  //
+  //   // split on x and y
+  //   let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
+  //   let ySplit = PQL.Split.FromFieldUsage(yfu, 'density');
+  //   for (let s of [xSplit, ySplit])
+  //     s.args[0] = c.map.biDensity.resolution;
+  //
+  //   // split on color?
+  //   let color = vismelQuery.layers[0].aesthetics.color;
+  //   let color_split = [];
+  //   if (color instanceof VisMEL.ColorMap && PQL.isSplit(color.fu)) {
+  //     console.log("cfu type: " + color.fu.yieldDataType);
+  //     color_split.push(color.fu);
+  //   }
+  //
+  //   let densityFu = new PQL.Density([xSplit.field, ySplit.field].concat(color_split.map(c=>c.field)));
+  //
+  //   let idx2fu = [xSplit, ySplit, densityFu].concat(color_split);
+  //   let fu2idx = new Map();
+  //   idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
+  //
+  //   // respect any filters but mvd_filter s
+  //   let filters = _cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
+  //
+  //   let query = {
+  //     'type': 'predict',
+  //     'predict': [xSplit.name, ySplit.name, densityFu].concat(color_split.map(c => c.name)),
+  //     'where': filters,
+  //     'splitby': [xSplit, ySplit].concat(color_split)
+  //   };
+  //
+  //   return {query, fu2idx, idx2fu}
+  // }
 
   return {
     aggregation,

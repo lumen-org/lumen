@@ -23,6 +23,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
    */
   var scaleGenerator = {};
 
+
   /**
    * Creates a color scale based on a given {@link FieldUsage}.
    * @param fu A {@link FieldUsage}.
@@ -42,7 +43,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
    *      * d3.schemeRdBu[9] (or d3.schemeRdYlBu[9] ?) centered on 0!
    */
 
-  scaleGenerator.color = function (colorMap, domain) {
+  scaleGenerator.color = function (colorMap, domain, mode='aggr') {
     let fu = colorMap.fu,
       palette,
       scale;
@@ -50,10 +51,24 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
     if (PQL.hasDiscreteYield(fu)) {
       scale = d3.scale.ordinal();
       let l = domain.length;
+      // if (l <= 9)
+      //   palette = c.colorscales.discrete9;
+      // else if (l <= 12)
+      //   palette = c.colorscales.discrete12;
+      // if (l <= 6)
+      //   if (mode === 'aggr')
+      //     palette = c.colorscales.discrete6dark;
+      //   else if (mode === 'data')
+      //     palette = c.colorscales.discrete6light;
+      //   else
+      //     throw RangeError("invalid mode " + mode);
       if (l <= 9)
-        palette = c.colorscales.discrete9;
-      else if (l <= 12)
-        palette = c.colorscales.discrete12;
+        if (mode === 'aggr')
+          palette = c.colorscales.discrete9dark;
+        else if (mode === 'data')
+          palette = c.colorscales.discrete9light;
+        else
+          throw RangeError("invalid mode " + mode);
       else {
         logger.warn("the domain of the field " + fu.name + " has too many elements to efficiently encode them as categorical colors: " + l + "\n I'll only use 12, anyway.");
         palette = c.colorscales.discrete12;

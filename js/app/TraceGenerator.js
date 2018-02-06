@@ -165,7 +165,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let colorFu = aest.color.fu,
           colorIdx = fu2idx.get(colorFu),
           colorTable, colorDomain, colorData;
-        // plotly heatmaps require to use a colorscale. It's impossible to ise a manual color specification
+        // plotly heatmaps require to use a colorscale. It's impossible to directly use a manual color specification
 
         if (PQL.hasDiscreteYield(colorFu)) {
           // create step-wise continuous color table
@@ -412,7 +412,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         // TODO: merge this with getUniTrace again?
         if (modelOrData === "data") {
           logger.warn("accumulated traces for data are not implemented!");
-          return [];
+          //return [];
         }
 
         if (data.length === 0)
@@ -461,7 +461,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yaxis: yAxis,
         };
 
-        let color = c.map.uniDensity.color.def;
+        let color = c.map.uniDensity.color.def();
         // let color = fixedColor;
         // if (color === undefined) {
         //   let lcmap = mapper.marginalColor;
@@ -550,6 +550,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         zdata = selectColumn(rt, 2),
         ztext = zdata.map(formatter);
 
+      // merge color split data into one
+
       let trace = {
         name: PQL.toString(rt.query),
         // name: '2d density',
@@ -562,7 +564,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         yaxis: axisId.y,
         opacity: c.map.biDensity.opacity,
         autocolorscale: false,
-        colorscale: c.map.biDensity.colorscale,
+        colorscale: c.map.biDensity.colorscale(),
         zauto: false,
         zmin: 0,
         zmax: rt.extent[1], // TODO: is that valid for c-c heat maps? NO!
@@ -573,6 +575,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
         trace.type = 'contour';
+        // trace.contours = {
+        //   coloring: 'heatmap',
+        // };
         trace.autocontour = false;
         trace.ncontours = c.map.biDensity.levels;
       }
@@ -640,11 +645,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               //opacity: c.map.biDensity.mark.opacity,
               line: {
                 width: c.map.biDensity.line.width,
-                color: c.map.biDensity.line.color,
+                color: c.map.biDensity.line.color(),
               },
               fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
               //fill: 'none',
-              fillcolor: makeOpaque(c.map.biDensity.line.color, c.map.biDensity.line.fillopacity),
+              fillcolor: makeOpaque(c.map.biDensity.line.color(), c.map.biDensity.line.fillopacity),
             };
 
             traces.push(trace);    
@@ -686,7 +691,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         opacity: cfg.fill.opacity,
       };
       trace.marker = {
-        color: applyMap(rt, mapper.aggrFillColor, aest.color.fu, fu2idx),
+        //color: applyMap(rt, mapper.aggrFillColor, aest.color.fu, fu2idx),
+        color: applyMap(rt, mapper.dataFillColor, aest.color.fu, fu2idx),
         size: applyMap(rt, mapper.samplesSize, aest.size.fu, fu2idx),
         symbol: applyMap(rt, mapper.samplesShape, aest.shape.fu, fu2idx),
         line: {

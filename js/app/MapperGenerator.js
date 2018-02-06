@@ -38,15 +38,34 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
 
   let gen = {};
 
-  gen.markersFillColor = function (query) {
+  gen.markersFillColor = function (query, mode='aggr') {
+    let defaultColor;
+    if (mode === 'aggr')
+      defaultColor = c.map.aggrMarker.fill.def;
+    else if (mode === 'data')
+      defaultColor = c.map.sampleMarker.fill.def;
+    else
+      throw RangeError("invalid mode " + mode);
+
+    let aesthetics = query.layers[0].aesthetics,
+      color = aesthetics.color;
+    if (color instanceof VisMEL.ColorMap) {
+      return _averaged(ScaleGen.color(color, color.fu.extent, mode));
+    } else {
+      return defaultColor;
+    }
+  };
+
+  gen.aggrFillColor = function (query, defaultColor=c.map.sampleMarker.fill.def) {
     let aesthetics = query.layers[0].aesthetics,
       color = aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       return _averaged(ScaleGen.color(color, color.fu.extent));
     } else {
-      return c.map.aggrMarker.fill.def;
+      return defaultColor;
     }
   };
+
 
   gen.markersSize = function (query, opts) {
     let aesthetics = query.layers[0].aesthetics,
@@ -133,7 +152,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       //   return mainColorMap(_valueOrAvg(fu.extent)); // scalar value, namely color for the average of the domain.
       // }
     }
-    return c.map.uniDensity.color.def;
+    return c.map.uniDensity.color.def();
   };
 
   return gen;

@@ -167,8 +167,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
             let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, modelTable.at[rIdx][cIdx]);
             promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY).then( 
             tbl => {
-                // simulate correct scaling of model probability queries
-                // only apply rescaling on model part
+                // TODO: Hack for Paper: simulate correct scaling of model probability queries
                 let nester = d3c.nest();
                 nester.key(e => e[0]);
                 for (let _key of ["$model", "$data"]) {
@@ -177,8 +176,8 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
                     // nested["$model"].map(e => prob_sum += e[2])
                     let prob_sum = probs.reduce((s,e) => s+e[2], 0)
                     probs.map(e => e[2] = e[2]/prob_sum)
-                    console.log(_key)
-                    console.log(probs.reduce((s,e) => s+e[2], 0))
+//                     console.log(_key)
+//                     console.log(probs.reduce((s,e) => s+e[2], 0))
                   }
                 }
                 // rerun attachextent
