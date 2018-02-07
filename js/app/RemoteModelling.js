@@ -128,7 +128,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       if (qtype === 'model')
         return this.model(query.model, query.where, query.as);
       if (qtype === 'select')
-        return this.select(query.select, query.where);
+        return this.select(query.select, query.where, query.opts);
       throw Error("not yet impemented");
     }
 
@@ -206,9 +206,9 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
         });
     }
 
-    select (select, where = []) {
-      [select, where] = utils.listify(select, where);
-      let jsonContent = PQL.toJSON.select(this.name, select, where);
+    select (select, where=undefined, opts=undefined) {
+      select = utils.listify(select);
+      let jsonContent = PQL.toJSON.select(this.name, select, where, opts);
 
       // list of datatypes of fields to predict - needed to parse returned csv-string correctly
       let dtypes = select.map( s => this.fields.get(s).dataType );

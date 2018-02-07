@@ -506,15 +506,26 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
       };
     },
 
-    select: function (from, select, where = []) {
+    select: function (from, select, where=undefined, opts=undefined) {
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
       if (!select.every(_.isString)) throw new TypeError("'select' must be all of type string.");
-      if (!where.every(isFilter)) throw new TypeError("'where' must be all of type Filter.");
-      return {
+
+      let jsonQuery =  {
         "SELECT": select,
-        "FROM": from,
-        "WHERE": where.map(Filter.toJSON)
+        "FROM": from
       };
+
+      if (where !== undefined) {
+        where = utils.listify(where);
+        if (!where.every(isFilter))
+          throw new TypeError("'where' must be all of type Filter.");
+        jsonQuery.WHERE = where.map(Filter.toJSON);
+      }
+
+      if (opts !== undefined)
+        jsonQuery.OPTS = opts;
+
+      return jsonQuery;
     },
 
     model: function (from, model, as_, where = []) {

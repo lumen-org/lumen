@@ -115,7 +115,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * @param model
    * @return {Promise.<Array>}
    */
-  function samplesCollection(queryCollection, modelTable, enabled=true) {
+  function samplesCollection(queryCollection, modelTable, enabled=true, opts={}) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -126,7 +126,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         let promise;
         try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx]);
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx], opts);
           promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
         } catch (e) {
           if (e instanceof vismel2pql.ConversionError)

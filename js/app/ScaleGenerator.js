@@ -67,6 +67,8 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
           palette = c.colorscales.discrete9dark;
         else if (mode === 'data')
           palette = c.colorscales.discrete9light;
+        else if (mode === 'test data')
+          palette = c.colorscales.discrete9light;
         else
           throw RangeError("invalid mode " + mode);
       else {

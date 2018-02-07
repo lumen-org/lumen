@@ -34,7 +34,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     // function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, axes) {
-    function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds) {
+    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds) {
 
       // let mainAxis = axes.main,
       //   marginalAxis = axis.marginal,
@@ -44,6 +44,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       let mapper = {
         aggrFillColor: MapperGen.markersFillColor(query, 'aggr'),
         dataFillColor: MapperGen.markersFillColor(query, 'data'),
+        testDataFillColor: MapperGen.markersFillColor(query, 'test data'),
         aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
         aggrShape: MapperGen.markersShape(query, 'filled'),
         samplesShape: MapperGen.markersShape(query, 'filled'),
@@ -61,7 +62,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         color: aest.color instanceof VisMEL.ColorMap,
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
-        details:  aest.details.filter( s => s.method === 'identity').length > 0, // identity splits can be ignored. OLD: aest.details.length != 0,
+        details:  aest.details.filter( s => s.method === 'identity').length > 0, // identity splits can be ignored
         x: xfu !== undefined,
         y: yfu !== undefined,
       };
@@ -85,28 +86,31 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
             else { // if (used.shape) {
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
               traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
             }
 
           }
           // at least on is dependent -> line chart
           else {
-            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
             traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
           }
         }
 
@@ -138,8 +142,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         else {
           traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
           traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
-          traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
         }
       }
 
@@ -153,7 +158,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.samples(dataRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
         traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
@@ -430,10 +436,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, uniColl, biColl, queries) {
+    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, queries) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
+      this.testDataCollection = testDataColl;
       this.queries = queries;
       this.size = aggrColl.size;
       this.size.x = this.size.cols;
@@ -456,6 +463,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       attachExtents(queries, this.aggrCollection);
       //if (dataenabled)
       attachExtents(queries, this.dataCollection);
+      attachExtents(queries, this.testDataCollection);
       normalizeExtents(queries);
 
       // shortcut to the queries layout attributes
@@ -694,7 +702,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds
             );
 
           traces.push(...atomicTraces);

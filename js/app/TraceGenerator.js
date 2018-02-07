@@ -241,6 +241,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let trace = {
           name: traceName,
           type: 'scatter',
+          mode: "lines+markers",
           showlegend: false,
           cliponaxis: false,
           x: selectColumn(data, fu2idx.get(xfu)),
@@ -662,9 +663,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * samples trace builder.
      * @param rt
      * @param query
+     * @param mapper: A dictionary of mapper for the keys (and visual channels): fillColor, size, shape
      * @return {Array}
      */
-    tracer.samples = function (rt, query, mapper, axisId) {
+    // tracer.samples = function (rt, query, mapper, visualConfig, axisId) {
+    tracer.samples = function (rt, query, mapper, mode, axisId) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
@@ -675,7 +678,25 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
         traces = [],
+        cfg;
+
+      if (mode === 'training data') {
         cfg = c.map.sampleMarker;
+        mapper = {
+          fillColor: mapper.dataFillColor,
+          shape: mapper.samplesShape,
+          size: mapper.samplesSize
+        };
+      } else if (mode === 'test data') {
+        cfg = c.map.testDataMarker;
+        mapper = {
+          fillColor: mapper.testDataFillColor,
+          shape: mapper.samplesShape,
+          size: mapper.samplesSize
+        };
+      } else {
+        throw RangeError("invalid mode: " + mode.toString());
+      }
 
       let xIdx = fu2idx.get(xfu),
         yIdx = fu2idx.get(yfu);
@@ -691,10 +712,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         opacity: cfg.fill.opacity,
       };
       trace.marker = {
-        //color: applyMap(rt, mapper.aggrFillColor, aest.color.fu, fu2idx),
-        color: applyMap(rt, mapper.dataFillColor, aest.color.fu, fu2idx),
-        size: applyMap(rt, mapper.samplesSize, aest.size.fu, fu2idx),
-        symbol: applyMap(rt, mapper.samplesShape, aest.shape.fu, fu2idx),
+        color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
+        size: applyMap(rt, mapper.size, aest.size.fu, fu2idx),
+        symbol: applyMap(rt, mapper.shape, aest.shape.fu, fu2idx),
         line: {
           color: cfg.stroke.color,
           width: cfg.stroke.width,

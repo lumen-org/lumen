@@ -73,23 +73,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       constructor (server, modelName, shelves) {
 
-        // function convertToTraceSemantic(c) {
-        //   let q = c.query;
-        //   //q.layout.rows;
-        //
-        //   let facets = c.config.visConfig;
-        //
-        //   // traces
-        //   let facets = {
-        //     density: ,
-        //     marginal: ,
-        //     aggregation: ,
-        //     data: ,
-        //   };
-        //
-        //   return facets;
-        // }
-
         /**
          * Creates and returns a function to update a context. _On calling this function the
          * context does not need to be provided again!_
@@ -119,21 +102,21 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
               .then(() => RT.aggrCollection(c.queryTable, c.modelTable, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
-              //.then(() => RT.samplesCollection(c.queryTable, c.model, c.config.visConfig.data.active))
-              .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.data.active))
+              .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.data.active, {data_category:'training data'}))
               .then(res => c.dataRT = res)
+              .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.testData.active, {data_category:'test data'}))
+              .then(res => c.testDataRT = res)
               .then(() => RT.uniDensityCollection(c.queryTable, c.modelTable,
                 c.config.visConfig.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
               )
               .then(res => c.uniDensityRT = res)
               .then(() => RT.biDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
-              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
+              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!
                   c.unredoer.commit(c.copyShelves());
-                  console.log("commiting");
                 }
               })
               .then(() => {
@@ -172,6 +155,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           visConfig: {
             aggregations: { active: Config.views.aggregations.active },
             data: { active: Config.views.data.active, },
+            testData: { active: Config.views.testData.active, },
             marginals: { active: Config.views.marginals.active },
             contour: { active: Config.views.contour.active },
           }
@@ -185,6 +169,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this.modelTable = {};
         this.aggrRT = {};
         this.dataRT = {};
+        this.testDataRT = {};
         this.uniDensityRT = {};
         this.biDensityRT = {};
         this.viewTable = {};
@@ -306,8 +291,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
       static _makeVisualization(context) {
         let $paneDiv = $('<div class="pl-visualization-pane"></div>');
-
-
         let $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
 
@@ -320,10 +303,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             helper: "pl-resizing",
             stop: (event, ui) => {
               let c = context;
-
               // redraw
               // TODO: what is visPanel, ... ?
-              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
+              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
             }
           });
         $vis.draggable(); // yeah, that was easy. just made it draggable!
@@ -394,12 +376,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           'marginals': 'marginal',
           'contour': 'density',
           'data': 'data',
+          'testData': 'test data',
         };
 
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
-        let checkBoxes = ['contour', 'marginals', 'aggregations', 'data'].map( // TODO: HACK for paper
-        //let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
+        let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData'].map(
+          // TODO: HACK for paper
+          // let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')

@@ -52,6 +52,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     single: d3chromatic.schemePaired[6],
   };
 
+  c.testDataColor = {
+    // single: d3chromatic.schemePaired[6], // TODO: improve?
+    single: d3chromatic.schemePaired[6], // TODO: improve?
+  };
+
   // set of default config options for the visualization
   // beware when you add more
   c.views = {
@@ -61,15 +66,19 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     },
     data: {
       possible: true,
+      active: false,
+    },
+    testData: {
+      possible: true,
       active: true,
     },
     marginals: {
       possible: true,
-      active: true,
+      active: false,
     },
     contour: {
       possible: true,
-      active: true,
+      active: false,
     },
     accuMarginals: {
       possible: true
@@ -163,6 +172,17 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         // opacity: 0.8,
       },
       maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
+    },
+
+    testDataMarker: {
+      stroke: {
+        color: greys(1),
+        width: 1,
+      },
+      fill: {
+        def: () => c.testDataColor.single,
+        opacity: 0.9,
+      },
     },
 
     uniDensity: {

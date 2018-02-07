@@ -127,7 +127,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     return {query, fu2idx, idx2fu};
   }
 
-  function samples(vismelQuery) {
+  function samples(vismelQuery, opts) {
     // note:
     // we derive the data-select query from a PQL/VisMEL query as follows:
     //  * filters: stay unchanged as filters
@@ -168,10 +168,13 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
       }
     }
 
+    // TODO: validate opts?
+
     let query = {
       'type': 'select',
       'select': Array.from(select.keys()),
-      'where': filters
+      'where': filters,
+      'opts': opts
     };
     return {query, fu2idx, idx2fu}
   }

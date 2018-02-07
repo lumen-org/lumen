@@ -44,6 +44,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       defaultColor = c.map.aggrMarker.fill.def;
     else if (mode === 'data')
       defaultColor = c.map.sampleMarker.fill.def;
+    else if (mode === 'test data')
+      defaultColor = c.map.testDataMarker.fill.def;
     else
       throw RangeError("invalid mode " + mode);
 
