@@ -677,7 +677,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         aest = query.layers[0].aesthetics,
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0],
-        traces = [],
         cfg;
 
       if (mode === 'training data') {
@@ -721,6 +720,61 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         },
         maxDisplayed: cfg.maxDisplayed
       };
+      return [trace];
+    };
+
+    /**
+     * Builds and returns a trace for line segments that connct the points given in testDataRT and predRT.
+     * It's meant to highlight theie difference....
+     * @param predRT
+     * @param testDataRT
+     * @param query
+     * @param mapper
+     * @param axisId
+     * @return {*}
+     */
+    tracer.predictionOffset = function (predRT, testDataRT, query, mapper, axisId) {
+
+      if (!c.views.predictionOffset.possible || testDataRT == undefined || predRT == undefined)
+        return [];
+
+      let fu2idx = predRT.fu2idx,
+        aest = query.layers[0].aesthetics,
+        xfu = query.layout.cols[0],
+        yfu = query.layout.rows[0];
+
+      // build data as needed
+      let xIdx = fu2idx.get(xfu),
+        yIdx = fu2idx.get(yfu),
+        len = testDataRT.length,
+        undefArray = Array(len).fill(undefined),
+        // sort both by same index (xIdx would have been likewise ok). It's not inplace.
+        // TODO: not its not that easy, I need to sort by the correct positional index!
+        predRTSorted = _.sortBy(predRT, e=>e[yIdx]),
+        testDataRTSorted = _.sortBy(testDataRT, e=>e[yIdx]),
+        xdata = _.flatten( _.zip(selectColumn(testDataRTSorted, xIdx), selectColumn(predRTSorted, xIdx), undefArray) ),
+        ydata = _.flatten( _.zip(selectColumn(testDataRTSorted, yIdx), selectColumn(predRTSorted, yIdx), undefArray) );
+
+      let trace = {
+        name: 'samples',
+        type: 'scatter',
+        mode: 'lines',
+        showlegend: false,
+        x: xdata,
+        y: ydata,
+        xaxis: axisId.x,
+        yaxis: axisId.y,
+        opacity: 1.0,
+        connectgaps: false,
+        marker: {
+          color: applyMap(predRT, mapper.aggrFillColor, aest.color.fu, fu2idx),
+          line: {
+            color: "black", // cfg.stroke.color,
+            width: "3", //cfg.stroke.width,
+          }
+        }
+      };
+
       return [trace];
     };
 

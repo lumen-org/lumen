@@ -80,6 +80,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       possible: true,
       active: false,
     },
+    predictionOffset: {
+      possible: true,
+      active: false,
+    },
     accuMarginals: {
       possible: true
     }

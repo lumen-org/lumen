@@ -98,6 +98,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
               traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
               traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
@@ -108,6 +109,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           else {
             traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
             traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
             traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
@@ -142,6 +144,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         else {
           traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
           traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
           traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
           traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
@@ -158,6 +161,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
           traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
