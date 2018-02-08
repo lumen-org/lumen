@@ -169,7 +169,6 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     }
 
     // TODO: validate opts?
-
     let query = {
       'type': 'select',
       'select': Array.from(select.keys()),

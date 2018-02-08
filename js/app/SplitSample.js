@@ -58,7 +58,7 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
         return pairs;
       else
         return pairs.map(function (range) {
-          return new Domain.Numeric(...range);
+          return new Domain.Numeric(range);
         });
     },
 
