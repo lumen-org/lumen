@@ -306,7 +306,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               let c = context;
               // redraw
               // TODO: what is visPanel, ... ?
-              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable);
+              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable, c.config);
             }
           });
         $vis.draggable(); // yeah, that was easy. just made it draggable!
