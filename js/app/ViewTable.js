@@ -34,7 +34,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     // function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, axes) {
-    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds) {
+    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
 
       // let mainAxis = axes.main,
       //   marginalAxis = axis.marginal,
@@ -98,7 +98,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
               traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
               traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
+              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
               traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
               traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
@@ -109,7 +109,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           else {
             traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
             traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
             traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
@@ -144,7 +144,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         else {
           traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
           traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
           traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
           traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
@@ -161,7 +161,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
           traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
@@ -440,7 +440,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, queries) {
+    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, queries, queryConfig) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
@@ -706,8 +706,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds
-            );
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
 
           traces.push(...atomicTraces);
         }

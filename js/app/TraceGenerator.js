@@ -27,7 +27,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     function makeOpaque(hexColorString, opacity) {
       let clr = d3.rgb(hexColorString);
-      return "rgba("+clr.r+","+clr.g+","+clr.b+","+opacity+")"
+      return "rgba(" + clr.r + "," + clr.g + "," + clr.b + "," + opacity + ")"
     }
 
     /**
@@ -35,9 +35,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param arr
      * @param extent
      */
-    function toIntegerLevels (arr, extent) {
+    function toIntegerLevels(arr, extent) {
       let str2int = d3c.map();
-      extent.forEach( (str, idx) => str2int.set(str, idx) );
+      extent.forEach((str, idx) => str2int.set(str, idx));
       return arr.map(val => str2int.get(val));
     }
 
@@ -112,7 +112,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let xy = isSplit.x ? 'x' : 'y';
         // we can make a line out of _one_ split (made of the points for the implicit conditions of that split).
         // If a layout split is a numerical split, we should make a line out of that layout split rather out of color, shape, size or detail splits. i.e. do not add  the numerical split to splits, but all other
-        if(PQL.hasNumericYield(fu[xy])) { // should be  isOrdered())
+        if (PQL.hasNumericYield(fu[xy])) { // should be  isOrdered())
           // splits.push(...cat_splits, ...num_splits); // done below
         }
         // however, if the layout split is a categorical split, we should rather make a line out of a color, shape, size or detail splits. i.e. add the discrete split to splits, but remove one other numerical
@@ -141,7 +141,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     let tracer = {};
 
-    tracer.aggrHeatmap = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+    tracer.aggrHeatmap = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
@@ -176,13 +176,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           let convertMap = d3c.map();
           colorFu.extent.forEach((v, idx) => {
             let color = colorMapper(v);
-            colorTable.push([idx/len,color], [(idx+1)/len,color]);
+            colorTable.push([idx / len, color], [(idx + 1) / len, color]);
             convertMap.set(v, idx)
           });
 
           // convert categorial data to integer values
           colorData = selectColumn(rt, colorIdx).map(v => convertMap.get(v));
-          colorDomain = [0, colorFu.extent.length-1];
+          colorDomain = [0, colorFu.extent.length - 1];
         } else {
           colorTable = ScaleGen.asTable(mapper.aggrFillColor.scale);
           colorDomain = colorFu.extent;
@@ -220,7 +220,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param query
      * @return {Array}
      */
-    tracer.aggr = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+    tracer.aggr = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
@@ -250,10 +250,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yaxis: axisId.y,
           opacity: cfg.fill.opacity,
           marker: {
-            color : applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
-            size : applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
-            symbol : applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
-            line : { // configures the line bounding the marker points
+            color: applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
+            size: applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
+            symbol: applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
+            line: { // configures the line bounding the marker points
               color: cfg.stroke.color,
               width: cfg.stroke.width
             },
@@ -286,7 +286,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param query
      * @return {Array}
      */
-    tracer.uni = function (p1dRT, query, mapper, mainAxisId, marginalAxisId, fixedColor=undefined) {
+    tracer.uni = function (p1dRT, query, mapper, mainAxisId, marginalAxisId, fixedColor = undefined) {
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
 
@@ -294,7 +294,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         return [];
 
       let aest = query.layers[0].aesthetics,
-        traceName = {"x":"setMe","y":"setMe"};
+        traceName = {"x": "setMe", "y": "setMe"};
 
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
@@ -344,7 +344,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               width: c.map.uniDensity.line.width,
               opacity: c.map.uniDensity.line.opacity,
             },
-            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x'?'y':'x')) : 'none',
+            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
           if (modelOrData === 'data') {
@@ -409,7 +409,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        *
        * @param datam
        */
-      function getAccumulatedUniTrace (data, fu2idx, xy, modelOrData) {
+      function getAccumulatedUniTrace(data, fu2idx, xy, modelOrData) {
         // TODO: merge this with getUniTrace again?
         if (modelOrData === "data") {
           logger.warn("accumulated traces for data are not implemented!");
@@ -456,8 +456,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let trace = {
           name: traceName[xy], // modelOrData + ' marginal on ' + xy,
           showlegend: false,
-          x: xy === 'x'? x : px, //selectColumn(data, xIdx),
-          y: xy === 'x'? px : x, //selectColumn(data, yIdx),
+          x: xy === 'x' ? x : px, //selectColumn(data, xIdx),
+          y: xy === 'x' ? px : x, //selectColumn(data, yIdx),
           xaxis: xAxis,
           yaxis: yAxis,
         };
@@ -482,7 +482,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               color: color,
               width: c.map.uniDensity.line.width,
             },
-            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x'?'y':'x')) : 'none',
+            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
           if (modelOrData === 'data') {
@@ -512,7 +512,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       for (let xOrY of ['x', 'y']) // adds seperate traces for x and y uni-marginals
         if (p1dRT[xOrY] !== undefined) {
           let rt = nestByMvd.map(p1dRT[xOrY]); // FAIL HERE
-          traceName[xOrY] =  PQL.toString(p1dRT[xOrY].query);
+          traceName[xOrY] = PQL.toString(p1dRT[xOrY].query);
           for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
             let data = rt.get(modelOrData);
             if (data !== undefined) {
@@ -537,7 +537,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param query
      * @return {Array}
      */
-    tracer.bi = function (rt, query, mapper, axisId={x:'x', y:'y'}) {
+    tracer.bi = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
@@ -616,7 +616,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let xYieldsCat = PQL.hasDiscreteYield(xfu), // flag: True if x encodes a categorical dimension
         catXy = xYieldsCat ? 'x' : 'y'; // where the categorical dimension is: on 'x' or 'y' ?
       let catIdx = xYieldsCat ? 0 : 1, // index of the categorical dimension in the result table
-       numIdx = 1 - catIdx; // index of the numerical dimension in the result table
+        numIdx = 1 - catIdx; // index of the numerical dimension in the result table
       let traces = [];
 
       // group by values of categorical dimension
@@ -624,37 +624,37 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // get extent of categorical field usage
       let catFu = xYieldsCat ? xfu : yfu, // the field usage with categorical yield
-       catExtent= rt.extent[catIdx];
+        catExtent = rt.extent[catIdx];
 
       if (catExtent.length != cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");
 
       // then iterate over groups in same order like given in extent
-      for (let i=0; i<cqAxisIds.length; ++i) {
-        let data = groupedData["$"+catExtent[i]];
+      for (let i = 0; i < cqAxisIds.length; ++i) {
+        let data = groupedData["$" + catExtent[i]];
         // TODO: this is a hack. If a filter is applied on the categorical dimension, the above lookup fails because the fields extent wasn't updated
         if (data !== undefined) {
-            let trace = {
-              name: PQL.toString(rt.query),
-              type: 'scatter',
-              mode: 'lines',
-              showlegend: false,
-              [catXy]: selectColumn(data, 2), // the axis that encodes the categorical dimension, encodes the density on the new axis.
-              [catXy==='x'?'y':'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
-              xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
-              yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-              //opacity: c.map.biDensity.mark.opacity,
-              line: {
-                width: c.map.biDensity.line.width,
-                color: c.map.biDensity.line.color(),
-              },
-              fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
-              //fill: 'none',
-              fillcolor: makeOpaque(c.map.biDensity.line.color(), c.map.biDensity.line.fillopacity),
-            };
+          let trace = {
+            name: PQL.toString(rt.query),
+            type: 'scatter',
+            mode: 'lines',
+            showlegend: false,
+            [catXy]: selectColumn(data, 2), // the axis that encodes the categorical dimension, encodes the density on the new axis.
+            [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
+            xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
+            yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
+            //opacity: c.map.biDensity.mark.opacity,
+            line: {
+              width: c.map.biDensity.line.width,
+              color: c.map.biDensity.line.color(),
+            },
+            fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
+            //fill: 'none',
+            fillcolor: makeOpaque(c.map.biDensity.line.color(), c.map.biDensity.line.fillopacity),
+          };
 
-            traces.push(trace);    
-        }       
+          traces.push(trace);
+        }
       }
       return traces;
     };
@@ -733,45 +733,54 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param axisId
      * @return {*}
      */
-    tracer.predictionOffset = function (predRT, testDataRT, query, mapper, axisId) {
+    tracer.predictionOffset = function (predRT, testDataRT, query, mapper, axisId, queryConfig) {
 
-      if (!c.views.predictionOffset.possible || testDataRT == undefined || predRT == undefined)
+      if (!queryConfig.visConfig.predictionOffset.active || testDataRT == undefined || predRT == undefined)
         return [];
 
-      let fu2idx = predRT.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0];
+      // let aest = query.layers[0].aesthetics;
+      let fus = {
+        x: query.layout.cols[0],
+        y: query.layout.rows[0]
+      };
 
-      // build data as needed
-      let xIdx = fu2idx.get(xfu),
-        yIdx = fu2idx.get(yfu),
+      let pIdx = {},
+        tIdx = {},
+        data = {},
         len = testDataRT.length,
-        undefArray = Array(len).fill(undefined),
-        // sort both by same index (xIdx would have been likewise ok). It's not inplace.
-        // TODO: not its not that easy, I need to sort by the correct positional index!
-        predRTSorted = _.sortBy(predRT, e=>e[yIdx]),
-        testDataRTSorted = _.sortBy(testDataRT, e=>e[yIdx]),
-        xdata = _.flatten( _.zip(selectColumn(testDataRTSorted, xIdx), selectColumn(predRTSorted, xIdx), undefArray) ),
-        ydata = _.flatten( _.zip(selectColumn(testDataRTSorted, yIdx), selectColumn(predRTSorted, yIdx), undefArray) );
+        undefArray = Array(len).fill(undefined);
+      for (let xy of ['x', 'y']) {
+        pIdx[xy] = predRT.fu2idx.get(fus[xy]);
+        tIdx[xy] = testDataRT.fu2idx.get(fus[xy]);
+      }
 
+      // sort both by same index (xIdx would have been likewise ok). It's not inplace.
+      // TODO: not its not that easy, I need to sort by the correct positional index!
+      for (let xy of ['x', 'y'])
+        if (PQL.isSplit(fus[xy])) {
+          predRT = _.sortBy(predRT, e => e[pIdx[xy]]);
+          testDataRT = _.sortBy(testDataRT, e => e[tIdx[xy]]);
+        }
+      for (let xy of ['x', 'y'])
+        data[xy] = _.flatten(_.zip(selectColumn(testDataRT, tIdx[xy]), selectColumn(predRT, pIdx[xy]), undefArray))
+
+      let cfg = c.map.predictionOffset.line;
       let trace = {
-        name: 'samples',
+        name: 'offset',
         type: 'scatter',
         mode: 'lines',
         showlegend: false,
-        x: xdata,
-        y: ydata,
+        x: data.x,
+        y: data.y,
         xaxis: axisId.x,
         yaxis: axisId.y,
         opacity: 1.0,
         connectgaps: false,
-        marker: {
-          color: applyMap(predRT, mapper.aggrFillColor, aest.color.fu, fu2idx),
-          line: {
-            color: "black", // cfg.stroke.color,
-            width: "3", //cfg.stroke.width,
-          }
+        line: {
+          color: cfg.color,
+          width: cfg.width,
+          opacity: cfg.opacity,
+          fill: cfg.fill,
         }
       };
 

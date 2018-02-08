@@ -112,7 +112,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               .then(res => c.uniDensityRT = res)
               .then(() => RT.biDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
-              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable))
+              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable, c.config))
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!
@@ -158,6 +158,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             testData: { active: Config.views.testData.active, },
             marginals: { active: Config.views.marginals.active },
             contour: { active: Config.views.contour.active },
+            predictionOffset: { active: Config.views.predictionOffset.active},
           }
         };
         // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
@@ -377,17 +378,20 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           'contour': 'density',
           'data': 'data',
           'testData': 'test data',
+          'predictionOffset': 'prediction offset',
         };
 
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
-        let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData'].map(
+        let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
+          .map(
           // TODO: HACK for paper
           // let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')
               .prop("checked", context.config.visConfig[what].active)
+              .prop("disabled", context.config.visConfig[what].possible)
               .change( (e) => {
                 // update the config and ...
                 context.config.visConfig[what].active = e.target.checked;

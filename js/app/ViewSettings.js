@@ -62,7 +62,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   c.views = {
     aggregations: {
       possible: true, // true iff the view should be made accessible to the user at all, false else
-      active: true, // true if the view is active (i.e.. computed and visible) by default, false if not
+      active: true, // true if the view is active (i.e.. computed and visible) BY DEFAULT false if not
     },
     data: {
       possible: true,
@@ -186,6 +186,15 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       fill: {
         def: () => c.testDataColor.single,
         opacity: 0.9,
+      },
+    },
+
+    predictionOffset: {
+      line: {
+        color: greys(0.7),
+        width: 2,
+        opacity: 0.8,
+        fill: false,
       },
     },
 
