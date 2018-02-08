@@ -10,7 +10,6 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
   var logger = Logger.get('pl-ResultTable');
   logger.setLevel(Logger.DEBUG);
 
-
   /**
    * Attaches the extent of each column of a (row-major) result table under the attribute .extent and returns the modified table.
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.

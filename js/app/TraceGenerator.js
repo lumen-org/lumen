@@ -145,7 +145,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
-        return []
+        return [];
 
       let fu2idx = rt.fu2idx,
         aest = query.layers[0].aesthetics,
@@ -167,6 +167,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           colorTable, colorDomain, colorData;
         // plotly heatmaps require to use a colorscale. It's impossible to directly use a manual color specification
 
+        let zRawData = selectColumn(rt, colorIdx);
+
         if (PQL.hasDiscreteYield(colorFu)) {
           // create step-wise continuous color table
           colorTable = [];
@@ -181,12 +183,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           });
 
           // convert categorial data to integer values
-          colorData = selectColumn(rt, colorIdx).map(v => convertMap.get(v));
+          colorData = zRawData.map(v => convertMap.get(v));
           colorDomain = [0, colorFu.extent.length - 1];
         } else {
           colorTable = ScaleGen.asTable(mapper.aggrFillColor.scale);
           colorDomain = colorFu.extent;
-          colorData = selectColumn(rt, colorIdx);
+          colorData = zRawData;
         }
 
         // no nesting necessary (no further splitting present)
@@ -207,12 +209,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           opacity: c.map.heatmap.opacity[PQL.hasDiscreteYield(colorFu) ? "discrete" : "continuous"],
           xgap: c.map.heatmap.xgap,
           ygap: c.map.heatmap.ygap,
+          text: zRawData,
+          hoverinfo: "text+x+y",
         };
         traces.push(trace);
       }
 
       return traces;
     };
+
 
     /**
      * Build and return traces for aggregation scatter plot, grouped by splits.
@@ -238,6 +243,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {
+
         let trace = {
           name: traceName,
           type: 'scatter',
@@ -260,6 +266,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             showscale: false,
             // sizemode: 'area',
           },
+          hoverinfo: "text",
+          text: rt.formatter(data),
           line: {},
         };
 
@@ -547,12 +555,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let xfu = rt.idx2fu[0],
         yfu = rt.idx2fu[1];
 
-      let formatter = d3.format(".2f"),
-        zdata = selectColumn(rt, 2),
-        ztext = zdata.map(formatter);
+      let zdata = selectColumn(rt, 2),
+        ztext = zdata.map(c.map.biDensity.labelFormatter);
 
       // merge color split data into one
-
       let trace = {
         name: PQL.toString(rt.query),
         // name: '2d density',
@@ -571,7 +577,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         zmax: rt.extent[1], // TODO: is that valid for c-c heat maps? NO!
         hoverinfo: 'text',
         text: ztext,
-        //labelformat:'.2f',
       };
 
       if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
@@ -666,7 +671,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param mapper: A dictionary of mapper for the keys (and visual channels): fillColor, size, shape
      * @return {Array}
      */
-    // tracer.samples = function (rt, query, mapper, visualConfig, axisId) {
     tracer.samples = function (rt, query, mapper, mode, axisId) {
       if (!axisId) throw RangeError("invalid axisId");
 
@@ -709,6 +713,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         xaxis: axisId.x,
         yaxis: axisId.y,
         opacity: cfg.fill.opacity,
+        hoverinfo: "text",
+        text: rt.formatter(rt),
       };
       trace.marker = {
         color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),

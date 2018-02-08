@@ -62,15 +62,15 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   c.views = {
     aggregations: {
       possible: true, // true iff the view should be made accessible to the user at all, false else
-      active: true, // true if the view is active (i.e.. computed and visible) BY DEFAULT false if not
+      active: false, // true if the view is active (i.e.. computed and visible) BY DEFAULT false if not
     },
     data: {
       possible: true,
-      active: false,
+      active: true,
     },
     testData: {
       possible: true,
-      active: true,
+      active: false,
     },
     marginals: {
       possible: true,
@@ -78,7 +78,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     },
     contour: {
       possible: true,
-      active: false,
+      active: true,
     },
     predictionOffset: {
       possible: true,
@@ -229,7 +229,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
 //      opacity: 0.8,
       levels: 16,
-      resolution: 30 // the number computed points along one axis
+      resolution: 30, // the number computed points along one axis
+      labelFormatter: d3.format(".3f"),
     },
   };
 

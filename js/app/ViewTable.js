@@ -23,6 +23,36 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return (xy === 'x'?'y':'x');
     }
 
+
+    /**
+     * Builds and returns a formatter for this result table.
+     * You can format any likewise structured data by passing it as the single argument to the returned formatter.
+     *
+     * @param rt
+     * @return
+     */
+    function resultTableFormatter(rt) {
+
+      let rtNames = rt.idx2fu.map(fu => fu.yields);
+
+      let formatter = rt.idx2fu.map(fu => {
+        if (PQL.hasDiscreteYield(fu)) {
+          return o => o.toString();  // no need for any special formatting
+        } else if (PQL.hasNumericYield(fu)) {
+          return d3.format(".3f");
+        } else {
+          throw RangeError("invalid yield type");
+        }
+      });
+
+      return (data) =>
+        data.map(item =>
+          d3.range(item.length).map(
+            i => rtNames[i] + ": " + formatter[i](item[i])
+          ).join('<br>')
+        );
+    }
+
     function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
       let axis = {};
       axis.range = [0, extent[1]*cfg.maxPrct];
@@ -39,6 +69,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // let mainAxis = axes.main,
       //   marginalAxis = axis.marginal,
       //   catQuantAxis = axis.catquant;
+
+      // attach formatter
+      for (let rt of [aggrRT, dataRT, testDataRT, p1dRT, p2dRT])
+        if (rt != undefined)
+          rt.formatter = resultTableFormatter(rt);
 
       // build all mappers
       let mapper = {
