@@ -53,6 +53,32 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         );
     }
 
+
+    /**
+     * Given a split returns a nicely formatted string representation of the splits extent, i.e. a string for each element of the extent array.
+     *
+     * TODO: actually, this is more general: we need a formatter for each data type, and there is essentially these types: string, number, array of string, interval of numbers, and in the future: data, ...
+     */
+    function splitExtentToString (split) {
+
+      if (split.extent == undefined)
+        throw RangeError("you must set the extent of a split before calling this function.");
+
+      // setup formatter
+      let numFormatter = d3.format(".1f"),
+        formatter = undefined;
+      if (PQL.hasDiscreteYield(split))
+        formatter = v => v.toString();
+      else if (PQL.hasNumericYield(split))
+        if (split.method === PQL.SplitMethod.equiinterval)
+          formatter = (v) => "[" + v.map(numFormatter).join(", ") + "]";
+        else
+          formatter = numFormatter;
+
+      // apply
+      return split.extent.map(formatter);
+    }
+
     function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
       let axis = {};
       axis.range = [0, extent[1]*cfg.maxPrct];
@@ -434,7 +460,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
-          let major = config.axisGenerator.templating_major(majorOffset, majorLength, ticks, yx + minorId);
+          let major = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
           axes[xy + 'axis' + majorId] = major;
         }
 

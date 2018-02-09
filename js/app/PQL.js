@@ -213,7 +213,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
     }
 
     /**
-     * Apply the filter, i.e. restrict the domain of the field stored in the filter as specified by the filter.
+     * Apply the filter
+     * , i.e. restrict the domain of the field stored in the filter as specified by the filter.
      */
     apply () {
       let newDomain;
