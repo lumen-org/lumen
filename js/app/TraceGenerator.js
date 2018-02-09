@@ -167,8 +167,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           colorTable, colorDomain, colorData;
         // plotly heatmaps require to use a colorscale. It's impossible to directly use a manual color specification
 
-        let zRawData = selectColumn(rt, colorIdx);
-
         if (PQL.hasDiscreteYield(colorFu)) {
           // create step-wise continuous color table
           colorTable = [];
@@ -183,12 +181,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           });
 
           // convert categorial data to integer values
-          colorData = zRawData.map(v => convertMap.get(v));
+          colorData = selectColumn(rt, colorIdx).map(v => convertMap.get(v));
           colorDomain = [0, colorFu.extent.length - 1];
         } else {
           colorTable = ScaleGen.asTable(mapper.aggrFillColor.scale);
           colorDomain = colorFu.extent;
-          colorData = zRawData;
+          colorData = selectColumn(rt, colorIdx);
         }
 
         // no nesting necessary (no further splitting present)
@@ -209,8 +207,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           opacity: c.map.heatmap.opacity[PQL.hasDiscreteYield(colorFu) ? "discrete" : "continuous"],
           xgap: c.map.heatmap.xgap,
           ygap: c.map.heatmap.ygap,
-          text: zRawData,
-          hoverinfo: "text+x+y",
+          text: rt.formatter(rt),
+          hoverinfo: "text",
         };
         traces.push(trace);
       }
