@@ -62,8 +62,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       axis.tickvals = [0, (extent[1] * cfg.linePrct).toPrecision(1)]; // draw a line at 0 and ~maxPrct%
       return axis
     }
-
-    // function atomicPlotlyTraces(aggrRT, dataRT, p1dRT, p2dRT, query, axes) {
+    
     function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
 
       // let mainAxis = axes.main,
@@ -71,7 +70,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       //   catQuantAxis = axis.catquant;
 
       // attach formatter
-      for (let rt of [aggrRT, dataRT, testDataRT, p1dRT, p2dRT])
+      for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt != undefined)
           rt.formatter = resultTableFormatter(rt);
 
@@ -97,7 +96,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         color: aest.color instanceof VisMEL.ColorMap,
         shape: aest.shape instanceof VisMEL.ShapeMap,
         size: aest.size instanceof VisMEL.SizeMap,
-        details:  aest.details.filter( s => s.method === 'identity').length > 0, // identity splits can be ignored
+        details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
         x: xfu !== undefined,
         y: yfu !== undefined,
       };
