@@ -262,7 +262,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               width: cfg.stroke.width
             },
             showscale: false,
-            // sizemode: 'area',
+            sizemode: 'area',
           },
           hoverinfo: "text",
           text: rt.formatter(data),
@@ -553,8 +553,16 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let xfu = rt.idx2fu[0],
         yfu = rt.idx2fu[1];
 
-      let zdata = selectColumn(rt, 2),
+      let zdata = selectColumn(rt, 2), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
+
+      // TODO: is that ok? We should normalize across ALL panes
+      let sortedZData = _.sortBy(zdata),
+        l = sortedZData.length;
+      // ignore all values smaller max*0.01
+      let lowerIdx = _.sortedIndex(sortedZData, _.last(sortedZData)*0.001);
+      // of the remaining values get the .98 quantile and choose this as the upper value of the scale
+      let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
 
       // merge color split data into one
       let trace = {
@@ -567,12 +575,14 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         z: zdata,
         xaxis: axisId.x,
         yaxis: axisId.y,
-        opacity: c.map.biDensity.opacity,
+        //opacity: c.map.biDensity.opacity,
+        opacity: 1,
         autocolorscale: false,
         colorscale: c.map.biDensity.colorscale(),
         zauto: false,
         zmin: 0,
-        zmax: rt.extent[1], // TODO: is that valid for c-c heat maps? NO!
+        zmax: rt.extent[2], // TODO: is that valid for c-c heat maps? NO!
+        //zmax: zmax, // TODO: is that valid for c-c heat maps? NO!
         hoverinfo: 'text',
         text: ztext,
       };
@@ -711,16 +721,19 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         xaxis: axisId.x,
         yaxis: axisId.y,
         opacity: cfg.fill.opacity,
+        //opacity: fooOpac,
         hoverinfo: "text",
         text: rt.formatter(rt),
       };
       trace.marker = {
         color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
         size: applyMap(rt, mapper.size, aest.size.fu, fu2idx),
+        sizemode: 'area',
         symbol: applyMap(rt, mapper.shape, aest.shape.fu, fu2idx),
         line: {
           color: cfg.stroke.color,
           width: cfg.stroke.width,
+          //width: 0,
         },
         maxDisplayed: cfg.maxDisplayed
       };

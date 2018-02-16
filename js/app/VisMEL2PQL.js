@@ -235,6 +235,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 
     // create new split for univariate density
     let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
+    densitySplit.args[0] = c.map.uniDensity.resolution;
 
     // create new univariate density field usage
     let fields4density = [...splits, densitySplit].map(split => split.field);

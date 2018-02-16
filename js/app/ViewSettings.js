@@ -14,6 +14,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   function makeDensityScale(colorArray) {
     const threshhold = 0.000001;
     let colorScale = [[0, 'rgba(255,255,255,0)'], [threshhold, 'rgba(255,255,255,0)']];  // to make sure very small values are drawn in white
+    // todo: this is ugly!
     let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
     split.push(1);
     split[0] = threshhold;
@@ -23,17 +24,21 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     return colorScale;
   }
 
+  //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
+  let reducedGreyScale = d3chromatic.schemeGreys[9];  // todo: debug
+
   c.densityColor = {
     adapt_to_color_usage: false,
-    single: d3chromatic.interpolateGreys(0.7), // the default
-    scale: makeDensityScale(d3chromatic.schemeGreys[9]), // the default
-    // single: d3chromatic.interpolateBlues(0.7), // the default
-    // scale: makeDensityScale(d3chromatic.schemeBlues[9]), // the default
     color_single: d3chromatic.interpolateBlues(0.7),
     color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
     grey_single: d3chromatic.interpolateGreys(0.7),
-    grey_scale: makeDensityScale(d3chromatic.schemeGreys[9]),
+    grey_scale: makeDensityScale(reducedGreyScale),
   };
+
+  c.densityColor.single = c.densityColor.grey_single;
+  c.densityColor.scale = c.densityColor.grey_scale ;
+  // single: d3chromatic.interpolateBlues(0.7), // the default
+  // scale: makeDensityScale(d3chromatic.schemeBlues[9]), // the default
 
   c.marginalColor = {
     single: d3chromatic.interpolateGreys(0.5),
@@ -66,7 +71,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     },
     data: {
       possible: true,
-      active: true,
+      active: false,
     },
     testData: {
       possible: true,
@@ -74,7 +79,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     },
     marginals: {
       possible: true,
-      active: false,
+      active: true,
     },
     contour: {
       possible: true,
@@ -154,7 +159,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     heatmap: {
       opacity: {
         discrete: 0.5,
-        continuous: 0.9,
+        continuous: 0.8,
       },
       xgap: 2,
       ygap: 2,
@@ -172,7 +177,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       fill: {
         def: () => c.dataColor.single,
-        opacity: 0.9,
+        opacity: _opac, //0.9,
         // opacity: 0.8,
       },
       maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
@@ -211,7 +216,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         opacity: 0.7, // line opacity
         fill: true,
         fillopacity: 0.06,
-      }
+      },
+      resolution: _res,
     },
 
     biDensity: {
@@ -228,8 +234,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         fillopacity: 0.06,
       },
 //      opacity: 0.8,
-      levels: 16,
-      resolution: 30, // the number computed points along one axis
+      levels: _lvls, //16,
+      resolution: _res, //30, // the number computed points along one axis
       labelFormatter: d3.format(".3f"),
     },
   };
@@ -448,8 +454,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       zeroline: true,
       zerolinecolor: c.plots.marginal.axis.color, // 'main' because visually this represent the main axis
       zerolinewidth: c.plots.marginal.axis.width,
-      tickformat: '.2f',
-      hoverformat: '.2f',
+      tickformat: '.3f',
+      hoverformat: '.3f',
       // autorange: 'false',
       autorange: 'false',
       fixedrange: false,
