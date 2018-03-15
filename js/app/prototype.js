@@ -185,6 +185,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // update is not an instance method that needs to be called with a proper this. it always knows its context.
         this.update = _.debounce(makeContextedUpdateFct(this), 200);
         this.unredoer = new UnRedo(20);
+
+        // emitter mixin
+        Emitter(this);
       }
 
       /**
@@ -196,6 +199,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           if ($visuals.hasOwnProperty(visual))
             $visuals[visual].remove();
         }
+        this.emit("ContextDeletedEvent", this);
       }
 
       /**
@@ -456,6 +460,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
               // create new context and visualization with that model if it exists
               var context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
+              contextQueue.add(context);
 
               // fetch model
               context.basemodel.update()
@@ -491,13 +496,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         this._context = context;
         let that = this;
         context.modelbase.listModels().then(
-          res => {
-            console.log(res);
-            console.log(that._$modelsDatalist.html());            
+          res => {          
             let $datalist = that._$modelsDatalist;
-            // clear contents
             $datalist.empty();
-            // append
             for (let name of res.models) {
               // filter any names that begin with "__" since these are only 'internal' models
               if (!name.startsWith("__"))
@@ -538,11 +539,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           () => this._context.clearShelves(['dim','meas']));
         var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
           () => {
-            let clone = this._context.copy();
+            let contextCopy = this._context.copy();
+            contextQueue.add(contextCopy);
             // fetch model
-            clone.basemodel.update()
-              .then(() => activate(clone, ['visualization', 'visPanel']))
-              .then(() => clone.update())
+            contextCopy.basemodel.update()
+              .then(() => activate(contextCopy, ['visualization', 'visPanel']))
+              .then(() => contextCopy.update())
               .catch((err) => {
                 console.error(err);
                 infoBox.message("Could not load remote model from Server!");
@@ -579,6 +581,107 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
     }
 
+    /**
+     * A managed queue for Contexts.
+     *
+     * Its purpose is to keep track of the open contexts and their order of use.
+     *
+     * Elements listen to events of contexts:
+     *  * if a context is deleted, the corresponding element is also deleted from the queue and the current first element of the queue is made the new active context.
+     *  * if a context is activated, the corresponding element is moved to the beginning of the queue.
+     *  * if the last context is deleted, a ContextQueueEmpty event is emitted.
+     *
+     *  Note that contexts are not automatically added to this this queue when instanciated, but need to be by calling .append().
+     */
+    class ContextQueue {
+
+      static
+      _makeElem(context=undefined, prev=undefined, next=undefined) {
+        return {prev, next, context}
+      }
+
+      constructor() {
+        this._first = undefined;
+        this._last = undefined;
+        Emitter(this);
+      }
+
+      empty() {
+        return this._first == undefined;
+      }
+
+      /**
+       * Makes elem the first element of the queue. elem must be in the queue already.
+       * @param elem
+       */
+      _moveToFront(elem) {
+        this._remove(elem);
+        this._prepend(elem);
+      }
+
+      /**
+       * Activates the context of the first element.
+       */
+      activateFirst() {
+        if (this.empty())
+          return;
+        activate(this._first.context);
+      }
+
+      /**
+       * Removes element elem from the queue.
+       * @param elem
+       */
+      _remove(elem) {
+        if (elem.prev !== undefined) elem.prev.next = elem.next;
+        if (elem.next !== undefined) elem.next.prev = elem.prev;
+        if (this._first === elem)
+          this._first = elem.next;
+        if (this._last === elem)
+          this._last = elem.prev;
+      }
+
+      /**
+       * Prepends the element to the front of the queue.
+       * @param elem
+       * @private
+       */
+      _prepend(elem) {
+        elem.next = this._first;
+        elem.prev = undefined;
+        if (this.empty())
+          this._last = elem;
+        else
+          this._first.prev = elem;
+        this._first = elem;
+      }
+
+      /**
+       * Adds the context as a new and as the first element to the context queue.
+       * @param context
+       */
+      add(context) {
+        let elem = ContextQueue._makeElem(context);
+        let that = this;
+
+        this._prepend(elem);
+
+        // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
+        context.on("ContextDeletedEvent", () => {
+          that._remove(elem);
+          that.activateFirst();
+          if(that.empty()) {
+            console.log("ContextQueueEmpty");
+            that.emit("ContextQueueEmpty")
+          }
+        });
+
+        // an element listens to a context being activated. it then is moved to the beginning of the queue
+        context.on("ContextActivatedEvent", () => {
+          that._moveToFront(elem);
+        })
+      }
+    }
 
     /**
      * Activates a context and enables interactive editing of a query on/for it.
@@ -604,7 +707,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // add marking for new active visualization
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
+        // TODO: replace this with context
         toolbar.setContext(context);
+
+        // emit signal that context is now active
+        context.emit("ContextActivatedEvent", context);
+
         // TODO: later maybe its nicer to emit a signal on context change. but for now its easier this way.
         //activate.emit("ContextChanged");
       }
@@ -623,13 +731,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     var toolbar = new Toolbar();
     toolbar.$visual.appendTo($('#pl-toolbar-container'));
 
+    // context queue
+    let contextQueue = new ContextQueue();
+
     return {
       /**
        * Starts the application.
        */
       start: function () {
         // create initial context with model
-        let context = new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL).makeGUI();
+        let context = 
+        new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL).makeGUI();
+        contextQueue.add(context);
 
         // activate that context
         activate(context, ['visualization', 'visPanel']);
