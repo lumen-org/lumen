@@ -449,7 +449,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       constructor (context) {
         this._context = context;
 
-        let $modelInput = $('<input type="text" value=""/>')
+        let $modelInput = $('<input type="text" list="models"/>')
           .keydown( (event) => {
             var modelName = event.target.value;
             if (event.keyCode === 13) {
@@ -469,12 +469,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             }
           });
 
+        this._$modelsDatalist = $('<datalist id="models"></datalist>');
+
         this.$visual = $('<div class="pl-model-selector"></div>')
           .append($('<div>Load Model:</div>'))
-          .append($modelInput);
+          .append($modelInput)
+          .append(this._$modelsDatalist);
 
-        if(context !== undefined)
+        if(context !== undefined) {
           this.setContext(context);
+        }
       }
 
       /**
@@ -484,8 +488,23 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       setContext (context) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
-        this._context = context; // TODO: not even tht is needed ...
-        //TODO in the future: fetch available models from the modelserver...? for now we are done!
+        this._context = context;
+        let that = this;
+        context.modelbase.listModels().then(
+          res => {
+            console.log(res);
+            console.log(that._$modelsDatalist.html());            
+            let $datalist = that._$modelsDatalist;
+            // clear contents
+            $datalist.empty();
+            // append
+            for (let name of res.models) {
+              // filter any names that begin with "__" since these are only 'internal' models
+              if (!name.startsWith("__"))
+                $datalist.append($("<option>").attr('value',name).text(name))
+            }            
+          }
+        );
       }
     }
 
@@ -539,6 +558,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           () => this._context.modelbase.reload());
 
         this._modelSelector = new ModelSelector(context);
+
         this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query, $reload);
 
         if(context !== undefined)

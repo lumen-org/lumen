@@ -103,3 +103,7 @@ doc/
 *.ipr
 *.iws
 .idea/
+
+# backup files
+*~
+
