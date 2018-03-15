@@ -278,7 +278,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       }
 
       /**
-       * Creates a deep copy of this context. This means a new (local view on the) model is created, as well as a copy of the shelves and their contents.  As the standard new context it is already "visual" (i.e. attachVisuals is called), but its "hidden" before (i.e. hideVisuals() is called).
+       * Creates a deep copy of this context.
+       *
+       * This means a new (local view on the) model is created, as well as a copy of the shelves and their contents. As the standard new context it is already "visual" (i.e. attachVisuals is called), but its "hidden" before (i.e. hideVisuals() is called.
        * Note that the pipeline including the visualization is not copied, but rerun.
        */
       copy () {
@@ -287,6 +289,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // additional stuff to copy
         copiedContext.config = JSON.parse(JSON.stringify(this.config));
+
+        // all the following objects are entirely recreated on a shelves change
+        // hence we do not need to deep-copy, but can simply link to them!
+        // TODO: i get the feeling that I should implement some sort of state machine at the same time, that manages that only required parts of the pipeline are updated
+        // for (let name of ['query', 'queryTable', 'modelTable', 'aggrRT', 'dataRT', 'testDataRT', 'uniDensityRT', 'biDensityRT', 'viewTable'])
+        //   copiedContext[name] = this[name]
 
         // now make it visual
         copiedContext.makeGUI();
@@ -541,6 +549,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
           () => {
             let contextCopy = this._context.copy();
             contextQueue.add(contextCopy);
+
             // fetch model
             contextCopy.basemodel.update()
               .then(() => activate(contextCopy, ['visualization', 'visPanel']))
