@@ -143,6 +143,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // server and model
         // note that basemodel is expected to be constant, i.e. it never is changed
         this.server = server;
+        if (server !== undefined)
+          this.modelbase = new Remote.ModelBase(server);
         if (modelName !== undefined && server !== undefined)
           this.basemodel = new Remote.Model(modelName, server);
         else
@@ -533,8 +535,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         var $query = $('<div class="pl-toolbar-button">Query!</div>').click(
           () => this._context.update());
 
+        var $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
+          () => this._context.modelbase.reload());
+
         this._modelSelector = new ModelSelector(context);
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query, $reload);
 
         if(context !== undefined)
           this.setContext(context);

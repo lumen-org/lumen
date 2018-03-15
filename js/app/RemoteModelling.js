@@ -57,15 +57,21 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     });
   }
 
-  /** Utility function to parse a row according to expected data types */
+  /** Utility function to parse a row according to expected data types 
+  * Missing data in a row is indicated by an empty string.
+  */
   function parseRow (row, dtypes) {
     for (let i=0; i<dtypes.length; ++i) {
-      if (dtypes[i] === PQL.FieldT.DataType.num)
-        row[i] = +row[i];
-      //else if (dtypes[i] == F.FieldT.DataType.string)
-      //  row[i] = row[i] // identity ...
-      else if (dtypes[i] !== PQL.FieldT.DataType.string)
-        throw new RangeError("invalid dataType: " + dtypes[i]);
+      if (row[i] === '')
+        row[i] = undefined;
+      else {
+        if (dtypes[i] === PQL.FieldT.DataType.num)
+          row[i] = +row[i];
+        //else if (dtypes[i] == F.FieldT.DataType.string)
+        //  row[i] = row[i] // identity ...
+        else if (dtypes[i] !== PQL.FieldT.DataType.string)
+          throw new RangeError("invalid dataType: " + dtypes[i]);
+      }
     }
     return row;
   }
@@ -294,6 +300,18 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
 
     header (modelName) {
       return this.execute(PQL.toJSON.header(modelName));
+    }
+
+    /**
+     * Reloads given models on the model base.
+     * Returns a promise to the execution.
+     * @param models Single model to reload, a list of models to reload from model source or "*". Defaults to "*".
+     *  TODO: currently only "*" is implemented.
+     */
+    reload (models="*") {
+      if (models !== '*')
+        throw "not implemented";
+      return this.execute({'RELOAD': models});
     }
 
   }
