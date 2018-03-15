@@ -226,8 +226,8 @@ main {
 }
 
 .pl-info-box {
-    /*position: fixed;*/
-    /*bottom: 1rem;*/
+    position: fixed;
+    bottom: 1rem;
     width: 90%;
     min-height: 1rem;
     margin: .5rem 5%;

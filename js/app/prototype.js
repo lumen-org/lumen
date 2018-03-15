@@ -670,10 +670,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         context.on("ContextDeletedEvent", () => {
           that._remove(elem);
           that.activateFirst();
-          if(that.empty()) {
-            console.log("ContextQueueEmpty");
+          if(that.empty())
             that.emit("ContextQueueEmpty")
-          }
         });
 
         // an element listens to a context being activated. it then is moved to the beginning of the queue
@@ -733,6 +731,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     // context queue
     let contextQueue = new ContextQueue();
+    contextQueue.on("ContextQueueEmpty", () => {
+      infoBox.message("Load a model to start!", "info")
+    });
+
 
     return {
       /**
