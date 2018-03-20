@@ -94,6 +94,15 @@ main {
 }
 
 #pl-mappings-container {
+
+}
+
+#pl-config-editor-container {
+    min-width: 400px;
+}
+
+.pl-config {
+
 }
 
 .pl-visualization-pane {

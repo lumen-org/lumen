@@ -29,10 +29,9 @@
     <!-- plotly.js --
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>-->
     <script src="../js/lib/plotly-latest_old.js"></script>   
-    
 
-    <!-- dataframe.js --
-    <script src="https://cdn.rawgit.com/Gmousse/dataframe-js/master/dist/dataframe-min.js"></script> -->
+    <!-- jsoneditor.js -->
+    <script src="../js/lib/jsoneditor.min.js"></script>
 
     <!-- custom styling -->
     <link rel="stylesheet" type="text/css" href="../css/prototype.css">
@@ -76,10 +75,14 @@
 <!-- main content -->
 <div id="pl-toolbar-container"></div>
 <main>
+    <div class="pl-column pl-config">
+        <div class="pl-column-title">Configuration</div>
+        <div id="pl-config-editor-container"> </div>
+        <div id="pl-config-editor-container2"> </div>
+    </div>
     <div class="pl-column pl-schema">
         <div class="pl-column-title">Schema</div>
         <div id="pl-model-container"> </div>
-
     </div>
     <div class="pl-column pl-spec">
         <div class="pl-column-title">Specification</div>

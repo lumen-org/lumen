@@ -1,5 +1,5 @@
 /**
- * @copyright © 2015-2017 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2015-2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 //define([], function () {
 define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain'], function (d3chromatic, d3f, d3color, ss, Domain) {
