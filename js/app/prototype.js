@@ -768,7 +768,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     SettingsEditor.watch('root', () => {
         infoBox.message("somethign changed!");
         console.log(Config);
-        });
+        contextQueue.first().update();
+    });
 
     ////////////////////////
 //

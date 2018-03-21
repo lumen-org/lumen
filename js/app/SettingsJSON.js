@@ -67,15 +67,636 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     //defaultProperties: ["colorEnum"],
   };
 
-  let colorTestSchemaInitial = {
+  let colorTestInitial = {
     colorEnum: "density2"
   };
 
-  // initial json of settings
 
-  let initial = {
-    colorTest : colorTestSchemaInitial
+  let tweaksSchema = {
+    type: "object",
+    properties: {
+      hideAggregations: {type: "boolean"},
+      resolution: {type: "integer"},
+    }
   };
+  let tweaksInitial = {
+    hideAggregations: false,
+    resolution: 50,
+  };
+
+  let colorsSchema = {
+    type: "object",
+    title: "colors",
+    properties: {
+      "semanticScales": {
+
+      },
+      "density": {
+        type: "object",
+        properties: {
+          "adapt_to_color_usage": {type: "boolean"},
+
+          "single": {type: "string", format: "color"},
+          "scale": {type: "string", enum: colorscalesKeys},
+
+          "grey_single": {type: "string", format: "color"},
+          "grey_scale": {type: "string", enum: colorscalesKeys},
+
+          "color_single": {type: "string", format: "color"},
+          "color_scale": {type: "string", enum: colorscalesKeys},
+        }
+      },
+      "aggregation": {
+        type: "object",
+        properties: {
+          "single": {type: "string", format: "color"}
+        }
+      },
+      "data": {
+        type: "object",
+        properties: {
+          "single": {type: "string", format: "color"}
+        }
+      },
+      "testData": {
+        type: "object",
+        properties: {
+          "single": {type: "string", format: "color"}
+        }
+      }
+
+    }
+  };
+
+  let colorsSchemaOld = {
+    type: "object",
+    title: "colors",
+    properties: {
+      density: {
+        type: "object",
+        properties: {
+          single: {type: "string"},
+          scale: {type: "string"},
+          adapt_to_color_usage: {type: "boolean"},
+        }
+      },
+      marginal: {
+        type: "object",
+        properties: {
+          single: {type: "object"}
+        }
+      },
+      aggregation: {
+        type: "object",
+        properties: {
+          single: {type: "object"}
+        }
+      },
+      data: {
+        type: "object",
+        properties: {
+          single: {type: "object"}
+        }
+      },
+      testData: {
+        type: "object",
+        properties: {
+          single: {type: "object"}
+        }
+      }
+    }
+  };
+
+  let viewsSchema = {
+    //$schema: "http://json-schema.org/draft-06/schema#",
+    type: "object",
+    title: "views", // todo: rename to traces
+    properties: {
+      "aggregations": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+          active: {type: "boolean"},
+        }
+      },
+      "data": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+          active: {type: "boolean"},
+        }
+      },
+      "testData": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+          active: {type: "boolean"},
+        }
+      },
+      "marginals": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+          active: {type: "boolean"},
+        }
+      },
+      "contour": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+          active: {type: "boolean"},
+        }
+      },
+      "predictionOffset": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+          active: {type: "boolean"},
+        }
+      },
+      "accuMarginals": {
+        type: "object",
+        properties: {
+          possible: {type: "boolean"},
+        }
+      },
+
+    }
+  };
+
+  let mapSchema = {
+    type: "object",
+    title: "map",
+    properties: {
+      aggrMarker: {
+        type: "object",
+        properties: {
+          fill: {
+            type: "object",
+            properties: {
+              def: {
+                type: "string",
+                format: "color"
+              },
+              opacity: {
+                type: "number"
+              }
+            }
+          },
+          stroke: {
+            type: "object",
+            properties: {
+              color: {
+                type: "object",
+                format: "color",
+              },
+              width: {
+                type: "number",
+              }
+            }
+          },
+          size: {
+            type: "object",
+            properties: {
+              min: { type: "number" },
+              max: { type: "number" },
+              def: { type: "number" },
+            }
+          }
+        }
+      }
+    }
+  };
+
+  let mapsSchema = {
+    type: "object",
+    properties: {
+      "aggrMarker": {
+        type: "object",
+        properties: {
+          "fill": {
+            type: "object",
+            properties: {
+              def: {/*TODO*/},
+              opacity: {/*TODO*/}
+            }
+          },
+          "stroke": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "width": {type: "number"},
+            }
+          },
+          "size": {
+            type: "object",
+            properties: {
+              type: "object",
+              properties: {
+                "min": {type: "integer"},
+                "max": {type: "integer"},
+                "def": {type: "integer"},
+              }
+            }
+          },
+          "line": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+            }
+          }
+        }
+      },
+      "heatmap": {
+        type: "object",
+        properties: {
+          "opacity": {
+            type: "object",
+            properties: {
+              "discrete": {type: "number"},
+              "continuous": {type: "number"},
+            }
+          },
+          "xgap": {type: "integer"},
+          "ygap": {type: "integer"},
+        }
+      },
+      "sampleMarker": {
+        type: "object",
+        properties: {
+          "size": {
+            type: "object",
+            properties: {
+              type: "object",
+              properties: {
+                "min": {type: "integer"},
+                "max": {type: "integer"},
+                "def": {type: "integer"},
+              }
+            }
+          },
+          "stroke": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "width": {type: "number"},
+            }
+          },
+          "fill": {
+            type: "object",
+            properties: {
+              def: {/*TODO*/},
+              opacity: {/*TODO*/}
+            }
+          },
+          "maxDisplayed": {type: "integer"},
+        }
+      },
+      "testDataMarker": {
+        type: "object",
+        properties: {
+          "stroke": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "width": {type: "number"},
+            }
+          },
+          "fill": {
+            type: "object",
+            properties: {
+              def: {/*TODO*/},
+              opacity: {/*TODO*/}
+            }
+          },
+        }
+      },
+      "predictionOffset": {
+        type: "object",
+        properties: {
+          "line": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "width": {type: "number"},
+              "opacity": {type: "number"},
+              "fill": {type: "boolean"},
+            }
+          }
+        }
+      },
+      "uniDensity": {
+        type: "object",
+        properties: {
+          "color": {
+            type: "object",
+            properties: {
+              "def": {}, // TODO () => c.colors.density.single,
+            }
+          },
+          "bar": {
+            type: "object",
+            properties: {
+              "opacity": {type: "number"},
+            }
+          },
+          "line": {
+            type: "object",
+            properties: {
+              "width": {type: "number"},
+              "opacity": {type: "number"},   // line opacity
+              "fill": {type: "boolean"},
+              "fillopacity": {type: "number"},
+            }
+          },
+          "resolution": {type: "number" } // TODO: dependent
+        }
+      },
+      "biDensity": {
+        type: "object",
+        properties: {
+          // globalColor: {type: "string", format: "color"},
+          // dependentColor: {type: "string", format: "color", watch: {"pl_color": "root.globalColor"}, template: "{{pl_color}}"},
+          mark: {
+            type: "object",
+            properties: {
+              opacity: {type: "number"},
+              color: {type: "string", format: "color"}, // TODO: dependent // () => c.colors.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+            }
+          },
+          line: {
+            type: "object",
+            properties: {
+              width: {type: "number", default: 99},
+              color: {type: "string", format: "color"}, // TODO: () => c.colors.density.single,
+              fill: {type: "boolean"},
+              fillopacity: {type: "number"}
+            }
+          },
+          colorscale: {type: "string", enum: ["A","B"]},// TODO
+
+          levels: {type: "integer"},
+          resolution: {type: "integer"},
+          labelFormatterString: {type: "string"}
+          // labelFormatter: d3.format(".3f"), // TODO
+        }
+      }
+    }
+  };
+  //TODO: mapsInitial
+  //TODO: use default values for schema?
+
+  // partial schemas?
+
+  let plotsSchema = {
+    type: "object",
+    properties: {
+      "axis": {
+        type: "object",
+        properties: {
+          "title_style": {type: "string"},
+          "title_font": {
+            type: "object",
+            properties: {
+              "family": {type: "string"},
+              "size": {type: "integer"},
+              "color": {type: "string", format: "color"},
+            }
+          },
+          "label_style": {type: "string"},
+          "label_font": {
+            type: "object",
+            properties: {
+              "family": {type: "string"},
+              "size": {type: "integer"},
+              "color": {type: "string", format: "color"},
+            }
+          }
+        }
+      },
+      "main": {
+        type: "object",
+        properties: {
+          "background": {
+            type: "object",
+            properties: {
+              "fill": {type: "string", format: "color"} // unused?
+            }
+          },
+          "grid": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"}
+            }
+          },
+          "axis": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "zerolinewidth": {type: "number"},
+              "zerolinecolor": {type: "string", format: "color"},
+            }
+          },
+          "text": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "size": {type: "integer"},
+            }
+          }
+        }
+      },
+      "marginal": {
+        type: "object",
+        properties: {
+          "background": {
+            type: "object",
+            properties: {
+              "fill": {type: "string", format: "color"} // unused?
+            }
+          },
+          "grid": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"}
+            }
+          },
+          "axis": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "width": {type: "number"},
+            }
+          },
+          "text": {
+            type: "object",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "size": {type: "integer"},
+            }
+          },
+          "position": {
+            type: "object",
+            properties: {
+              "x": {type: "string", enum:['topright','bottomleft']},
+              "y": {type: "string", enum:['topright','bottomleft']}, //
+            }
+          }
+        }
+      },
+      "layout": {
+        type: "object",
+        properties: {
+          "margin": {
+            type: "object",
+            properties: {
+              "l": {type: "number"},
+              "t": {type: "number"},
+              "r": {type: "number"},
+              "b": {type: "number"},
+              "pad": {type: "number"},
+            }
+          },
+          "templ_axis_level_ratio": {
+            type: "object",
+            properties: {
+              "x": {type: "number"},
+              "y": {type: "number"},
+            }
+          },
+          "templ_axis_level_width": {
+            type: "object",
+            properties: {
+              "x": {type: "number"},
+              "y": {type: "number"},
+            }
+          },
+          "main_axis_padding": {type: "number"}
+        }
+      },
+    },
+    "defaultProperties": ["axis"],
+  };
+
+  let plotsInitial = {
+    axis: {
+      title_style: "em",
+      title_font: {
+        family: "Droid Sans",
+        size: 16,
+        color: "#b3b3b3",
+      },
+      label_style: "",
+      label_font: {
+        family: "Droid Sans",
+        size: 11,
+        color: "#232323",
+      },
+    },
+    main: {
+      background: {
+        fill: 'white', //unused
+      },
+      grid: {
+        color: greys(0.4),
+      },
+      axis: {
+        color: "#3D3A40",
+        zerolinewidth: 1.5,
+        zerolinecolor: greys(0.3),
+      },
+      text: {
+        color: greys(1.0),
+        size: 13,
+      }
+    },
+
+    marginal: {
+      background: {
+        fill: 'white', //unused
+      },
+      grid: {
+        color: greys(0.3),
+      },
+      // prepaper
+      // axis: {
+      //   color: greys(0.4),
+      //   width: 2,
+      // },
+      axis: {
+        color: greys(0.8),
+        width: 1,
+      },
+      text: {
+        color: greys(0.5),
+        size: 12,
+      },
+      position: {
+        x: 'topright', // bottomleft or topright
+        y: 'topright', // bottomleft or topright
+      },
+    },
+
+    layout: {
+      //ratio_marginal: used => (used ? 0.75 : 0.05),
+
+      //margin_main_sub: 0.02,
+      margin: {
+        l: 70,
+        //l: 120,
+        t: 15,
+        r: 15,
+        b: 60,
+        pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
+      },
+      // ratio of plotting area reserved for the templating axis (if any)
+      templ_axis_level_ratio: {
+        x: 0.08,
+        y: 0.15
+      },
+      // width in [px] reserved for one axis
+      templ_axis_level_width: {
+        x: 60, // for a x-axis (i.e. it's the available height)
+        y: 120, // for a y-axis (i.e. it's the available width)
+      },
+
+      main_axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
+    },
+
+    // label: {
+    //   formatter: d3f.format(".3") // three significant digits, no trailing zeros
+    // }
+  };
+
+  let biDensitySchema = {
+    type: "object",
+
+  };
+
+  /////////////////////
+
+  let jsonSchema = {
+    type: "object",
+    properties: {
+      "tweaks": {"$ref": "#/definitions/tweaks"},
+      "colorTest": {"$ref": "#/definitions/colorTest"},
+      "plots": {"$ref": "#/definitions/plots"},
+    },
+    definitions: {
+      "tweaks": tweaksSchema,
+      "colorTest": colorTestSchema,
+      "plots": plotsSchema,
+    }
+  };
+
+  let jsonInitial = {
+    tweaks: tweaksInitial,
+    colorTest: colorTestInitial,
+    plots: plotsInitial,
+  };
+
+
+  ////////////////////
 
   /**
    * add static, non-changable part of the json-compatible config.
@@ -83,7 +704,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
    * Advantage: no need to specify a schema for it...
    */
   function _addStaticJson(c) {
-
+    // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
     c.shapes = {
       open: _.range(100, 144),
       filled: _.range(44),
@@ -92,9 +713,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   }
 
   function _addRefactorJSON(c) {
-    c.tweaks = {
-      hideAggregations : false,
-    };
+    // c.tweaks = {
+    //   hideAggregations : false,
+    // };
 
     c.colors = {
 
@@ -176,12 +797,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       accuMarginals: {
         possible: true
       }
-    };
-
-    // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
-    c.shapes = {
-      open: _.range(100,144),
-      filled: _.range(44),
     };
 
     c.map = {
@@ -293,101 +908,101 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
     };
 
-    c.plots = {
-
-      styled_text: (title, style) => {
-        if (style === "")
-          return title;
-        return "<" + style + ">" + title +"</" + style + ">";
-      },
-      axis: {
-        title_style: "em",
-        title_font: {
-          family: "Droid Sans",
-          size: 16,
-          color: "#b3b3b3",
-        },
-        label_style: "",
-        label_font: {
-          family: "Droid Sans",
-          size: 11,
-          color: "#232323",
-        },
-      },
-      main: {
-        background: {
-          fill: 'white', //unused
-        },
-        grid: {
-          color: greys(0.4),
-        },
-        axis: {
-          color: "#3D3A40",
-          zerolinewidth: 1.5,
-          zerolinecolor: greys(0.3),
-        },
-        text: {
-          color: greys(1.0),
-          size: 13,
-        }
-      },
-
-      marginal: {
-        background: {
-          fill: 'white', //unused
-        },
-        grid: {
-          color: greys(0.3),
-        },
-        // prepaper
-        // axis: {
-        //   color: greys(0.4),
-        //   width: 2,
-        // },
-        axis: {
-          color: greys(0.8),
-          width: 1,
-        },
-        text: {
-          color: greys(0.5),
-          size: 12,
-        },
-        position: {
-          x: 'topright', // bottomleft or topright
-          y: 'topright', // bottomleft or topright
-        },
-      },
-
-      layout: {
-        ratio_marginal: used => (used ? 0.75 : 0.05),
-
-        //margin_main_sub: 0.02,
-        margin: {
-          l: 70,
-          //l: 120,
-          t: 15,
-          r: 15,
-          b: 60,
-          pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
-        },
-        // ratio of plotting area reserved for the templating axis (if any)
-        templ_axis_level_ratio: {
-          x: 0.08,
-          y: 0.15
-        },
-        // width in [px] reserved for one axis
-        templ_axis_level_width: {
-          x: 60, // for a x-axis (i.e. it's the available height)
-          y: 120, // for a y-axis (i.e. it's the available width)
-        },
-
-        main_axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
-      },
-
-      // label: {
-      //   formatter: d3f.format(".3") // three significant digits, no trailing zeros
-      // }
-    };
+    // c.plots = {
+    //
+    //   styled_text: (title, style) => {
+    //     if (style === "")
+    //       return title;
+    //     return "<" + style + ">" + title +"</" + style + ">";
+    //   },
+    //   axis: {
+    //     title_style: "em",
+    //     title_font: {
+    //       family: "Droid Sans",
+    //       size: 16,
+    //       color: "#b3b3b3",
+    //     },
+    //     label_style: "",
+    //     label_font: {
+    //       family: "Droid Sans",
+    //       size: 11,
+    //       color: "#232323",
+    //     },
+    //   },
+    //   main: {
+    //     background: {
+    //       fill: 'white', //unused
+    //     },
+    //     grid: {
+    //       color: greys(0.4),
+    //     },
+    //     axis: {
+    //       color: "#3D3A40",
+    //       zerolinewidth: 1.5,
+    //       zerolinecolor: greys(0.3),
+    //     },
+    //     text: {
+    //       color: greys(1.0),
+    //       size: 13,
+    //     }
+    //   },
+    //
+    //   marginal: {
+    //     background: {
+    //       fill: 'white', //unused
+    //     },
+    //     grid: {
+    //       color: greys(0.3),
+    //     },
+    //     // prepaper
+    //     // axis: {
+    //     //   color: greys(0.4),
+    //     //   width: 2,
+    //     // },
+    //     axis: {
+    //       color: greys(0.8),
+    //       width: 1,
+    //     },
+    //     text: {
+    //       color: greys(0.5),
+    //       size: 12,
+    //     },
+    //     position: {
+    //       x: 'topright', // bottomleft or topright
+    //       y: 'topright', // bottomleft or topright
+    //     },
+    //   },
+    //
+    //   layout: {
+    //     ratio_marginal: used => (used ? 0.75 : 0.05),
+    //
+    //     //margin_main_sub: 0.02,
+    //     margin: {
+    //       l: 70,
+    //       //l: 120,
+    //       t: 15,
+    //       r: 15,
+    //       b: 60,
+    //       pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
+    //     },
+    //     // ratio of plotting area reserved for the templating axis (if any)
+    //     templ_axis_level_ratio: {
+    //       x: 0.08,
+    //       y: 0.15
+    //     },
+    //     // width in [px] reserved for one axis
+    //     templ_axis_level_width: {
+    //       x: 60, // for a x-axis (i.e. it's the available height)
+    //       y: 120, // for a y-axis (i.e. it's the available width)
+    //     },
+    //
+    //     main_axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
+    //   },
+    //
+    //   // label: {
+    //   //   formatter: d3f.format(".3") // three significant digits, no trailing zeros
+    //   // }
+    // };
     return c;
   }
 
@@ -400,7 +1015,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     };
 
     c.plots.layout.ratio_marginal = used => (used ? 0.75 : 0.05);  // translate to JSON dependency
-    
 
     /**
      *
@@ -597,8 +1211,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
    * @private
    */
   function _initSettings() {
-    // let settings = makeSettings(initial);
-    let settings = makeSettings(JSON.parse(JSON.stringify(initial)));
+    let settings = makeSettings(JSON.parse(JSON.stringify(jsonInitial)));  // deep copy initial object (why?^^)
     Object.assign(viewSettings, settings);
   }
 
@@ -624,200 +1237,16 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   }
 
 
-  let tweaksSchema = {
-    type: "object",
-    properties: {
-      hideAggregations: {type: "boolean"},
-    }
-  };
-
-
-  let colorsSchema = {
-    type: "object",
-    title: "colors",
-    properties: {
-      density: {
-        type: "object",
-        properties: {
-          single: {type: "string"},
-          scale: {type: "string"},
-          adapt_to_color_usage: {type: "boolean"},
-        }
-      },
-      marginal: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      },
-      aggregation: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      },
-      data: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      },
-      testData: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      }
-    }
-  };
-
-  let viewsSchema = {
-    //$schema: "http://json-schema.org/draft-06/schema#",
-    type: "object",
-    title: "views", // todo: rename to traces
-    properties: {
-      "aggregations": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-          active: {type: "boolean"},
-        }
-      },
-      "data": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-          active: {type: "boolean"},
-        }
-      },
-      "testData": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-          active: {type: "boolean"},
-        }
-      },
-      "marginals": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-          active: {type: "boolean"},
-        }
-      },
-      "contour": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-          active: {type: "boolean"},
-        }
-      },
-      "predictionOffset": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-          active: {type: "boolean"},
-        }
-      },
-      "accuMarginals": {
-        type: "object",
-        properties: {
-          possible: {type: "boolean"},
-        }
-      },
-
-    }
-  };
-
-
-  let mapSchema = {
-    type: "object",
-    title: "map",
-    properties: {
-      aggrMarker: {
-        type: "object",
-        properties: {
-          fill: {
-            type: "object",
-            properties: {
-              def: {
-                type: "string",
-                format: "color"
-              },
-              opacity: {
-                type: "number"
-              }
-            }
-          },
-          stroke: {
-            type: "object",
-            properties: {
-              color: {
-                type: "object",
-                format: "color",
-              },
-              width: {
-                type: "number",
-              }
-            }
-          },
-          size: {
-            type: "object",
-            properties: {
-              min: { type: "number" },
-              max: { type: "number" },
-              def: { type: "number" },
-            }
-          }
-        }
-      }
-    }
-  };
-
-
-  // partial schemas?
-  let biDensitySchema = {
-    type: "object",
-    properties: {
-      globalColor: {type: "string", format: "color"},
-      dependentColor: {type: "string", format: "color", watch: {"pl_color": "root.globalColor"}, template: "{{pl_color}}"},
-      mark: {
-        type: "object",
-        properties: {
-          opacity: {type: "number"},
-          color: {type: "string", format: "color"},
-        }
-      },
-      line: {
-        type: "object",
-        //description: "a line description!",
-        //format: "grid",
-        properties: {
-          width: {type: "number", default: 99},
-          color: {type: "string", format: "color"},
-          fill: {type: "boolean", format: "checkbox"},
-          fillopacity: {type: "number"}
-        }
-      },
-      colorscale: {type: "string", enum: ["A","B"]},
-
-      levels: {type: "integer"},
-      resolution: {type: "integer"},
-      labelFormatString: {type: "string"}
-    }
-  };
-
   // initializes the settings object in ViewSettings.js
   _initSettings();
-
-  // TODO: this should be the full schema in the future!
-  let jsonSchema = {};
 
   return {
     makeSettings,
     updateSettings,
     jsonSchema,  //
+    jsonInitial,
     colorTestSchema,
-    colorTestSchemaInitial
+    colorTestSchemaInitial: colorTestInitial
     //watch
   }
 

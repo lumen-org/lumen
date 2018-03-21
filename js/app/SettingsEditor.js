@@ -66,10 +66,7 @@ define(['./SettingsJSON'], function (s) {
     // register to editor to watch
     editor.watch(ref, () => {
       // get current editor value
-      let json = {
-        colorTest: editor.getValue()
-        //colorTest: JSON.parse(JSON.stringify(editor.getValue()))
-      };
+      let json = editor.getValue();
 
       // complete settings object with stuff that isn't interactively configurable JSON
       let settings = s.makeSettings(json);
@@ -89,14 +86,14 @@ define(['./SettingsJSON'], function (s) {
   function setEditor(domElement) {
 
     let options = {
-      schema: s.colorTestSchema,
-      //schema: biDensitySchema,
-      startval: s.colorTestSchemaInitial,
-      //startval: BiDensitySchemaStartVal,
+      schema: s.jsonSchema,
+      startval: s.jsonInitial,
       theme: 'barebones',
       disable_edit_json: true,
       disable_properties: true,
-      disable_collapse: true
+      //disable_collapse: false,
+      //no_additional_properties: true,
+      collapsed: true,
     };
 
     editor = new JSONEditor(domElement, options);
