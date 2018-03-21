@@ -44,31 +44,47 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
    * A user can select between these for an option that requires a color scheme.
    */
   let colorscalesEnum = {
-      density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
-      density2: d3chromatic.schemeBlues[9],
-      diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
-      sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
-      discrete9: d3chromatic.schemeSet1,
-      discrete12: d3chromatic.schemePaired,
-      discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
-      discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
-      discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
-      discrete9dark: d3chromatic.schemeSet1,
-    },
-    colorscalesKeys = Object.keys(colorscalesEnum),
+    blues: d3chromatic.schemeBlues[9],
+    greens: d3chromatic.schemeGreens[9],
+    greys: d3chromatic.schemeGreys[9],
+    oranges: d3chromatic.schemeOranges[9],
+    reds: d3chromatic.schemeReds[9],
+    RdBu: d3chromatic.schemeRdBu[11],
+    YlOrBr: d3chromatic.schemeYlOrBr[9],
+    set1: d3chromatic.schemeSet1,
+    paired12: d3chromatic.schemePaired,
+    discrete6_light: d3.range(6).map(i => d3chromatic.schemePaired[i * 2]),
+    discrete6_dark: d3.range(6).map(i => d3chromatic.schemePaired[i * 2 + 1]),
+    discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
+    discrete9dark: d3chromatic.schemeSet1,
+  };
+
+  // let colorscalesEnum = {
+  //     density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
+  //     density2: d3chromatic.schemeBlues[9],
+  //     diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
+  //     sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
+  //     discrete9: d3chromatic.schemeSet1,
+  //     discrete12: d3chromatic.schemePaired,
+  //     discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
+  //     discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
+  //     discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
+  //     discrete9dark: d3chromatic.schemeSet1,
+  //   },
+  let colorscalesKeys = Object.keys(colorscalesEnum),
     colorscalesValues = Object.values(colorscalesEnum);
 
   let colorTestSchema = {
     type: "object",
     title: "colorTest",
     properties: {
-      colorEnum: {type: "string", enum: colorscalesKeys,},
+      color_Enum: {type: "string", enum: colorscalesKeys,},
     },
     //defaultProperties: ["colorEnum"],
   };
 
   let colorTestInitial = {
-    colorEnum: "density2"
+    colorEnum: "blues"
   };
 
 
@@ -89,7 +105,17 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     title: "colors",
     properties: {
       "semanticScales": {
-
+        type: "object",
+        properties: {
+          diverging_Enum: {type: "string", enum: colorscalesKeys}, // mit Nulldurchgang
+          sequential_Enum: {type: "string", enum: colorscalesKeys}, // ohne Nulldurchgang / bis 0
+          discrete9_Enum: {type: "string", enum: colorscalesKeys},
+          discrete12_Enum: {type: "string", enum: colorscalesKeys},
+          discrete6light_Enum: {type: "string", enum: colorscalesKeys},
+          discrete6dark_Enum: {type: "string", enum: colorscalesKeys},
+          discrete9light_Enum: {type: "string", enum: colorscalesKeys},
+          discrete9dark_Enum: {type: "string", enum: colorscalesKeys},
+        },
       },
       "density": {
         type: "object",
@@ -97,13 +123,13 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           "adapt_to_color_usage": {type: "boolean"},
 
           "single": {type: "string", format: "color"},
-          "scale": {type: "string", enum: colorscalesKeys},
+          "scale_Enum": {type: "string", enum: colorscalesKeys},
 
           "grey_single": {type: "string", format: "color"},
-          "grey_scale": {type: "string", enum: colorscalesKeys},
+          "grey_scale_Enum": {type: "string", enum: colorscalesKeys},
 
           "color_single": {type: "string", format: "color"},
-          "color_scale": {type: "string", enum: colorscalesKeys},
+          "color_scale_Enum": {type: "string", enum: colorscalesKeys},
         }
       },
       "aggregation": {
@@ -126,6 +152,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       }
 
     }
+  };
+
+  let colorsInitial = {
+    // TODO!
   };
 
   let colorsSchemaOld = {
@@ -1024,7 +1054,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
      * @param postfix
      * @return {*}
      */
-    function translateEnum(obj, refs, dict, postfix="Enum"/*, deleteflag=False*/) {
+    function translateEnum(obj, refs, dict, postfix="_Enum"/*, deleteflag=False*/) {
       refs = utils.listify(refs);
       for (let ref of refs)
         obj[ref] = dict[obj[ref + postfix]];
@@ -1032,6 +1062,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     }
 
     translateEnum(c.colorTest, ["color"], colorscalesEnum);
+    //translateEnum(c.colors.density, ["scale", "grey_scale", "color_scale"]);
+    //translateEnum(c.colors.semanticScales, ["diverging", "sequential", "discrete9", "discrete12", "discrete6light", "discrete6dark", "discrete9light", "discrete9dark"]);
 
     return c;
   }
