@@ -27,7 +27,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let reducedGreyScale = d3chromatic.schemeGreys[9];  // todo: debug
 
 
-  // >> BEGIN NEW
   c.colors = {
 
     // abstract scales for certain data characteristics
@@ -77,43 +76,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   c.colors.density.single = c.colors.density.grey_single;
   c.colors.density.scale = c.colors.density.grey_scale;
 
-  // << END NEW
-
-  // c.densityColor = {
-  //   adapt_to_color_usage: false,
-  //   color_single: d3chromatic.interpolateBlues(0.7),
-  //   color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
-  //   grey_single: d3chromatic.interpolateGreys(0.7),
-  //   grey_scale: makeDensityScale(reducedGreyScale),
-  // };
-  //
-  // c.densityColor.single = c.densityColor.grey_single;
-  // c.densityColor.scale = c.densityColor.grey_scale ;
-  // // single: d3chromatic.interpolateBlues(0.7), // the default
-  // scale: makeDensityScale(d3chromatic.schemeBlues[9]), // the default
-
-  // c.marginalColor = {
-  //   single: d3chromatic.interpolateGreys(0.5),
-  // };
-
-  // c.aggrColor = {
-  //   // single:  d3chromatic.interpolateReds(0.55),
-  //   // single:  d3chromatic.schemeSet1[6],
-  //   //single:  d3chromatic.schemeSet1[5],
-  //   single: d3chromatic.schemePaired[7],
-  // };
-
-  // c.dataColor = {
-  //   //single: d3chromatic.interpolateBlues(0.7),
-  //   //single: d3chromatic.schemeSet1[7],
-  //   single: d3chromatic.schemePaired[6],
-  // };
-  //
-  // c.testDataColor = {
-  //   // single: d3chromatic.schemePaired[6], // TODO: improve?
-  //   single: d3chromatic.schemePaired[6], // TODO: improve?
-  // };
-
   // set of default config options for the visualization
   // beware when you add more
   c.views = {
@@ -144,40 +106,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     accuMarginals: {
       possible: true
     }
-  };
-
-  // appearantly unused
-//   c.maps = {
-//     size: 50,
-//     minSize: 32,
-//     maxSize: 2048,
-//     fill: c.aggrColor.single,
-// //    fill: "#377eb8", prepaper
-//     stroke: "#222222",
-//     opacity: 0.3,
-//     shape: "circle"
-//   };
-
-  // appearantly unused
-  // c.appearance = {
-  //   pane: {
-  //     //borderColor: "#d4d4d4",
-  //     borderColor: "#FF0000",
-  //     fill: 'none'
-  //   }
-  // };
-
-  c.colorscales = {
-    density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
-    density2: d3chromatic.schemeBlues[9],
-    diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
-    sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
-    discrete9: d3chromatic.schemeSet1,
-    discrete12: d3chromatic.schemePaired,
-    discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
-    discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
-    discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
-    discrete9dark: d3chromatic.schemeSet1,
   };
 
   // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol

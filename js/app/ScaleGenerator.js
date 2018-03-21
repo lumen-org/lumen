@@ -64,16 +64,16 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
       //     throw RangeError("invalid mode " + mode);
       if (l <= 9)
         if (mode === 'aggr')
-          palette = c.colorscales.discrete9dark;
+          palette = c.colors.semanticScales.discrete9dark;
         else if (mode === 'data')
-          palette = c.colorscales.discrete9light;
+          palette = c.colors.semanticScales.discrete9light;
         else if (mode === 'test data')
-          palette = c.colorscales.discrete9light;
+          palette = c.colors.semanticScales.discrete9light;
         else
           throw RangeError("invalid mode " + mode);
       else {
         logger.warn("the domain of the field " + fu.name + " has too many elements to efficiently encode them as categorical colors: " + l + "\n I'll only use 12, anyway.");
-        palette = c.colorscales.discrete12;
+        palette = c.colors.semanticScales.discrete12;
         //throw new ValueError("too many categories to encode in color");
       }
       palette = palette.slice(0, l);
@@ -87,7 +87,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
 
       // check if domain is (almost) exclusively negative or non-negative:
       if (h-ext < 0 || l+ext > 0) {
-        palette = c.colorscales.sequential;
+        palette = c.colors.semanticScales.sequential;
 
         // include 0 if closely not included
         if (h < 0 && h+ext_to_zero > 0)
@@ -102,7 +102,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
         }
       }
       else {
-        palette = c.colorscales.diverging;
+        palette = c.colors.semanticScales.diverging;
         // center scale on 0. Note: it is not necessarily h>0 and l<0 (but almost. See above)
         if (Math.abs(h) > Math.abs(l))
           l = -Math.abs(h);
