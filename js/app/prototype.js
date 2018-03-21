@@ -764,7 +764,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     //   }
     // });
 
-    SettingsEditor.watch('root.mark.color', () => infoBox.message("COLOR!"));
+    //SettingsEditor.watch('root.mark.color', () => infoBox.message("COLOR!"));
+    SettingsEditor.watch('root', () => {
+        infoBox.message("somethign changed!");
+        console.log(Config);
+        });
 
     ////////////////////////
 //

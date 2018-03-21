@@ -15,7 +15,7 @@
  *    * the resulting augmented settings object is then made available in ViewSettings.js
  *    * and can be imported and used from other modules
  */
-define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain', './ViewSettings'], function (d3chromatic, d3f, d3color, ss, Domain, viewSettings) {
+define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain', './ViewSettings', './utils'], function (d3chromatic, d3f, d3color, ss, Domain, viewSettings, utils) {
   "use strict";
 
   // utility functions
@@ -38,7 +38,44 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   *  * a function to watch changes in certain parts of the config
   * */
 
-  let initial = {};
+
+  /**
+   * An enumeration of all available color schemes.
+   * A user can select between these for an option that requires a color scheme.
+   */
+  let colorscalesEnum = {
+      density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
+      density2: d3chromatic.schemeBlues[9],
+      diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
+      sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
+      discrete9: d3chromatic.schemeSet1,
+      discrete12: d3chromatic.schemePaired,
+      discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
+      discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
+      discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
+      discrete9dark: d3chromatic.schemeSet1,
+    },
+    colorscalesKeys = Object.keys(colorscalesEnum),
+    colorscalesValues = Object.values(colorscalesEnum);
+
+  let colorTestSchema = {
+    type: "object",
+    title: "colorTest",
+    properties: {
+      colorEnum: {type: "string", enum: colorscalesKeys,},
+    },
+    //defaultProperties: ["colorEnum"],
+  };
+
+  let colorTestSchemaInitial = {
+    colorEnum: "density2"
+  };
+
+  // initial json of settings
+
+  let initial = {
+    colorTest : colorTestSchemaInitial
+  };
 
   /**
    * add static, non-changable part of the json-compatible config.
@@ -363,6 +400,25 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     };
 
     c.plots.layout.ratio_marginal = used => (used ? 0.75 : 0.05);  // translate to JSON dependency
+    
+
+    /**
+     *
+     * @param obj
+     * @param refs
+     * @param dict
+     * @param postfix
+     * @return {*}
+     */
+    function translateEnum(obj, refs, dict, postfix="Enum"/*, deleteflag=False*/) {
+      refs = utils.listify(refs);
+      for (let ref of refs)
+        obj[ref] = dict[obj[ref + postfix]];
+      return obj;
+    }
+
+    translateEnum(c.colorTest, ["color"], colorscalesEnum);
+
     return c;
   }
 
@@ -541,7 +597,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
    * @private
    */
   function _initSettings() {
-    let settings = makeSettings(initial);
+    // let settings = makeSettings(initial);
+    let settings = makeSettings(JSON.parse(JSON.stringify(initial)));
     Object.assign(viewSettings, settings);
   }
 
@@ -574,28 +631,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     }
   };
 
-  // appearance to plot
-
-  /**
-   * An enumeration of all available color schemes.
-   * A user can select between these for an option that requires a color scheme.
-   */
-  let colorscalesEnum = {
-    // schemePaired5: d3chromatic.schemePaired[5],
-    // schemePaired6: d3chromatic.schemePaired[6],
-    // schemePaired7: d3chromatic.schemePaired[7],
-    // TODO: change to suitable names.
-    density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
-    density2: d3chromatic.schemeBlues[9],
-    diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
-    sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
-    discrete9: d3chromatic.schemeSet1,
-    discrete12: d3chromatic.schemePaired,
-    discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
-    discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
-    discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
-    discrete9dark: d3chromatic.schemeSet1,
-  };
 
   let colorsSchema = {
     type: "object",
@@ -693,18 +728,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     }
   };
 
-  // let mapsSchema = {
-  //   type: "object",
-  //   properties: {
-  //     size: {type: "integer"},
-  //     minSize: {type: "integer"},
-  //     maxSize: {type: "integer"},
-  //     fill: {type: "string", format: "color"},
-  //     stroke: {type: "string", format: "color"},
-  //     opacity: {type: "number"},
-  //     shape: {type: "string"} // add possible enum types
-  //   }
-  // };
 
   let mapSchema = {
     type: "object",
@@ -783,17 +806,18 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     }
   };
 
-
   // initializes the settings object in ViewSettings.js
   _initSettings();
 
-  // foo
+  // TODO: this should be the full schema in the future!
   let jsonSchema = {};
 
   return {
     makeSettings,
     updateSettings,
     jsonSchema,  //
+    colorTestSchema,
+    colorTestSchemaInitial
     //watch
   }
 

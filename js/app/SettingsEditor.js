@@ -1,15 +1,9 @@
 /**
  * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['./SettingsJSON'], function (SettingsJSON) {
+define(['./SettingsJSON'], function (s) {
   "use strict";
 
-
-
-
-
-
-  // create editor
   let biDensitySchema = {
     type: "object",
     properties: {
@@ -62,7 +56,6 @@ define(['./SettingsJSON'], function (SettingsJSON) {
   };
 
 
-
   /**
    * Registers a callback function to be triggered on changes to the JSON subtree referenced by ref.
    *
@@ -72,13 +65,19 @@ define(['./SettingsJSON'], function (SettingsJSON) {
   function watch(ref, callback) {
     // register to editor to watch
     editor.watch(ref, () => {
+      // get current editor value
+      let json = {
+        colorTest: editor.getValue()
+        //colorTest: JSON.parse(JSON.stringify(editor.getValue()))
+      };
 
-      // always update fill settings object
-      let json = editor.getValue();
-      let settings = SettingsJSON.makeSettings(json);
-      SettingsJSON.updateSettings(settings);
+      // complete settings object with stuff that isn't interactively configurable JSON
+      let settings = s.makeSettings(json);
 
-      // then call the callback
+      // set it as the new active settings object
+      s.updateSettings(settings);
+
+      // finally call the callback
       callback()
     });
   }
@@ -90,9 +89,10 @@ define(['./SettingsJSON'], function (SettingsJSON) {
   function setEditor(domElement) {
 
     let options = {
-      schema: biDensitySchema,
-      //schema: viewSchema,
-      startval: BiDensitySchemaStartVal,
+      schema: s.colorTestSchema,
+      //schema: biDensitySchema,
+      startval: s.colorTestSchemaInitial,
+      //startval: BiDensitySchemaStartVal,
       theme: 'barebones',
       disable_edit_json: true,
       disable_properties: true,
@@ -100,14 +100,12 @@ define(['./SettingsJSON'], function (SettingsJSON) {
     };
 
     editor = new JSONEditor(domElement, options);
-
     return editor;
   }
 
   // currently only a single editor is supported, i.e. only a single instance of viewSettings can be managed.
   // Hence, all visualizations share the same set of settings
   // TODO: we will need a per-instance editor
-
   let editor = undefined;
 
   return {
