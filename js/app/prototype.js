@@ -9,8 +9,8 @@ var _opac = 0.9;
 var _res = 40;
 var _lvls = 16;
 
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './ViewSettings'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Config) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
+  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -751,101 +751,118 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       infoBox.message("Load a model to start!", "info")
     });
 
-    // create editor
-    let biDensitySchema = {
-      type: "object",
-      properties: {
-        globalColor: {type: "string", format: "color"},
-        dependentColor: {type: "string", format: "color", watch: {"pl_color": "root.globalColor"}, template: "{{pl_color}}"},
-        mark: {
-          type: "object",
-          properties: {
-            opacity: {type: "number"},
-            color: {type: "string", format: "color"},
-          }
-        },
-        line: {
-          type: "object",
-          //description: "a line description!",
-          //format: "grid",
-          properties: {
-            width: {type: "number", default: 99},
-            color: {type: "string", format: "color"},
-            fill: {type: "boolean", format: "checkbox"},
-            fillopacity: {type: "number"}
-          }
-        },
-        colorscale: {type: "string", enum: ["A","B"]},
+    ////////////////////////
 
-        levels: {type: "integer"},
-        resolution: {type: "integer"},
-        labelFormatString: {type: "string"}
-      }
-    };
+    let myeditor = SettingsEditor.setEditor(document.getElementById('pl-config-editor-container2'));
+    // SettingsEditor.watch('root', () => {
+    //   let errors = myeditor.validate();
+    //   if (errors.length) {
+    //     console.log(errors);
+    //     infoBox.message("invalid JSON!");
+    //   } else {
+    //     infoBox.message("valid JSON!");
+    //   }
+    // });
 
-    let BiDensitySchemaStartVal = {
-       colorscale: "A", // color scale to use for heat maps / contour plots
-        globalColor: "#0000FF",
-        dependentColor: "#0000FF",
-        mark: {
-          color: "#FF0000", // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
-          opacity: 0.8,
-        },
-        line: {
-          width: 2,
-          color: "##00FF00",
-          fill: true,
-          fillopacity: 0.06,
-        },
-//      opacity: 0.8,
-        levels: 16, //16,
-        resolution: 30, // the number computed points along one axis
-        labelFormatString: ".3f",
-      };
+    SettingsEditor.watch('root.mark.color', () => infoBox.message("COLOR!"));
 
-    let options = {
-      schema: biDensitySchema,
-      //schema: viewSchema,
-      startval: BiDensitySchemaStartVal,
-      theme: 'barebones',
-      disable_edit_json: true,
-      disable_properties: true,
-      disable_collapse: true
-    };
-
-    var editor = new JSONEditor(document.getElementById('pl-config-editor-container'), options);
-
-    function updateViewSettings() {
-      // collect json from editor
-      let json = editor.getValue();
-
-      // post updates
-      json.labelFormatter = d3.format(json.labelFormatString);
-      json.colorscale = Config.map.biDensity.colorscale;
-      json.mark.color = () => "red";
-      json.line.color = () => "blue";
-
-      // set in config object
-      Config.map.biDensity = json;
-
-      // redraw / requery
-      contextQueue.first().update();
-    }
-
-    editor.on('change', () => {
-      // Get an array of errors from the validator
-      var errors = editor.validate();
-      if (errors.length) {
-        console.log(errors);
-        infoBox.message("invalid JSON!");
-      } //else {
-        infoBox.message("querying with updated config!");
-        updateViewSettings();
-      //}
-    });
-
-    editor.watch('root', () => console.log("YEAH!"));
-    editor.watch('root.mark', () => console.log("YEAH root!"));
+    ////////////////////////
+//
+//     // create editor
+//     let biDensitySchema = {
+//       type: "object",
+//       properties: {
+//         globalColor: {type: "string", format: "color"},
+//         dependentColor: {type: "string", format: "color", watch: {"pl_color": "root.globalColor"}, template: "{{pl_color}}"},
+//         mark: {
+//           type: "object",
+//           properties: {
+//             opacity: {type: "number"},
+//             color: {type: "string", format: "color"},
+//           }
+//         },
+//         line: {
+//           type: "object",
+//           //description: "a line description!",
+//           //format: "grid",
+//           properties: {
+//             width: {type: "number", default: 99},
+//             color: {type: "string", format: "color"},
+//             fill: {type: "boolean", format: "checkbox"},
+//             fillopacity: {type: "number"}
+//           }
+//         },
+//         colorscale: {type: "string", enum: ["A","B"]},
+//
+//         levels: {type: "integer"},
+//         resolution: {type: "integer"},
+//         labelFormatString: {type: "string"}
+//       }
+//     };
+//
+//     let BiDensitySchemaStartVal = {
+//        colorscale: "A", // color scale to use for heat maps / contour plots
+//         globalColor: "#0000FF",
+//         dependentColor: "#0000FF",
+//         mark: {
+//           color: "#FF0000", // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+//           opacity: 0.8,
+//         },
+//         line: {
+//           width: 2,
+//           color: "##00FF00",
+//           fill: true,
+//           fillopacity: 0.06,
+//         },
+// //      opacity: 0.8,
+//         levels: 16, //16,
+//         resolution: 30, // the number computed points along one axis
+//         labelFormatString: ".3f",
+//       };
+//
+//     let options = {
+//       schema: biDensitySchema,
+//       //schema: viewSchema,
+//       startval: BiDensitySchemaStartVal,
+//       theme: 'barebones',
+//       disable_edit_json: true,
+//       disable_properties: true,
+//       disable_collapse: true
+//     };
+//
+//     var editor = new JSONEditor(document.getElementById('pl-config-editor-container'), options);
+//
+//     function updateViewSettings() {
+//       // collect json from editor
+//       let json = editor.getValue();
+//
+//       // post updates
+//       json.labelFormatter = d3.format(json.labelFormatString);
+//       json.colorscale = Config.map.biDensity.colorscale;
+//       json.mark.color = () => "red";
+//       json.line.color = () => "blue";
+//
+//       // set in config object
+//       Config.map.biDensity = json;
+//
+//       // redraw / requery
+//       contextQueue.first().update();
+//     }
+//
+//     editor.on('change', () => {
+//       // Get an array of errors from the validator
+//       var errors = editor.validate();
+//       if (errors.length) {
+//         console.log(errors);
+//         infoBox.message("invalid JSON!");
+//       } //else {
+//         infoBox.message("querying with updated config!");
+//         updateViewSettings();
+//       //}
+//     });
+//
+//     editor.watch('root', () => console.log("YEAH!"));
+//     editor.watch('root.mark', () => console.log("YEAH root!"));
 
     return {
       /**
