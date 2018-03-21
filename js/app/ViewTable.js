@@ -515,11 +515,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       /// todo: is this actually "redo on canvas size change" ?
 
       // select color for density
-      if (config.densityColor.adapt_to_color_usage) {
+      if (config.colors.density.adapt_to_color_usage) {
         let colorused = queries.base.layers[0].aesthetics.color instanceof VisMEL.ColorMap;
-        let dc = config.densityColor;
-        config.densityColor.single = colorused ? dc.grey_single : dc.color_single;
-        config.densityColor.scale = colorused ? dc.grey_scale : dc.color_scale;
+        let dc = config.colors.density;
+        config.colors.density.single = colorused ? dc.grey_single : dc.color_single;
+        config.colors.density.scale = colorused ? dc.grey_scale : dc.color_scale;
       }
 
       // extents
@@ -742,9 +742,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 //axis.showticklabels = false;
                 //axis.tickcolor
                 //axis.ticklen = -210;
-                axis.color = config.densityColor.single;
+                axis.color = config.colors.density.single;
                 axis.tickfont = {
-                  color: config.densityColor.single,
+                  color: config.colors.density.single,
                 };
 
                 // hack to shorten inside axis // doesn't really work, because the tick at 0 is special...

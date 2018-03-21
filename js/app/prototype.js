@@ -752,88 +752,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     });
 
     // create editor
-    let viewSchemaTest = {
-      schema: {
-        $schema: "http://json-schema.org/draft-06/schema#",
-        type: "object",
-        title: "traces",
-        properties: {
-          "aggregations": {
-            type: "object",
-            properties: {
-              possible: {type: "boolean"},
-              active: {type: "boolean"},
-            }
-          },
-          "data": {
-            type: "object",
-            properties: {
-              possible: {type: "boolean"},
-              active: {type: "boolean"},
-            }
-          },
-          "testData": {
-            type: "object",
-            properties: {
-              possible: {type: "boolean"},
-              active: {type: "boolean"},
-            }
-          },
-          "marginals": {
-            type: "object",
-            properties: {
-              possible: {type: "boolean"},
-              active: {type: "boolean"},
-            }
-          }
-
-        }
-      }
-    };
-
-    let viewSchema = {
-      type: "object",
-      title: "map",
-      properties: {
-        aggrMarker: {
-          type: "object",
-          properties: {
-            fill: {
-              type: "object",
-              properties: {
-                def: {
-                  type: "string",
-                  format: "color"
-                },
-                opacity: {
-                  type: "number"
-                }
-              }
-            },
-            stroke: {
-              type: "object",
-              properties: {
-                color: {
-                  type: "object",
-                  format: "color",
-                },
-                width: {
-                  type: "number",
-                }
-              }
-            },
-            size: {
-              type: "object",
-              properties: {
-                min: { type: "number" },
-                max: { type: "number" },
-                def: { type: "number" },
-              }
-            }
-          }
-        }
-      }
-    };
     let biDensitySchema = {
       type: "object",
       properties: {
@@ -926,8 +844,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       //}
     });
 
+    editor.watch('root', () => console.log("YEAH!"));
     editor.watch('root.mark', () => console.log("YEAH root!"));
-    editor.watch('.mark', () => console.log("YEAH!"));
 
     return {
       /**

@@ -9,7 +9,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
   // TODO HACK: paper only
   let hideAggregations = false;
-  c.sizeFactor = 4;
 
   function makeDensityScale(colorArray) {
     const threshhold = 0.000001;
@@ -27,40 +26,93 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
   let reducedGreyScale = d3chromatic.schemeGreys[9];  // todo: debug
 
-  c.densityColor = {
-    adapt_to_color_usage: false,
-    color_single: d3chromatic.interpolateBlues(0.7),
-    color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
-    grey_single: d3chromatic.interpolateGreys(0.7),
-    grey_scale: makeDensityScale(reducedGreyScale),
+
+  // >> BEGIN NEW
+  c.colors = {
+
+    // abstract scales for certain data characteristics
+    semanticScales: {
+      diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
+      sequential: d3chromatic.schemeYlOrBr[9], // ohne Nulldurchgang / bis 0
+      discrete9: d3chromatic.schemeSet1,
+      discrete12: d3chromatic.schemePaired,
+      discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i * 2]),
+      discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i * 2 + 1]),
+      discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
+      discrete9dark: d3chromatic.schemeSet1,
+    },
+
+    density: {
+      adapt_to_color_usage: false,
+      color_single: d3chromatic.interpolateBlues(0.7),
+      color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
+      grey_single: d3chromatic.interpolateGreys(0.7),
+      grey_scale: makeDensityScale(reducedGreyScale),
+    },
+
+    // not used at the moment
+    // marginal: {
+    //   single: d3chromatic.interpolateGreys(0.5),
+    // },
+
+    aggregation: {
+      // single:  d3chromatic.interpolateReds(0.55),
+      // single:  d3chromatic.schemeSet1[6],
+      //single:  d3chromatic.schemeSet1[5],
+      single: d3chromatic.schemePaired[7],
+    },
+
+    data: {
+      //single: d3chromatic.interpolateBlues(0.7),
+      //single: d3chromatic.schemeSet1[7],
+      single: d3chromatic.schemePaired[6],
+    },
+
+    testData: {
+      // single: d3chromatic.schemePaired[6], // TODO: improve?
+      single: d3chromatic.schemePaired[6], // TODO: improve?
+    }
   };
 
-  c.densityColor.single = c.densityColor.grey_single;
-  c.densityColor.scale = c.densityColor.grey_scale ;
-  // single: d3chromatic.interpolateBlues(0.7), // the default
+  c.colors.density.single = c.colors.density.grey_single;
+  c.colors.density.scale = c.colors.density.grey_scale;
+
+  // << END NEW
+
+  // c.densityColor = {
+  //   adapt_to_color_usage: false,
+  //   color_single: d3chromatic.interpolateBlues(0.7),
+  //   color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
+  //   grey_single: d3chromatic.interpolateGreys(0.7),
+  //   grey_scale: makeDensityScale(reducedGreyScale),
+  // };
+  //
+  // c.densityColor.single = c.densityColor.grey_single;
+  // c.densityColor.scale = c.densityColor.grey_scale ;
+  // // single: d3chromatic.interpolateBlues(0.7), // the default
   // scale: makeDensityScale(d3chromatic.schemeBlues[9]), // the default
 
-  c.marginalColor = {
-    single: d3chromatic.interpolateGreys(0.5),
-  };
+  // c.marginalColor = {
+  //   single: d3chromatic.interpolateGreys(0.5),
+  // };
 
-  c.aggrColor = {
-    // single:  d3chromatic.interpolateReds(0.55),
-    // single:  d3chromatic.schemeSet1[6],
-    //single:  d3chromatic.schemeSet1[5],
-    single: d3chromatic.schemePaired[7],
-  };
+  // c.aggrColor = {
+  //   // single:  d3chromatic.interpolateReds(0.55),
+  //   // single:  d3chromatic.schemeSet1[6],
+  //   //single:  d3chromatic.schemeSet1[5],
+  //   single: d3chromatic.schemePaired[7],
+  // };
 
-  c.dataColor = {
-    //single: d3chromatic.interpolateBlues(0.7),
-    //single: d3chromatic.schemeSet1[7],
-    single: d3chromatic.schemePaired[6],
-  };
-
-  c.testDataColor = {
-    // single: d3chromatic.schemePaired[6], // TODO: improve?
-    single: d3chromatic.schemePaired[6], // TODO: improve?
-  };
+  // c.dataColor = {
+  //   //single: d3chromatic.interpolateBlues(0.7),
+  //   //single: d3chromatic.schemeSet1[7],
+  //   single: d3chromatic.schemePaired[6],
+  // };
+  //
+  // c.testDataColor = {
+  //   // single: d3chromatic.schemePaired[6], // TODO: improve?
+  //   single: d3chromatic.schemePaired[6], // TODO: improve?
+  // };
 
   // set of default config options for the visualization
   // beware when you add more
@@ -94,23 +146,26 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     }
   };
 
-  c.maps = {
-    size: 50,
-    minSize: 32,
-    maxSize: 2048,
-    fill: c.aggrColor.single,
-//    fill: "#377eb8", prepaper
-    stroke: "#222222",
-    opacity: 0.3,
-    shape: "circle"
-  };
+  // appearantly unused
+//   c.maps = {
+//     size: 50,
+//     minSize: 32,
+//     maxSize: 2048,
+//     fill: c.aggrColor.single,
+// //    fill: "#377eb8", prepaper
+//     stroke: "#222222",
+//     opacity: 0.3,
+//     shape: "circle"
+//   };
 
-  c.appearance = {
-    pane: {
-      borderColor: "#d4d4d4",
-      fill: 'none'
-    }
-  };
+  // appearantly unused
+  // c.appearance = {
+  //   pane: {
+  //     //borderColor: "#d4d4d4",
+  //     borderColor: "#FF0000",
+  //     fill: 'none'
+  //   }
+  // };
 
   c.colorscales = {
     density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
@@ -135,7 +190,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     aggrMarker: {
       fill: {
         //def: "#377eb8",
-        def: () => c.aggrColor.single,
+        def: () => c.colors.aggregation.single,
         //def: greys(0.05), // prepaper
         opacity: 1 * !hideAggregations,
       },
@@ -146,12 +201,12 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       size: {
         min: 3, // HACK: used to be 8.
-        max: 40*c.sizeFactor,
+        max: 160,
         def: 14,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
-        //color: c.aggrColor.single,
+        //color: cc.colors.aggregation.single,
         color: greys(0.8),
       }
     },
@@ -176,7 +231,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         width: 1,
       },
       fill: {
-        def: () => c.dataColor.single,
+        def: () => c.colors.data.single,
         opacity: _opac, //0.9,
         // opacity: 0.8,
       },
@@ -189,7 +244,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         width: 1,
       },
       fill: {
-        def: () => c.testDataColor.single,
+        def: () => c.colors.testData.single,
         opacity: 0.9,
       },
     },
@@ -206,7 +261,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     uniDensity: {
       color: {
         //def: greys(0.5),
-        def: () => c.densityColor.single,
+        def: () => c.colors.density.single,
       },
       bar: {
         opacity: 0.7,
@@ -222,14 +277,14 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
     biDensity: {
       //colorscale: c.colorscales.density, // prepaper
-      colorscale: () => c.densityColor.scale, // color scale to use for heat maps / contour plots
+      colorscale: () => c.colors.density.scale, // color scale to use for heat maps / contour plots
       mark: {
-        color: () => c.densityColor.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+        color: () => c.colors.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
         opacity: 0.8,
       },
       line: {
         width: 2,
-        color: () => c.densityColor.single,
+        color: () => c.colors.density.single,
         fill: true,
         fillopacity: 0.06,
       },
