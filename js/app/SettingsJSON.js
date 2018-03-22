@@ -15,13 +15,13 @@
  *    * the resulting augmented settings object is then made available in ViewSettings.js
  *    * and can be imported and used from other modules
  *
- *  TODO :
+ *  TODO:
  *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
- *    * TODO: make editor view more compact
  *    * TODO: add remaining dependencies
  *    * TODO: fix wrong encoding of color as strings
  *    * TODO: fix weird dependencies on color:
- *    * TODO: make it hideable
+ *    * TODO: make editor view more compact
+ *    * DONE: make it hideable
  *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
  **/
 define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain', './ViewSettings', './utils'], function (d3chromatic, d3f, d3color, ss, Domain, viewSettings, utils) {
@@ -291,8 +291,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           "fill": {
             type: "object", format: "grid",
             properties: {
-              def: {/*TODO*/},
-              opacity: {/*TODO*/}
+              "def": {type: "string", format: "color", watch: {_single: "colors.aggregation.single"}, template: "{{_single}}"},
+              // TODO: "opacity": {type: "number", watch: {_hide:"tweaks.hideAggregations"}, template: "1*!{{_hide}}"},
+              opacity: {type: "number"},
             }
           },
           "stroke": {
@@ -353,7 +354,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           "fill": {
             type: "object", format: "grid",
             properties: {
-              def: {/*TODO*/},
+              "def": {type: "string", format: "color", watch: {_single: "colors.data.single"}, template: "{{_single}}"},
               opacity: {/*TODO*/}
             }
           },
@@ -426,7 +427,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           mark: {
             type: "object", format: "grid",
             properties: {
-              "color": {type: "string", format: "color"}, // TODO: dependent // () => c.colors.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+              // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+              "color": {type: "string", format: "color", watch: {_single: "colors.density.single"}, template: "{{_single}}"},
               "opacity": {type: "number"},
             }
           },
@@ -434,7 +436,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
             type: "object", format: "grid",
             properties: {
               "width": {type: "number", default: 99},
-              "color": {type: "string", format: "color"}, // TODO: () => c.colors.density.single,
+              "color": {type: "string", format: "color", watch: {_single: "colors.density.single"}, template: "{{_single}}"},
               "fill": {type: "boolean"},
               "fillopacity": {type: "number"}
             }
@@ -453,9 +455,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     aggrMarker: {
       fill: {
         //def: "#377eb8",
-        def: colorsInitial.aggregation.single, // TODO: watched!
+        def: colorsInitial.aggregation.single, // TODO: watches!
         //def: greys(0.05), // prepaper
-        opacity: 1 * !tweaksInitial.hideAggregations, // TODO: watched!
+        opacity: 1 * !tweaksInitial.hideAggregations, // TODO: watches!
       },
       stroke: {
         color: greys(0.95),

@@ -1166,7 +1166,8 @@ button, .button {
   background-color: #008CBA;
   border-color: #007095;
   color: #FFFFFF;
-  transition: background-color 300ms ease-out; }
+  transition: background-color 300ms ease-out;
+  }
   button:hover, button:focus, .button:hover, .button:focus {
     background-color: #007095; }
   button:hover, button:focus, .button:hover, .button:focus {
@@ -1228,7 +1229,8 @@ button, .button {
     padding-right: 1.25rem;
     padding-bottom: 0.6875rem;
     padding-left: 1.25rem;
-    font-size: 0.6875rem; }
+    font-size: 0.6875rem;
+    }
   button.expand, .button.expand {
     padding-right: 0;
     padding-left: 0;
@@ -1328,7 +1330,8 @@ button::-moz-focus-inner {
 
 @media only screen and (min-width: 40.063em) {
   button, .button {
-    display: inline-block; } }
+    display: inline-block;
+    } }
 /* Standard Forms */
 form {
   margin: 0 0 1rem; }
@@ -2312,7 +2315,8 @@ meta.foundation-mq-topbar {
   left: 0; }
   .button-group:before, .button-group:after {
     content: " ";
-    display: table; }
+    display: table;
+    }
   .button-group:after {
     clear: both; }
   .button-group.even-2 li {
@@ -2693,7 +2697,8 @@ meta.foundation-mq-topbar {
     color: #333333; }
   .panel h1, .panel h2, .panel h3, .panel h4, .panel h5, .panel h6 {
     line-height: 1;
-    margin-bottom: 0.625rem; }
+    margin-bottom: 0.625rem;
+    }
     .panel h1.subheader, .panel h2.subheader, .panel h3.subheader, .panel h4.subheader, .panel h5.subheader, .panel h6.subheader {
       line-height: 1.4; }
   .panel.callout {
@@ -3837,7 +3842,8 @@ blockquote p {
 
 @media only screen and (min-width: 40.063em) {
   h1, h2, h3, h4, h5, h6 {
-    line-height: 1.4; }
+    line-height: 1.4;
+    }
 
   h1 {
     font-size: 2.75rem; }

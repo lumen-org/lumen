@@ -105,6 +105,24 @@ main {
     width: 400px;
 }
 
+/* css adaption to make layout more compact for the foundation layout option of the json-editor ... */
+.pl-config h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    padding: 0;
+}
+
+.pl-config .panel {
+    margin: 0;
+    padding: 2px;
+}
+
+.pl-config .button {
+    margin: 2px;
+    padding: 2px;
+}
+/* ... until here*/
+
 .pl-visualization-pane {
     width: 100%;
     height: 100%;
