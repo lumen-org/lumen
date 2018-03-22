@@ -34,7 +34,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   }
 
   /**
-   *
    * @param obj
    * @param refs
    * @param dict
@@ -96,14 +95,16 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     format: "grid",
     properties: {
       "hideAggregations": {type: "boolean"},
-      "resolution": {type: "integer"},
+      "resolution_1d": {type: "integer"},
+      "resolution_2d": {type: "integer"},
       "opacity": {type: "number"},
       "levels": {type: "number"},
     },
   };
   let tweaksInitial = {
     hideAggregations: false,
-    resolution: 50,
+    resolution_1d: 100,
+    resolution_2d: 30,
     opacity: 0.7,
     levels: 16,
   };
@@ -407,7 +408,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
               "fillopacity": {type: "number"},
             }
           },
-          "resolution": {type: "number"} // TODO: dependent
+          "resolution": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"}
         }
       },
       "biDensity": {
@@ -416,24 +417,24 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           mark: {
             type: "object", format: "grid",
             properties: {
-              color: {type: "string", format: "color"}, // TODO: dependent // () => c.colors.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
-              opacity: {type: "number"},
+              "color": {type: "string", format: "color"}, // TODO: dependent // () => c.colors.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
+              "opacity": {type: "number"},
             }
           },
           line: {
             type: "object", format: "grid",
             properties: {
-              width: {type: "number", default: 99},
-              color: {type: "string", format: "color"}, // TODO: () => c.colors.density.single,
-              fill: {type: "boolean"},
-              fillopacity: {type: "number"}
+              "width": {type: "number", default: 99},
+              "color": {type: "string", format: "color"}, // TODO: () => c.colors.density.single,
+              "fill": {type: "boolean"},
+              "fillopacity": {type: "number"}
             }
           },
           // TODO: make subgroup and  format: "grid",
-          colorscale_Enum: {type: "string", enum: colorscalesKeys},
-          levels: {type: "integer"},
-          resolution: {type: "integer"},
-          labelFormatterString: {type: "string"}
+          "colorscale_Enum": {type: "string", enum: colorscalesKeys},
+          "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
+          "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
+          "labelFormatterString": {type: "string"}
         }
       }
     }
@@ -524,7 +525,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         fill: true,
         fillopacity: 0.06,
       },
-      resolution: tweaksInitial.resolution,  // TODO: watched!
+      resolution: tweaksInitial.resolution_1d,  // TODO: watched!
     },
 
     biDensity: {
@@ -541,7 +542,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       colorscale_Enum: colorsInitial.density.scale_Enum, // color scale to use for heat maps / contour plots  // TODO: watches!
       levels: tweaksInitial.levels, // TODO: watches!
-      resolution: tweaksInitial.resolution, // the number computed points along one axis // TODO: watches!
+      resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
     },
   };
@@ -793,9 +794,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     type: "object",
     //format: "grid",
     properties: {
+      "tweaks": {"$ref": "#/definitions/tweaks"},
       "map": {"$ref": "#/definitions/map"},
       "colors": {"$ref": "#/definitions/colors"},
-      "tweaks": {"$ref": "#/definitions/tweaks"},
       // "myTest": {"$ref": "#/definitions/myTest"},
       "plots": {"$ref": "#/definitions/plots"},
     },
@@ -824,6 +825,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
    * Advantage: no need to specify a schema for it...
    */
   function _addStaticJson(c) {
+    // set of default config options for the visualization
+    // beware when you add more
+
     // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
     c.shapes = {
       open: _.range(100, 144),
@@ -833,8 +837,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   }
 
   function _addRefactorJSON(c) {
-      // set of default config options for the visualization
-    // beware when you add more
     c.views = {
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
@@ -864,135 +866,28 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         possible: true
       }
     };
-
-//     c.map = {
-//       aggrMarker: {
-//         fill: {
-//           //def: "#377eb8",
-//           def: () => c.colors.aggregation.single,
-//           //def: greys(0.05), // prepaper
-//           opacity: 1 * !c.tweaks.hideAggregations,
-//         },
-//         stroke: {
-//           color: greys(0.95),
-//           // color: greys(0.1),
-//           width: 1.5,
-//         },
-//         size: {
-//           min: 3, // HACK: used to be 8.
-//           max: 160,
-//           def: 14,
-//           //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
-//         },
-//         line: { // the line connecting the marker points
-//           //color: cc.colors.aggregation.single,
-//           color: greys(0.8),
-//         }
-//       },
-//
-//       heatmap: {
-//         opacity: {
-//           discrete: 0.5,
-//           continuous: 0.8,
-//         },
-//         xgap: 2,
-//         ygap: 2,
-//       },
-//
-//       sampleMarker: {
-//         size: {
-//           min: 6,
-//           max: 40,
-//           def: 8,
-//         },
-//         stroke: {
-//           color: greys(0.0),
-//           width: 1,
-//         },
-//         fill: {
-//           def: () => c.colors.data.single,
-//           opacity: _opac, //0.9,
-//           // opacity: 0.8,
-//         },
-//         maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
-//       },
-//
-//       testDataMarker: {
-//         stroke: {
-//           color: greys(1),
-//           width: 1,
-//         },
-//         fill: {
-//           def: () => c.colors.testData.single,
-//           opacity: 0.9,
-//         },
-//       },
-//
-//       predictionOffset: {
-//         line: {
-//           color: greys(0.7),
-//           width: 2,
-//           opacity: 0.8,
-//           fill: false,
-//         },
-//       },
-//
-//       uniDensity: {
-//         color: {
-//           //def: greys(0.5),
-//           def: () => c.colors.density.single,
-//         },
-//         bar: {
-//           opacity: 0.7,
-//         },
-//         line: {
-//           width: 2.5,
-//           opacity: 0.7, // line opacity
-//           fill: true,
-//           fillopacity: 0.06,
-//         },
-//         resolution: _res,
-//       },
-//
-//       biDensity: {
-//         //colorscale: c.colorscales.density, // prepaper
-//         colorscale: () => c.colors.density.scale, // color scale to use for heat maps / contour plots
-//         mark: {
-//           color: () => c.colors.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
-//           opacity: 0.8,
-//         },
-//         line: {
-//           width: 2,
-//           color: () => c.colors.density.single,
-//           fill: true,
-//           fillopacity: 0.06,
-//         },
-// //      opacity: 0.8,
-//         levels: _lvls, //16,
-//         resolution: _res, //30, // the number computed points along one axis
-//         labelFormatter: d3.format(".3f"),
-//       },
-//     };
-
     return c;
   }
 
   function _addNonJson(c) {
-
+    // .plots
     c.plots.styled_text = (title, style) => {
       if (style === "")
         return title;
       return "<" + style + ">" + title + "</" + style + ">";
     };
-    c.plots.layout.ratio_marginal = used => (used ? 0.75 : 0.05);  // translate to JSON dependency
+    c.plots.layout.ratio_marginal = used => (used ? 0.75 : 0.05);
 
+    // .colors
     translateEnum(c.colors.density, ["scale", "grey_scale", "color_scale"], colorscalesEnum);
     translateEnum(c.colors.semanticScales, ["diverging", "sequential", "discrete9", "discrete12", "discrete6light", "discrete6dark", "discrete9light", "discrete9dark"], colorscalesEnum);
     // translateEnum(c.myTest, ["color"], colorscalesEnum);
 
+    // .map
     c.map.biDensity.labelFormatter = d3.format(c.map.biDensity.labelFormatterString);
     translateEnum(c.map.biDensity, ["colorscale"], colorscalesEnum);
-        return c;
+
+    return c;
   }
 
   function _addGenerators(c) {
