@@ -190,45 +190,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     }
   };
 
-  let colorsSchemaOld = {
-    type: "object",
-    title: "colors",
-    properties: {
-      density: {
-        type: "object",
-        properties: {
-          single: {type: "string"},
-          scale: {type: "string"},
-          adapt_to_color_usage: {type: "boolean"},
-        }
-      },
-      marginal: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      },
-      aggregation: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      },
-      data: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      },
-      testData: {
-        type: "object",
-        properties: {
-          single: {type: "object"}
-        }
-      }
-    }
-  };
-
   let viewsSchema = {
     //$schema: "http://json-schema.org/draft-06/schema#",
     type: "object",
