@@ -33,12 +33,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     return colorScale;
   }
 
-  /*
-  * API:
-  *  * a function to watch changes in certain parts of the config
-  * */
-
-
   /**
    * An enumeration of all available color schemes.
    * A user can select between these for an option that requires a color scheme.
@@ -66,6 +60,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     colorscalesKeys = Object.keys(colorscalesEnum),
     colorscalesValues = Object.values(colorscalesEnum);
 
+  ////////// test
   let myTestSchema = {
     type: "object",
     title: "myTest",
@@ -78,6 +73,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let myTestInitial = {
     color_Enum: "blues"
   };
+  ////////// <<<<< test
 
   let tweaksSchema = {
     type: "object",
@@ -253,50 +249,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         }
       },
 
-    }
-  };
-
-  let mapSchema = {
-    type: "object",
-    title: "map",
-    properties: {
-      aggrMarker: {
-        type: "object",
-        properties: {
-          fill: {
-            type: "object",
-            properties: {
-              def: {
-                type: "string",
-                format: "color"
-              },
-              opacity: {
-                type: "number"
-              }
-            }
-          },
-          stroke: {
-            type: "object",
-            properties: {
-              color: {
-                type: "object",
-                format: "color",
-              },
-              width: {
-                type: "number",
-              }
-            }
-          },
-          size: {
-            type: "object",
-            properties: {
-              min: { type: "number" },
-              max: { type: "number" },
-              def: { type: "number" },
-            }
-          }
-        }
-      }
     }
   };
 
