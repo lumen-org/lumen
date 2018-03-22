@@ -570,7 +570,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         this._modelSelector = new ModelSelector(context);
 
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $clone, $undo,/* $save,*/ $redo, $clear, $query, $reload);
+        let $configHideButton = $('<div class="pl-toolbar-button">Config</div>').click( () => {
+          $('.pl-config').toggle()
+        });
+
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $configHideButton,  $clone, $undo,/* $save,*/ $redo, $clear, $query, $reload);
 
         if(context !== undefined)
           this.setContext(context);

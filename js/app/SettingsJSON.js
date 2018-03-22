@@ -19,7 +19,9 @@
  *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
  *    * TODO: make editor view more compact
  *    * TODO: add remaining dependencies
+ *    * TODO: fix wrong encoding of color as strings
  *    * TODO: fix weird dependencies on color:
+ *    * TODO: make it hideable
  *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
  **/
 define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain', './ViewSettings', './utils'], function (d3chromatic, d3f, d3color, ss, Domain, viewSettings, utils) {
