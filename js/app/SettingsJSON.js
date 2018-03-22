@@ -44,34 +44,23 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
    * A user can select between these for an option that requires a color scheme.
    */
   let colorscalesEnum = {
-    blues: d3chromatic.schemeBlues[9],
-    greens: d3chromatic.schemeGreens[9],
-    greys: d3chromatic.schemeGreys[9],
-    oranges: d3chromatic.schemeOranges[9],
-    reds: d3chromatic.schemeReds[9],
-    RdBu: d3chromatic.schemeRdBu[11],
-    YlOrBr: d3chromatic.schemeYlOrBr[9],
-    set1: d3chromatic.schemeSet1,
-    paired12: d3chromatic.schemePaired,
-    discrete6_light: d3.range(6).map(i => d3chromatic.schemePaired[i * 2]),
-    discrete6_dark: d3.range(6).map(i => d3chromatic.schemePaired[i * 2 + 1]),
-    discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
-    discrete9dark: d3chromatic.schemeSet1,
-  };
-
-  // let colorscalesEnum = {
-  //     density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
-  //     density2: d3chromatic.schemeBlues[9],
-  //     diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
-  //     sequential: d3chromatic.schemeYlOrBr[9] , // ohne Nulldurchgang / bis 0
-  //     discrete9: d3chromatic.schemeSet1,
-  //     discrete12: d3chromatic.schemePaired,
-  //     discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i*2]),
-  //     discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i*2+1]),
-  //     discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
-  //     discrete9dark: d3chromatic.schemeSet1,
-  //   },
-  let colorscalesKeys = Object.keys(colorscalesEnum),
+      //     density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
+      blues: d3chromatic.schemeBlues[9],
+      greens: d3chromatic.schemeGreens[9],
+      greys: d3chromatic.schemeGreys[9],
+      oranges: d3chromatic.schemeOranges[9],
+      reds: d3chromatic.schemeReds[9],
+      rdBu: d3chromatic.schemeRdBu[11],
+      rdYlBu: d3chromatic.schemeRdYlBu[9],
+      ylOrBr: d3chromatic.schemeYlOrBr[9],
+      set1: d3chromatic.schemeSet1,
+      paired12: d3chromatic.schemePaired,
+      discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i * 2]),
+      discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i * 2 + 1]),
+      discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
+      discrete9dark: d3chromatic.schemeSet1,
+    },
+    colorscalesKeys = Object.keys(colorscalesEnum),
     colorscalesValues = Object.values(colorscalesEnum);
 
   let colorTestSchema = {
@@ -157,7 +146,48 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   };
 
   let colorsInitial = {
-    // TODO!
+    // abstract scales for certain data characteristics
+    semanticScales: {
+      diverging: "rdBu",  // rdYlBu ?  // mit Nulldurchgang
+      sequential: "ylOrBr", // ohne Nulldurchgang / bis 0
+      discrete9: "set1",
+      discrete12: "paired12",
+      discrete6light: "discrete6light",
+      discrete6dark: "discrete6dark",
+      discrete9light: "discrete9light",
+      discrete9dark: "discrete9dark",
+    },
+
+    density: {
+      adapt_to_color_usage: false,
+      color_single: d3chromatic.interpolateBlues(0.7),
+      color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
+      grey_single: d3chromatic.interpolateGreys(0.7),
+      grey_scale: makeDensityScale(d3chromatic.schemeGreys[9]), // todo: debug
+      //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
+    },
+
+    // not used at the moment
+    // marginal: {
+    //   single: d3chromatic.interpolateGreys(0.5),
+    // },
+
+    aggregation: {
+      // single:  d3chromatic.interpolateReds(0.55),
+      // single:  d3chromatic.schemeSet1[6],
+      //single:  d3chromatic.schemeSet1[5],
+      single: d3chromatic.schemePaired[7],
+    },
+
+    data: {
+      //single: d3chromatic.interpolateBlues(0.7),
+      //single: d3chromatic.schemeSet1[7],
+      single: d3chromatic.schemePaired[6],
+    },
+
+    testData: {
+      single: d3chromatic.schemePaired[6], // TODO: improve?
+    }
   };
 
   let colorsSchemaOld = {
@@ -717,11 +747,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     // label: {
     //   formatter: d3f.format(".3") // three significant digits, no trailing zeros
     // }
-  };
-
-  let biDensitySchema = {
-    type: "object",
-
   };
 
   /////////////////////
