@@ -46,8 +46,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let colorscalesEnum = {
       //     density: [[0, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,0)'], [0.000001, 'rgba(255,255,255,1)'], [1, 'rgba(0,0,0,1)']],
       blues: d3chromatic.schemeBlues[9],
+      density_blues: makeDensityScale(d3chromatic.schemeBlues[9]),
       greens: d3chromatic.schemeGreens[9],
+      density_greens: makeDensityScale(d3chromatic.schemeGreens[9]),
       greys: d3chromatic.schemeGreys[9],
+      density_greys: makeDensityScale(d3chromatic.schemeGreys[9]),
       oranges: d3chromatic.schemeOranges[9],
       reds: d3chromatic.schemeReds[9],
       rdBu: d3chromatic.schemeRdBu[11],
@@ -63,26 +66,25 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     colorscalesKeys = Object.keys(colorscalesEnum),
     colorscalesValues = Object.values(colorscalesEnum);
 
-  let colorTestSchema = {
+  let myTestSchema = {
     type: "object",
-    title: "colorTest",
+    title: "myTest",
     properties: {
       color_Enum: {type: "string", enum: colorscalesKeys,},
     },
     //defaultProperties: ["colorEnum"],
   };
 
-  let colorTestInitial = {
+  let myTestInitial = {
     color_Enum: "blues"
   };
-
 
   let tweaksSchema = {
     type: "object",
     format: "grid",
     properties: {
-      hideAggregations: {type: "boolean"},
-      resolution: {type: "integer"},
+      "hideAggregations": {type: "boolean"},
+      "resolution": {type: "integer"},
     },
   };
   let tweaksInitial = {
@@ -92,8 +94,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
   let colorsSchema = {
     type: "object",
-    title: "colors",
-    format: "grid",
+    //title: "colors",
     properties: {
       "semanticScales": {
         type: "object",
@@ -110,6 +111,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       "density": {
         type: "object",
+        format: "grid",
         properties: {
           "adapt_to_color_usage": {type: "boolean"},
 
@@ -125,45 +127,52 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       "aggregation": {
         type: "object",
+        format: "grid",
         properties: {
           "single": {type: "string", format: "color"}
         }
       },
       "data": {
         type: "object",
+        format: "grid",
         properties: {
           "single": {type: "string", format: "color"}
         }
       },
       "testData": {
         type: "object",
+        format: "grid",
         properties: {
           "single": {type: "string", format: "color"}
         }
       }
-
     }
   };
 
   let colorsInitial = {
     // abstract scales for certain data characteristics
     semanticScales: {
-      diverging: "rdBu",  // rdYlBu ?  // mit Nulldurchgang
-      sequential: "ylOrBr", // ohne Nulldurchgang / bis 0
-      discrete9: "set1",
-      discrete12: "paired12",
-      discrete6light: "discrete6light",
-      discrete6dark: "discrete6dark",
-      discrete9light: "discrete9light",
-      discrete9dark: "discrete9dark",
+      diverging_Enum: "rdBu",  // rdYlBu ?  // mit Nulldurchgang
+      sequential_Enum: "ylOrBr", // ohne Nulldurchgang / bis 0
+      discrete9_Enum: "set1",
+      discrete12_Enum: "paired12",
+      discrete6light_Enum: "discrete6light",
+      discrete6dark_Enum: "discrete6dark",
+      discrete9light_Enum: "discrete9light",
+      discrete9dark_Enum: "discrete9dark",
     },
 
     density: {
       adapt_to_color_usage: false,
+
+      single: d3chromatic.interpolateGreys(0.7), // todo: same as grey single
+      scale_Enum: "density_greys", // todo: same as grey scale
+
       color_single: d3chromatic.interpolateBlues(0.7),
-      color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
+      color_scale_Enum: "density_blues",
+
       grey_single: d3chromatic.interpolateGreys(0.7),
-      grey_scale: makeDensityScale(d3chromatic.schemeGreys[9]), // todo: debug
+      grey_scale_Enum: "density_greys", // todo: debug
       //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
     },
 
@@ -469,8 +478,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   //TODO: mapsInitial
   //TODO: use default values for schema?
 
-  // partial schemas?
-
   let plotsSchema = {
     type: "object",
     //format: "grid",
@@ -716,23 +723,25 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     type: "object",
     //format: "grid",
     properties: {
+      "colors": {"$ref": "#/definitions/colors"},
       "tweaks": {"$ref": "#/definitions/tweaks"},
-      "colorTest": {"$ref": "#/definitions/colorTest"},
+      // "myTest": {"$ref": "#/definitions/myTest"},
       "plots": {"$ref": "#/definitions/plots"},
     },
     definitions: {
       "tweaks": tweaksSchema,
-      "colorTest": colorTestSchema,
+      "colors": colorsSchema,
+      // "myTest": myTestSchema,
       "plots": plotsSchema,
     }
   };
 
   let jsonInitial = {
     tweaks: tweaksInitial,
-    colorTest: colorTestInitial,
+    colors: colorsInitial,
+    // myTest: myTestInitial,
     plots: plotsInitial,
   };
-
 
   ////////////////////
 
@@ -751,61 +760,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   }
 
   function _addRefactorJSON(c) {
-    // c.tweaks = {
-    //   hideAggregations : false,
-    // };
-
-    c.colors = {
-
-      // abstract scales for certain data characteristics
-      semanticScales: {
-        diverging: d3chromatic.schemeRdBu[11],  // d3chromatic.schemeRdYlBu[9] ?  // mit Nulldurchgang
-        sequential: d3chromatic.schemeYlOrBr[9], // ohne Nulldurchgang / bis 0
-        discrete9: d3chromatic.schemeSet1,
-        discrete12: d3chromatic.schemePaired,
-        discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i * 2]),
-        discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i * 2 + 1]),
-        discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
-        discrete9dark: d3chromatic.schemeSet1,
-      },
-
-      density: {
-        adapt_to_color_usage: false,
-        color_single: d3chromatic.interpolateBlues(0.7),
-        color_scale: makeDensityScale(d3chromatic.schemeBlues[9]),
-        grey_single: d3chromatic.interpolateGreys(0.7),
-        grey_scale: makeDensityScale(d3chromatic.schemeGreys[9]), // todo: debug
-        //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
-      },
-
-      // not used at the moment
-      // marginal: {
-      //   single: d3chromatic.interpolateGreys(0.5),
-      // },
-
-      aggregation: {
-        // single:  d3chromatic.interpolateReds(0.55),
-        // single:  d3chromatic.schemeSet1[6],
-        //single:  d3chromatic.schemeSet1[5],
-        single: d3chromatic.schemePaired[7],
-      },
-
-      data: {
-        //single: d3chromatic.interpolateBlues(0.7),
-        //single: d3chromatic.schemeSet1[7],
-        single: d3chromatic.schemePaired[6],
-      },
-
-      testData: {
-        // single: d3chromatic.schemePaired[6], // TODO: improve?
-        single: d3chromatic.schemePaired[6], // TODO: improve?
-      }
-    };
-
-    c.colors.density.single = c.colors.density.grey_single;
-    c.colors.density.scale = c.colors.density.grey_scale;
-
-    // set of default config options for the visualization
+      // set of default config options for the visualization
     // beware when you add more
     c.views = {
       aggregations: {
@@ -1069,9 +1024,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       return obj;
     }
 
-    translateEnum(c.colorTest, ["color"], colorscalesEnum);
-    //translateEnum(c.colors.density, ["scale", "grey_scale", "color_scale"]);
-    //translateEnum(c.colors.semanticScales, ["diverging", "sequential", "discrete9", "discrete12", "discrete6light", "discrete6dark", "discrete9light", "discrete9dark"]);
+    // translateEnum(c.myTest, ["color"], colorscalesEnum);
+    translateEnum(c.colors.density, ["scale", "grey_scale", "color_scale"], colorscalesEnum);
+    translateEnum(c.colors.semanticScales, ["diverging", "sequential", "discrete9", "discrete12", "discrete6light", "discrete6dark", "discrete9light", "discrete9dark"], colorscalesEnum);
 
     return c;
   }
@@ -1285,8 +1240,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     updateSettings,
     jsonSchema,  //
     jsonInitial,
-    colorTestSchema,
-    colorTestSchemaInitial: colorTestInitial
+    myTestSchema,
+    myTestSchemaInitial: myTestInitial
     //watch
   }
 
