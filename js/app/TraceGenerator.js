@@ -468,7 +468,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yaxis: yAxis,
         };
 
-        let color = c.map.uniDensity.color.def();
+        let color = c.map.uniDensity.color.def;
         // let color = fixedColor;
         // if (color === undefined) {
         //   let lcmap = mapper.marginalColor;
@@ -578,7 +578,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         //opacity: c.map.biDensity.opacity,
         opacity: 1,
         autocolorscale: false,
-        colorscale: c.map.biDensity.colorscale(),
+        colorscale: c.map.biDensity.colorscale,
         zauto: false,
         zmin: 0,
         zmax: rt.extent[2], // TODO: is that valid for c-c heat maps? NO!
@@ -659,11 +659,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             //opacity: c.map.biDensity.mark.opacity,
             line: {
               width: c.map.biDensity.line.width,
-              color: c.map.biDensity.line.color(),
+              color: c.map.biDensity.line.color
             },
             fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
             //fill: 'none',
-            fillcolor: makeOpaque(c.map.biDensity.line.color(), c.map.biDensity.line.fillopacity),
+            fillcolor: makeOpaque(c.map.biDensity.line.color, c.map.biDensity.line.fillopacity),
           };
 
           traces.push(trace);

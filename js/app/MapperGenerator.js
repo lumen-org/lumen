@@ -154,7 +154,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       //   return mainColorMap(_valueOrAvg(fu.extent)); // scalar value, namely color for the average of the domain.
       // }
     }
-    return c.map.uniDensity.color.def();
+    return c.map.uniDensity.color.def;
   };
 
   return gen;
