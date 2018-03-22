@@ -84,16 +84,17 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   };
 
   let colorTestInitial = {
-    colorEnum: "blues"
+    color_Enum: "blues"
   };
 
 
   let tweaksSchema = {
     type: "object",
+    format: "grid",
     properties: {
       hideAggregations: {type: "boolean"},
       resolution: {type: "integer"},
-    }
+    },
   };
   let tweaksInitial = {
     hideAggregations: false,
@@ -103,6 +104,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let colorsSchema = {
     type: "object",
     title: "colors",
+    format: "grid",
     properties: {
       "semanticScales": {
         type: "object",
@@ -480,22 +482,26 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
   let plotsSchema = {
     type: "object",
+    //format: "grid",
     properties: {
       "axis": {
         type: "object",
+        format: "grid",
         properties: {
           "title_style": {type: "string"},
+          "label_style": {type: "string"},
           "title_font": {
             type: "object",
+            format: "grid",
             properties: {
               "family": {type: "string"},
               "size": {type: "integer"},
               "color": {type: "string", format: "color"},
             }
           },
-          "label_style": {type: "string"},
           "label_font": {
             type: "object",
+            format: "grid",
             properties: {
               "family": {type: "string"},
               "size": {type: "integer"},
@@ -506,21 +512,25 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       "main": {
         type: "object",
+        //format: "grid",
         properties: {
           "background": {
             type: "object",
+            format: "grid",
             properties: {
               "fill": {type: "string", format: "color"} // unused?
             }
           },
           "grid": {
             type: "object",
+            format: "grid",
             properties: {
               "color": {type: "string", format: "color"}
             }
           },
           "axis": {
             type: "object",
+            format: "grid",
             properties: {
               "color": {type: "string", format: "color"},
               "zerolinewidth": {type: "number"},
@@ -529,6 +539,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           },
           "text": {
             type: "object",
+            format: "grid",
             properties: {
               "color": {type: "string", format: "color"},
               "size": {type: "integer"},
@@ -538,21 +549,25 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       "marginal": {
         type: "object",
+        // format: "grid",
         properties: {
           "background": {
             type: "object",
+            format: "grid",
             properties: {
               "fill": {type: "string", format: "color"} // unused?
             }
           },
           "grid": {
             type: "object",
+            format: "grid",
             properties: {
               "color": {type: "string", format: "color"}
             }
           },
           "axis": {
             type: "object",
+            format: "grid",
             properties: {
               "color": {type: "string", format: "color"},
               "width": {type: "number"},
@@ -560,6 +575,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           },
           "text": {
             type: "object",
+            format: "grid",
             properties: {
               "color": {type: "string", format: "color"},
               "size": {type: "integer"},
@@ -567,6 +583,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           },
           "position": {
             type: "object",
+            format: "grid",
             properties: {
               "x": {type: "string", enum:['topright','bottomleft']},
               "y": {type: "string", enum:['topright','bottomleft']}, //
@@ -576,9 +593,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       },
       "layout": {
         type: "object",
+        // format: "grid",
         properties: {
           "margin": {
             type: "object",
+            format: "grid",
             properties: {
               "l": {type: "number"},
               "t": {type: "number"},
@@ -589,6 +608,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           },
           "templ_axis_level_ratio": {
             type: "object",
+            format: "grid",
             properties: {
               "x": {type: "number"},
               "y": {type: "number"},
@@ -596,6 +616,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           },
           "templ_axis_level_width": {
             type: "object",
+            format: "grid",
             properties: {
               "x": {type: "number"},
               "y": {type: "number"},
@@ -707,6 +728,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
   let jsonSchema = {
     type: "object",
+    //format: "grid",
     properties: {
       "tweaks": {"$ref": "#/definitions/tweaks"},
       "colorTest": {"$ref": "#/definitions/colorTest"},

@@ -88,7 +88,8 @@ define(['./SettingsJSON'], function (s) {
     let options = {
       schema: s.jsonSchema,
       startval: s.jsonInitial,
-      theme: 'barebones',
+      theme: 'foundation5',
+      //theme: 'barebones',
       disable_edit_json: true,
       disable_properties: true,
       //disable_collapse: false,

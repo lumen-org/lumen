@@ -98,11 +98,11 @@ main {
 }
 
 #pl-config-editor-container {
-    min-width: 400px;
+/*     width: 400px; */
 }
 
 .pl-config {
-
+    width: 400px;
 }
 
 .pl-visualization-pane {
