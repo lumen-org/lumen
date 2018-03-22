@@ -14,7 +14,14 @@
  *      * other non-json compatible things are added
  *    * the resulting augmented settings object is then made available in ViewSettings.js
  *    * and can be imported and used from other modules
- */
+ *
+ *  TODO :
+ *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
+ *    * TODO: make editor view more compact
+ *    * TODO: add remaining dependencies
+ *    * TODO: fix weird dependencies on color:
+ *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
+ **/
 define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain', './ViewSettings', './utils'], function (d3chromatic, d3f, d3color, ss, Domain, viewSettings, utils) {
   "use strict";
 
@@ -546,8 +553,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       labelFormatterString: ".3f",
     },
   };
-  //TODO: mapInitial
-  //TODO: use default values for schema?
 
   let plotsSchema = {
     type: "object",
