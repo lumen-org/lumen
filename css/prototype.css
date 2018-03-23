@@ -97,9 +97,11 @@ main {
 
 }
 
-#pl-config-editor-container {
-/*     width: 400px; */
+#pl-config-editor-container2 {
+    overflow: auto;
+    height: 100%;
 }
+
 
 .pl-config {
     width: 400px;
