@@ -18,5 +18,12 @@ define(['app/utils'], function (utils) {
       expect (utils.selectValue(undefined, false, undefined, false, null, 1)).toBe(1);
       expect (utils.selectValue(undefined, false, undefined, false, null, null)).toBe(null);
     });
+
+    it('tests colorstring2hex()', function () {
+      expect(utils.colorstring2hex("rgb(255,255,0)")).toBe("0xffff00");
+      expect(utils.colorstring2hex("rgb(0,0,0)")).toBe("0x000000");
+      expect(utils.colorstring2hex("rgb(255,255,255)")).toBe("0xffffff");
+      expect(utils.colorstring2hex("rgb(163,1,88)")).toBe("0xa30158");
+    });
   });
 });

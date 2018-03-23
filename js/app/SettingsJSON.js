@@ -19,8 +19,8 @@
  *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
  *    * TODO: add remaining dependencies
  *    * TODO: fix wrong encoding of color as strings
- *    * TODO: fix weird dependencies on color:
- *    * TODO: make editor view more compact
+ *    * TODO: fix weird dependencies on color
+ *    * TODO/DONE: make editor view more compact. I made some progress
  *    * DONE: make it hideable
  *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
  **/

@@ -137,6 +137,17 @@ define([], function() {
     }
   }
 
+
+  function colorstring2hex(str) {
+    let innerStr = str.split("(")[1].split(")")[0];
+    let rgb = innerStr.split(",");
+    let hex = rgb.map( x => {
+      x = parseInt(x).toString(16);
+      return (x.length==1) ? "0"+x : x;
+    });
+    return "0x" + hex.join("");
+  }
+
   return {
     selectValue,
     listify,
