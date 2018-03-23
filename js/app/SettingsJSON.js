@@ -18,7 +18,7 @@
  *  TODO:
  *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
  *    * TODO: add remaining dependencies
- *    * TODO: fix wrong encoding of color as strings
+ *    * DONE: fix wrong encoding of color as strings
  *    * TODO: fix weird dependencies on color
  *    * TODO/DONE: make editor view more compact. I made some progress
  *    * DONE: make it hideable
