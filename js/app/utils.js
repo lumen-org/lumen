@@ -155,6 +155,7 @@ define([], function() {
     domain,
     hasProperty,
     hasValue,
-    ExtendableError
+    ExtendableError,
+    colorstring2hex
   };
 });

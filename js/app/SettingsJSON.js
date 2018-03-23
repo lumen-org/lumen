@@ -28,7 +28,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   "use strict";
 
   // utility functions
-  let greys = d3chromatic.interpolateGreys;
+  let c2h = utils.colorstring2hex;
+  
+  //let greys = x => c2h(d3chromatic.interpolateGreys(x));
+  let greys = x => d3chromatic.interpolateGreys(x);
+
   function makeDensityScale(colorArray) {
     const threshhold = 0.000001;
     let colorScale = [[0, 'rgba(255,255,255,0)'], [threshhold, 'rgba(255,255,255,0)']];  // to make sure very small values are drawn in white
@@ -191,20 +195,20 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     density: {
       adapt_to_color_usage: false,
 
-      single: d3chromatic.interpolateGreys(0.7), // todo: same as grey single
+      single: greys(0.7), // todo: same as grey single
       scale_Enum: "density_greys", // todo: same as grey scale
 
-      color_single: d3chromatic.interpolateBlues(0.7),
+      color_single: c2h(d3chromatic.interpolateBlues(0.7)),
       color_scale_Enum: "density_blues",
 
-      grey_single: d3chromatic.interpolateGreys(0.7),
+      grey_single: greys(0.7),
       grey_scale_Enum: "density_greys", // todo: debug
       //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
     },
 
     // not used at the moment
     // marginal: {
-    //   single: d3chromatic.interpolateGreys(0.5),
+    //   single: greys(0.5),
     // },
 
     aggregation: {
