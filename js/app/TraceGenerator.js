@@ -269,6 +269,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           line: {},
         };
 
+        // TODO: workaround for bug: allow to hide aggregations, because we need the colors be computed to have correct colors in marginals
+        if (c.tweaks.hideAggregations)
+          trace.opacity = 0;
+
         let lcmap = mapper.lineColor;
         trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
         // TODO: problem: I cannot (easily) draw lines with changing color.
@@ -417,10 +421,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        */
       function getAccumulatedUniTrace(data, fu2idx, xy, modelOrData) {
         // TODO: merge this with getUniTrace again?
-        if (modelOrData === "data") {
-          logger.warn("accumulated traces for data are not implemented!");
-          //return [];
-        }
+        // if (modelOrData === "data") {
+        //   logger.warn("accumulated traces for data are not implemented!");
+        //   //return [];
+        // }
 
         if (data.length === 0)
           return [];
@@ -522,7 +526,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
             let data = rt.get(modelOrData);
             if (data !== undefined) {
-              if (c.views.accuMarginals.possible)
+              if (!c.tweaks.hideAccuMarginals)
+              // if (c.views.accuMarginals.possible)
                 traces.push(...getAccumulatedUniTrace(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
               //data.query = p1dRT[xOrY].query; // attach query to data, beacuse we might need it later
               traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));

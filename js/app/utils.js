@@ -137,15 +137,22 @@ define([], function() {
     }
   }
 
-
-  function colorstring2hex(str) {
+  /**
+   * Converts a colorstring of form rgb(<r>,<g>,<b>) to its hex representation and returns it.
+   * for example:  colorstring2hex("rgb(255,255,0)") returns "#ffff00"
+   *
+   * @param str
+   * @param prefix: defaults to "#".
+   * @return {string}
+   */
+  function colorstring2hex(str, prefix="#") {
     let innerStr = str.split("(")[1].split(")")[0];
     let rgb = innerStr.split(",");
     let hex = rgb.map( x => {
       x = parseInt(x).toString(16);
       return (x.length==1) ? "0"+x : x;
     });
-    return "0x" + hex.join("");
+    return prefix + hex.join("");
   }
 
   return {

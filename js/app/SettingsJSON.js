@@ -30,8 +30,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   // utility functions
   let c2h = utils.colorstring2hex;
   
-  //let greys = x => c2h(d3chromatic.interpolateGreys(x));
-  let greys = x => d3chromatic.interpolateGreys(x);
+  let greys = x => c2h(d3chromatic.interpolateGreys(x));
+  //let greys = x => d3chromatic.interpolateGreys(x);
 
   function makeDensityScale(colorArray) {
     const threshhold = 0.000001;
@@ -105,9 +105,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
   let tweaksSchema = {
     type: "object",
-    format: "grid",
+    //format: "grid",
     properties: {
       "hideAggregations": {type: "boolean"},
+      "hideAccuMarginals": {type: "boolean"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
       "opacity": {type: "number"},
@@ -116,6 +117,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   };
   let tweaksInitial = {
     hideAggregations: false,
+    hideAccuMarginals: false,
     resolution_1d: 100,
     resolution_2d: 30,
     opacity: 0.7,
