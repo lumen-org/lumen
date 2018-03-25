@@ -31,7 +31,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     }
 
     /**
-     * Returns the color for a uniDensity trace, for the case that no Color is not used to encode any result table dimension.
+     * Returns the color for a uniDensity trace, for the case that the color channel is not used to encode any result table dimension.
      * @param query
      * @param config
      * @return {*}
@@ -490,14 +490,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         // this should always be the primary color, because this way we can distinghuish from the secondary color
         let color = c.colors.density.primary_single;
-        //let color = c.map.uniDensity.color.def;
-        // let color = colorOfUniDensityTrace(query, xy, c);
-        // let color = fixedColor;
-        // if (color === undefined) {
-        //   let lcmap = mapper.marginalColor;
-        //   // whole line gets same color, or all lines have uniform color anyway
-        //   color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
-        // }
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace

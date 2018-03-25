@@ -113,14 +113,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       "levels": {type: "number"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
-      "densityColors": {
-        type: "object",
-        format: "grid",
-        properties: {
-          "1d": {type: "string", format: "color", enum: [c2h(d3chromatic.interpolateBlues(0.7)), greys(0.7)]},
-          "2d_Enum": {type: "string", enum: colorscalesKeys},
-        }
-      },
       "splitCnts": {
         type: "object",
         format: "grid",
@@ -139,10 +131,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     resolution_2d: 30,
     opacity: 0.7,
     levels: 16,
-    densityColors: {
-      "1d": greys(0.7),
-      "2d_Enum": "density_greys",
-    },
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches
@@ -175,32 +163,15 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         type: "object",
         //format: "grid",
         properties: {
-          //
-
-          "single": {type: "string", format: "color", watch: {_single: "tweaks.densityColors.1d"}, template: "{{_single}}"},
-          "scale_Enum": {type: "string", enum: colorscalesKeys},
-
-          /* iff this flag is set to true and no color is used in the VisMEL query, then:
-           *   marginal densities will use a grey encoding, while for the 'full' density a (single) hue encoding is used.
-           * otherwise:
-           */
-
-          // primary: grey
-          // secondary: blue (used for full density if no color is used and adapt_to_color_usage flag is set)
-          //
+           // iff this flag is set to true and no color is used in the VisMEL query, then:
+           //  marginal densities will use a grey encoding, while for the 'full' density a (single) hue encoding is used.
           "adapt_to_color_usage": {type: "boolean"},
-
+          // primary: grey
           "primary_single": {type: "string", format: "color"},
           "primary_scale_Enum": {type: "string", enum: colorscalesKeys},
-
+          // secondary: blue (used for full density if no color is used and adapt_to_color_usage flag is set)
           "secondary_single": {type: "string", format: "color"},
           "secondary_scale_Enum": {type: "string", enum: colorscalesKeys},
-
-          "grey_single": {type: "string", format: "color"},
-          "grey_scale_Enum": {type: "string", enum: colorscalesKeys},
-
-          "color_single": {type: "string", format: "color"},
-          "color_scale_Enum": {type: "string", enum: colorscalesKeys},
         }
       },
       "aggregation": {
@@ -243,15 +214,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     density: {
       adapt_to_color_usage: true,
 
-      single: greys(0.7), // todo: same as grey single
-      scale_Enum: "density_greys", // todo: same as grey scale
-
-      color_single: c2h(d3chromatic.interpolateBlues(0.7)),
-      color_scale_Enum: "density_blues",
-
-      grey_single: greys(0.7),
-      grey_scale_Enum: "density_greys", // todo: debug
-
       primary_single: greys(0.7),
       primary_scale_Enum: "density_greys", // todo: debug
 
@@ -282,9 +244,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       single: d3chromatic.schemePaired[6], // TODO: improve?
     }
   };
-
-  colorsInitial.density.single = colorsInitial.density.grey_single;
-  colorsInitial.density.scale_Enum = colorsInitial.density.grey_scale_Enum;
 
   let viewsSchema = {
     //$schema: "http://json-schema.org/draft-06/schema#",
@@ -458,14 +417,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       "uniDensity": {
         type: "object",
         properties: {
-          "color": {
-            type: "object",
-            properties: {
-              //"def": {}, // TODO () => c.colors.density.single,
-              "def": {type: "string", format: "color", watch: {_single: "tweaks.densityColors.1d"}, template: "{{_single}}"},
-              //"def": {type: "string", format: "color", watch: {_single: "colors.density.single"}, template: "{{_single}}"},
-            }
-          },
+          // "color": { TODO: link to colors.density. ... },
           "bar": {
             type: "object",
             properties: {
@@ -490,9 +442,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           mark: {
             type: "object", format: "grid",
             properties: {
-              // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
-              "color": {type: "string", format: "color", watch: {_single: "tweaks.densityColors.1d"}, template: "{{_single}}"},
-              // "color": {type: "string", format: "color", watch: {_single: "colors.density.single"}, template: "{{_single}}"},
+              // "color": { TODO: link to colors.density. ... }, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
               "opacity": {type: "number"},
             }
           },
@@ -500,15 +450,13 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
             type: "object", format: "grid",
             properties: {
               "width": {type: "number", default: 99},
-              "color": {type: "string", format: "color", watch: {_single: "tweaks.densityColors.1d"}, template: "{{_single}}"},
-              // "color": {type: "string", format: "color", watch: {_single: "colors.density.single"}, template: "{{_single}}"},
+              // "color": { TODO: link to colors.density. ... },
               "fill": {type: "boolean"},
               "fillopacity": {type: "number"}
             }
           },
           // TODO: make subgroup and  format: "grid",
-          "colorscale_Enum": {type: "string", watch: {_scale: "tweaks.densityColors.2d_Enum"}, template: "{{_scale}}"},
-          //"colorscale_Enum": {type: "string"}, /*, enum: colorscalesKeys*/
+          // "colorscale_Enum": { TODO: link to colors.density. ... },
           "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
           "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
           "labelFormatterString": {type: "string"}
@@ -589,10 +537,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     },
 
     uniDensity: {
-      color: {
-        //def: greys(0.5),
-        def: colorsInitial.density.single, // TODO: watched!
-      },
       bar: {
         opacity: 0.7,
       },
@@ -607,13 +551,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
     biDensity: {
       mark: {
-        color: colorsInitial.density.single, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
-        // TODO: watches!
         opacity: 0.8,
       },
       line: {
         width: 2,
-        color: colorsInitial.density.single, // TODO: watches!
         fill: true,
         fillopacity: 0.06,
       },
@@ -863,7 +804,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     // }
   };
 
-  /////////////////////
 
   let jsonSchema = {
     type: "object",
@@ -892,7 +832,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     plots: plotsInitial,
   };
 
-  ////////////////////
 
   /**
    * add static, non-changable part of the json-compatible config.
@@ -954,8 +893,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     c.plots.layout.ratio_marginal = used => (used ? 0.75 : 0.05);
 
     // .colors
-    translateEnum(c.colors.density, ["scale", "grey_scale", "color_scale"], colorscalesEnum); // scale should not be derived but is set internally (?)
-    //translateEnum(c.colors.density, ["grey_scale", "color_scale"], colorscalesEnum);
     translateEnum(c.colors.density, ["primary_scale", "secondary_scale"], colorscalesEnum);
     translateEnum(c.colors.semanticScales, ["diverging", "sequential", "discrete9", "discrete12", "discrete6light", "discrete6dark", "discrete9light", "discrete9dark"], colorscalesEnum);
     // translateEnum(c.myTest, ["color"], colorscalesEnum);
@@ -1167,7 +1104,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     Object.assign(viewSettings, newSettings);
   }
 
-
   // initializes the settings object in ViewSettings.js
   _initSettings();
 
@@ -1180,6 +1116,5 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     myTestSchemaInitial: myTestInitial
     //watch
   }
-
 
 });

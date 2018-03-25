@@ -91,10 +91,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     
     function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
 
-      // let mainAxis = axes.main,
-      //   marginalAxis = axis.marginal,
-      //   catQuantAxis = axis.catquant;
-
       // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt != undefined)
@@ -112,7 +108,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
         x: xfu !== undefined,
         y: yfu !== undefined,
-        //xOrY: xfu !== undefined || yfu !== undefined,
       };
       // attach to query object, so we can reuse it internally
       query.used = used;
@@ -517,22 +512,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
-//       // select color for density
-//       // TODO: why has this no influence!?
-//       if (config.colors.density.adapt_to_color_usage) {
-//         let colorused = queries.base.layers[0].aesthetics.color instanceof VisMEL.ColorMap;
-//         let dc = config.colors.density;
-//
-//         // Get a reference to a node within the editor
-//         let single = editor.getEditor('root.colors.density.single');
-// //           scale = editor.getEditor('root.colors.density.scale');
-//         single.setValue(colorused ? dc.grey_single : dc.color_single);
-// //         scale.setValue(colorused ? dc.grey_scale : dc.color_scale);
-//
-//         // config.colors.density.single = colorused ? dc.grey_single : dc.color_single;
-//         // config.colors.density.scale = colorused ? dc.grey_scale : dc.color_scale;
-//       }
-
       // extents
       initEmptyExtents(queries);
       attachExtents(queries, this.aggrCollection);
@@ -764,10 +743,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 axis.tickwidth = 2;
                 axis.tickcolor = "#FFFFFF";
                 axis.mirror = "ticks";
-
                 axis.zerolinecolor = "#878787";
                 //axis.tickcolor = "#FF0000";
-
                 //axis.side  = (catXY === 'y' ? "left" : "bottom");
 
                 catQuantAxisIds.push(catXY + id_); // store for later reuse

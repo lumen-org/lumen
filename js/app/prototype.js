@@ -5,9 +5,6 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
-var _opac = 0.9;
-var _res = 40;
-var _lvls = 16;
 
 define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
   function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
@@ -25,16 +22,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-//       drop(shelves.column, shelves.dim.at(0));
-//       drop(shelves.column, shelves.dim.at(1));
         drop(shelves.column, shelves.meas.at(0));
         drop(shelves.row, shelves.meas.at(1));
-      //drop(shelves.row, shelves.dim.at(0));
-
-      //drop(shelves.filter, shelves.meas.at(1));
-      // drop(shelves.detail, shelves.meas.at(2));
-      // drop(shelves.color, shelves.dim.at(1));
-      // drop(shelves.shape, shelves.dim.at(2));
     }
 
     /**
@@ -755,30 +744,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
       infoBox.message("Load a model to start!", "info")
     });
 
-    ////////////////////////
-
-    //let myeditor = 
+    // setup editor for settings
     SettingsEditor.setEditor(document.getElementById('pl-config-editor-container2'));
-    // SettingsEditor.watch('root', () => {
-    //   let errors = myeditor.validate();
-    //   if (errors.length) {
-    //     console.log(errors);
-    //     infoBox.message("invalid JSON!");
-    //   } else {
-    //     infoBox.message("valid JSON!");
-    //   }
-    // });
+    // NOTE: SettingsEditor represents a singelton! The returned editor by setEditor() is an instance of jsoneditor (something different, whcih is encapsulated)
 
-    //SettingsEditor.watch('root.mark.color', () => infoBox.message("COLOR!"));
-    // NOTE: SettingsEditor represents a singelton! 
-    // The returned editor "myeditor" is an instance of jsoneditor (something different, whcih is encapsulated)
+    // watch for changes
+    // TODO: implement smart reload (i.e. only redraw, for example)
     SettingsEditor.watch('root', () => {
         infoBox.message("somethign changed!");
         console.log(Config);
         contextQueue.first().update();
     });
 
-    ////////////////////////
 //
 //     // create editor
 //     let biDensitySchema = {
