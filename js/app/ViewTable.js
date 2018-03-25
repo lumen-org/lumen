@@ -95,23 +95,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       //   marginalAxis = axis.marginal,
       //   catQuantAxis = axis.catquant;
 
-      // attach formatter
+      // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt != undefined)
           rt.formatter = resultTableFormatter(rt);
-
-      // build all mappers
-      let mapper = {
-        aggrFillColor: MapperGen.markersFillColor(query, 'aggr'),
-        dataFillColor: MapperGen.markersFillColor(query, 'data'),
-        testDataFillColor: MapperGen.markersFillColor(query, 'test data'),
-        aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
-        aggrShape: MapperGen.markersShape(query, 'filled'),
-        samplesShape: MapperGen.markersShape(query, 'filled'),
-        samplesSize: MapperGen.markersSize(query, config.map.sampleMarker.size),
-        lineColor: MapperGen.lineColor(query),
-      };
-      mapper.marginalColor = MapperGen.marginalColor(query, mapper.aggrFillColor);
 
       let traces = [],
         aest = query.layers[0].aesthetics,
@@ -125,7 +112,23 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
         x: xfu !== undefined,
         y: yfu !== undefined,
+        //xOrY: xfu !== undefined || yfu !== undefined,
       };
+      // attach to query object, so we can reuse it internally
+      query.used = used;
+
+      // build all mappers
+      let mapper = {
+        aggrFillColor: MapperGen.markersFillColor(query, 'aggr'),
+        dataFillColor: MapperGen.markersFillColor(query, 'data'),
+        testDataFillColor: MapperGen.markersFillColor(query, 'test data'),
+        aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
+        aggrShape: MapperGen.markersShape(query, 'filled'),
+        samplesShape: MapperGen.markersShape(query, 'filled'),
+        samplesSize: MapperGen.markersSize(query, config.map.sampleMarker.size),
+        lineColor: MapperGen.lineColor(query),
+      };
+      mapper.marginalColor = MapperGen.marginalColor(query, mapper.aggrFillColor);
 
       // choose a neat chart type depending on data types
 
@@ -514,13 +517,21 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
-      // select color for density
-      if (config.colors.density.adapt_to_color_usage) {
-        let colorused = queries.base.layers[0].aesthetics.color instanceof VisMEL.ColorMap;
-        let dc = config.colors.density;
-        config.colors.density.single = colorused ? dc.grey_single : dc.color_single;
-        config.colors.density.scale = colorused ? dc.grey_scale : dc.color_scale;
-      }
+//       // select color for density
+//       // TODO: why has this no influence!?
+//       if (config.colors.density.adapt_to_color_usage) {
+//         let colorused = queries.base.layers[0].aesthetics.color instanceof VisMEL.ColorMap;
+//         let dc = config.colors.density;
+//
+//         // Get a reference to a node within the editor
+//         let single = editor.getEditor('root.colors.density.single');
+// //           scale = editor.getEditor('root.colors.density.scale');
+//         single.setValue(colorused ? dc.grey_single : dc.color_single);
+// //         scale.setValue(colorused ? dc.grey_scale : dc.color_scale);
+//
+//         // config.colors.density.single = colorused ? dc.grey_single : dc.color_single;
+//         // config.colors.density.scale = colorused ? dc.grey_scale : dc.color_scale;
+//       }
 
       // extents
       initEmptyExtents(queries);
@@ -807,7 +818,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         // modeBarButtonsToAdd: [],
       };
 
-      console.log(layout);
+      //console.log(layout);
 
       // plot everything
       Plotly.purge(pane);

@@ -154,7 +154,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       //   return mainColorMap(_valueOrAvg(fu.extent)); // scalar value, namely color for the average of the domain.
       // }
     }
-    return c.map.uniDensity.color.def;
+    return undefined; // TODO: this is a workaround: the value undefined indicates that we should use the default value for marginal densities (which depends on other things)
+    // return c.map.uniDensity.color.def;
   };
 
   return gen;

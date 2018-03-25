@@ -31,6 +31,22 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     }
 
     /**
+     * Returns the color for a uniDensity trace, for the case that no Color is not used to encode any result table dimension.
+     * @param query
+     * @param config
+     * @return {*}
+     */
+    function colorOfUniDensityTrace(query, xy, config) {
+      // uniTraces are always using the primary color. Unless there is no biDensity-Trace and adapt_to_color_usage is set:
+      // in this case the uniTrace becomes the 'full' density representation and hence uses the secondary color (just like the biDensityTrace would)
+      let yx = (xy === 'x'?'y':'x');
+      if (config.colors.density.adapt_to_color_usage && !query.used[yx])
+        return config.colors.density.secondary_single;
+      else
+        return config.colors.density.primary_single;
+    }
+
+    /**
      * Converts an array of string values into an array of integer values, using the extent array as conversion array.
      * @param arr
      * @param extent
@@ -334,12 +350,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yaxis: yAxis,
         };
 
-        let color = fixedColor;
-        if (color === undefined) {
-          let lcmap = mapper.marginalColor;
-          // whole line gets same color, or all lines have uniform color anyway
-          color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
-        }
+        let color = mapper.marginalColor;
+        if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
+          color = colorOfUniDensityTrace(query, xy, c);
+        } else
+          // apply the color mapping that color represents
+          color = color(data[0][fu2idx.get(aest.color.fu)]);
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
@@ -472,7 +488,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           yaxis: yAxis,
         };
 
-        let color = c.map.uniDensity.color.def;
+        // this should always be the primary color, because this way we can distinghuish from the secondary color
+        let color = c.colors.density.primary_single;
+        //let color = c.map.uniDensity.color.def;
+        // let color = colorOfUniDensityTrace(query, xy, c);
         // let color = fixedColor;
         // if (color === undefined) {
         //   let lcmap = mapper.marginalColor;
@@ -492,7 +511,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               color: color,
               width: c.map.uniDensity.line.width,
             },
-            fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
+            fill: 'none', // never fill (easier to distinguish, maybe) TODO
+            //fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
           if (modelOrData === 'data') {
@@ -568,6 +588,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let lowerIdx = _.sortedIndex(sortedZData, _.last(sortedZData)*0.001);
       // of the remaining values get the .98 quantile and choose this as the upper value of the scale
       let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
+      // color is
+
+      let cd = c.colors.density,
+       colorscale = (cd.adapt_to_color_usage && !query.used.color) ? cd.secondary_scale : cd.primary_scale;
 
       // merge color split data into one
       let trace = {
@@ -583,7 +607,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         //opacity: c.map.biDensity.opacity,
         opacity: 1,
         autocolorscale: false,
-        colorscale: c.map.biDensity.colorscale,
+        colorscale: colorscale, // c.map.biDensity.colorscale, OLD
         zauto: false,
         zmin: 0,
         zmax: rt.extent[2], // TODO: is that valid for c-c heat maps? NO!

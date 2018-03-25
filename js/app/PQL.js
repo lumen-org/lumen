@@ -48,7 +48,7 @@
  *
  */
 
-define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, Logger, domain, utils) {
+define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], function (Emitter, Logger, domain, utils, config) {
   "use strict";
 
   var logger = Logger.get('pl-PQL');
@@ -264,7 +264,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
       return new Split(this.field.copy(), this.method, this.args);
     }
 
-    static FromFieldUsage (fu, mode = "layout-split") {
+    static FromFieldUsage (fu, mode = "layout") {
       if (isSplit(fu) || isFilter(fu))
         return Split.DefaultSplit(fu.field, mode);
       else if (isAggregation(fu) || isDensity(fu))
@@ -277,18 +277,20 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
      * Returns a split with decent values for the chose usage mode.
      * The defaults of the modes are as follows:
      *   * aggregations and density: split to elements or 25 equiintervals
-     *   * layout-split: split to elements or 5 equiintervals
+     *   * layout: split to elements or 5 equiintervals
      * @param field
-     * @param mode Optional. One of: 'aggregation', 'density', 'layout-split'
+     * @param mode Optional. One of: 'aggregation', 'density', 'layout'
      * @returns {Split}
      * @constructor
      */
-    static DefaultSplit (field, mode = "layout-split") {
-      let split_cnt = 5;
-      if (mode === 'density')
-        split_cnt = 50;
-      else if (mode === 'aggregation')
-        split_cnt = 25;
+    static DefaultSplit (field, mode = "layout") {
+      // TODO: move to settings.
+      let split_cnt = config.tweaks.splitCnts[mode];
+      // 5;
+      // if (mode === 'density')
+      //   split_cnt = 50;
+      // else if (mode === 'aggregation')
+      //   split_cnt = 25;
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
@@ -606,12 +608,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils'], function (Emitter, 
               logger.warn("aggregation.toString string is imprecise because it aggregates over multiple variables.");
             let conditionPart = (splits.length + filters.length === 0) ? "" : ("|" + splits.concat(filters).join());
             str = "m(" + variate.yields + conditionPart + ")";
-            console.log(str);
+            //console.log(str);
             variates.push(str);
           } else if (isDensity(variate)) {
             let conditionPart = filters.length === 0 ? "" : ("|" + filters.join());
             str = "p(" + variate.names + conditionPart + ")";
-            console.log(str);
+            //console.log(str);
             variates.push(str);
           }
         }

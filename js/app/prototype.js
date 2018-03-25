@@ -757,7 +757,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
     ////////////////////////
 
-    let myeditor = SettingsEditor.setEditor(document.getElementById('pl-config-editor-container2'));
+    //let myeditor = 
+    SettingsEditor.setEditor(document.getElementById('pl-config-editor-container2'));
     // SettingsEditor.watch('root', () => {
     //   let errors = myeditor.validate();
     //   if (errors.length) {
@@ -769,6 +770,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
     // });
 
     //SettingsEditor.watch('root.mark.color', () => infoBox.message("COLOR!"));
+    // NOTE: SettingsEditor represents a singelton! 
+    // The returned editor "myeditor" is an instance of jsoneditor (something different, whcih is encapsulated)
     SettingsEditor.watch('root', () => {
         infoBox.message("somethign changed!");
         console.log(Config);

@@ -289,7 +289,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
     let ySplit = PQL.Split.FromFieldUsage(yfu, 'density');
     for (let s of [xSplit, ySplit])
-      s.args[0] = c.map.biDensity.resolution;
+       s.args[0] = c.map.biDensity.resolution;
     let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
 
     let idx2fu = [xSplit, ySplit, densityFu];
