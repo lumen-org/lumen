@@ -734,7 +734,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 //axis.ticklen = -210;
                 axis.color = config.colors.density.single;
                 axis.tickfont = {
-                  color: config.colors.density.single,
+                  color: config.colors.density.adapt_to_color_usage ? config.colors.density.secondary_single : config.colors.density.primary_single
                 };
 
                 // hack to shorten inside axis // doesn't really work, because the tick at 0 is special...
