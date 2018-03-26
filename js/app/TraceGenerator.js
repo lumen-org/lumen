@@ -668,6 +668,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let data = groupedData["$" + catExtent[i]];
         // TODO: this is a hack. If a filter is applied on the categorical dimension, the above lookup fails because the fields extent wasn't updated
         if (data !== undefined) {
+          // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19  . the process of determining the color should be more complicated then.
+          let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
           let trace = {
             name: PQL.toString(rt.query),
             type: 'scatter',
@@ -680,11 +682,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             //opacity: c.map.biDensity.mark.opacity,
             line: {
               width: c.map.biDensity.line.width,
-              color: c.map.biDensity.line.color
+              color: color,
             },
             fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
             //fill: 'none',
-            fillcolor: makeOpaque(c.map.biDensity.line.color, c.map.biDensity.line.fillopacity),
+            fillcolor: makeOpaque(color, c.map.biDensity.line.fillopacity),
           };
 
           traces.push(trace);
