@@ -1,5 +1,13 @@
 /**
  * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
+ *
+ * This module provides an GUI to an instance of a JSON Schema defined in SettingsJSON.js and published in ViewSettings.js
+ * The GUI allows interactive editing of its values. The module provides an interface register callback for watch values.
+ *
+ * Editor is provided by: https://github.com/json-editor/json-editor
+ *
+ * TODO: make use of https://selectize.github.io/selectize.js/ or https://select2.org/ for other GUI parts?
+ *
  */
 define(['./SettingsJSON'], function (s) {
   "use strict";
