@@ -707,7 +707,15 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
               "y": {type: "number"},
             }
           },
-          "main_axis_padding": {type: "number"}
+          "main": {
+            type: "object",
+            format: "grid",
+            properties: {
+              "marginal_unused": {type: "number"},
+              "marginal_used": {type: "number"},
+              "axis_padding": {type: "number"},
+            }
+          },
         }
       },
     },
@@ -795,8 +803,12 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         x: 60, // for a x-axis (i.e. it's the available height)
         y: 120, // for a y-axis (i.e. it's the available width)
       },
-
-      main_axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
+      main: {
+        // the ratio of space used for the main plot...
+        marginal_unused: 0.05,  // ... if there is no marginal
+        marginal_used: 0.8,  // ... if there is a marginal plot
+        axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
+      },
     },
 
     // label: {
@@ -890,7 +902,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         return title;
       return "<" + style + ">" + title + "</" + style + ">";
     };
-    c.plots.layout.ratio_marginal = used => (used ? 0.75 : 0.05);
+   c.plots.layout.ratio_marginal = used => (used ? c.plots.layout.main.marginal_used : c.plots.layout.main.marginal_unused);
 
     // .colors
     translateEnum(c.colors.density, ["primary_scale", "secondary_scale"], colorscalesEnum);
