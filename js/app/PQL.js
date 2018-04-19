@@ -477,6 +477,51 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   }
 
   /**
+   * Returns a subset of the given FieldUsages in fus.
+   * This method is stable, i.e. the order of FieldUsages in fus is maintained.
+   *
+   * @param fus
+   * @return {Array}
+   * @private
+   */
+  function cleanFieldUsages(fus) {
+
+    // there may be no two Splits on the same Field. Exception: one has split method 'identity'
+    let cleanedFus = [],
+      usedSplits = new Map();
+
+    for (let fu of fus) {
+      if (isSplit(fu) && (fu.method !== SplitMethod.identity)) {
+        let name = fu.field.name,
+          used = usedSplits.get(name);
+        if (used == undefined) {
+          usedSplits.set(name, fu);
+          cleanedFus.push(fu);
+        }
+        else {
+          // TODO: I'm not entirely sure if this is a sane way of dealing with the underlying problem...
+          // TODO: no it's not. Instead the two identical splits should actually be the same...
+          // Problem is, for example: if we change the split count in one - which one will be used?
+          if (used.method !== fu.method) {
+            // turn into identity split if methods equal the one saved
+            throw ConversionError("Conflicting splits of the same field, i.e. splits with unequal")
+          }
+          // else {
+          //   same method. simply remove it from the field usages, i.e. don't push it to cleanedFus
+          // }
+        }
+      } else {
+        cleanedFus.push(fu);
+      }
+    }
+
+    // TODO: more checks for correctness of query
+
+    return cleanedFus;
+  }
+
+
+  /**
    * PQL: create JSON-formatted queries from internal-format
    */
   var toJSON = {
@@ -623,6 +668,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
   }
 
+
+
   return {
     Field: Field,
     FieldT: FieldT,
@@ -644,6 +691,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     fields: fields,
     hasDiscreteYield: hasDiscreteYield,
     hasNumericYield: hasNumericYield,
+    cleanFieldUsages,
     toJSON: toJSON,
     toString: toString,
   };

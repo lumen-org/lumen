@@ -22,49 +22,12 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
    */
   class ConversionError extends utils.ExtendableError {}
 
-
-  function _cleanFieldUsages(fus) {
-
-    // there may be no two Splits on the same Field. Exception: one has split method 'identity'
-    let cleanedFus = [],
-      usedSplits = new Map();
-
-    for (let fu of fus) {
-      if (PQL.isSplit(fu) && (fu.method !== PQL.SplitMethod.identity)) {
-        let name = fu.field.name,
-          used = usedSplits.get(name);
-        if (used == undefined) {
-          usedSplits.set(name, fu);
-          cleanedFus.push(fu);
-        }
-        else {
-          // TODO: I'm not entirely sure if this is a sane way of dealing with the underlying problem...
-          // TODO: no it's not. Instead the two identical splits should actually be the same...
-          // Problem is, for example: if we change the split count in one - which one will be used?
-          if (used.method !== fu.method) {
-            // turn into identity split if methods equal the one saved
-            throw ConversionError("Conflicting splits of the same field, i.e. splits with unequal")
-          }
-          // else {
-          //   same method. simply remove it from the field usages, i.e. don't push it to cleanedFus
-          // }
-        }
-      } else {
-        cleanedFus.push(fu);
-      }
-    }
-
-    // TODO: more checks for correctness of query
-
-    return cleanedFus;
-  }
-
   /**
    * Translates a VisMEL query into a PQL query of the aggregations requested in the VisMEL query.
-   * @param vismelQuery
+   * @param vismel
    * @return {query, fu2idx, idx2fu}
    */
-  function aggregation(vismelQuery) {
+  function aggregation(vismel) {
     // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
     // - multiple measures of the same field are possible
@@ -75,7 +38,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     //  field usages, as duplicate dimensions won't show up in dimensions
     // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
 
-    let fieldUsages = _cleanFieldUsages(vismelQuery.fieldUsages()),
+    let fieldUsages = PQL.cleanFieldUsages(vismel.fieldUsages()),
       dimensions = [],
       fu2idx = new Map(),
       idx2fu = [],
@@ -121,7 +84,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
       'type': 'predict',
       'predict': [...dimensions, ...measures],
       'splitby': dimensions,
-      'mode': vismelQuery.mode
+      'mode': vismel.mode
     };
 
     return {query, fu2idx, idx2fu};
@@ -141,7 +104,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
       fu2idx = new Map(),
       select = new Map();  // map of <field-name to select> to <index of column in result-table>
     let filters = [];
-    for (let fu of _cleanFieldUsages(vismelQuery.fieldUsages())) {
+    for (let fu of PQL.cleanFieldUsages(vismelQuery.fieldUsages())) {
       let name;
       if (PQL.isFilter(fu) && fu.field.name !== "model vs data") {
         filters.push(fu);
@@ -206,16 +169,16 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
    *   case 3: mvd is used as a filter (but not as a split):
    *     - add a elements split on mvd
    *
-   * @param vismelQuery The VisMEL query to derive the PQL query from.
+   * @param vismel The VisMEL query to derive the PQL query from.
    * @param rowsOrCols There is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. Accordingly, this parameter may have the value 'rows' or 'cols'.
    * @param model The model against which the resulting query is executed later.
    * @return {*}
    */
-  function uniDensity(vismelQuery, rowsOrCols, model) {
+  function uniDensity(vismel, rowsOrCols, model) {
     if (rowsOrCols !== 'cols' && rowsOrCols !== 'rows')
       throw new RangeError("rowsOrCols must be 'rows' or 'cols' but is:" + rowsOrCols.toString());
 
-    let axisFieldUsage = vismelQuery.layout[rowsOrCols][0];
+    let axisFieldUsage = vismel.layout[rowsOrCols][0];
     if (!PQL.isFieldUsage(axisFieldUsage)) {
       // nothing to do! set result table to empty and return fullfilled promise
       //return Promise.resolve(_emptyResultTable());
@@ -223,7 +186,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     }
 
     // collect splits from aesthetics and details
-    let splits = _cleanFieldUsages(vismelQuery.fieldUsages(['layout', 'filters'], 'exclude'))
+    let splits = PQL.cleanFieldUsages(vismel.fieldUsages(['layout', 'filters'], 'exclude'))
       .filter(PQL.isSplit)
       .filter(split => split.field.isDiscrete());
 
@@ -242,7 +205,69 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     let densityUsage = new PQL.Density(fields4density);
 
     // find mvd filter
-    let filters = _cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include'));
+    let filters = PQL.cleanFieldUsages(vismel.fieldUsages(['filters'], 'include'));
+    let mvd_filter = filters.find(elem => elem.name === 'model vs data');
+    // TODO: there could be more than one mvd filter
+
+    // if there is no filter on model vs data and no split on model vs data ...
+    if (mvd_filter === undefined && mvd_split_idx == -1) {
+      // .. then add a (new) filter on model vs data == model
+      filters.push(PQL.Filter.ModelVsDataFilter(model, 'model'));
+      // .. and add a (new) identity split on model vs data (for consistency)
+      mvd_split = [PQL.Split.ModelVsDataSplit(model, 'identity')]
+    }
+    // if mvd is used as a filter, but has no split on it ...
+    if (mvd_filter !== undefined && mvd_split_idx == -1) {
+      // ... add an elements split
+      mvd_split = [PQL.Split.ModelVsDataSplit(model, 'elements')]
+    }
+
+    // build accessor maps
+    let fu2idx = new Map();
+    let idx2fu = [mvd_split[0], densitySplit, densityUsage, ...splits];
+    idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
+
+    let query = {
+      'type': 'predict',
+      'predict': ['model vs data', densitySplit.name, densityUsage, ...splits.map(split => split.name)],
+      'splitby': [...mvd_split, densitySplit, ...splits],
+      'where': filters
+    };
+    return {query, fu2idx, idx2fu}
+  }
+
+  function uniDensityOLD(vismelQuery, rowsOrCols, model) {
+    if (rowsOrCols !== 'cols' && rowsOrCols !== 'rows')
+      throw new RangeError("rowsOrCols must be 'rows' or 'cols' but is:" + rowsOrCols.toString());
+
+    let axisFieldUsage = vismelQuery.layout[rowsOrCols][0];
+    if (!PQL.isFieldUsage(axisFieldUsage)) {
+      // nothing to do! set result table to empty and return fullfilled promise
+      //return Promise.resolve(_emptyResultTable());
+      throw new ConversionError("empty " + rowsOrCols);
+    }
+
+    // collect splits from aesthetics and details
+    let splits = PQL.cleanFieldUsages(vismelQuery.fieldUsages(['layout', 'filters'], 'exclude'))
+      .filter(PQL.isSplit)
+      .filter(split => split.field.isDiscrete());
+
+    // find (index of) split on data vs model
+    let mvd_split_idx = splits.findIndex(split => split.name === 'model vs data');
+    let mvd_split = []; // this is an array on purpose, even though it has one element at maximum
+    if (mvd_split_idx !== -1)
+      mvd_split = splits.splice(mvd_split_idx, 1); // removes mvd_split and returns it
+
+    // create new split for univariate density
+    let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
+    densitySplit.args[0] = c.map.uniDensity.resolution;
+
+    // create new univariate density field usage
+    let fields4density = [...splits, densitySplit].map(split => split.field);
+    let densityUsage = new PQL.Density(fields4density);
+
+    // find mvd filter
+    let filters = PQL.cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include'));
     let mvd_filter = filters.find(elem => elem.name === 'model vs data');
     // TODO: there could be more than one mvd filter
 
@@ -297,7 +322,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
 
     // respect any filters but mvd_filter s
-    let filters = _cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
+    let filters = PQL.cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
 
     let query = {
       'type': 'predict',
@@ -308,6 +333,10 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 
     return {query, fu2idx, idx2fu}
   }
+
+
+  var generic = aggregation;
+
   // function biDensity(vismelQuery) {
   //   // this version of biDensity splits by color as well! However, currently I cannot map that into a visualization...
   //   // one idea to achieve this is create one contour trace for each value of the split, make them opaque and map very small values to None such that they are not drawn at all. See also: https://plot.ly/~etpinard/7415/heatmap-with-custom-nan-layer.py
@@ -342,7 +371,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   //   idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
   //
   //   // respect any filters but mvd_filter s
-  //   let filters = _cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
+  //   let filters = PQL.cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
   //
   //   let query = {
   //     'type': 'predict',
@@ -359,7 +388,8 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     samples,
     biDensity,
     uniDensity,
-    ConversionError
+    ConversionError,
+    generic,
   };
 
 });

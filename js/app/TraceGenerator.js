@@ -207,7 +207,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         // no nesting necessary (no further splitting present)
         let trace = {
-          name: PQL.toString(rt.query),
+          name: PQL.toString(rt.pql),
           type: 'heatmap',
           x: selectColumn(rt, fu2idx.get(xfu)),
           y: selectColumn(rt, fu2idx.get(yfu)),
@@ -251,7 +251,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         yfu = query.layout.rows[0],
         traces = [],
         cfg = c.map.aggrMarker,
-        traceName = PQL.toString(rt.query);
+        traceName = PQL.toString(rt.pql);
 
       let [nestedData, depth] = splitRTIntoTraceData(rt, query);
 
@@ -534,7 +534,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       for (let xOrY of ['x', 'y']) // adds seperate traces for x and y uni-marginals
         if (p1dRT[xOrY] !== undefined) {
           let rt = nestByMvd.map(p1dRT[xOrY]); // FAIL HERE
-          traceName[xOrY] = PQL.toString(p1dRT[xOrY].query);
+          traceName[xOrY] = PQL.toString(p1dRT[xOrY].pql);
           for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
             let data = rt.get(modelOrData);
             if (data !== undefined) {
@@ -587,7 +587,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // merge color split data into one
       let trace = {
-        name: PQL.toString(rt.query),
+        name: PQL.toString(rt.pql),
         // name: '2d density',
         showlegend: false,
         showscale: false,
@@ -671,7 +671,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19  . the process of determining the color should be more complicated then.
           let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
           let trace = {
-            name: PQL.toString(rt.query),
+            name: PQL.toString(rt.pql),
             type: 'scatter',
             mode: 'lines',
             showlegend: false,

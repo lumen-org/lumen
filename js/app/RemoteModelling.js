@@ -249,7 +249,8 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     }
 
     /**
-     * Returns a copy of this object. This does not actually copy any model on the remote host. It simply copies the local object and does not run any remote queries at all.
+     * Returns a copy of this object. This does not actually copy any model on the remote host.
+     * It simply copies the local object and does not run any remote queries at all.
      */
     localCopy() {
       var clone = new RemoteModel(this.name, this.url);
