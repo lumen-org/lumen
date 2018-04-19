@@ -229,7 +229,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 
     // find (index of) split on data vs model
     let mvd_split_idx = splits.findIndex(split => split.name === 'model vs data');
-    let mvd_split = []; // this is an array on purpose, even though it as one element at maximum
+    let mvd_split = []; // this is an array on purpose, even though it has one element at maximum
     if (mvd_split_idx !== -1)
       mvd_split = splits.splice(mvd_split_idx, 1); // removes mvd_split and returns it
 

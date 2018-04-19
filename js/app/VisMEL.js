@@ -30,6 +30,14 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
   }
 
+  function isMap (o) {
+    return o instanceof BaseMap;
+  }
+
+  function isSplitMap(o) {
+    return (isMap(o) && PQL.isSplit(o.fu));
+  }
+
   class ColorMap extends BaseMap {
     constructor(fu, channel) {
       super(fu);
@@ -59,6 +67,16 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   var FilterMap = BaseMap;
   //var LayoutMap = BaseMap;
 
+  /**
+   * Converts given instance of (subclass of) BaseMap to a split map, i.e. a BaseMapp that has a Split as its FieldUsage.
+   * @param map_
+   */
+  function toSplitMap(map_) {
+    if (map_ instanceof ColorMap)
+      return new ColorMap(PQL.Split.FromFieldUsage(map_.fu));
+    else
+      return new BaseMap(PQL.Split.FromFieldUsage(map_.fu));
+  }
 
   /**
    * Constructs the sources part of a VisMEL query from a given source.
@@ -351,6 +369,9 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     ColorMap: ColorMap,
     ShapeMap: ShapeMap,
     SizeMap: SizeMap,
-    FilterMap: FilterMap
+    FilterMap: FilterMap,
+    isMap: isMap,
+    isSplitMap,
+    toSplitMap,
   };
 });

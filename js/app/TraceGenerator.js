@@ -410,7 +410,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
         let split_idxs = splits.map(split => fu2idx.get(split));
 
-        // TODO: this is a larger piece of work. We should create a __VisMEL__ uni trace query and then turn in to PQL ...
+        // TODO: this is a larger piece of work. We should create a __VisMEL__ uni trace query and then turn it into PQL ...
         // split into more traces by all remaining discrete yield fields (but not model vs data splits)
         // let splits = query.fieldUsages(['layout'], 'exclude')
         //   .filter(PQL.hasDiscreteYield)
