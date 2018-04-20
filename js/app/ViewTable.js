@@ -101,15 +101,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         xfu = query.layout.cols[0],
         yfu = query.layout.rows[0];
 
-      let used = {
-        color: aest.color instanceof VisMEL.ColorMap,
-        shape: aest.shape instanceof VisMEL.ShapeMap,
-        size: aest.size instanceof VisMEL.SizeMap,
-        details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
-        x: xfu !== undefined,
-        y: yfu !== undefined,
-      };
       // attach to query object, so we can reuse it internally
+      let used = query.usages();
       query.used = used;
 
       // build all mappers
@@ -390,7 +383,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @param xy Get row-wise (xy === 'y') or column-wise (xy === 'x') extents.
      * @param accessor Accessor function to extract the wanted attribute from a value of the collection.
      */
-    function xyCollectionExtent(coll, xy, accessor) {
+    function xyCollectionExtent(coll, xy) {
+    // function xyCollectionExtent(coll, xy, accessor) {
       let yx = _invXY(xy),
         extents = [],
         len = {
@@ -401,7 +395,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       for (idx[xy] = 0; idx[xy] < len[xy]; ++idx[xy]) {
         let xyExtent = []; // extent across one row or column
         for (idx[yx] = 0; idx[yx] < len[yx]; ++idx[yx]) {
-          let cellExtent = accessor(coll[idx.y][idx.x]); // extent of selected attribute for one atomic plot (of given collection)
+          let rt = coll[idx.y][idx.x][yx],
+            //rowsOrCols = (xy === 'x'? 'rows': 'cols'),
+            rowsOrCols = (xy === 'x'? 'cols': 'rows'),
+            fu = rt.vismel.layout[rowsOrCols][0],
+            i = rt.fu2idx.get(fu),
+            cellExtent = rt.extent[i];
+            // e) => e[yx].extent[2]
+          //let cellExtent = accessor(coll[idx.y][idx.x]); // extent of selected attribute for one atomic plot (of given collection)
           xyExtent = d3.extent([...xyExtent, ...cellExtent]);
         }
         extents.push(xyExtent);
@@ -627,7 +628,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       for (let xy of ['x','y']) {
         let yx = _invXY(xy);
         if (marginal[xy]) {  // marginal active?
-          uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
+          //uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
+          uniColl.extent[xy] = xyCollectionExtent(uniColl, xy);
           uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
         }
       }

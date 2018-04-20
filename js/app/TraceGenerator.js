@@ -319,21 +319,21 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       if (p1dRT == undefined)  // means 'disable this trace type'
         return [];
 
-      let aest = query.layers[0].aesthetics,
-        traceName = {"x": "setMe", "y": "setMe"};
+      // let aest = query.layers[0].aesthetics,
+      let traceName = {"x": "setMe", "y": "setMe"};
 
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
        * @param xy 'x' ('y') if the trace is for x (y) axis.
-       * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
+       //* @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @param fu2idx
-       * @param fixedColor: optional. sets a color regardless of query specifications.
+       //* @param fixedColor: optional. sets a color regardless of query specifications.
        * @return Object: A trace.
        */
-      function getUniTrace(data, xy, modelOrData, fu2idx) {
-        let xIdx = (xy === 'x' ? 1 : 2),
-          yIdx = (xy === 'x' ? 2 : 1);
+      function getUniTrace(data, xy, fu2idx) {       
+        let xIdx = fu2idx.get(query.layout.cols[0]),
+          yIdx = fu2idx.get(query.layout.rows[0]);
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
         let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
@@ -355,7 +355,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           color = colorOfUniDensityTrace(query, xy, c);
         } else
           // apply the color mapping that color represents
-          color = color(data[0][fu2idx.get(aest.color.fu)]);
+          color = color(data[0][fu2idx.get(query.layers[0].aesthetics.color.fu)]);
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
@@ -373,9 +373,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
-          if (modelOrData === 'data') {
-            trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
-          }
+          // if (modelOrData === 'data') {
+          //   trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
+          // }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -399,15 +399,16 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * For each subgroup an appropriate trace is generated. The array of all traces is returned.
        * @param data The data to split further.
        * @param fu2idx A map of FieldUsages to column indices in the data.
-       * @param xOrY 'x' ('y') if the trace is for x (y) axis.
-       * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
+       * @param xy 'x' ('y') if the trace is for x (y) axis.
+       //* @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @return {Array} or traces.
        */
-      function getSplittedUniTraces(data, fu2idx, xOrY, modelOrData) {
+      function getSplittedUniTraces(data, fu2idx, xy) {
         // split into more traces by all remaining splits (but not model vs data splits)
         let splits = query.fieldUsages(['layout'], 'exclude')
           .filter(PQL.isSplit)
-          .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
+          //.filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
+          .filter(split => split.field.isDiscrete());
         let split_idxs = splits.map(split => fu2idx.get(split));
 
         // TODO: this is a larger piece of work. We should create a __VisMEL__ uni trace query and then turn it into PQL ...
@@ -426,7 +427,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let nestedData = nester.map(data);
 
         let traces = [];
-        dfs(nestedData, leafData => traces.push(getUniTrace(leafData, xOrY, modelOrData, fu2idx)), splits.length);
+        dfs(nestedData, leafData => traces.push(getUniTrace(leafData, xy, fu2idx)), splits.length);
         return traces;
       }
 
@@ -435,7 +436,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        *
        * @param datam
        */
-      function getAccumulatedUniTrace(data, fu2idx, xy, modelOrData) {
+      function getAccumulatedUniTrace(data, fu2idx, xy) {
         // TODO: merge this with getUniTrace again?
         // if (modelOrData === "data") {
         //   logger.warn("accumulated traces for data are not implemented!");
@@ -446,7 +447,14 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           return [];
 
         // accumulate density values
-        const xIdx = 1, yIdx = 2;
+        //const xIdx = 1, yIdx = 2;
+
+        // TODO: this is buggy: we need to determine the index of the x and p(x) from the semantics of the field usage!
+        // However, what we really should do is implemment this cleanly in a different way, namely querying for the accumulated density!
+
+        let xIdx = fu2idx.get(query.layout.cols[0]),
+          yIdx = fu2idx.get(query.layout.rows[0]);
+
         let x = [], // the value of which the density is computed
           px = [], // the density
           currentX = data[0][xIdx], // [1] is by convention the column of which the density is computed
@@ -507,9 +515,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             //fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
-          if (modelOrData === 'data') {
-            trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
-          }
+          // if (modelOrData === 'data') {
+          //   trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
+          // }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -530,22 +538,29 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // code (not function defs) for tracer.uni starts here
       let traces = [];
-      let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
-      for (let xOrY of ['x', 'y']) // adds seperate traces for x and y uni-marginals
-        if (p1dRT[xOrY] !== undefined) {
-          let rt = nestByMvd.map(p1dRT[xOrY]); // FAIL HERE
-          traceName[xOrY] = PQL.toString(p1dRT[xOrY].pql);
-          for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
-            let data = rt.get(modelOrData);
-            if (data !== undefined) {
-              if (!c.tweaks.hideAccuMarginals)
-              // if (c.views.accuMarginals.possible)
-                traces.push(...getAccumulatedUniTrace(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
-              //data.query = p1dRT[xOrY].query; // attach query to data, beacuse we might need it later
-              traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
-            }
-          }
+
+      //let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
+      for (let xOrY of ['x', 'y']) { // adds seperate traces for x and y uni-marginals
+        let rt = p1dRT[xOrY];
+        if (rt !== undefined) {
+
+          query = rt.vismel;
+          query.used = query.usages();
+          //let rt = nestByMvd.map(rt); // FAIL HERE
+          traceName[xOrY] = PQL.toString(rt.pql);
+          // remove data trace.
+          //for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
+          //let data = rt.get(modelOrData);
+          //if (data !== undefined) {
+            if (!c.tweaks.hideAccuMarginals)
+            // if (c.views.accuMarginals.possible)
+            // TODO: reenable: traces.push(...getAccumulatedUniTrace(rt, rt.fu2idx, xOrY));
+            //data.query = rt.query; // attach query to data, beacuse we might need it later
+              traces.push(...getSplittedUniTraces(rt, rt.fu2idx, xOrY));
+          //}
+          //}
         }
+      }
       return traces;
     };
 

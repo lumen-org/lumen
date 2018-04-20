@@ -29,7 +29,8 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
     if (what !== "rows" && what !== "cols")
       throw "the value of 'what' has to be 'rows' or 'cols' but it is : " + what;
 
-    let nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize()),
+    //let nsf = (what === "rows" ? query.layout.rows.normalize() : query.layout.cols.normalize()),
+    let nsf = query.layout[what].normalize(),
       len = nsf.length,
       expansion = [];
 
@@ -38,7 +39,8 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
       let instance = query.shallowCopy(),
         filter = instance.layers[0].filters,
         details = instance.layers[0].aesthetics.details,
-        layout = (what === "rows" ? instance.layout.rows : instance.layout.cols);
+        layout = instance.layout[what];
+        //layout = (what === "rows" ? instance.layout.rows : instance.layout.cols);
 
       // delete templated part (this does not affect the base query!)
       layout.clear();

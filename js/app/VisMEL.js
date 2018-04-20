@@ -297,6 +297,22 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
           throw TypeError("unknown type of field usage");
       }
     }
+
+    /**
+     * Returns a dictionary with keys 'color', 'shape', 'size', 'details', 'x', 'y' and value true or false, where true
+     * indicates that the semantic is used in the query.
+     */
+    usages () {
+      let aest = this.layers[0].aesthetics;
+      return {
+        color: aest.color instanceof ColorMap,
+        shape: aest.shape instanceof ShapeMap,
+        size: aest.size instanceof SizeMap,
+        details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
+        x: this.layout.cols[0] !== undefined,
+        y: this.layout.rows[0] !== undefined,
+      };
+    }
   }
 
   // delimiter for JSON conversion

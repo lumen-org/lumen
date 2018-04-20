@@ -237,11 +237,10 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         for (let [xOrY, colsOrRows] of [['x', 'cols'], ['y', 'rows']]) {
           let promise,
-            model = modelTable.at[rIdx][cIdx],
-          // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
-            vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);  // in this particular case, there is nothing to do
-
+            model = modelTable.at[rIdx][cIdx];
           try {
+              // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
+            let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);  // in this particular case, there is nothing to do
             // 2. convert this facet's atomic VisMEL query to PQL query
             // let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(vismel, colsOrRows, modelTable.at[rIdx][cIdx]);
             let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.generic(vismel);
@@ -264,7 +263,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
                 return tbl;
               });
           } catch (e) {
-            if (e instanceof vismel2pql.ConversionError)
+            if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)
               promise = Promise.resolve(undefined);
             else
               throw e;

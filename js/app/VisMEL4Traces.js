@@ -1,13 +1,13 @@
 /**
  * VisMEL4Traces module.
  *
- * This module allows to derive VisMEL queries for difference facets from a given 'abstract' VisMEL query.
+ * This module derives VisMEL queries for difference facets from a given VisMEL query.
  *
- * The 'abstract' VisMEL query is the one that is specified by the user to describe what he is interested in.
- * By doing so she implicitely specifies:
+ * The VisMEL query is the one that is specified by the user to describe what "he is interested in".
+ * It implicitely specifies:
  *
  *   * a set of dimensions of interest
- *   * a division of the dimensions into covariate and variate dimensions
+ *   * a division of the dimensions into co-variate and variate dimensions
  *   * global filters
  *   * mappings of these to visual variables
  *   * configurations for splits, predictions, and more
@@ -17,6 +17,29 @@
  *   * the full density model over all given dimensions (for the bidensity and unidensity traces) (see the functions for more details)
  *
  *   * the predictions as requested
+ *
+ *  Conversion principles:
+ *
+ *  A major challenge is the complexity of the resulting table based visualization which potentially combines multiple
+ *  facets per atomic pane and a potentially large table. The facets are all interrelated, since they are all
+ *  derived from the same initial VisMEL query. Especially, we want these facets and the multiple plots be linked, such
+ *  that for example axes encoding the same thing are scaled identically, or a split is applied in an identical way in
+ *  all atomic plots.
+ *
+ *  As said we need to link the various facets and atomic plots. The way these are linked is via the common 'parts' of
+ *  their corresponding VisMEL and PQL query. Therefore, we use the identical FieldUsages and BaseMaps in all the facets and atomic plots, where ever possible. The FieldUsages act as keys for look up of results in a result table (-> ResultTable), their extents. The FieldMaps (-> BaseMap)
+ *
+ * Therefore, using the identical FieldUsage and FieldMaps across multiple PQL/VisMEL queries allows to link them.
+ *
+ * However, it also is a challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we somehow
+ * need to keep track of the FieldUsage and FieldMaps already created. How can we do this?
+ *
+ * An open question is also: which FieldUsages should NOT be shared? What about the filters created by the expansion of the table agebra expressions?
+ * Another advantage is, that it would be possible to change parameters of e.g. a split without recreating everything,
+ * since the change is automatically "propagated" to all relevant queries - since they in fact use the same field usage.
+ *
+ * TODO: What about rebasing of queries? Can we even share all the field usages? the different vismel queries for different atomic plots are executed against different models! When exactly does this become important? Does it at all?
+ * This is a bit weird...
  *
  * @module VisMEL
  * @author Philipp Lucas
@@ -35,6 +58,11 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     checkItIsRowsOrCols(rowsOrCols);
     return rowsOrCols === 'rows' ? 'cols' : 'rows';
   }
+
+  /**
+   * Error Class that indicates a conversion error for vismel2pql conversions. No suitable vismel query can be derived in this case.
+   */
+  class ConversionError extends utils.ExtendableError {}  
 
   /**
    * Returns a VisMEL query for the marginal density over the innermost dimension on <rowsOrCols>.
@@ -105,6 +133,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
 
   return {
     uniDensity,
+    ConversionError,
   }
 
 });
