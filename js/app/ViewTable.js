@@ -137,39 +137,39 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
-              traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.aggrHeatmap(aggrRT, vismel, mapper, mainAxis));
-              traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
             else { // if (used.shape) {
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
-              traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
-              traces.push(...TraceGen.bi(p2dRT, vismel, mapper, mainAxis));
-              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
-              traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
-              traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+              traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
             }
 
           }
           // at least on is dependent -> line chart
           else {
-            traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
-            traces.push(...TraceGen.bi(p2dRT, vismel, mapper, mainAxis));
-            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
-            traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
-            traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
+            traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+            traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+            traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
           }
         }
 
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
-          traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
 
           // hard to show splits of more than rows and cols: overlap in visualization
           // TODO: solve by creating a bubble plot/jittered plot
@@ -182,44 +182,44 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             // TODO: the next line is new, test it! should disallow other splits
             && !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
             // don't show bi density in this case
-            traces.push(...TraceGen.aggrHeatmap(aggrRT, vismel, mapper, mainAxis));
+            traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, vismel, mapper, mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           }
         }
 
         // one is discrete, the other numerical
         else {
-          traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
-          traces.push(...TraceGen.biQC(p2dRT, vismel, mapper, mainAxis, catQuantAxisIds));
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
+          traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.biQC(p2dRT, mapper, mainAxis, catQuantAxisIds));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
         }
       }
 
       // only one of x-axis and y-axis is in use
       else if (used.x && !used.y || !used.x && used.y) {
         let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
-        traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
+        traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
         // the one in use is categorical
         if (PQL.hasDiscreteYield(axisFu)) {
           // anything special here to do?
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
-        traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
+        traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       } else {
-        traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
+        traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       }
 
       return traces;

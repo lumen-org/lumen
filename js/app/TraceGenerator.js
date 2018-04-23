@@ -32,15 +32,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     /**
      * Returns the color for a uniDensity trace, for the case that the color channel is not used to encode any result table dimension.
-     * @param query
+     * @param vismel
      * @param config
      * @return {*}
      */
-    function colorOfUniDensityTrace(query, xy, config) {
+    function colorOfUniDensityTrace(vismel, xy, config) {
       // uniTraces are always using the primary color. Unless there is no biDensity-Trace and adapt_to_color_usage is set:
       // in this case the uniTrace becomes the 'full' density representation and hence uses the secondary color (just like the biDensityTrace would)
       let yx = (xy === 'x'?'y':'x');
-      if (config.colors.density.adapt_to_color_usage && !query.used[yx])
+      if (config.colors.density.adapt_to_color_usage && !vismel.used[yx])
         return config.colors.density.secondary_single;
       else
         return config.colors.density.primary_single;
@@ -99,17 +99,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     /**
      * Utility function. Splits the result table rt into hierarchical data for traces and returns this nested data.
-     * @param query A vismel query.
+     * @param vismel A vismel query.
      * @param rt A result Table.
      */
-    function splitRTIntoTraceData(rt, query) {
+    function splitRTIntoTraceData(rt, vismel) {
       // split into more traces by all remaining splits on discrete field
       // i.e.: possibly details, color, shape, size
       let fu = {
-          x: query.layout.cols[0],
-          y: query.layout.rows[0],
+          x: vismel.layout.cols[0],
+          y: vismel.layout.rows[0],
         },
-        splits = query.fieldUsages(['layout'], 'exclude')
+        splits = vismel.fieldUsages(['layout'], 'exclude')
           .filter(PQL.isSplit); // TODO: should be: isOrdered()
 
       let num_splits = splits.filter(s => PQL.hasNumericYield(s)),
@@ -157,16 +157,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     let tracer = {};
 
-    tracer.aggrHeatmap = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.aggrHeatmap = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      let fu2idx = rt.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let vismel = rt.vismel,
+        fu2idx = rt.fu2idx,
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0],
         traces = [];
 
       // this may not be used if any mapping on shape or size is present in query!
@@ -236,24 +237,25 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     /**
      * Build and return traces for aggregation scatter plot, grouped by splits.
      * @param rt
-     * @param query
+     * @param vismel
      * @return {Array}
      */
-    tracer.aggr = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.aggr = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      let fu2idx = rt.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let vismel = rt.vismel,
+        fu2idx = rt.fu2idx,
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0],
         traces = [],
         cfg = c.map.aggrMarker,
         traceName = PQL.toString(rt.pql);
 
-      let [nestedData, depth] = splitRTIntoTraceData(rt, query);
+      let [nestedData, depth] = splitRTIntoTraceData(rt, vismel);
 
       // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {
@@ -309,18 +311,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * marginal histogram / density traces
      * -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
      * @param p1dRT
-     * @param query
      * @return {Array}
      */
-    tracer.uni = function (p1dRT, query, mapper, mainAxisId, marginalAxisId, fixedColor = undefined) {
+    tracer.uni = function (p1dRT, mapper, mainAxisId, marginalAxisId, fixedColor = undefined) {
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
 
       if (p1dRT == undefined)  // means 'disable this trace type'
         return [];
 
-      // let aest = query.layers[0].aesthetics,
-      let traceName = {"x": "setMe", "y": "setMe"};
+     let vismel = undefined,
+       traceName = {"x": "setMe", "y": "setMe"};
 
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
@@ -332,11 +333,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * @return Object: A trace.
        */
       function getUniTrace(data, xy, fu2idx) {       
-        let xIdx = fu2idx.get(query.layout.cols[0]),
-          yIdx = fu2idx.get(query.layout.rows[0]);
+        let xIdx = fu2idx.get(vismel.layout.cols[0]),
+          yIdx = fu2idx.get(vismel.layout.rows[0]);
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
-        let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
+        let axisFu = vismel.layout[xy === 'x' ? 'cols' : 'rows'][0];
 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
@@ -352,10 +353,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         let color = mapper.marginalColor;
         if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
-          color = colorOfUniDensityTrace(query, xy, c);
+          color = colorOfUniDensityTrace(vismel, xy, c);
         } else
           // apply the color mapping that color represents
-          color = color(data[0][fu2idx.get(query.layers[0].aesthetics.color.fu)]);
+          color = color(data[0][fu2idx.get(vismel.layers[0].aesthetics.color.fu)]);
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
@@ -405,7 +406,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        */
       function getSplittedUniTraces(data, fu2idx, xy) {
         // split into more traces by all remaining splits
-        let splits = query.fieldUsages(['layout'], 'exclude').filter(PQL.isSplit);
+        let splits = vismel.fieldUsages(['layout'], 'exclude').filter(PQL.isSplit);
         //let split_idxs = splits.map(split => fu2idx.get(split));
         let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
 
@@ -435,8 +436,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         // accumulate density values
         // TODO: this is buggy: we need to determine the index of the x and p(x) from the semantics of the field usage!
         // However, what we really should do is implemment this cleanly in a different way, namely querying for the accumulated density!
-        let xIdx = fu2idx.get(query.layout.cols[0]),
-          yIdx = fu2idx.get(query.layout.rows[0]);
+        let xIdx = fu2idx.get(vismel.layout.cols[0]),
+          yIdx = fu2idx.get(vismel.layout.rows[0]);
 
         let x = [], // the value of which the density is computed
           px = [], // the density
@@ -465,7 +466,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         // return getUniTrace(xOrY, modelOrData, );
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
-        let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
+        let axisFu = vismel.layout[xy === 'x' ? 'cols' : 'rows'][0];
 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
@@ -526,9 +527,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       for (let xOrY of ['x', 'y']) { // adds seperate traces for x and y uni-marginals
         let rt = p1dRT[xOrY];
         if (rt !== undefined) {
+          vismel = rt.vismel;
+          vismel.used = vismel.usages();
 
-          query = rt.vismel;
-          query.used = query.usages();
           //let rt = nestByMvd.map(rt); // FAIL HERE
           traceName[xOrY] = PQL.toString(rt.pql);
           // remove data trace.
@@ -558,7 +559,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param vismel TODO: remove this param!
      * @return {Array}
      */
-    tracer.bi = function (rt, blub, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
@@ -642,11 +643,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param cqAxisIds
      * @return {{}}
      */
-    tracer.biQC = function (rt, vismel, mapper, axisId, cqAxisIds) {
+    tracer.biQC = function (rt, mapper, axisId, cqAxisIds) {
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      vismel = rt.vismel;
+      let vismel = rt.vismel;
 
       if (!axisId) throw RangeError("invalid axisId");
       if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
@@ -707,20 +708,21 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     /**
      * samples trace builder.
      * @param rt
-     * @param query
+     * @param vismel
      * @param mapper: A dictionary of mapper for the keys (and visual channels): fillColor, size, shape
      * @return {Array}
      */
-    tracer.samples = function (rt, query, mapper, mode, axisId) {
+    tracer.samples = function (rt, mapper, mode, axisId) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      let fu2idx = rt.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let vismel = rt.vismel,
+        fu2idx = rt.fu2idx,
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0],
         cfg;
 
       if (mode === 'training data') {
@@ -777,21 +779,22 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * It's meant to highlight theie difference....
      * @param predRT
      * @param testDataRT
-     * @param query
+     * @param vismel
      * @param mapper
      * @param axisId
      * @return {*}
      */
-    tracer.predictionOffset = function (predRT, testDataRT, query, mapper, axisId, queryConfig) {
+    tracer.predictionOffset = function (predRT, testDataRT, mapper, axisId, queryConfig) {
 
       if (!queryConfig.visConfig.predictionOffset.active || testDataRT == undefined || predRT == undefined)
         return [];
 
       // let aest = query.layers[0].aesthetics;
-      let fus = {
-        x: query.layout.cols[0],
-        y: query.layout.rows[0]
-      };
+      let vismel = predRT.vismel,
+        fus = {
+            x: vismel.layout.cols[0],
+            y: vismel.layout.rows[0]
+        };
 
       let pIdx = {},
         tIdx = {},
