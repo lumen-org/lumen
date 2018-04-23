@@ -311,7 +311,19 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
         x: this.layout.cols[0] !== undefined,
         y: this.layout.rows[0] !== undefined,
+        atomic: this.isAtomic()
       };
+    }
+
+    /**
+     * Returns True iff the VisMEL query is atomic. This is equivalent to:
+     *   * the query is not templated
+     *   * the expansion of the the table algebra expression on this.layout.rows / cols leads to actually no expansion
+     *   * there is at most one FieldUsage on this.layout.rows / cols
+     */
+    isAtomic () {
+      return ((this.layout.cols.length == 1 && PQL.isFieldUsage(this.layout.cols[0])) &&
+              (this.layout.rows.length == 1 && PQL.isFieldUsage(this.layout.rows[0])));
     }
   }
 

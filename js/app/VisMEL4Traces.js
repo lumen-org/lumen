@@ -62,7 +62,8 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
   /**
    * Error Class that indicates a conversion error for vismel2pql conversions. No suitable vismel query can be derived in this case.
    */
-  class ConversionError extends utils.ExtendableError {}  
+  class ConversionError extends utils.ExtendableError {}
+  class InvalidConversionError extends utils.ExtendableError {}
 
   /**
    * Returns a VisMEL query for the marginal density over the innermost dimension on <rowsOrCols>.
@@ -131,9 +132,48 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     return uniVismel;
   }
 
+  /**
+   * Return a VisMEL query for the contour plot density density facet.
+   *
+   * Internal: TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves. Currently, we do not support
+   */
+  function biDensity(vismel) {
+
+    if (!vismel.used)
+      vismel.used = vismel.usages();
+
+    if (!vismel.used.x || !vismel.used.y)
+      // nothing to do!
+      throw new ConversionError("at least one empty axis");
+
+    if (!vismel.used.atomic)
+      throw new InvalidConversionError("VisMEL query must be atomic, but is not.");
+
+    let biVismel = new VisMEL.VisMEL(vismel.sources);
+
+    // TODO: currently there is not support for any field usages on aestetics. If we fix this, the density below needs to include these new splits
+    // generate splits for sampling along x and y axis
+    let xSplit = PQL.Split.FromFieldUsage(vismel.layout.cols[0], 'density');
+    let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'density');
+    for (let s of [xSplit, ySplit])
+      s.args[0] = c.map.biDensity.resolution;
+
+    let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
+
+    biVismel.layout.cols.push(xSplit);
+    biVismel.layout.rows.push(ySplit);
+    biVismel.layers[0].aesthetics.color = new VisMEL.ColorMap(densityFu, 'lightness');
+    // TODO: after mvd removal: biVismel.layer[0].filters = vismel.layer[0].filters.slice();  // reference all existing filters
+    biVismel.layers[0].filters = PQL.cleanFieldUsages(vismel.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
+
+    return biVismel;
+  }
+
   return {
     uniDensity,
+    biDensity,
     ConversionError,
+    InvalidConversionError,
   }
 
 });

@@ -116,8 +116,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
                 c.config.visConfig.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
               )
               .then(res => c.uniDensityRT = res)
+
               .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
+
               .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
               .then(() => {
                 if (commit) {

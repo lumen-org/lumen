@@ -89,7 +89,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return axis
     }
     
-    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
+    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
 
       // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
@@ -97,26 +97,26 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           rt.formatter = resultTableFormatter(rt);
 
       let traces = [],
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0];
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0];
 
       // attach to query object, so we can reuse it internally
-      let used = query.usages();
-      query.used = used;
+      let used = vismel.usages();
+      vismel.used = used;
 
       // build all mappers
       let mapper = {
-        aggrFillColor: MapperGen.markersFillColor(query, 'aggr'),
-        dataFillColor: MapperGen.markersFillColor(query, 'data'),
-        testDataFillColor: MapperGen.markersFillColor(query, 'test data'),
-        aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
-        aggrShape: MapperGen.markersShape(query, 'filled'),
-        samplesShape: MapperGen.markersShape(query, 'filled'),
-        samplesSize: MapperGen.markersSize(query, config.map.sampleMarker.size),
-        lineColor: MapperGen.lineColor(query),
+        aggrFillColor: MapperGen.markersFillColor(vismel, 'aggr'),
+        dataFillColor: MapperGen.markersFillColor(vismel, 'data'),
+        testDataFillColor: MapperGen.markersFillColor(vismel, 'test data'),
+        aggrSize: MapperGen.markersSize(vismel, config.map.aggrMarker.size),
+        aggrShape: MapperGen.markersShape(vismel, 'filled'),
+        samplesShape: MapperGen.markersShape(vismel, 'filled'),
+        samplesSize: MapperGen.markersSize(vismel, config.map.sampleMarker.size),
+        lineColor: MapperGen.lineColor(vismel),
       };
-      mapper.marginalColor = MapperGen.marginalColor(query, mapper.aggrFillColor);
+      mapper.marginalColor = MapperGen.marginalColor(vismel, mapper.aggrFillColor);
 
       // choose a neat chart type depending on data types
 
@@ -137,39 +137,39 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.aggrHeatmap(aggrRT, vismel, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
             else { // if (used.shape) {
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
-              traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-              traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.bi(p2dRT, vismel, mapper, mainAxis));
+              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
+              traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
             }
 
           }
           // at least on is dependent -> line chart
           else {
-            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
-            traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-            traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+            traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
+            traces.push(...TraceGen.bi(p2dRT, vismel, mapper, mainAxis));
+            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
+            traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
+            traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
           }
         }
 
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
 
           // hard to show splits of more than rows and cols: overlap in visualization
           // TODO: solve by creating a bubble plot/jittered plot
@@ -182,44 +182,44 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             // TODO: the next line is new, test it! should disallow other splits
             && !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
             // don't show bi density in this case
-            traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.aggrHeatmap(aggrRT, vismel, mapper, mainAxis));
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.bi(p2dRT, vismel, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
           }
         }
 
         // one is discrete, the other numerical
         else {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
-          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+          traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.biQC(p2dRT, vismel, mapper, mainAxis, catQuantAxisIds));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis));
         }
       }
 
       // only one of x-axis and y-axis is in use
       else if (used.x && !used.y || !used.x && used.y) {
         let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
-        traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+        traces.push(...TraceGen.uni(p1dRT, vismel, mapper, mainAxis, marginalAxis));
         // the one in use is categorical
         if (PQL.hasDiscreteYield(axisFu)) {
           // anything special here to do?
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, vismel, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.samples(dataRT, vismel, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, vismel, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
-        traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+        traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
       } else {
-        traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+        traces.push(...TraceGen.aggr(aggrRT, vismel, mapper, mainAxis));
       }
 
       return traces;
@@ -499,32 +499,32 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, queries, queryConfig) {
+    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, vismels, queryConfig) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
       this.testDataCollection = testDataColl;
-      this.queries = queries;
+      this.vismels = vismels;
       this.size = aggrColl.size;
       this.size.x = this.size.cols;
       this.size.y = this.size.rows;
-      let query = queries.base;
+      let query = vismels.base;
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
       // extents
-      initEmptyExtents(queries);
-      attachExtents(queries, this.aggrCollection);
+      initEmptyExtents(vismels);
+      attachExtents(vismels, this.aggrCollection);
       //if (dataenabled)
-      attachExtents(queries, this.dataCollection);
-      attachExtents(queries, this.testDataCollection);
-      normalizeExtents(queries);
+      attachExtents(vismels, this.dataCollection);
+      attachExtents(vismels, this.testDataCollection);
+      normalizeExtents(vismels);
 
       // shortcut to the queries layout attributes
       // accessor to the layout fields usage for a certain row(y)/col(x) in the view table
       let getFieldUsage = (idx, xy) => {
-        return xy === 'x' ? queries.at[0][idx].layout.cols[0] : queries.at[idx][0].layout.rows[0];
+        return xy === 'x' ? vismels.at[0][idx].layout.cols[0] : vismels.at[idx][0].layout.rows[0];
       };
 
       let qx = query.layout.cols,
@@ -757,7 +757,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismels.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
 
           traces.push(...atomicTraces);
         }

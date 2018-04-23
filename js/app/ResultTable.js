@@ -183,49 +183,6 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    * @param model
    * @return {Promise.<Array>}
    */
-  function uniDensityCollectionOLD(queryCollection, modelTable, enabled=true) {
-    let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
-    if (!enabled)  // quit early if disabled
-      return Promise.resolve(collection);
-
-    let fetchPromises = new Set();
-    for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
-      for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        for(let [xOrY, colsOrRows] of [['x','cols'], ['y', 'rows']] ) {
-          let promise;
-          try {
-            let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, modelTable.at[rIdx][cIdx]);
-            promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY).then(
-            tbl => {
-                // TODO: Hack for Paper: simulate correct scaling of model probability queries
-                let nester = d3c.nest();
-                nester.key(e => e[0]);
-                for (let _key of ["$model", "$data"]) {
-                  let probs = nester.map(tbl)[_key];
-                  if (probs != undefined) {
-                    let prob_sum = probs.reduce((s,e) => s+e[2], 0);
-                    probs.map(e => e[2] = e[2]/prob_sum);
-                  }
-                }
-                // rerun attachextent
-                _attachExtent(tbl);
-                return tbl;
-            });
-
-          } catch (e) {
-            if (e instanceof vismel2pql.ConversionError)
-              promise = Promise.resolve(undefined);
-            else
-              throw e;
-          }
-          fetchPromises.add(promise);
-        }
-      }
-    }
-    return Promise.all(fetchPromises).then(() => collection);
-  }
-
   function uniDensityCollection(queryCollection, modelTable, enabled = true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
@@ -239,10 +196,10 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
           let promise,
             model = modelTable.at[rIdx][cIdx];
           try {
-              // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
-            let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);  // in this particular case, there is nothing to do
+              // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
+            let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);
+
             // 2. convert this facet's atomic VisMEL query to PQL query
-            // let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(vismel, colsOrRows, modelTable.at[rIdx][cIdx]);
             let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.generic(vismel);
 
             // 3. run this query and return promise to its result
@@ -290,18 +247,38 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
     let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        let promise;
+        let promise,
+          model = modelTable.at[rIdx][cIdx];
         try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.biDensity(queryCollection.at[rIdx][cIdx]);
-          promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
-        }
-        catch (e) {
-          if (e instanceof vismel2pql.ConversionError)
+          // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
+          let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx]);
+
+          // 2. convert this facet's atomic VisMEL query to PQL query
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.generic(vismel);
+
+          // 3. run this query and return promise to its result
+          promise = _runAndaddRTtoCollectionNew(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+
+        } catch (e) {
+          if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)
             promise = Promise.resolve(undefined);
           else
             throw e;
         }
         fetchPromises.add(promise);
+
+        // let promise;
+        // try {
+        //   let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.biDensity(queryCollection.at[rIdx][cIdx]);
+        //   promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+        // }
+        // catch (e) {
+        //   if (e instanceof vismel2pql.ConversionError)
+        //     promise = Promise.resolve(undefined);
+        //   else
+        //     throw e;
+        // }
+        // fetchPromises.add(promise);
       }
     }
     return Promise.all(fetchPromises).then(() => collection);

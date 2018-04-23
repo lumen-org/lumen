@@ -552,7 +552,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           //for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
           //let data = rt.get(modelOrData);
           //if (data !== undefined) {
-            if (!c.tweaks.hideAccuMarginals)
+            //if (!c.tweaks.hideAccuMarginals)
             // if (c.views.accuMarginals.possible)
             // TODO: reenable: traces.push(...getAccumulatedUniTrace(rt, rt.fu2idx, xOrY));
             //data.query = rt.query; // attach query to data, beacuse we might need it later
@@ -567,25 +567,34 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     /** 2d density plot trace builder.
      *
      * The created trace depends on the data type of the fields on rows and cols:
-     *   * both numerical: greyscale contour map
-     *   * both discrete: greyscale heatmap
+     *   * both numerical: lightness contour map
+     *   * both discrete: lightness heatmap
      *   * mixed: no trace
      *
      * @param rt
-     * @param query
+     * @param vismel TODO: remove this param!
      * @return {Array}
      */
-    tracer.bi = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.bi = function (rt, blub, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      // note: the indexes are by convention!
-      let xfu = rt.idx2fu[0],
-        yfu = rt.idx2fu[1];
+      let vismel = rt.vismel;
 
-      let zdata = selectColumn(rt, 2), //.map(Math.sqrt),
+      if (!vismel.used)
+        vismel.used = vismel.usages();
+
+      let xFu = vismel.layout.cols[0],
+        yFu = vismel.layout.rows[0],
+        colorFu = vismel.layers[0].aesthetics.color.fu;
+
+      let xIdx = rt.fu2idx.get(xFu),
+        yIdx = rt.fu2idx.get(yFu),
+        colorIdx = rt.fu2idx.get(colorFu);
+
+      let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
 
       // TODO: is that ok? We should normalize across ALL panes
@@ -595,10 +604,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let lowerIdx = _.sortedIndex(sortedZData, _.last(sortedZData)*0.001);
       // of the remaining values get the .98 quantile and choose this as the upper value of the scale
       let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
-      // color is
 
       let cd = c.colors.density,
-       colorscale = (cd.adapt_to_color_usage && !query.used.color) ? cd.secondary_scale : cd.primary_scale;
+       colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
 
       // merge color split data into one
       let trace = {
@@ -606,8 +614,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         // name: '2d density',
         showlegend: false,
         showscale: false,
-        x: selectColumn(rt, 0),
-        y: selectColumn(rt, 1),
+        x: selectColumn(rt, xIdx),
+        y: selectColumn(rt, yIdx),
         z: zdata,
         xaxis: axisId.x,
         yaxis: axisId.y,
@@ -617,13 +625,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         colorscale: colorscale, // c.map.biDensity.colorscale, OLD
         zauto: false,
         zmin: 0,
-        zmax: rt.extent[2], // TODO: is that valid for c-c heat maps? NO!
+        zmax: rt.extent[colorIdx], // TODO: is that valid for c-c heat maps? NO!
         //zmax: zmax, // TODO: is that valid for c-c heat maps? NO!
         hoverinfo: 'text',
         text: ztext,
       };
 
-      if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
+      if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {
         trace.type = 'contour';
         // trace.contours = {
         //   coloring: 'heatmap',
@@ -631,7 +639,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         trace.autocontour = false;
         trace.ncontours = c.map.biDensity.levels;
       }
-      else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
+      else if (PQL.hasDiscreteYield(xFu) && PQL.hasDiscreteYield(yFu)) {
         trace.type = 'heatmap';
         trace.xgap = c.map.heatmap.xgap;
         trace.ygap = c.map.heatmap.ygap;
