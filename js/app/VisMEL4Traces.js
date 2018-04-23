@@ -133,9 +133,17 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
   }
 
   /**
-   * Return a VisMEL query for the contour plot density density facet.
+   * Return a VisMEL query for the contour plot density facet.
    *
-   * Internal: TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves. Currently, we do not support
+   * Internal: TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves.
+   * Currently, we do not support it!
+   *
+   * Conversion rules:
+   *
+   *   * keep all filters
+   *   * ignore (i.e. remove) anything on aestetics
+   *   * replace layout shelf contents by new split over x and y dimensions, respectively
+   *   * add a ColorMap for a Density FieldUsage over both, the x and y split
    */
   function biDensity(vismel) {
 
@@ -169,9 +177,24 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     return biVismel;
   }
 
+
+  /**
+   * Return a VisMEL query for the data facet.
+   *
+   * I believe no conversion is necessary.
+   *
+   * @param vismel
+   * @param opts
+   */
+  function samples(vismel) {
+    return vismel;
+  }
+
+
   return {
     uniDensity,
     biDensity,
+    samples,
     ConversionError,
     InvalidConversionError,
   }
