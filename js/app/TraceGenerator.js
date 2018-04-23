@@ -636,36 +636,38 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * Creates a density line plot for each categorical value of the categorical dimension.
      *
      * @param rt
-     * @param query
+     * @param vismel
      * @param mapper
      * @param axisId
      * @param cqAxisIds
      * @return {{}}
      */
-    tracer.biQC = function (rt, query, mapper, axisId, cqAxisIds) {
+    tracer.biQC = function (rt, vismel, mapper, axisId, cqAxisIds) {
       if (rt == undefined)  // means 'disable this trace type'
         return [];
+
+      vismel = rt.vismel;
 
       if (!axisId) throw RangeError("invalid axisId");
       if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
 
-      // note: the indexes are by convention!
-      let xfu = rt.idx2fu[0],
-        yfu = rt.idx2fu[1];
+      let xFu = vismel.layout.cols[0],
+        yFu = vismel.layout.rows[0],
+        colorFu = vismel.layers[0].aesthetics.color.fu;
 
-      let xYieldsCat = PQL.hasDiscreteYield(xfu), // flag: True if x encodes a categorical dimension
+      let xIdx = rt.fu2idx.get(xFu),
+        yIdx = rt.fu2idx.get(yFu),
+        colorIdx = rt.fu2idx.get(colorFu);
+
+      let xYieldsCat = PQL.hasDiscreteYield(xFu), // flag: True if x encodes a categorical dimension
         catXy = xYieldsCat ? 'x' : 'y'; // where the categorical dimension is: on 'x' or 'y' ?
-      let catIdx = xYieldsCat ? 0 : 1, // index of the categorical dimension in the result table
-        numIdx = 1 - catIdx; // index of the numerical dimension in the result table
+      let [catIdx, numIdx] = (xYieldsCat ? [xIdx, yIdx] : [yIdx, xIdx]); // index of the categorical and numerical dimension in the result table
       let traces = [];
 
       // group by values of categorical dimension
       let groupedData = d3c.nest().key(e => e[catIdx]).map(rt);
 
-      // get extent of categorical field usage
-      let catFu = xYieldsCat ? xfu : yfu, // the field usage with categorical yield
-        catExtent = rt.extent[catIdx];
-
+      let catExtent = rt.extent[catIdx];
       if (catExtent.length != cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");
 
@@ -674,14 +676,15 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let data = groupedData["$" + catExtent[i]];
         // TODO: this is a hack. If a filter is applied on the categorical dimension, the above lookup fails because the fields extent wasn't updated
         if (data !== undefined) {
-          // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19  . the process of determining the color should be more complicated then.
+          // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19
+          // the process of determining the color should be more complicated then this
           let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
           let trace = {
             name: PQL.toString(rt.pql),
             type: 'scatter',
             mode: 'lines',
             showlegend: false,
-            [catXy]: selectColumn(data, 2), // the axis that encodes the categorical dimension, encodes the density on the new axis.
+            [catXy]: selectColumn(data, colorIdx), // the axis that encodes the categorical dimension, encodes the density on the new axis.
             [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
             xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
             yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
