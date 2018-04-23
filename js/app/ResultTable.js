@@ -15,23 +15,23 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
    * Note that a result table is expected, which has the .idx2fu property.
    */
-  function _attachExtent(resulttable) {
-    if (resulttable.length === 0 || resulttable[0].length === 0)
-      resulttable.extent = [];
+  function _attachExtent(resultTable) {
+    if (resultTable.length === 0 || resultTable[0].length === 0)
+      resultTable.extent = [];
     else {
-      let cols = resulttable[0].length;
+      let cols = resultTable[0].length;
       let extent = new Array(cols);
       for (let i = 0; i < cols; ++i) {
-        if (resulttable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
-          extent[i] = d3.extent(resulttable, row => row[i]); // jshint ignore:line
-        else if (resulttable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
-          extent[i] = _.unique(_.map(resulttable, row => row[i]));
+        if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
+          extent[i] = d3.extent(resultTable, row => row[i]); // jshint ignore:line
+        else if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
+          extent[i] = _.unique(_.map(resultTable, row => row[i]));
         else
           throw new RangeError("invalid data type.");
       }
-      resulttable.extent = extent;
+      resultTable.extent = extent;
     }
-    return resulttable;
+    return resultTable;
   }
 
   /**

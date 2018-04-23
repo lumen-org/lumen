@@ -404,19 +404,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * @return {Array} or traces.
        */
       function getSplittedUniTraces(data, fu2idx, xy) {
-        // split into more traces by all remaining splits (but not model vs data splits)
-        let splits = query.fieldUsages(['layout'], 'exclude')
-          .filter(PQL.isSplit)
-          //.filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
-          .filter(split => split.field.isDiscrete());
-        let split_idxs = splits.map(split => fu2idx.get(split));
-
-        // TODO: this is a larger piece of work. We should create a __VisMEL__ uni trace query and then turn it into PQL ...
-        // split into more traces by all remaining discrete yield fields (but not model vs data splits)
-        // let splits = query.fieldUsages(['layout'], 'exclude')
-        //   .filter(PQL.hasDiscreteYield)
-        //   .filter(split => (split.name !== 'model vs data'));// && split.field.isDiscrete()));
-        // let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
+        // split into more traces by all remaining splits
+        let splits = query.fieldUsages(['layout'], 'exclude').filter(PQL.isSplit);
+        //let split_idxs = splits.map(split => fu2idx.get(split));
+        let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
 
         // build nesting function
         let nester = d3c.nest();
@@ -438,20 +429,12 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        */
       function getAccumulatedUniTrace(data, fu2idx, xy) {
         // TODO: merge this with getUniTrace again?
-        // if (modelOrData === "data") {
-        //   logger.warn("accumulated traces for data are not implemented!");
-        //   //return [];
-        // }
-
         if (data.length === 0)
           return [];
 
         // accumulate density values
-        //const xIdx = 1, yIdx = 2;
-
         // TODO: this is buggy: we need to determine the index of the x and p(x) from the semantics of the field usage!
         // However, what we really should do is implemment this cleanly in a different way, namely querying for the accumulated density!
-
         let xIdx = fu2idx.get(query.layout.cols[0]),
           yIdx = fu2idx.get(query.layout.rows[0]);
 
