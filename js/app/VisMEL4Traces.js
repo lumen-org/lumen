@@ -114,7 +114,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     // prune layout shelves and convert to split and density FieldUsage
 
     // create new split for univariate density (always new splits!)
-    let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
+    let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'probability');
     densitySplit.args[0] = c.map.uniDensity.resolution;
 
     let layout = uniVismel.layout;
@@ -127,7 +127,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     if(!splits.every(PQL.isSplit))
       throw RangeError("Assertion Error: there should only be splits left");
     let fields4density = splits.map(split => split.field);
-    layout[invRoC].push(new PQL.Density(fields4density));
+    layout[invRoC].push(new PQL.Density(fields4density, PQL.DensityMethod.probability));
 
     return uniVismel;
   }
@@ -161,12 +161,12 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
 
     // TODO: currently there is not support for any field usages on aestetics. If we fix this, the density below needs to include these new splits
     // generate splits for sampling along x and y axis
-    let xSplit = PQL.Split.FromFieldUsage(vismel.layout.cols[0], 'density');
-    let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'density');
+    let xSplit = PQL.Split.FromFieldUsage(vismel.layout.cols[0], 'probability');
+    let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'probability');
     for (let s of [xSplit, ySplit])
       s.args[0] = c.map.biDensity.resolution;
 
-    let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
+    let densityFu = new PQL.Density([xSplit.field, ySplit.field], PQL.DensityMethod.probability);
 
     biVismel.layout.cols.push(xSplit);
     biVismel.layout.rows.push(ySplit);

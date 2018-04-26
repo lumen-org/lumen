@@ -119,6 +119,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         properties: {
           "layout": {type: "integer"},
           "density": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"},
+          "probability": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"},
           "aggregation": {type: "integer"},
         }
       }

@@ -124,7 +124,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   var isAggregationMethod = (m) => (m === AggregationMethods.argavg || m === AggregationMethods.argmax);
 
   var DensityMethodT = Object.freeze({
-    density: 'density'
+    density: 'density',
+    probability: 'probability'
   });
   var isDensityMethod = (m) => m === DensityMethodT.density;
 
@@ -286,11 +287,6 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     static DefaultSplit (field, mode = "layout") {
       // TODO: move to settings.
       let split_cnt = config.tweaks.splitCnts[mode];
-      // 5;
-      // if (mode === 'density')
-      //   split_cnt = 50;
-      // else if (mode === 'aggregation')
-      //   split_cnt = 25;
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
@@ -378,13 +374,13 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   }
 
   class Density extends FieldUsage {
-    constructor(fields) {
+    constructor(fields, method=DensityMethodT.density) {
       super();
       fields = utils.listify(fields);
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
       this.fields = fields;
-      this.method = DensityMethodT.density;
+      this.method = method;
       this.yieldDataType = FieldT.DataType.num;
     }
 
