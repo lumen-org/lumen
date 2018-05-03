@@ -146,6 +146,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       };
 
       this.filters = [];
+      this.defaults = [];
       this.aesthetics = aesthetics;
     }
 
@@ -168,6 +169,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       // construct from shelves
       var layer = new Layer();
       layer.filters = shelves.filter.content();
+      layer.defaults = ('defaults' in shelves) ? shelves.defaults.content() : [];
       layer.aesthetics = {
         mark: "auto",
         // shelves that hold a single field usages
@@ -187,6 +189,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     shallowCopy() {
       var copy = new Layer();
       copy.filters = this.filters.slice();
+      copy.defaults = this.defaults.slice();
       copy.aesthetics.mark = this.aesthetics.mark;
       copy.aesthetics.color = this.aesthetics.color;
       copy.aesthetics.shape = this.aesthetics.shape;
@@ -258,7 +261,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       if (mode === 'exclude')
         excluded = new Set(what);
       else if (mode === 'include') {
-        const all = ['layout', 'details', 'filters', 'aesthetics'];
+        const all = ['layout', 'details', 'filters', 'aesthetics', 'defaults'];
         excluded = new Set(_.difference(all, what));
       } else
         throw RangeError("mode must be 'exclude' or 'include'");
@@ -271,6 +274,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         excluded.has('layout') ? undefined : layout.cols.fieldUsages(),
         excluded.has('details') ? undefined : aesthetics.details,
         excluded.has('filters') ? undefined : layer.filters,
+        excluded.has('defaults') ? undefined : layer.defaults,
         excluded.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
       );
       let fus = usedVars.filter(PQL.isFieldUsage);

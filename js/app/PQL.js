@@ -185,16 +185,6 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return new Filter(field, method, extent);
     }
 
-    static ModelVsDataFilter(model, value) {
-      if(value !== 'model' && value !== 'data')
-        throw RangeError("value must be 'model' or 'data' but is " + value.toString());
-      return new Filter(
-        model.fields.get('model vs data'),
-        FilterMethodT.equals,
-        new domain.Discrete('model')
-      );
-    }
-
     get name() {return this.field.name;}
 
     toJSON() {
@@ -572,23 +562,51 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return jsonQuery;
     },
 
-    model: function (from, model, as_, where = []) {
+    model: function (from, model, as_, where = [], defaults = []) {
+      let json = {};
+
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
+      json.FROM = from;
+
       if (model !== "*") {
         model = utils.listify(model);
         if(!model.every( o => isField(o) || _.isString(o) )) throw new TypeError("'model' must be all strings or fields");
         model = model.map( o => isField(o) ? o.name : o);
       }
+      json.MODEL = model;
+
       where = utils.listify(where);
       if(!where.every(isFilter)) throw new TypeError("'where' must be all filters.");
-      if(!_.isString(as_)) throw new TypeError("'name' must be a string");
+      if (where.length > 0)
+        json.WHERE = where.map(Filter.toJSON);
 
-      return {
-        "MODEL": model,
-        "FROM": from,
-        "WHERE": where.map(Filter.toJSON),
-        "AS": as_
-      };
+      if(!_.isString(as_)) throw new TypeError("'name' must be a string");
+      if (as_.length > 0)
+        json.AS = as_;
+
+      // get default values and subsets
+      let default_values = [],
+        default_subsets = [];
+      for (let d of defaults) {
+        let domain = d.args,
+          name = d.field.name,
+          o = {};
+        if (domain.isSingular()) {
+          o[name] = domain.value();
+          default_values.push(o);
+        } else {
+          o[name] = domain.values();
+          default_subsets.push(o);
+        }
+      }
+
+      if (default_values > 0)
+        json["DEFAULT_VALUE"] = default_values;
+
+      if (default_subsets.length > 0)
+        json["DEFAULT_SUBSET"] = default_subsets;
+
+      return json;
     },
 
     copy: function (from, as_) {
