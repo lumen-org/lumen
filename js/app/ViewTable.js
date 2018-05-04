@@ -521,10 +521,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       attachExtents(vismels, this.testDataCollection);
       normalizeExtents(vismels);
 
-      // shortcut to the queries layout attributes
-      // accessor to the layout fields usage for a certain row(y)/col(x) in the view table
-      let getFieldUsage = (idx, xy) => {
-        return xy === 'x' ? vismels.at[0][idx].layout.cols[0] : vismels.at[idx][0].layout.rows[0];
+      /*
+       * Shortcut to the layout attributes of a vismel query table.
+       * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
+       */
+      let getFieldUsage = (idx, xy, vismelQT) => {
+        return xy === 'x' ? vismelQT.at[0][idx].layout.cols[0] : vismelQT.at[idx][0].layout.rows[0];
       };
 
       let qx = query.layout.cols,
@@ -646,7 +648,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         if (used.y) {
           let axisTitleAnno = config.annotationGenerator.axis_title(
-            getFieldUsage(idx.y, 'y').yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
+            getFieldUsage(idx.y, 'y', vismels).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
           axisTitles.push(axisTitleAnno);
         }
         layout["yaxis" + yid] = yaxis;
@@ -663,7 +665,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
-              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
+              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismels).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
               axisTitles.push(axisTitleAnno);
             }
             layout["xaxis" + xid] = xaxis;
@@ -708,17 +710,23 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           if (used.x && used.y && biColl[0][0] != undefined) {
             let rt = biColl[idx.y][idx.x];
             // build up helper variables needed later and to check if we are in the quant-categorical case
-            //let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
-            // TODO: continue here: I should not use 0 1 2 hard coded indexes, but derive them from the query
-            let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
-              fuType = {x: fu.x.yieldDataType, y: fu.y.yieldDataType},
-              catXY = (fuType.x === "string" ? 'x' : (fuType.y === "string" ? 'y' : undefined)),
-              quantXY = (fuType.x === "numerical" ? 'x' : (fuType.y === "numerical" ? 'y' : undefined));
+            let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
+              catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
+              quantXY = PQL.hasNumericYield(fu.x) ? 'x' : (PQL.hasNumericYield(fu.y) ? 'y' : undefined);
+
             if (catXY && quantXY) {
+              let catFu = fu[catXY],
+                catIdx = rt.fu2idx.get(catFu);
+
               // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
-              let catExtent = rt.extent[catXY === 'x' ? 0 : 1],
+              let catExtent = rt.extent[catIdx],
+              // let catExtent = rt.extent[catXY === 'x' ? 0 : 1],
                 n = catExtent.length,
                 d = axisLength.main[catXY] / n;
+
+              let pFu = rt.vismel.layers[0].aesthetics.color.fu,  // by construction in Vismel4Traces the color field usage is the one that encodes density/probability
+                pIdx = rt.fu2idx.get(pFu),
+                pExtent = rt.extent[pIdx];
 
               // build additional axes along categorial dimension, i.e. the axes that will encode density
               // need as many axis as there is categories!
@@ -730,8 +738,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                   axis = config.axisGenerator.marginal(o, d*(r-1)/r, mainOffset[quantXY], catXY);
                 axis.anchor = mainAxes[quantXY][idx[quantXY]];
 
-                // set axis labels and tick marks
-                let pExtent = biColl[idx.y][idx.x].extent[2];
+                // set axis labels and tick marks                
                 Object.assign(axis, getRangeAndTickMarks(pExtent,catXY));
                 //axis.showticklabels = false;
                 //axis.tickcolor
