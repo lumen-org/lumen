@@ -265,13 +265,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      *
      * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... Ah, it's just messy... :-(
      *
-     * Note: you cannot use the .extent or .domain of any field of any field usage that query and queries consists of The reason is that these are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
+     * Note: you cannot use the .extent or .domain of any field of any field usage that queries consists of. The reason is that these are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
      *
-     * @param query
      * @param queries
      * @param results
      */
-    var attachExtents = function (queries, results) {
+    function attachExtents (queries, results) {
       /**
        * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
        * Note: it gracefully forgives undefined arguments in extent and newData
@@ -401,7 +400,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             fu = rt.vismel.layout[rowsOrCols][0],
             i = rt.fu2idx.get(fu),
             cellExtent = rt.extent[i];
-            // e) => e[yx].extent[2]
           //let cellExtent = accessor(coll[idx.y][idx.x]); // extent of selected attribute for one atomic plot (of given collection)
           xyExtent = d3.extent([...xyExtent, ...cellExtent]);
         }
@@ -516,7 +514,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // extents
       initEmptyExtents(vismels);
       attachExtents(vismels, this.aggrCollection);
-      //if (dataenabled)
       attachExtents(vismels, this.dataCollection);
       attachExtents(vismels, this.testDataCollection);
       normalizeExtents(vismels);
@@ -771,10 +768,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // add templating axis
       let [templx, annotationsx] = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, qx, idgen.templating);
-
       let [temply, annotationsy] = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
-
-
       Object.assign(layout, templx, temply);
 
       // add 'global' layout options

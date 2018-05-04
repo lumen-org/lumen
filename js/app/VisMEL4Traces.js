@@ -173,7 +173,6 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     biVismel.layers[0].aesthetics.color = new VisMEL.ColorMap(densityFu, 'lightness');
     biVismel.layers[0].defaults = vismel.layers[0].defaults.slice();  // reference all existing defaults
     biVismel.layers[0].filters = vismel.layers[0].filters.slice();  // reference all existing filters
-    //OLD: biVismel.layers[0].filters = PQL.cleanFieldUsages(vismel.fieldUsages(['filters'], 'include'))
 
     return biVismel;
   }
