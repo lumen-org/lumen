@@ -128,8 +128,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
-    resolution_1d: 100,
-    resolution_2d: 30,
+    // resolution_1d: 100,
+    // resolution_2d: 30,
+    resolution_1d: 20,
+    resolution_2d: 10,
     opacity: 0.7,
     levels: 16,
     splitCnts: {

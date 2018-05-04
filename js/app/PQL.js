@@ -171,11 +171,11 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
      * @param newDomain
      */
     setDomain (newDomain) {
-      // need to convert method?
-      if (this.method == FilterMethodT.in && newDomain.isSingular())
-        this.method = FilterMethodT.equals;
-      else if (this.method == FilterMethodT.equals && !newDomain.isSingular())
-        this.method = FilterMethodT.in;
+      // OLD: need to convert method?
+      // if (this.method == FilterMethodT.in && newDomain.isSingular())
+      //   this.method = FilterMethodT.equals;
+      // else if (this.method == FilterMethodT.equals && !newDomain.isSingular())
+      //   this.method = FilterMethodT.in;
       this.args = newDomain;
     }
 
@@ -195,7 +195,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return {        
         name: f.name,
         operator: f.method,
-        value: f.args.value
+        value: f.args.values
       };
     }
 
@@ -519,12 +519,23 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
      * @returns {Object} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
     predict: function (from, predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
+      let json = {};
+
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
+
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
+      json.FROM = from;
+
       if (!where.every(isFilter)) throw new TypeError("'where' must be all of type Filter.");
+      if (where.length > 0)
+        json.WHERE = where.map(Filter.toJSON);
+
       if (!splitBy.every(isSplit)) throw new TypeError("'splitby' must be all of type Split.");
-      return {
-        "PREDICT": predict.map(p => {
+      if (splitBy.length > 0)
+        json["SPLIT BY"] = splitBy.map(Split.toJSON);
+
+      if (predict.length > 0) {
+        predict = predict.map(p => {
           if (_.isString(p)) // its just the name of a field then
             return p;
           if (isField(p) || isSplit(p))
@@ -533,11 +544,10 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
             return p.toJSON();
           else
             throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
-        }),
-        "FROM": from,
-        "WHERE": where.map(Filter.toJSON),
-        "SPLIT BY": splitBy.map(Split.toJSON)
-      };
+        });
+        json.PREDICT = predict;
+      }
+      return json;
     },
 
     select: function (from, select, where=undefined, opts=undefined) {
@@ -585,25 +595,35 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
         json.AS = as_;
 
       // get default values and subsets
-      let default_values = [],
-        default_subsets = [];
-      for (let d of defaults) {
-        let domain = d.args,
-          name = d.field.name,
-          o = {};
-        if (domain.isSingular()) {
-          o[name] = domain.value();
-          default_values.push(o);
-        } else {
-          o[name] = domain.values();
-          default_subsets.push(o);
-        }
+      let default_values = {}, any_default_values = false,
+        default_subsets = {}, any_default_subsets = false;
+      for (let {field: {name: name}, method: op, args: domain} of defaults) {
+        // let domain = d.args,
+        //   op = d.method,
+        //   name = d.field.name;
+        if (op === FilterMethodT.equals) {
+          default_values[name] = domain.value;
+          any_default_values = true;
+        } else if (op === FilterMethodT.in) {
+          default_subsets[name] = domain.values;
+          any_default_subsets = true;
+        } else
+            throw RangeError("Invalid filter operator: " + op.toString());
+        //
+        // if (domain.isSingular()) {
+        //   default_values[name] = domain.value;
+        //   any_default_values = true;
+        // }
+        // else {
+        //   default_subsets[name] = domain.values;
+        //   any_default_subsets = true;
+        // }
       }
 
-      if (default_values > 0)
+      if (any_default_values)
         json["DEFAULT_VALUE"] = default_values;
 
-      if (default_subsets.length > 0)
+      if (any_default_subsets)
         json["DEFAULT_SUBSET"] = default_subsets;
 
       return json;

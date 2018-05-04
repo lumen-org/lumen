@@ -708,6 +708,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           if (used.x && used.y && biColl[0][0] != undefined) {
             let rt = biColl[idx.y][idx.x];
             // build up helper variables needed later and to check if we are in the quant-categorical case
+            //let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
+            // TODO: continue here: I should not use 0 1 2 hard coded indexes, but derive them from the query
             let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
               fuType = {x: fu.x.yieldDataType, y: fu.y.yieldDataType},
               catXY = (fuType.x === "string" ? 'x' : (fuType.y === "string" ? 'y' : undefined)),

@@ -122,11 +122,11 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     layout[invRoC].splice(0);
     layout[rowsOrCols].push(densitySplit);
 
-    // create density field usage (over all splits)
-    let splits = PQL.cleanFieldUsages(uniVismel.fieldUsages(['aesthetics', 'details', 'layout'], 'include'));
-    if(!splits.every(PQL.isSplit))
+    // create density field usage (over all splits and defaults)
+    let splits = PQL.cleanFieldUsages(uniVismel.fieldUsages(['aesthetics', 'details', 'layout', 'defaults'], 'include'));
+    if(!splits.every(e => (PQL.isSplit(e) || PQL.isFilter(e)) ) )
       throw RangeError("Assertion Error: there should only be splits left");
-    let fields4density = splits.map(split => split.field);
+    let fields4density = _.unique( splits.map(split => split.field) );
     layout[invRoC].push(new PQL.Density(fields4density, PQL.DensityMethod.probability));
 
     return uniVismel;
@@ -165,14 +165,15 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'probability');
     for (let s of [xSplit, ySplit])
       s.args[0] = c.map.biDensity.resolution;
-
-    let densityFu = new PQL.Density([xSplit.field, ySplit.field], PQL.DensityMethod.probability);
+    let fields4density = _.unique( [xSplit, ySplit, ...vismel.layers[0].defaults].map(d => d.field) );
+    let densityFu = new PQL.Density(fields4density, PQL.DensityMethod.probability);
 
     biVismel.layout.cols.push(xSplit);
     biVismel.layout.rows.push(ySplit);
     biVismel.layers[0].aesthetics.color = new VisMEL.ColorMap(densityFu, 'lightness');
-    // TODO: after mvd removal: biVismel.layer[0].filters = vismel.layer[0].filters.slice();  // reference all existing filters
-    biVismel.layers[0].filters = PQL.cleanFieldUsages(vismel.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
+    biVismel.layers[0].defaults = vismel.layers[0].defaults.slice();  // reference all existing defaults
+    biVismel.layers[0].filters = vismel.layers[0].filters.slice();  // reference all existing filters
+    //OLD: biVismel.layers[0].filters = PQL.cleanFieldUsages(vismel.fieldUsages(['filters'], 'include'))
 
     return biVismel;
   }

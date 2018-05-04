@@ -22,8 +22,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-        drop(shelves.column, shelves.meas.at(0));
-        drop(shelves.row, shelves.meas.at(1));
+        drop(shelves.column, shelves.dim.at(0));
+        drop(shelves.column, shelves.meas.at(1));
     }
 
     /**

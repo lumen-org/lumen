@@ -50,7 +50,7 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
         if (PQL.isFilter(fu)) {
           // add this field to details, if not already in the query. This is necessary since we need that field to be included in the result table later.
           // NEW: no need for this, I think ...
-          // let fus = instance.fieldUsages(['layout','filters'],'exclude');
+          // let fus = instance.fieldUsages(['layout','filters', 'defaults'],'exclude');
           // if (-1 === fus.findIndex(o => PQL.isSplit(o) && o.name === fu.name)) {
           //   // this split is necessary to generate any input from that field at all
           //   details.push(new PQL.Split(fu.field, 'identity'));
