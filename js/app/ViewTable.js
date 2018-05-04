@@ -705,8 +705,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
-          //OLD: dictionary of special cat-quant axis. Key is axis id, value is axis configuration.
-          //let catQuantAxes = {x: {}, y:{}};
           if (used.x && used.y && biColl[0][0] != undefined) {
             let rt = biColl[idx.y][idx.x];
             // build up helper variables needed later and to check if we are in the quant-categorical case
@@ -720,7 +718,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
               // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
               let catExtent = rt.extent[catIdx],
-              // let catExtent = rt.extent[catXY === 'x' ? 0 : 1],
                 n = catExtent.length,
                 d = axisLength.main[catXY] / n;
 
