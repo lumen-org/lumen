@@ -165,9 +165,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param fu2idx
      * @param vismel
      * @param nester [Optional] You may give a nester that is used and extended. Otherwise just pass nothing or undefined.
-     * @return Nested data table.
+     * @return Array: 2-element array of nested data and depth of applied nester.
      */
-    function nestBySplits (data, fu2idx, vismel, nester=undefined) {
+    function nestBySplits (data, fu2idx, vismel, nester=undefined, nesterlength=0) {
       // collect splits
       let splitIdxs = vismel.fieldUsages(['aesthetics', 'details'], 'include')
         .filter(PQL.isSplit)
@@ -176,6 +176,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       if (_.uniq(splitIdxs).length != splitIdxs.length)
         throw "AssertionError: this should not happen.";
 
+      let l = splitIdxs.length;
+
       // build nester
       if (nester === undefined)
         nester = d3c.nest();
@@ -183,9 +185,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         nester.key(e => e[idx]);
 
       // nest it
-      return nester.map(data);
+      return [nester.map(data), l + nesterlength];
     }
-
 
 
     let tracer = {};
@@ -363,7 +364,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * @param fu2idx
        * @return Object: A trace.
        */
-      function getUniTrace(data, xy, fu2idx) {       
+      function getUniTrace(data, xy, fu2idx) {
         let xIdx = fu2idx.get(vismel.layout.cols[0]),
           yIdx = fu2idx.get(vismel.layout.rows[0]);
 
@@ -444,7 +445,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let nestedData = nester.map(data);
 
         let traces = [];
-        dfs(nestedData, leafData => traces.push(getUniTrace(leafData, xy, fu2idx)), splits.length);
+        dfs(nestedData, leafData => traces.push(getUniTrace(leafData, xy, fu2idx)), split_idxs.length);
         return traces;
       }
 
@@ -667,6 +668,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @return {{}}
      */
     tracer.biQC = function (rt, mapper, axisId, cqAxisIds) {
+
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
@@ -691,50 +693,52 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       // nest by values of categorical dimension
       let groupedData = d3c.nest().key(e => e[catIdx]).map(rt);
 
-      // nest further TODO: is that ok?
+      // nest further
       let nesterCatAxis = d3c.nest().key(e => e[catIdx]);
-      let groupedData2 = nestBySplits(rt, rt.fu2idx, vismel, nesterCatAxis);
+      let [groupedData2, depth] = nestBySplits(rt, rt.fu2idx, vismel, nesterCatAxis, 1);
 
       let catExtent = rt.extent[catIdx];
       if (catExtent.length != cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");
 
+      /**
+       * generator for traces of line plots
+       * @param data a data table
+       * @param i index along the categorical axis' extent
+       */
+      function uniTrace4biQC(data, i) {
+        // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19
+        // the process of determining the color should be more complicated then this
+        let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
+        let trace = {
+          name: PQL.toString(rt.pql),
+          type: 'scatter',
+          mode: 'lines',
+          showlegend: false,
+          [catXy]: selectColumn(data, pIdx), // the axis that encodes the categorical dimension, encodes the density on the new axis.
+          [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
+          xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
+          yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
+          //opacity: c.map.biDensity.mark.opacity,
+          line: {
+            width: c.map.biDensity.line.width,
+            color: color,
+          },
+          fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
+          //fill: 'none',
+          fillcolor: makeOpaque(color, c.map.biDensity.line.fillopacity),
+        };
+        return trace;
+      }
+
       // iterate over groups in same order like given in extent
       let traces = [];
       for (let i = 0; i < cqAxisIds.length; ++i) {
-        let data = groupedData["$" + catExtent[i]];
+        let data = groupedData2["$" + catExtent[i]];
         // TODO: this is a hack. If a filter is applied on the categorical dimension, the above access to groupedData fails because the fields extent wasn't updated
-        if (data !== undefined) {
-
-          // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19
-          // the process of determining the color should be more complicated then this
-          let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
-
-          let trace = {
-            name: PQL.toString(rt.pql),
-            type: 'scatter',
-            mode: 'lines',
-            showlegend: false,
-            [catXy]: selectColumn(data, pIdx), // the axis that encodes the categorical dimension, encodes the density on the new axis.
-            [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
-            xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
-            yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-            //opacity: c.map.biDensity.mark.opacity,
-            line: {
-              width: c.map.biDensity.line.width,
-              color: color,
-            },
-            fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
-            //fill: 'none',
-            fillcolor: makeOpaque(color, c.map.biDensity.line.fillopacity),
-          };
-
+        if (data !== undefined)
           // create trace for each leave in the map for the grouped data:
-          // continue here:
-          //dfs(data, leafData => traces.push(), 0 /* depth */);
-
-          traces.push(trace);
-        }
+          dfs(data, leafData => traces.push(uniTrace4biQC(leafData, i)), depth-1 /* -1 because we already iterate over the first level */);
       }
       return traces;
     };
