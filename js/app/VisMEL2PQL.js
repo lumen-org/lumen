@@ -9,13 +9,13 @@
  *
  *   idx2fu: an array that maps a row index of the result of the query to the corresponding FieldUsage.
  *
- * If it is for some reason impossible to generate a valid query from given VisMEL query a
+ * If it is for some reason impossible to generate a valid query from given VisMEL query a ConversionError is thrown.
  */
 define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], function (Logger, utils, PQL, VisMEL, c) {
   "use strict";
 
-  var logger = Logger.get('pl-vismel2pql');
-  logger.setLevel(Logger.DEBUG);
+  let logger = Logger.get('pl-vismel2pql');
+  logger.setLevel(Logger.INFO);
 
   /**
    * Error Class that indicates a conversion error for vismel2pql conversions. No suitable pql query can be derived in this case.
@@ -43,9 +43,6 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
       fu2idx = new Map(),
       idx2fu = [],
       idx = 0;
-
-    // HACK FOR PAPER: do never split on mvd for aggregations.
-    //fieldUsages = fieldUsages.filter( fu => !(PQL.isSplit(fu) && fu.name === 'model vs data'));
 
     fieldUsages.filter(PQL.isSplit).forEach(fu => {
       // todo: this kind of comparison is ugly and slow for the case of many dimensions
@@ -91,7 +88,6 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   }
 
   function sample(vismelQuery, opts) {
-    // note:
     // we derive the data-select query from a PQL/VisMEL query as follows:
     //  * filters: stay unchanged as filters
     //  * splits: add the name of what is split to the select-clause
@@ -140,137 +136,6 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     };
     return {query, fu2idx, idx2fu}
   }
-
-  // /**
-  //  *
-  //  * All filters of the VisMEL query are preserved.
-  //  *
-  //  * When executing the resulting query, you will get a result table with columns in a certain order, as follows:
-  //  *
-  //  *   1. column:
-  //  *     * idx: 0
-  //  *     * name: 'data vs model'
-  //  *     * fieldUsage: A Split on the 'data vs model' Field.
-  //  *   2. column:
-  //  *     * idx: 1
-  //  *     * name: the name of the field which is on rows/cols in the VisMEL query
-  //  *     * fieldUsage: the FieldUsage which is on rows/cols in the VisMEL query
-  //  *   3. column:
-  //  *     * idx: 2
-  //  *     * name: density[<all involved fields>])
-  //  *     * fieldUsage: a new Density FieldUsage over all splits
-  //  *   4.+ all other remaining discrete fields that is split by.
-  //  *
-  //  * Handling the model vs data field (mvd):
-  //  *   case 1: mvd is entirely unused in the base VisMEL query.
-  //  *     -> then it defaults to a filter on 'model' and a identity split
-  //  *   case 2: mvd is used as a split:
-  //  *     -> then stays the same and use the split as the mvds field usage
-  //  *   case 3: mvd is used as a filter (but not as a split):
-  //  *     - add a elements split on mvd
-  //  *
-  //  * @param vismel The VisMEL query to derive the PQL query from.
-  //  * @param rowsOrCols There is up to two marginal density queries from a VisMEL query, one for the FieldUsage on Layout.Rows and one for the FieldUsage on Layout.Cols. Accordingly, this parameter may have the value 'rows' or 'cols'.
-  //  * @param model The model against which the resulting query is executed later.
-  //  * @return {*}
-  //  */
-  // function uniDensity(vismel, rowsOrCols, model) {
-  //   if (rowsOrCols !== 'cols' && rowsOrCols !== 'rows')
-  //     throw new RangeError("rowsOrCols must be 'rows' or 'cols' but is:" + rowsOrCols.toString());
-  //
-  //   let axisFieldUsage = vismel.layout[rowsOrCols][0];
-  //   if (!PQL.isFieldUsage(axisFieldUsage)) {
-  //     // nothing to do! set result table to empty and return fullfilled promise
-  //     //return Promise.resolve(_emptyResultTable());
-  //     throw new ConversionError("empty " + rowsOrCols);
-  //   }
-  //
-  //   // collect splits from aesthetics and details
-  //   let splits = PQL.cleanFieldUsages(vismel.fieldUsages(['layout', 'filters'], 'exclude'))
-  //     .filter(PQL.isSplit)
-  //     .filter(split => split.field.isDiscrete());
-  //
-  //   // find (index of) split on data vs model
-  //   let mvd_split_idx = splits.findIndex(split => split.name === 'model vs data');
-  //   let mvd_split = []; // this is an array on purpose, even though it has one element at maximum
-  //   if (mvd_split_idx !== -1)
-  //     mvd_split = splits.splice(mvd_split_idx, 1); // removes mvd_split and returns it
-  //
-  //   // create new split for univariate density
-  //   let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'density');
-  //   densitySplit.args[0] = c.map.uniDensity.resolution;
-  //
-  //   // create new univariate density field usage
-  //   let fields4density = [...splits, densitySplit].map(split => split.field);
-  //   let densityUsage = new PQL.Density(fields4density);
-  //
-  //   // find mvd filter
-  //   let filters = PQL.cleanFieldUsages(vismel.fieldUsages(['filters'], 'include'));
-  //   let mvd_filter = filters.find(elem => elem.name === 'model vs data');
-  //   // TODO: there could be more than one mvd filter
-  //
-  //   // if there is no filter on model vs data and no split on model vs data ...
-  //   if (mvd_filter === undefined && mvd_split_idx == -1) {
-  //     // .. then add a (new) filter on model vs data == model
-  //     filters.push(PQL.Filter.ModelVsDataFilter(model, 'model'));
-  //     // .. and add a (new) identity split on model vs data (for consistency)
-  //     mvd_split = [PQL.Split.ModelVsDataSplit(model, 'identity')]
-  //   }
-  //   // if mvd is used as a filter, but has no split on it ...
-  //   if (mvd_filter !== undefined && mvd_split_idx == -1) {
-  //     // ... add an elements split
-  //     mvd_split = [PQL.Split.ModelVsDataSplit(model, 'elements')]
-  //   }
-  //
-  //   // build accessor maps
-  //   let fu2idx = new Map();
-  //   let idx2fu = [mvd_split[0], densitySplit, densityUsage, ...splits];
-  //   idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
-  //
-  //   let query = {
-  //     'type': 'predict',
-  //     'predict': ['model vs data', densitySplit.name, densityUsage, ...splits.map(split => split.name)],
-  //     'splitby': [...mvd_split, densitySplit, ...splits],
-  //     'where': filters
-  //   };
-  //   return {query, fu2idx, idx2fu}
-  // }
-  //
-  // /**
-  //  * Given a VisMEL query, it constructs a PQL query for the 2d model density over the fields of rows and cols.
-  //  * */
-  // function biDensity(vismelQuery) {
-  //   // can only get density if there is something on rows and cols
-  //   let xfu = vismelQuery.layout.cols[0];
-  //   let yfu = vismelQuery.layout.rows[0];
-  //   if (!PQL.isFieldUsage(xfu) || !PQL.isFieldUsage(yfu)) {
-  //     // nothing to do! set result table to empty and return fullfilled promise
-  //     //return Promise.resolve(_emptyResultTable())
-  //     throw new ConversionError("at least one empty axis");
-  //   }
-  //
-  //   let xSplit = PQL.Split.FromFieldUsage(xfu, 'density');
-  //   let ySplit = PQL.Split.FromFieldUsage(yfu, 'density');
-  //   for (let s of [xSplit, ySplit])
-  //      s.args[0] = c.map.biDensity.resolution;
-  //   let densityFu = new PQL.Density([xSplit.field, ySplit.field]);
-  //
-  //   let idx2fu = [xSplit, ySplit, densityFu];
-  //   let fu2idx = new Map();
-  //   idx2fu.forEach((fu, idx) => fu2idx.set(fu, idx));
-  //
-  //   // respect any filters but mvd_filter s
-  //   let filters = PQL.cleanFieldUsages(vismelQuery.fieldUsages(['filters'], 'include')).filter( f => f.field.name !== "model vs data");
-  //
-  //   let query = {
-  //     'type': 'predict',
-  //     'predict': [xSplit.name, ySplit.name, densityFu],
-  //     'where': filters,
-  //     'splitby': [xSplit, ySplit]
-  //   };
-  //
-  //   return {query, fu2idx, idx2fu}
-  // }
 
   return {
     predict,

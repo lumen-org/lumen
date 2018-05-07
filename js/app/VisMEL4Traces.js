@@ -72,7 +72,8 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    *
    *   * convert the innermost dimension on <rowsOrcols> to a split usage and keep only this
    *   * add a density FieldUsage on <invert-rowsOrCols> and keep only this
-   *   * keep all filters
+   *     * the density is computed over: <rowsOrCols> and all splits and defaults
+   *   * keep all filters and defaults
    *   * keep all details (it's always splits)
    *   * convert an aggregation usages on color to a split (we aim to visualize the full model given by the user!)
    *   * conversion of shape and size: if it is splits: move to details-shelf. if it is aggregations: convert to splits and move to details.
@@ -83,7 +84,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    * @param vismel A VisMEL query.
    * @param rowsOrCols Either 'rows' or 'cols'.
    */
-  function uniDensity(vismel, rowsOrCols /*, model*/) {
+  function uniDensity(vismel, rowsOrCols) {
     checkItIsRowsOrCols(rowsOrCols);
     let invRoC = invertRowsOrCols(rowsOrCols);
 
@@ -112,7 +113,6 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
       }
 
     // prune layout shelves and convert to split and density FieldUsage
-
     // create new split for univariate density (always new splits!)
     let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'probability');
     densitySplit.args[0] = c.map.uniDensity.resolution;
@@ -135,12 +135,12 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
   /**
    * Return a VisMEL query for the contour plot density facet.
    *
-   * Internal: TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves.
-   * Currently, we do not support it!
+   * Aestetics shelves:
+   *  Currently, we do not support it!
+   *  TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves.
    *
    * Conversion rules:
-   *
-   *   * keep all filters
+   *   * keep all filters and defaults
    *   * ignore (i.e. remove) anything on aestetics
    *   * replace layout shelf contents by new split over x and y dimensions, respectively
    *   * add a ColorMap for a Density FieldUsage over both, the x and y split
