@@ -136,8 +136,11 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    * Return a VisMEL query for the contour plot density facet.
    *
    * Aestetics shelves:
-   *  Currently, we do not support it!
+   *  Currently, we generally do not support it! The problem is not to generate the query, but to encode all of it in the visualization.
    *  TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves.
+   *  However, there is one special case, namely when one of the positional axis encodes a categorical value, and the
+   *  other a quantitative one. Then we can encode dimensions on aestetics shelves as a series of line plots (like for uniDensity).
+   *  TODO: If we fix this, the generated density below needs to include these new splits.
    *
    * Conversion rules:
    *   * keep all filters and defaults
@@ -157,22 +160,62 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     if (!vismel.used.atomic)
       throw new InvalidConversionError("VisMEL query must be atomic, but is not.");
 
+    // build new vismel query
     let biVismel = new VisMEL.VisMEL(vismel.sources);
 
-    // TODO: currently there is not support for any field usages on aestetics. If we fix this, the density below needs to include these new splits
     // generate splits for sampling along x and y axis
     let xSplit = PQL.Split.FromFieldUsage(vismel.layout.cols[0], 'probability');
     let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'probability');
     for (let s of [xSplit, ySplit])
       s.args[0] = c.map.biDensity.resolution;
-    let fields4density = _.unique( [xSplit, ySplit, ...vismel.layers[0].defaults].map(d => d.field) );
-    let densityFu = new PQL.Density(fields4density, PQL.DensityMethod.probability);
+    //let fields4density = _.unique( [xSplit, ySplit, ...vismel.layers[0].defaults].map(d => d.field) );
+
+    // should we generate the special trace biQC ?
+    let posFu = [vismel.layout.cols[0], vismel.layout.rows[0]];
+    let discreteYieldCnt = posFu.filter(PQL.hasDiscreteYield).length,
+      numYieldCnt =  posFu.filter(PQL.hasNumericYield).length;
+    if (discreteYieldCnt + numYieldCnt !== 2)
+      throw "This should not happen.";  // should always add up tp 2!!
+    let qc = (discreteYieldCnt === 1);
+    if (qc) {
+      let aestOld = vismel.layers[0].aesthetics,
+        aestNew = biVismel.layers[0].aesthetics;
+      // use color (convert if necessary)
+      if (vismel.used.color && !VisMEL.isSplitMap(aestOld.color))
+        aestNew.color = VisMEL.toSplitMap(aest.color);
+      else
+        aestNew.color = aestOld.color;  
+
+      // TODO: 
+      // convert shape and size to splits in details
+      // for (let key in ['shape', 'size'])
+      //   if (vismel.used[key]) {
+      //     if (VisMEL.isSplitMap(aestOld[key]))
+      //       aestNew.details.push(aestOld[key]);
+      //     else
+      //       aestNew.details.push(VisMEL.toSplitMap(aestOld[key]));
+      //   }
+    }
 
     biVismel.layout.cols.push(xSplit);
     biVismel.layout.rows.push(ySplit);
-    biVismel.layers[0].aesthetics.color = new VisMEL.ColorMap(densityFu, 'lightness');
     biVismel.layers[0].defaults = vismel.layers[0].defaults.slice();  // reference all existing defaults
     biVismel.layers[0].filters = vismel.layers[0].filters.slice();  // reference all existing filters
+
+    // collect unique fields for density fu
+    let splits = PQL.cleanFieldUsages(biVismel.fieldUsages(['aesthetics', 'details', 'layout', 'defaults'], 'include'));
+    if(!splits.every(e => (PQL.isSplit(e) || PQL.isFilter(e)) ) )
+      throw RangeError("Assertion Error: there should only be splits left");
+    let fields4density = _.unique( splits.map(split => split.field) );
+    let densityFu = new PQL.Density(fields4density, PQL.DensityMethod.probability);  
+
+    // add density field usage to suitable channel
+    if (qc) {
+      for (let rc of ['rows', 'cols'])
+        if (PQL.hasDiscreteYield(vismel.layout[rc][0]))
+          biVismel.layout[rc].push(densityFu)
+    } else
+      biVismel.layers[0].aesthetics.color = new VisMEL.ColorMap(densityFu, 'lightness');
 
     return biVismel;
   }

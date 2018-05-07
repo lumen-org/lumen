@@ -718,7 +718,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 n = catExtent.length,
                 d = axisLength.main[catXY] / n;
 
-              let pFu = rt.vismel.layers[0].aesthetics.color.fu,  // by construction in Vismel4Traces the color field usage is the one that encodes density/probability
+              //let pFu = rt.vismel.layers[0].aesthetics.color.fu,  // by construction in Vismel4Traces the color field usage is the one that encodes density/probability
+              let pFu = rt.vismel.layout[PQL.hasDiscreteYield(fu.x) ? 'cols' : 'rows'][1],
                 pIdx = rt.fu2idx.get(pFu),
                 pExtent = rt.extent[pIdx];
 

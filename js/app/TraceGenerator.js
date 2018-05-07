@@ -31,7 +31,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     }
 
     /**
-     * Returns the color for a uniDensity trace, for the case that the color channel is not used to encode any result table dimension.
+     * Returns the color for a uniDensity trace for the case that the color channel is not explicitely used to encode any result table dimension.
      * @param vismel
      * @param config
      * @return {*}
@@ -99,6 +99,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     /**
      * Utility function. Splits the result table rt into hierarchical data for traces and returns this nested data.
+     *
+     * This is originally written for tracer.aggr
      * @param vismel A vismel query.
      * @param rt A result Table.
      */
@@ -153,6 +155,37 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       // nest it!
       return [nester.map(rt), splits.length,];
     }
+
+
+    /**
+     * Nests given data table by the field usage on aestetics and details of the given vismel query using the index look up map fu2idx.
+     *
+     * This is originally written for tracer.biQC.
+     * @param data
+     * @param fu2idx
+     * @param vismel
+     * @param nester [Optional] You may give a nester that is used and extended. Otherwise just pass nothing or undefined.
+     * @return Nested data table.
+     */
+    function nestBySplits (data, fu2idx, vismel, nester=undefined) {
+      // collect splits
+      let splitIdxs = vismel.fieldUsages(['aesthetics', 'details'], 'include')
+        .filter(PQL.isSplit)
+        .map(split => fu2idx.get(split));
+
+      if (_.uniq(splitIdxs).length != splitIdxs.length)
+        throw "AssertionError: this should not happen.";
+
+      // build nester
+      if (nester === undefined)
+        nester = d3c.nest();
+      for (let idx of splitIdxs)
+        nester.key(e => e[idx]);
+
+      // nest it
+      return nester.map(data);
+    }
+
 
 
     let tracer = {};
@@ -327,9 +360,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
        * @param xy 'x' ('y') if the trace is for x (y) axis.
-       //* @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @param fu2idx
-       //* @param fixedColor: optional. sets a color regardless of query specifications.
        * @return Object: A trace.
        */
       function getUniTrace(data, xy, fu2idx) {       
@@ -361,7 +392,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
           _.extendOwn(trace, {
-            //type: modelOrData === 'model' ? 'scatter' : 'bar',
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
             type: 'scatter',
             mode: 'lines',
@@ -374,9 +404,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
-          // if (modelOrData === 'data') {
-          //   trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
-          // }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -396,18 +423,16 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       }
 
       /**
-       * Splits given data into subgroups by all splits of the vismel query (but not model vs data splits).
+       * Splits given data into subgroups by all splits of the vismel query.
        * For each subgroup an appropriate trace is generated. The array of all traces is returned.
        * @param data The data to split further.
        * @param fu2idx A map of FieldUsages to column indices in the data.
        * @param xy 'x' ('y') if the trace is for x (y) axis.
-       //* @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @return {Array} or traces.
        */
       function getSplittedUniTraces(data, fu2idx, xy) {
         // split into more traces by all remaining splits
         let splits = vismel.fieldUsages(['layout'], 'exclude').filter(PQL.isSplit);
-        //let split_idxs = splits.map(split => fu2idx.get(split));
         let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
 
         // build nesting function
@@ -474,8 +499,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let trace = {
           name: traceName[xy], // modelOrData + ' marginal on ' + xy,
           showlegend: false,
-          x: xy === 'x' ? x : px, //selectColumn(data, xIdx),
-          y: xy === 'x' ? px : x, //selectColumn(data, yIdx),
+          x: xy === 'x' ? x : px,
+          y: xy === 'x' ? px : x,
           xaxis: xAxis,
           yaxis: yAxis,
         };
@@ -486,7 +511,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
           _.extendOwn(trace, {
-            //type: modelOrData === 'model' ? 'scatter' : 'bar',
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
             type: 'scatter',
             mode: 'lines',
@@ -499,9 +523,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             //fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
-          // if (modelOrData === 'data') {
-          //   trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
-          // }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -540,7 +561,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             // if (c.views.accuMarginals.possible)
             // TODO: reenable: traces.push(...getAccumulatedUniTrace(rt, rt.fu2idx, xOrY));
             //data.query = rt.query; // attach query to data, beacuse we might need it later
-              traces.push(...getSplittedUniTraces(rt, rt.fu2idx, xOrY));
+
+          traces.push(...getSplittedUniTraces(rt, rt.fu2idx, xOrY));
+
           //}
           //}
         }
@@ -653,39 +676,46 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
 
       let xFu = vismel.layout.cols[0],
-        yFu = vismel.layout.rows[0],
-        colorFu = vismel.layers[0].aesthetics.color.fu;
+        yFu = vismel.layout.rows[0];
+
+      let xYieldsCat = PQL.hasDiscreteYield(xFu), // flag: True iff x encodes a categorical dimension
+        catXy = xYieldsCat ? 'x' : 'y'; // where the categorical dimension is: on 'x' or 'y' ?
 
       let xIdx = rt.fu2idx.get(xFu),
         yIdx = rt.fu2idx.get(yFu),
-        colorIdx = rt.fu2idx.get(colorFu);
+        // colorIdx = rt.fu2idx.get(colorFu);
+        pIdx = rt.fu2idx.get(vismel.layout[xYieldsCat ? 'cols' : 'rows'][1]); // density is encoded here
 
-      let xYieldsCat = PQL.hasDiscreteYield(xFu), // flag: True if x encodes a categorical dimension
-        catXy = xYieldsCat ? 'x' : 'y'; // where the categorical dimension is: on 'x' or 'y' ?
       let [catIdx, numIdx] = (xYieldsCat ? [xIdx, yIdx] : [yIdx, xIdx]); // index of the categorical and numerical dimension in the result table
-      let traces = [];
 
-      // group by values of categorical dimension
+      // nest by values of categorical dimension
       let groupedData = d3c.nest().key(e => e[catIdx]).map(rt);
+
+      // nest further TODO: is that ok?
+      let nesterCatAxis = d3c.nest().key(e => e[catIdx]);
+      let groupedData2 = nestBySplits(rt, rt.fu2idx, vismel, nesterCatAxis);
 
       let catExtent = rt.extent[catIdx];
       if (catExtent.length != cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");
 
-      // then iterate over groups in same order like given in extent
+      // iterate over groups in same order like given in extent
+      let traces = [];
       for (let i = 0; i < cqAxisIds.length; ++i) {
         let data = groupedData["$" + catExtent[i]];
-        // TODO: this is a hack. If a filter is applied on the categorical dimension, the above lookup fails because the fields extent wasn't updated
+        // TODO: this is a hack. If a filter is applied on the categorical dimension, the above access to groupedData fails because the fields extent wasn't updated
         if (data !== undefined) {
+
           // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19
           // the process of determining the color should be more complicated then this
           let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
+
           let trace = {
             name: PQL.toString(rt.pql),
             type: 'scatter',
             mode: 'lines',
             showlegend: false,
-            [catXy]: selectColumn(data, colorIdx), // the axis that encodes the categorical dimension, encodes the density on the new axis.
+            [catXy]: selectColumn(data, pIdx), // the axis that encodes the categorical dimension, encodes the density on the new axis.
             [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
             xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
             yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
@@ -698,6 +728,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             //fill: 'none',
             fillcolor: makeOpaque(color, c.map.biDensity.line.fillopacity),
           };
+
+          // create trace for each leave in the map for the grouped data:
+          // continue here:
+          //dfs(data, leafData => traces.push(), 0 /* depth */);
 
           traces.push(trace);
         }
