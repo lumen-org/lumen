@@ -630,7 +630,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         //opacity: c.map.biDensity.opacity,
         opacity: 1,
         autocolorscale: false,
-        colorscale: colorscale, // c.map.biDensity.colorscale, OLD
+        colorscale: colorscale,
         zauto: false,
         zmin: 0,
         zmax: rt.extent[colorIdx], // TODO: is that valid for c-c heat maps? NO!
@@ -685,21 +685,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       let xIdx = rt.fu2idx.get(xFu),
         yIdx = rt.fu2idx.get(yFu),
-        // colorIdx = rt.fu2idx.get(colorFu);
         pIdx = rt.fu2idx.get(vismel.layout[xYieldsCat ? 'cols' : 'rows'][1]); // density is encoded here
 
       let [catIdx, numIdx] = (xYieldsCat ? [xIdx, yIdx] : [yIdx, xIdx]); // index of the categorical and numerical dimension in the result table
 
-      // nest by values of categorical dimension
-      let groupedData = d3c.nest().key(e => e[catIdx]).map(rt);
-
-      // nest further
+      // nest by values of categorical dimension, and then all remaining splits
       let nesterCatAxis = d3c.nest().key(e => e[catIdx]);
       let [groupedData2, depth] = nestBySplits(rt, rt.fu2idx, vismel, nesterCatAxis, 1);
-
-      let catExtent = rt.extent[catIdx];
-      if (catExtent.length != cqAxisIds.length)
-        throw RangeError("this should not happen. See trace.biQC.");
 
       /**
        * generator for traces of line plots
@@ -732,6 +724,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       }
 
       // iterate over groups in same order like given in extent
+      let catExtent = rt.extent[catIdx];
+      if (catExtent.length != cqAxisIds.length)
+        throw RangeError("this should not happen. See trace.biQC.");
       let traces = [];
       for (let i = 0; i < cqAxisIds.length; ++i) {
         let data = groupedData2["$" + catExtent[i]];
@@ -793,7 +788,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         xaxis: axisId.x,
         yaxis: axisId.y,
         opacity: cfg.fill.opacity,
-        //opacity: fooOpac,
         hoverinfo: "text",
         text: rt.formatter(rt),
       };
@@ -805,7 +799,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         line: {
           color: cfg.stroke.color,
           width: cfg.stroke.width,
-          //width: 0,
         },
         maxDisplayed: cfg.maxDisplayed
       };
