@@ -534,19 +534,17 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       if (splitBy.length > 0)
         json["SPLIT BY"] = splitBy.map(Split.toJSON);
 
-      if (predict.length > 0) {
-        predict = predict.map(p => {
-          if (_.isString(p)) // its just the name of a field then
-            return p;
-          if (isField(p) || isSplit(p))
-            return p.name;
-          else if (isAggregation(p) || isDensity(p))
-            return p.toJSON();
-          else
-            throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
-        });
-        json.PREDICT = predict;
-      }
+      predict = predict.map(p => {
+        if (_.isString(p)) // its just the name of a field then
+          return p;
+        if (isField(p) || isSplit(p))
+          return p.name;
+        else if (isAggregation(p) || isDensity(p))
+          return p.toJSON();
+        else
+          throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
+      });
+      json.PREDICT = predict;
       return json;
     },
 
