@@ -247,6 +247,43 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     /**
+     * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
+     * Note: it gracefully forgives undefined arguments in extent and newData
+     * @returns The updated extent
+     */
+    function _extentUnion(extent, data, discreteFlag) {
+      if (extent === undefined) extent = [];
+      if (data === undefined) data = [];
+      return (discreteFlag ? _.union(extent, data) : d3.extent([...extent, ...data]) );
+    }
+
+    /**
+     * Extents t
+     * @param rt
+     * @param globalExtent
+     */
+    function addResultTableExtents (rt, globalExtent) {
+      if (rt === undefined)
+        return globalExtent
+      for (let [fu, idx] of rt.fu2idx.entries()) {
+        let discreteFlag = PQL.hasDiscreteYield(fu);
+        globalExtent.set(fu, _extentUnion(globalExtent.get(fu), rt.extent[idx]))
+      }
+      return globalExtent;
+    }
+
+
+    function addCollectionExtents (coll, globalExtent) {
+      let size = coll.size;
+      for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
+        for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
+          addResultTableExtents(coll[rIdx][cIdx], globalExtent)
+        }
+      }
+      return globalExtent;
+    }
+
+    /**
      * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
      * inherited from templated query, extents are also available at the atomic query.
      *
@@ -510,6 +547,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
+
+      let globalExtent = new Map();
+      for (let obj of [aggrColl, dataColl, testDataColl, biColl])
+        addCollectionExtents(obj, globalExtent);
+      TODO_CONTINUE_HERE // TODO
+       
 
       // extents
       initEmptyExtents(vismelColl);
