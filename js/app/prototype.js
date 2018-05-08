@@ -90,7 +90,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               // i.e. change basemodel, and basequery
               c.basequery = c.query;
 
-              c.baseQueryTable = new QueryTable(c.query);
+              c.baseQueryTable = new QueryTable(c.basequery);
               c.baseModelTable = new ModelTable(c.baseQueryTable);
 
               // let foo = V4T.uniDensity(c.query, 'rows');

@@ -90,7 +90,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
     
     function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
-
       // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt != undefined)
@@ -263,14 +262,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      *
      * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
      *
-     * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... Ah, it's just messy... :-(
+     * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... It's a bit messy... :-(
      *
-     * Note: you cannot use the .extent or .domain of any field of any field usage that queries consists of. The reason is that these are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
+     * Note: you cannot use the .extent or .domain of any FIELD (not field usage) of any field usage that the vismel queries consists of. The reason is two fold:
+     *   (1) they have a different semantic, namely .extent stores a 'meaningful' range of values where the density function is considerably larger than 0, and .domain stores the allowed domain of the dimension of that model.
+     *   (2) these values are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
      *
-     * @param queries
-     * @param results
+     * @param vismelColl
+     * @param resultColl
      */
-    function attachExtents (queries, results) {
+    function attachExtents (vismelColl, resultColl) {
       /**
        * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
        * Note: it gracefully forgives undefined arguments in extent and newData
@@ -285,7 +286,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
       // retrieve FieldUsages of aestetics for later reuse
       let aes = new Map();
-      let qa = queries.base.layers[0].aesthetics;
+      let qa = vismelColl.base.layers[0].aesthetics;
       if (qa.color instanceof VisMEL.ColorMap)
         aes.set('color', qa.color.fu);
       if (qa.shape instanceof VisMEL.ShapeMap)
@@ -295,12 +296,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       /// iterate over results for each atomic query
       // all aesthetics of all atomic queries simply refer to the base query one.
-      let row = new Array(queries.size.rows);
-      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+      let row = new Array(vismelColl.size.rows);
+      for (let rIdx = 0; rIdx < vismelColl.size.rows; ++rIdx) {
         row[rIdx] = [];
-        for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-          let rt = results[rIdx][cIdx],
-            q = queries.at[rIdx][cIdx];
+        for (let cIdx = 0; cIdx < vismelColl.size.cols; ++cIdx) {
+          let rt = resultColl[rIdx][cIdx],
+            q = vismelColl.at[rIdx][cIdx];
 
           if (rt == undefined)
             continue;
@@ -380,10 +381,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     /**
      * @param coll The collection to extract the extent of. An 3 dimensional array, where the first two dimensions represent 'y' and  'x' and the last dimension contains the values.
      * @param xy Get row-wise (xy === 'y') or column-wise (xy === 'x') extents.
-     * @param accessor Accessor function to extract the wanted attribute from a value of the collection.
      */
     function xyCollectionExtent(coll, xy) {
-    // function xyCollectionExtent(coll, xy, accessor) {
       let yx = _invXY(xy),
         extents = [],
         len = {
@@ -395,12 +394,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         let xyExtent = []; // extent across one row or column
         for (idx[yx] = 0; idx[yx] < len[yx]; ++idx[yx]) {
           let rt = coll[idx.y][idx.x][yx],
-            //rowsOrCols = (xy === 'x'? 'rows': 'cols'),
             rowsOrCols = (xy === 'x'? 'cols': 'rows'),
             fu = rt.vismel.layout[rowsOrCols][0],
             i = rt.fu2idx.get(fu),
             cellExtent = rt.extent[i];
-          //let cellExtent = accessor(coll[idx.y][idx.x]); // extent of selected attribute for one atomic plot (of given collection)
           xyExtent = d3.extent([...xyExtent, ...cellExtent]);
         }
         extents.push(xyExtent);
@@ -465,7 +462,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        //let annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId);
         let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
         annotations.push(annotation);
       });
@@ -486,37 +482,42 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
 
     /**
-     * A ViewTable takes a data collections and a query collection and turns it into an actual visual representation.
+     * A ViewTable takes data collections and a query collection and turns it into an actual visual representation.
      * This visualization is attached to the DOM within the given pane <div> object.
      *
      * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
      *
      * @param pane A <div> element. This must already have a width and height.
-     * @param aggrColl The {@link Collection} to visualize with this viewTable.
+     * @param aggrColl The {@link Collection} of predictions to visualize.
+     * @param dataColl The {@link Collection} of training data to visualize.
+     * @param testDataColl The {@link Collection} of test data to visualize.
+     * @param uniColl The {@link Collection} of marignal probability values to visualize.
+     * @param biColl The {@link Collection} of probability values to visualize.
      * @constructor
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, vismels, queryConfig) {
+    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
       this.testDataCollection = testDataColl;
-      this.vismels = vismels;
       this.size = aggrColl.size;
       this.size.x = this.size.cols;
       this.size.y = this.size.rows;
-      let query = vismels.base;
+      this.vismels = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
+      let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
       // extents
-      initEmptyExtents(vismels);
-      attachExtents(vismels, this.aggrCollection);
-      attachExtents(vismels, this.dataCollection);
-      attachExtents(vismels, this.testDataCollection);
-      normalizeExtents(vismels);
+      initEmptyExtents(vismelColl);
+      attachExtents(vismelColl, this.aggrCollection);
+      attachExtents(vismelColl, this.dataCollection);
+      attachExtents(vismelColl, this.testDataCollection);
+      // TODO: what about uniColl and BiColl?
+      normalizeExtents(vismelColl);
 
       /*
        * Shortcut to the layout attributes of a vismel query table.
@@ -526,8 +527,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         return xy === 'x' ? vismelQT.at[0][idx].layout.cols[0] : vismelQT.at[idx][0].layout.rows[0];
       };
 
-      let qx = query.layout.cols,
-       qy = query.layout.rows;
+      let qx = vismel.layout.cols,
+       qy = vismel.layout.rows;
 
       // flag whether or not in an atomic plot the x axis (.x) (y axis (.y)) is in use, i.e. encodes some fieldusage of the model
       let used = {
@@ -645,7 +646,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         if (used.y) {
           let axisTitleAnno = config.annotationGenerator.axis_title(
-            getFieldUsage(idx.y, 'y', vismels).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
+            getFieldUsage(idx.y, 'y', vismelColl).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
           axisTitles.push(axisTitleAnno);
         }
         layout["yaxis" + yid] = yaxis;
@@ -662,7 +663,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
-              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismels).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
+              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
               axisTitles.push(axisTitleAnno);
             }
             layout["xaxis" + xid] = xaxis;
@@ -761,7 +762,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismels.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
 
           traces.push(...atomicTraces);
         }
