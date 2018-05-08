@@ -173,7 +173,6 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     }
 
     model(model, where = [], defaults = [], as_ = this.name) {
-      // TODO continue here
       let jsonPQL = PQL.toJSON.model(this.name, model, as_, where, defaults);
       let newModel = (as_ !== this.name ? new RemoteModel(as_, this.url) : this);
       return executeRemotely(jsonPQL, this.url)

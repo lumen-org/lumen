@@ -64,23 +64,6 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
           layout.push(fu);
         }
       });
-      // OLD:
-      // nsf[i].forEach( fu => { // jshint ignore:line
-      //   if (PQL.isFilter(fu)) {
-      //     // add this field to details, if not already in the query. This is necessary since we need that field to be included in the result table later.
-      //      let fus = instance.fieldUsages(['layout','filters'],'exclude');
-      //     if (-1 === fus.findIndex(o => PQL.isSplit(o) && o.name === fu.name)) {
-      //       // this split is necessary to generate any input from that field at all
-      //       details.push(new PQL.Split(fu.field, 'identity'));
-      //     }
-      //     // add the filer to restrict its domain accordingly at query time
-      //     filter.push(fu);
-      //   } else {
-      //     // push remaining field usage to layout
-      //     console.assert(layout.empty(), "After template expansion there must be only one FU on a row/col shelf");
-      //     layout.push(fu);
-      //   }
-      // });
       expansion.push(instance);
     }
 

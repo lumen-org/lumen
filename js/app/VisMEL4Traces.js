@@ -1,3 +1,4 @@
+
 /**
  * VisMEL4Traces module.
  *
@@ -15,37 +16,44 @@
  * The basic working idea is: the user should get to see:
  *
  *   * the full density model over all given dimensions (for the bidensity and unidensity traces) (see the functions for more details)
- *
  *   * the predictions as requested
+ *   * the marginals along the visualization table axis
+ *   * the training and or test data
  *
  *  Conversion principles:
  *
  *  A major challenge is the complexity of the resulting table based visualization which potentially combines multiple
- *  facets per atomic pane and a potentially large table. The facets are all interrelated, since they are all
- *  derived from the same initial VisMEL query. Especially, we want these facets and the multiple plots be linked, such
+ *  facets per atomic pane and a potentially large table as such. The facets are all interrelated, since they are all
+ *  derived from the same initial VisMEL query. Especially, we require these facets and the multiple plots be linked, such
  *  that for example axes encoding the same thing are scaled identically, or a split is applied in an identical way in
  *  all atomic plots.
  *
  *  As said we need to link the various facets and atomic plots. The way these are linked is via the common 'parts' of
- *  their corresponding VisMEL and PQL query. Therefore, we use the identical FieldUsages and BaseMaps in all the facets and atomic plots, where ever possible. The FieldUsages act as keys for look up of results in a result table (-> ResultTable), their extents. The FieldMaps (-> BaseMap)
+ *  their corresponding VisMEL and PQL query. This means we use the identical FieldUsages and BaseMaps in all the facets and atomic plots, where ever possible. This allows FieldUsages to act as
+ *    (1) uniform keys for look ups of results in a result table (-> ResultTable) (i.e. the same FieldUsage will work in different result tables!)
+ *    (2) uniform keys for look ups of extents within a single result table (-> ResultTable) (like above)
+ *    (3) and since (2) Field Usages act as unique, global keys for the global extent of a Field Usage.
  *
- * Therefore, using the identical FieldUsage and FieldMaps across multiple PQL/VisMEL queries allows to link them.
+ * In short: using the identical FieldUsage and FieldMaps across multiple PQL/VisMEL queries allows to link them!
  *
- * However, it also is a challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we somehow
- * need to keep track of the FieldUsage and FieldMaps already created. How can we do this?
+ * However, it also poses a challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we need to keep track of the FieldUsage and FieldMaps already created. Take, for example, the table of vismel queries created for the marginal densities. They should all reuse the same density FU, but at the moment are created independently from each other. How can we achieve the reuse here?
  *
- * An open question is also: which FieldUsages should NOT be shared? What about the filters created by the expansion of the table agebra expressions?
+ * An open question is: which FieldUsages should NOT be shared?
+ *  * What about the filters created by the expansion of the table algebra expressions?
+ *    We could reuse them, but it is not necessary because the linking is not required for such filters. So for the sake of simplicity we do not reuse them.
+ *
  * Another advantage is, that it would be possible to change parameters of e.g. a split without recreating everything,
  * since the change is automatically "propagated" to all relevant queries - since they in fact use the same field usage.
  *
- * TODO: What about rebasing of queries? Can we even share all the field usages? the different vismel queries for different atomic plots are executed against different models! When exactly does this become important? Does it at all?
- * This is a bit weird...
+ * Issue: Rebasing models/queries:
+ *    What about rebasing of queries? Can we even share all the field usages at all? The different vismel queries for different atomic plots are executed against different models. And different model have different instances of <Field> at their 'core'...
+ *    Answer: Yes, this is a bit messy. The different models do have different instances of <Field>, even for the same dimensions. Read on
+ *    TODO/Note: One way to make it cleaner: Decouple PQL/VisMEL queries and models stronger. Right now the coupling is the reference of a particular models Field in the query. This should not happen. It would be enough to reference the Field by its name, for example. Actually, however, the only real coupling here, is that Fields also store their extent and domain (since these are / could be different for each model, and are not directly relevant for the query statement. We do not use this information at any point _after_ we constructed the queries. Hence, we should be fine with leaving things as they are.
  *
  * @module VisMEL
  * @author Philipp Lucas
  * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-
 define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, VisMEL, c) {
   'use strict';
 
