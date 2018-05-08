@@ -36,11 +36,22 @@
  *
  * In short: using the identical FieldUsage and FieldMaps across multiple PQL/VisMEL queries allows to link them!
  *
- * However, it also poses a challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we need to keep track of the FieldUsage and FieldMaps already created. Take, for example, the table of vismel queries created for the marginal densities. They should all reuse the same density FU, but at the moment are created independently from each other. How can we achieve the reuse here?
+ * Challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we need to keep track of the FieldUsage and FieldMaps already created. Take, for example, the table of vismel queries created for the marginal densities. They should all reuse the same density FU, but at the moment are created independently from each other. How can we achieve the reuse here?
+ *
+ *
  *
  * An open question is: which FieldUsages should NOT be shared?
  *  * What about the filters created by the expansion of the table algebra expressions?
- *    We could reuse them, but it is not necessary because the linking is not required for such filters. So for the sake of simplicity we do not reuse them.
+ *    Answer: We could reuse them, but it is not necessary because the linking is not required for such filters. So for the sake of simplicity we do not reuse them.
+ *  * I cannot think of any.
+ *
+ * Do the FieldUsages actually 'match', i.e. is it sufficient to look for matching FieldUsage in order to find common global extents?
+ * Take a visualization that consists of a larger visualization table. Do the queries that should match between the cells actually match?
+ *   I think so. It seems to work for all (relevant) types of FieldUsages:
+ *     * Aggregations (not density/probability): e.g. query = "predict sex given age"
+ *       This query is identical across all cells, even though the condition for age might differ, e.g. because we split by age along x.
+ *     * Splits: well, yes, ... by construction.
+ *     * Density/Probability: yes!
  *
  * Another advantage is, that it would be possible to change parameters of e.g. a split without recreating everything,
  * since the change is automatically "propagated" to all relevant queries - since they in fact use the same field usage.
@@ -49,6 +60,14 @@
  *    What about rebasing of queries? Can we even share all the field usages at all? The different vismel queries for different atomic plots are executed against different models. And different model have different instances of <Field> at their 'core'...
  *    Answer: Yes, this is a bit messy. The different models do have different instances of <Field>, even for the same dimensions. Read on
  *    TODO/Note: One way to make it cleaner: Decouple PQL/VisMEL queries and models stronger. Right now the coupling is the reference of a particular models Field in the query. This should not happen. It would be enough to reference the Field by its name, for example. Actually, however, the only real coupling here, is that Fields also store their extent and domain (since these are / could be different for each model, and are not directly relevant for the query statement. We do not use this information at any point _after_ we constructed the queries. Hence, we should be fine with leaving things as they are.
+ *
+ * TODO Issue: better way to derive queries:
+ *
+ *   Now: user query -> base query --(expand)--> base query table -> specialized query tables (for prediction, uniDensity, biDensity, ...)
+ *
+ *   Better: user query -> base query -> specialized base queries --(expand each)--> specialized query tables
+ *
+ * Advantage: it would automatically solve the problem of reuse field usags along x and y axis.
  *
  * @module VisMEL
  * @author Philipp Lucas
@@ -68,12 +87,63 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
   }
 
   /**
-   * Error Class that indicates a conversion error for vismel2pql conversions. No suitable vismel query can be derived in this case.
+   * Error Class that indicates a conversion error for vismel4traces conversions. No suitable vismel query can be derived in this case.
    */
   class ConversionError extends utils.ExtendableError {}
   class InvalidConversionError extends utils.ExtendableError {}
 
+
   /**
+   * Either <hashmap> contains a mapping for obj.prop.toString(). Then the value of the hashmap replaces the value of <obj.prop>
+   * Or hashmap has no mapping for obj.prop.toString(). Then the value of obj.prop stay unchanged, but the mapping is added to hashmap.
+   * @param obj An object that has property <prop>
+   * @param prop A property name.
+   * @param hashmap A hashmap.
+   */
+  function useUpdateHashmap (obj, hashmap) {
+    let hash = obj.toString();
+    let cached = hashmap.get(hash);
+    if (cached === undefined) {
+      hashmap.set(hash, obj);
+      return obj;
+    } else {
+      return cached;
+    }
+  }
+
+  function reuseIdenticalFieldUsagesAndMaps(vismel, hashmap) {
+    if (vismel.used === undefined)
+      vismel.used = vismel.usages();
+
+    let aest = vismel.layers[0].aesthetics;
+    for (let prop of ['color', 'shape', 'size']) {
+      if (vismel.used[prop])
+        aest[prop] = useUpdateHashmap(aest[prop], hashmap)
+    }
+
+    let details = aest.details;
+    for (let i = 0; i < details.length; i++)
+        details[i] = useUpdateHashmap(details[i], hashmap)
+
+    for (let [xy, cr] of [['x', 'cols'], ['y', 'rows']]) {
+      if (vismel.used[xy]) {
+        let fus = vismel.layout[cr];
+        for (let i = 0; i < fus.length; i++) {
+          let fu = fus[i];
+          if (PQL.isFieldUsage(fu))
+            fus[i] = useUpdateHashmap(fus[i], hashmap)
+        }
+      }
+    }
+
+    // no need to copy filters / defaults...
+    // ... yet :-)
+
+    return vismel;
+  }
+
+
+  /**f
    * Returns a VisMEL query for the marginal density over the innermost dimension on <rowsOrCols>.
    *
    * The rules for conversion are as follows:
@@ -91,10 +161,31 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    *
    * @param vismel A VisMEL query.
    * @param rowsOrCols Either 'rows' or 'cols'.
+   * @param reuse [Optional]. A map of FieldUsage hashes to FieldUsages. Contains mappings for those fieldusages to reuse. Note that the hashes are identical also if the value of FieldUsages are identical, even if they are not object-identical.
+   *
    */
-  function uniDensity(vismel, rowsOrCols) {
+  // function uniDensity(vismel, rowsOrCols) {
+  function uniDensity(vismel, rowsOrCols, reuse=undefined) {
     checkItIsRowsOrCols(rowsOrCols);
     let invRoC = invertRowsOrCols(rowsOrCols);
+
+    if (reuse != undefined) {
+      // reuse the vismel given in <reuse>.
+      // what can potentially differ between <reuse> and the vismel to be generated?
+      //  * the field usages on x and y shelf
+      //  * that's it!
+      //  * but:
+
+      // need to store
+      //  * split over dims for positional axis: key = name to split ?? need a hash function:
+      //  * densities over dims for positional axis: key = ??? need a hash function
+
+      /*
+
+
+
+      */
+    }
 
     let axisFieldUsage = vismel.layout[rowsOrCols][0];
     if (!PQL.isFieldUsage(axisFieldUsage))
@@ -109,14 +200,18 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
       color = aest.color;
     if (VisMEL.isMap(color) && !VisMEL.isSplitMap(color))
       aest.color = VisMEL.toSplitMap(color);
+    //aest.color = useUpdateHashmap(aest.color, reuse);
 
     // convert shape and size to splits in details
     for (let key in ['shape', 'size'])
       if (VisMEL.isMap(aest[key])) {
+        let fu = undefined;
         if (VisMEL.isSplitMap(aest[key]))
-          aest.details.push(aest[key]);
+          fu = aest[key];
         else
-          aest.details.push(VisMEL.toSplitMap(aest[key]));
+          fu = VisMEL.toSplitMap(aest[key]);
+//        fu = useUpdateHashmap(fu, reuse);
+        aest.details.push(fu);
         aest[key] = {};
       }
 
@@ -145,7 +240,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    *
    * Aestetics shelves:
    *  Currently, we generally do not support it! The problem is not to generate the query, but to encode all of it in the visualization.
-   *  TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves.
+   *  TODO: In fact, it is hard to efficiently encode any dimension on aestetics shelves in the resulting visualizations.
    *  However, there is one special case, namely when one of the positional axis encodes a categorical value, and the
    *  other a quantitative one. Then we can encode dimensions on aestetics shelves as a series of line plots (like for uniDensity).
    *  TODO: If we fix this, the generated density below needs to include these new splits.
@@ -176,7 +271,6 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'probability');
     for (let s of [xSplit, ySplit])
       s.args[0] = c.map.biDensity.resolution;
-    //let fields4density = _.unique( [xSplit, ySplit, ...vismel.layers[0].defaults].map(d => d.field) );
 
     // should we generate the special trace biQC ?
     let posFu = [vismel.layout.cols[0], vismel.layout.rows[0]];
@@ -246,6 +340,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     uniDensity,
     biDensity,
     samples,
+    reuseIdenticalFieldUsagesAndMaps,
     ConversionError,
     InvalidConversionError,
   }

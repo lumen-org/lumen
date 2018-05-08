@@ -297,7 +297,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   class Aggregation extends FieldUsage {
     constructor(fields, method, yields, args = []) {
       super();
-      fields = utils.listify(fields);
+      fields = _.sortBy(utils.listify(fields), 'name');
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
       if (!isAggregationMethod(method))
@@ -346,7 +346,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static toJSON (a) {
       return {
-        name: a.names,
+        name: a.names.sort(),
         aggregation: a.method,
         yields: a.yields,
         args: a.args
@@ -354,14 +354,14 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString () {
-      return this.method  + " of [" + this.names + "] with args: [" + this.args + "]";
+      return this.method  + " of [" + this.names.sort() + "] with args: [" + this.args + "]";
     }
   }
 
   class Density extends FieldUsage {
     constructor(fields, method=DensityMethodT.density) {
       super();
-      fields = utils.listify(fields);
+      fields = _.sortBy(utils.listify(fields), 'name');
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
       this.fields = fields;
@@ -387,7 +387,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static toJSON(d) {
       return {
-        name: d.names,
+        name: d.names.sort(),
         aggregation: d.method,
         args: d.args
       };
@@ -403,7 +403,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString () {
-      return this.method  + " of [" + this.names + "]";
+      return this.method  + " of [" + this.names.sort() + "]";
     }
   }
 

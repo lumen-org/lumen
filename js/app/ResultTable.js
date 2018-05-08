@@ -85,7 +85,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    * @param modelCollection
    * @return {Promise.<Array>}
    */
-   function aggrCollection(queryCollection, modelCollection, enabled=true) {
+   function aggrCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled=true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -98,6 +98,8 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
 
         // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
         let vismel = queryCollection.at[rIdx][cIdx];  // in this particular case, there is nothing to do
+        // unify identical field usages / maps!
+        vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
 
         try {
           // 2. convert this facet's atomic VisMEL query to PQL query
@@ -124,7 +126,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    * @param model
    * @return {Promise.<Array>}
    */
-  function samplesCollection(queryCollection, modelTable, enabled=true, opts={}) {
+  function samplesCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled=true, opts={}) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -138,6 +140,8 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
         try {
           // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
           let vismel = V4T.samples(queryCollection.at[rIdx][cIdx]);
+          // unify identical field usages / maps!
+          vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
 
           // 2. convert this facet's atomic VisMEL query to PQL query
           let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.sample(queryCollection.at[rIdx][cIdx], opts);
@@ -167,7 +171,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    * @param model
    * @return {Promise.<Array>}
    */
-  function uniDensityCollection(queryCollection, modelTable, enabled = true) {
+  function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -182,6 +186,9 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
           try {
               // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
             let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);
+
+            // unify identical field usages / maps!
+            vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
 
             // 2. convert this facet's atomic VisMEL query to PQL query
             let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
@@ -223,7 +230,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    * @param model
    * @return {Promise.<Array>}
    */
-  function biDensityCollection(queryCollection, modelTable, enabled=true) {
+  function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled=true) {
     let size = queryCollection.size;
     let collection = getEmptyCollection(size);
     if (!enabled)  // quit early if disabled
@@ -237,6 +244,8 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
         try {
           // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
           let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx]);
+          // unify identical field usages / maps!
+          vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
 
           // 2. convert this facet's atomic VisMEL query to PQL query
           let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);

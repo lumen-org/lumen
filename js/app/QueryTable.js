@@ -16,7 +16,6 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
    * Extends the field usage templates in query, possibly merging domains if applicable.
    *
    * Removes a template by expanding it into a list of atomic queries.
-   * OLD: The implicit domain restrictions are encoded in filter statements of the query.
    * The implicit domain restrictions are encoded as default_subset clauses of the query.
    *
    * @param vismel {VisMEL} The templated query.
@@ -45,7 +44,6 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
       // delete templated part (this does not affect the base query!)
       layout.clear();
 
-      // NEW:
       nsf[i].forEach( fu => { // jshint ignore:line
         if (PQL.isFilter(fu)) {
           // add this field to details, if not already in the query. This is necessary since we need that field to be included in the result table later.

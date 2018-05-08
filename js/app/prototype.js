@@ -100,24 +100,27 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               console.error(error);
               infoBox.message(error);
             }
+
+            let fieldUsageCacheMap = new Map();
+
             c.baseModelTable.model()
               .then(() => infoBox.hide())
 
-              .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, c.config.visConfig.aggregations.active))
+              .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, c.config.visConfig.data.active, {data_category:'training data'}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data'}))
               .then(res => c.dataRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, c.config.visConfig.testData.active, {data_category:'test data'}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data'}))
               .then(res => c.testDataRT = res)
 
-              .then(() => RT.uniDensityCollection(c.baseQueryTable, c.baseModelTable,
+              .then(() => RT.uniDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap,
                 c.config.visConfig.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
               )
               .then(res => c.uniDensityRT = res)
 
-              .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, c.config.visConfig.contour.active))
+              .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
 
               .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
