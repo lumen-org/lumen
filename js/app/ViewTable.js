@@ -700,16 +700,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // indexing over x and y
       let idx = {x:0, y:0};
 
-      // need some additional statistics on 1d density: row and column wise extent
-      uniColl.extent = {};
-      for (let xy of ['x','y']) {
-        let yx = _invXY(xy);
-        if (marginal[xy]) {  // marginal active?
-          //uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
-          uniColl.extent[xy] = xyCollectionExtent(uniColl, xy);
-          uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
-        }
-      }
+//       // need some additional statistics on 1d density: row and column wise extent
+//       uniColl.extent = {};
+//       for (let xy of ['x','y']) {
+//         let yx = _invXY(xy);
+//         if (marginal[xy]) {  // marginal active?
+//           //uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
+//           uniColl.extent[xy] = xyCollectionExtent(uniColl, xy);
+//           uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
+//         }
+//       }
 
       // loops over view cells
       this.at = new Array(this.size.rows);
@@ -767,9 +767,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               if (axis.side === 'right')
                 axis.side = 'left';
 
-              // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range.
-              let extent = uniColl.extent[xy][idx[xy]];
-              Object.assign(axis, getRangeAndTickMarks(extent, xy));
+              // [xy] is x or y axis; idx[xy] is index in view table
+              let rc = (xy === 'x' ? 'cols' : 'rows')
+              let uniVismel = uniColl[idx.y][idx.x][yx].vismel,
+                xyFu = uniVismel.layout[rc][0];
+              Object.assign(axis, getRangeAndTickMarks(xyFu.extent, xy));
 
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
