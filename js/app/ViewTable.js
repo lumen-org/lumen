@@ -281,14 +281,36 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * @param globalExtent A map of field usages to their global extents.
      * @return {Map} The modified global extent maps.
      */
-    function addCollectionExtents (coll, globalExtent) {
+    function addCollectionExtents (coll, globalExtent, attr=undefined) {
       let size = coll.size;
-      for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
+      for (let rIdx = 0; rIdx < size.rows; ++rIdx)
         for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-          addResultTableExtents(coll[rIdx][cIdx], globalExtent)
+          let rt = coll[rIdx][cIdx];
+          if (attr === undefined)
+            addResultTableExtents(rt, globalExtent);
+          else {
+            if (rt === undefined)
+              continue;  // rt is undefined if neither of the marginals are in use
+            addResultTableExtents(rt[attr], globalExtent);
+          }
         }
-      }
+          
       return globalExtent;
+    }
+
+    /**
+     * For each key in <globalExtent> (i.e. a FieldUsage) add its value (i.e. the global extent of that FieldUsage) to the key as the attribute .extent.
+     * @param globalExtent A Map of FieldUsages to their global extents.
+     */
+    function attachToFieldUsages(globalExtent) {
+      for (let [fu, extent] of globalExtent.entries())
+        fu.extent = extent;
+    }
+
+    function normalizeGlobalExtents (globalExtent) {
+      for (let [fu, extent] of globalExtent.entries())
+        if (PQL.hasNumericYield(fu))
+          globalExtent.set(fu, normalizeContinuousExtent(extent));
     }
 
     /**
@@ -559,16 +581,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       let globalExtent = new Map();
       for (let obj of [aggrColl, dataColl, testDataColl, biColl])
         addCollectionExtents(obj, globalExtent);
-      TODO_CONTINUE_HERE // TODO
-       
+      for (let xy of ['x', 'y'])
+        addCollectionExtents(uniColl, globalExtent, xy);
 
-      // extents
-      initEmptyExtents(vismelColl);
-      attachExtents(vismelColl, this.aggrCollection);
-      attachExtents(vismelColl, this.dataCollection);
-      attachExtents(vismelColl, this.testDataCollection);
-      // TODO: what about uniColl and BiColl?
-      normalizeExtents(vismelColl);
+      // // extents
+      // initEmptyExtents(vismelColl);
+      // attachExtents(vismelColl, this.aggrCollection);
+      // attachExtents(vismelColl, this.dataCollection);
+      // attachExtents(vismelColl, this.testDataCollection);
+      // // TODO: what about uniColl and BiColl?
+      // normalizeExtents(vismelColl);
+
+      // replace with new extents
+      normalizeGlobalExtents(globalExtent);
+      attachToFieldUsages(globalExtent);
 
       /*
        * Shortcut to the layout attributes of a vismel query table.

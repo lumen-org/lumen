@@ -107,6 +107,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
       hashmap.set(hash, obj);
       return obj;
     } else {
+      // DEBUG: console.log("replacing:\n" + obj.toString() + " \n with:\n " + cached.toString());
       return cached;
     }
   }

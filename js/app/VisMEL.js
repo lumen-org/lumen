@@ -28,6 +28,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     static DefaultMap(fu) {
       return new BaseMap(fu);
     }
+
+    toString() {
+      return "BaseMap " + this.fu.toString()
+    }
   }
 
   function isMap (o) {
@@ -58,6 +62,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
 
     static DefaultMap(fu) {
       return new ColorMap(fu, 'rgb');
+    }
+
+    toString() {
+      return "ColorMap on "+ this.channel + " of " + this.fu.toString();
     }
   }
 

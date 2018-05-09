@@ -200,7 +200,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString() {
-      return this.field.name + " " + this.method + " " + this.args;
+      return "FILTER: " + this.field.name + " " + this.method + " " + this.args;
     }
 
     /**
@@ -248,7 +248,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString() {
-      return this.method  + " of " + this.field.name + " with args:" + " " + this.args;
+      return "SPLIT " + this.method  + " of " + this.field.name + " with args:" + " " + this.args;
     }
 
     copy () {

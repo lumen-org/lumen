@@ -633,7 +633,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         colorscale: colorscale,
         zauto: false,
         zmin: 0,
-        zmax: rt.extent[colorIdx], // TODO: is that valid for c-c heat maps? NO!
+        //zmax: rt.extent[colorIdx], // TODO: is that valid for c-c heat maps? NO!
+        zmax: colorFu.extent, // TODO: is that valid for c-c heat maps? NO!
         //zmax: zmax, // TODO: is that valid for c-c heat maps? NO!
         hoverinfo: 'text',
         text: ztext,
