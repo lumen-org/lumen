@@ -146,10 +146,10 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     let color = query.layers[0].aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       let fu = color.fu;
-      if (PQL.hasDiscreteYield(fu)) {
+      // if (PQL.hasDiscreteYield(fu)) {
         let scale = ScaleGen.color(color, fu.extent);
         return _averaged(scale);  // compute on demand
-      }
+      // }
       // else {
       //   return mainColorMap(_valueOrAvg(fu.extent)); // scalar value, namely color for the average of the domain.
       // }

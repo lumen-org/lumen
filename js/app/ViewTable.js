@@ -105,17 +105,51 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       vismel.used = used;
 
       // build all mappers
-      let mapper = {
-        aggrFillColor: MapperGen.markersFillColor(vismel, 'aggr'),
-        dataFillColor: MapperGen.markersFillColor(vismel, 'data'),
-        testDataFillColor: MapperGen.markersFillColor(vismel, 'test data'),
-        aggrSize: MapperGen.markersSize(vismel, config.map.aggrMarker.size),
-        aggrShape: MapperGen.markersShape(vismel, 'filled'),
-        samplesShape: MapperGen.markersShape(vismel, 'filled'),
-        samplesSize: MapperGen.markersSize(vismel, config.map.sampleMarker.size),
-        lineColor: MapperGen.lineColor(vismel),
-      };
-      mapper.marginalColor = MapperGen.marginalColor(vismel, mapper.aggrFillColor);
+      // TODO: this is a bit weird: i base all the mapper on vismel, but vismel is only the very original base query...
+      let mapper = {};
+      if (aggrRT != undefined) {
+        mapper.aggrFillColor = MapperGen.markersFillColor(vismel, 'aggr');
+        mapper.aggrSize = MapperGen.markersSize(vismel, config.map.aggrMarker.size);
+        mapper.aggrShape = MapperGen.markersShape(vismel, 'filled');
+        mapper.lineColor = MapperGen.lineColor(vismel);
+      }
+      if (dataRT != undefined || testDataRT != undefined) {
+        mapper.samplesShape = MapperGen.markersShape(vismel, 'filled');
+        mapper.samplesSize = MapperGen.markersSize(vismel, config.map.sampleMarker.size);
+        if (dataRT != undefined)
+          mapper.dataFillColor = MapperGen.markersFillColor(vismel, 'data');
+        if (testDataRT != undefined)
+          mapper.testDataFillColor = MapperGen.markersFillColor(vismel, 'test data');
+      }
+      mapper.marginalColor = mapper.aggrFillColor;
+
+      // try any other ColorMap on uni or bidensity
+
+      // if (p2dRT != undefined) {
+      //   mapper.marginalColor = MapperGen.marginalColor(p2dRT.vismel, mapper.aggrFillColor);
+      // }
+      // if (mapper.marginalColor != undefined && ()) {
+      //
+      // }
+
+      // let mapper = {
+      //   aggrFillColor:  MapperGen.markersFillColor(vismel, 'aggr'),
+      //   dataFillColor: MapperGen.markersFillColor(vismel, 'data'),
+      //   testDataFillColor: MapperGen.markersFillColor(vismel, 'test data'),
+      //   aggrSize: MapperGen.markersSize(vismel, config.map.aggrMarker.size),
+      //   aggrShape: MapperGen.markersShape(vismel, 'filled'),
+      //   samplesShape: MapperGen.markersShape(vismel, 'filled'),
+      //   samplesSize: MapperGen.markersSize(vismel, config.map.sampleMarker.size),
+      //   lineColor: MapperGen.lineColor(vismel),
+      // };
+
+      // TODO:
+      // if there is an aggregation on color in the original vismel query:
+      // this aggr is turned to a split for p1drt and p2drt, but both result in a value of the same dimension
+      // we should really have an extent per yield dimension!
+
+      // must be based on p1dRT or p2dRT color usage
+      //mapper.marginalColor = MapperGen.marginalColor(vismel, mapper.aggrFillColor);
 
       // choose a neat chart type depending on data types
 
@@ -300,17 +334,34 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
     /**
      * For each key in <globalExtent> (i.e. a FieldUsage) add its value (i.e. the global extent of that FieldUsage) to the key as the attribute .extent.
-     * @param globalExtent A Map of FieldUsages to their global extents.
+     * @param fuExtent A Map of FieldUsages to their global extents.
      */
-    function attachToFieldUsages(globalExtent) {
-      for (let [fu, extent] of globalExtent.entries())
+    function attachToFieldUsages(fuExtent) {
+      for (let [fu, extent] of fuExtent.entries())
         fu.extent = extent;
     }
 
-    function normalizeGlobalExtents (globalExtent) {
-      for (let [fu, extent] of globalExtent.entries())
+    function normalizeGlobalExtents (fuExtent) {
+      for (let [fu, extent] of fuExtent.entries())
         if (PQL.hasNumericYield(fu))
-          globalExtent.set(fu, normalizeContinuousExtent(extent));
+          fuExtent.set(fu, normalizeContinuousExtent(extent));
+    }
+
+    function getYieldExtent (fuExtent) {
+      let yieldExtent = new Map();
+      for (let [fu, extent] of fuExtent.entries()) {
+        let name = fu.yields;
+        let soFarExtent = yieldExtent.get(name);
+        let updatedExtent = _extentUnion(soFarExtent, extent, PQL.hasDiscreteYield(fu));
+        yieldExtent.set(name, updatedExtent);
+      }
+      return yieldExtent;
+    }
+
+    function updateWithYieldExtent (fuExtent, yieldExtent) {
+      for (let fu of fuExtent.keys())
+        fuExtent.set(fu, yieldExtent.get(fu.yields))
+      return fuExtent;
     }
 
     /**
@@ -593,8 +644,65 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // normalizeExtents(vismelColl);
 
       // replace with new extents
+      let yieldExtent = getYieldExtent(globalExtent);
+      globalExtent = updateWithYieldExtent(globalExtent, yieldExtent);
       normalizeGlobalExtents(globalExtent);
       attachToFieldUsages(globalExtent);
+
+      // TODO: build mappers here!!
+      // build mappers for visual channels: fill, size, shape, (but not positional)
+
+      // /**
+      //  * Returns any vismel query of the collection, or undefined if there is none.
+      //  */
+      // function getAnyVismel(coll) {
+      //   if (!coll.enabled) {
+      //     return undefined;
+      //   }
+      //   if (coll.size.rows === 0 || coll.size.rows === 0)
+      //     return undefined;
+      //   return coll[0][0].vismel;
+      // }
+
+      // // mappers for aggregation facet
+      // if (aggrColl.enabled) {
+      //   let vismel = getAnyVismel(aggrColl); // TODO: in the future this could be replace with the templated query that expands to this collection
+      //   let used = vismel.used;
+      //   let aest = vismel.layers[0].aesthetics;
+      //   if (used.color) {
+      //     aest.color.aggrFillColorMapper = MapperGen.markersFillColor(vismel, 'aggr'); //MapperGen.markersFillColor(aest.color);
+      //     aest.color.lineColorMapper = MapperGen.lineColor(vismel); //MapperGen.markersFillColor(vismel, 'aggr');
+      //   }
+      //   if (used.size)
+      //     aest.size.aggrSizeMapper = MapperGen.markersSize(vismel, config.map.aggrMarker.size); //MapperGen.markersFillColor(aest.size);
+      //   if (used.shape)
+      //     aest.shape.aggrShapeMapper = MapperGen.markersShape(vismel, 'filled');// MapperGen.markersShape(aest.shape);
+      // }
+      //
+      // // mappers for sample facets
+      // for (let [coll, whichOne] of [[dataColl, 'training data'], [testDataColl, 'test data']]) {
+      //   if (coll.enabled) {
+      //     let vismel = getAnyVismel(coll);
+      //     let used = vismel.usages();
+      //     let aest = vismel.layers[0].aesthetics;
+      //     if (used.color) {
+      //       aest.color.lineColorMapper = MapperGen.lineColor(vismel);
+      //       if (whichOne === 'training data')
+      //         aest.color.dataFillColorMapper = MapperGen.markersFillColor(vismel, 'data');
+      //       else if (whichOne === 'test data')
+      //         aest.color.testDataFillColor = MapperGen.markersFillColor(vismel, 'test data');
+      //       else
+      //         throw RangeError("invalid whichOne value")
+      //     }
+      //     if (used.size)
+      //       aest.size.samplesSizeMapper = MapperGen.markersSize(vismel, config.map.sampleMarker.size);
+      //     if (used.shape)
+      //       aest.shape.samplesShapeMapper = MapperGen.markersShape(vismel, 'filled');
+      //   }
+      // }
+
+      // mappers for density
+      // TODO:
 
       /*
        * Shortcut to the layout attributes of a vismel query table.

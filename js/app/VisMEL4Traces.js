@@ -285,7 +285,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
         aestNew = biVismel.layers[0].aesthetics;
       // use color (convert if necessary)
       if (vismel.used.color && !VisMEL.isSplitMap(aestOld.color))
-        aestNew.color = VisMEL.toSplitMap(aest.color);
+        aestNew.color = VisMEL.toSplitMap(aestOld.color);
       else
         aestNew.color = aestOld.color;  
 

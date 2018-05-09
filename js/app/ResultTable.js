@@ -57,9 +57,10 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
   }
 
 
-  function getEmptyCollection (size) {
+  function getEmptyCollection (size, enabled) {
     let collection = new Array(size.rows);
     collection.size = size;
+    collection.enabled = enabled;
     for (let rIdx = 0; rIdx < size.rows; ++rIdx)
       collection[rIdx] = new Array(size.cols);
     return collection;
@@ -87,7 +88,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    */
    function aggrCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled=true) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
@@ -128,7 +129,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    */
   function samplesCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled=true, opts={}) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
@@ -173,7 +174,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    */
   function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
@@ -232,7 +233,7 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
    */
   function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled=true) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
