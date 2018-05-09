@@ -101,6 +101,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               infoBox.message(error);
             }
 
+            // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
+            // this is crucial to link corresponding axis and results in the visualization
+            // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
             let fieldUsageCacheMap = new Map();
 
             c.baseModelTable.model()

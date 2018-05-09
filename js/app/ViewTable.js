@@ -258,13 +258,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     /**
-     * Extents t
-     * @param rt
-     * @param globalExtent
+     * Adds the extent of a result tables <rt> to the global extent. By construction all pql queries
+     * share object-identical field usages, whenever appropriate.
+     * @param rt A result tables. See ResultTable.js to understand result tables.
+     * @param globalExtent A map of field usages to their global extents.
+     * @return {Map} The modified global extent maps.
      */
     function addResultTableExtents (rt, globalExtent) {
       if (rt === undefined)
-        return globalExtent
+        return globalExtent;
       for (let [fu, idx] of rt.fu2idx.entries()) {
         let discreteFlag = PQL.hasDiscreteYield(fu);
         globalExtent.set(fu, _extentUnion(globalExtent.get(fu), rt.extent[idx]))
@@ -272,7 +274,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return globalExtent;
     }
 
-
+    /**
+     * Adds the extent of the result tables in collection <coll> to the global extent. By construction all pql queries
+     * share object-identical field usages, whenever appropriate.
+     * @param coll A collection of result tables. See ResultTable.js to understand result tables.
+     * @param globalExtent A map of field usages to their global extents.
+     * @return {Map} The modified global extent maps.
+     */
     function addCollectionExtents (coll, globalExtent) {
       let size = coll.size;
       for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
