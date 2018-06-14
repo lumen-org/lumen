@@ -113,6 +113,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         mapper.aggrShape = MapperGen.markersShape(vismel, 'filled');
         mapper.lineColor = MapperGen.lineColor(vismel);
       }
+
       if (dataRT != undefined || testDataRT != undefined) {
         mapper.samplesShape = MapperGen.markersShape(vismel, 'filled');
         mapper.samplesSize = MapperGen.markersSize(vismel, config.map.sampleMarker.size);
@@ -121,7 +122,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         if (testDataRT != undefined)
           mapper.testDataFillColor = MapperGen.markersFillColor(vismel, 'test data');
       }
-      mapper.marginalColor = mapper.aggrFillColor;
+
+      //mapper.marginalColor = mapper.aggrFillColor;
 
       // try any other ColorMap on uni or bidensity
 
@@ -131,6 +133,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // if (mapper.marginalColor != undefined && ()) {
       //
       // }
+
+      if (p1dRT != undefined) {
+          let vismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
+          mapper.marginalColor = MapperGen.marginalColor(vismel) // todo: fix interface of function
+      }
 
       // let mapper = {
       //   aggrFillColor:  MapperGen.markersFillColor(vismel, 'aggr'),

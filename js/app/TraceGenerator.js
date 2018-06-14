@@ -388,11 +388,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let color = mapper.marginalColor;
         if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
           color = colorOfUniDensityTrace(vismel, xy, c);
-        } else {
+        }
+        if (_.isFunction(color)) {
           // apply the color mapping that color represents
           let colorIdx = fu2idx.get(vismel.layers[0].aesthetics.color.fu);
           color = color(data[0][colorIdx]);
-        }
+        } 
+        //else color = color;
 
 
         if (PQL.hasNumericYield(axisFu)) {
