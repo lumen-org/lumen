@@ -105,41 +105,34 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       vismel.used = used;
 
       // build all mappers
-      // TODO: this is a bit weird: i base all the mapper on vismel, but vismel is only the very original base query...
       let mapper = {};
       if (aggrRT != undefined) {
-        mapper.aggrFillColor = MapperGen.markersFillColor(vismel, 'aggr');
-        mapper.aggrSize = MapperGen.markersSize(vismel, config.map.aggrMarker.size);
-        mapper.aggrShape = MapperGen.markersShape(vismel, 'filled');
-        mapper.lineColor = MapperGen.lineColor(vismel);
+        let aggrVismel = aggrRT.vismel;
+        mapper.aggrFillColor = MapperGen.markersFillColor(aggrVismel, 'aggr');
+        mapper.aggrSize = MapperGen.markersSize(aggrVismel, config.map.aggrMarker.size);
+        mapper.aggrShape = MapperGen.markersShape(aggrVismel, 'filled');
+        mapper.lineColor = MapperGen.lineColor(aggrVismel);
       }
 
       if (dataRT != undefined || testDataRT != undefined) {
-        mapper.samplesShape = MapperGen.markersShape(vismel, 'filled');
-        mapper.samplesSize = MapperGen.markersSize(vismel, config.map.sampleMarker.size);
+        let dataVismel = (dataRT != undefined ? dataRT.vismel : testDataRT.vismel);
+        mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
+        mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
         if (dataRT != undefined)
-          mapper.dataFillColor = MapperGen.markersFillColor(vismel, 'data');
+          mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
         if (testDataRT != undefined)
-          mapper.testDataFillColor = MapperGen.markersFillColor(vismel, 'test data');
+          mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
       }
-
-      //mapper.marginalColor = mapper.aggrFillColor;
-
-      // try any other ColorMap on uni or bidensity
-
-      // if (p2dRT != undefined) {
-      //   mapper.marginalColor = MapperGen.marginalColor(p2dRT.vismel, mapper.aggrFillColor);
-      // }
-      // if (mapper.marginalColor != undefined && ()) {
-      //
-      // }
 
       if (p1dRT != undefined) {
-          let vismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
-          mapper.marginalColor = MapperGen.marginalColor(vismel) // todo: fix interface of function
+          let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
+          mapper.marginalColor = MapperGen.marginalColor(pvismel);
       }
 
-      // let mapper = {
+      // TODO: we will have color for p2dRT in the future - maybe.
+      // if (p2dRT != undefined) { ... }
+
+      // OLD: let mapper = {
       //   aggrFillColor:  MapperGen.markersFillColor(vismel, 'aggr'),
       //   dataFillColor: MapperGen.markersFillColor(vismel, 'data'),
       //   testDataFillColor: MapperGen.markersFillColor(vismel, 'test data'),
@@ -154,9 +147,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // if there is an aggregation on color in the original vismel query:
       // this aggr is turned to a split for p1drt and p2drt, but both result in a value of the same dimension
       // we should really have an extent per yield dimension!
-
-      // must be based on p1dRT or p2dRT color usage
-      //mapper.marginalColor = MapperGen.marginalColor(vismel, mapper.aggrFillColor);
 
       // choose a neat chart type depending on data types
 
