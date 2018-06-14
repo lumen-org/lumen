@@ -213,13 +213,13 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     // convert shape and size to splits in details
     for (let key of ['shape', 'size'])
       if (VisMEL.isMap(aest[key])) {
-        let fu = undefined;
+        let splitMap = undefined;
         if (VisMEL.isSplitMap(aest[key]))
-          fu = aest[key];
+          splitMap = aest[key];
         else
-          fu = VisMEL.toSplitMap(aest[key]);
+          splitMap = VisMEL.toSplitMap(aest[key]);
 //        fu = useUpdateHashmap(fu, reuse);
-        aest.details.push(fu);
+        aest.details.push(splitMap.fu);
         aest[key] = {};
       }
 

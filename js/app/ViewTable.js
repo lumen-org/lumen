@@ -873,7 +873,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                 axis.side = 'left';
 
               // [xy] is x or y axis; idx[xy] is index in view table
-              let rc = (xy === 'x' ? 'cols' : 'rows')
+              let rc = (xy === 'x' ? 'cols' : 'rows');
               let uniVismel = uniColl[idx.y][idx.x][yx].vismel,
                 xyFu = uniVismel.layout[rc][0];
               Object.assign(axis, getRangeAndTickMarks(xyFu.extent, xy));
