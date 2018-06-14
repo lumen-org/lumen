@@ -1039,7 +1039,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         zerolinewidth: c.plots.marginal.axis.width,
         tickformat: '.3f',
         hoverformat: '.3f',
-        // autorange: 'false',
+        rangemode: 'nonnegative',
         autorange: 'false',
         fixedrange: false,
         tickmode: 'auto', // TODO:

@@ -820,6 +820,15 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 //         }
 //       }
 
+      // Mapping of yields to spatial axis. This is for anchoring all axis with the same yield together.
+      let yield2axis = new Map();
+      function getSetYield2Axis(yield_, yieldAxisId) {
+        let axis = yield2axis.get(yield_);
+        if (axis === undefined)  // never overwrite existing mappings. This maybe makes it easier to debug...
+          yield2axis.set(yield_, yieldAxisId);
+        return axis;
+      }
+
       // loops over view cells
       this.at = new Array(this.size.rows);
       for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
@@ -828,9 +837,12 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
         let yaxis = config.axisGenerator.main(mainOffset.y, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
-          yid = idgen.main.y++;
+          yid = idgen.main.y++;        
 
         if (used.y) {
+          let yYield = getFieldUsage(idx.y,'y',vismelColl).yields;
+          yaxis.scaleanchor = getSetYield2Axis(yYield, "y"+yid);
+
           let axisTitleAnno = config.annotationGenerator.axis_title(
             getFieldUsage(idx.y, 'y', vismelColl).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
           axisTitles.push(axisTitleAnno);
@@ -849,6 +861,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
+              let xYield = getFieldUsage(idx.x,'x',vismelColl).yields;
+              xaxis.scaleanchor = getSetYield2Axis(xYield, "x"+xid);
+                
               let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
               axisTitles.push(axisTitleAnno);
             }
