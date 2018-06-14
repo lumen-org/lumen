@@ -112,6 +112,12 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     }
   }
 
+  /**
+   * Replace the fieldUsages of given vismel query with the values of the hashmap (if matching).
+   * @param vismel
+   * @param hashmap
+   * @return {*}
+   */
   function reuseIdenticalFieldUsagesAndMaps(vismel, hashmap) {
     if (vismel.used === undefined)
       vismel.used = vismel.usages();
@@ -165,28 +171,24 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    * @param reuse [Optional]. A map of FieldUsage hashes to FieldUsages. Contains mappings for those fieldusages to reuse. Note that the hashes are identical also if the value of FieldUsages are identical, even if they are not object-identical.
    *
    */
-  // function uniDensity(vismel, rowsOrCols) {
-  function uniDensity(vismel, rowsOrCols, reuse=undefined) {
+  function uniDensity(vismel, rowsOrCols) {
+  //function uniDensity(vismel, rowsOrCols, reuse=undefined) {
     checkItIsRowsOrCols(rowsOrCols);
     let invRoC = invertRowsOrCols(rowsOrCols);
 
-    if (reuse != undefined) {
-      // reuse the vismel given in <reuse>.
-      // what can potentially differ between <reuse> and the vismel to be generated?
-      //  * the field usages on x and y shelf
-      //  * that's it!
-      //  * but:
-
-      // need to store
-      //  * split over dims for positional axis: key = name to split ?? need a hash function:
-      //  * densities over dims for positional axis: key = ??? need a hash function
-
-      /*
-
-
-
-      */
-    }
+    // if (reuse != undefined) {
+    //   // TODO: what was the plan here????
+    //   //
+    //   // reuse the vismel given in <reuse>.
+    //   // what can potentially differ between <reuse> and the vismel to be generated?
+    //   //  * the field usages on x and y shelf
+    //   //  * that's it!
+    //   //  * but:
+    //
+    //   // need to store
+    //   //  * split over dims for positional axis: key = name to split ?? need a hash function:
+    //   //  * densities over dims for positional axis: key = ??? need a hash function
+    // }
 
     let axisFieldUsage = vismel.layout[rowsOrCols][0];
     if (!PQL.isFieldUsage(axisFieldUsage))
@@ -204,7 +206,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     //aest.color = useUpdateHashmap(aest.color, reuse);
 
     // convert shape and size to splits in details
-    for (let key in ['shape', 'size'])
+    for (let key of ['shape', 'size'])
       if (VisMEL.isMap(aest[key])) {
         let fu = undefined;
         if (VisMEL.isSplitMap(aest[key]))
@@ -291,7 +293,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
 
       // TODO: 
       // convert shape and size to splits in details
-      // for (let key in ['shape', 'size'])
+      // for (let key of ['shape', 'size'])
       //   if (vismel.used[key]) {
       //     if (VisMEL.isSplitMap(aestOld[key]))
       //       aestNew.details.push(aestOld[key]);
