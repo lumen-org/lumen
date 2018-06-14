@@ -285,7 +285,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     function _extentUnion(extent, data, discreteFlag) {
       if (extent === undefined) extent = [];
       if (data === undefined) data = [];
-      return (discreteFlag ? _.union(extent, data) : d3.extent([...extent, ...data]) );
+      if (discreteFlag === true)
+        return _.union(extent, data)
+      else if (discreteFlag === false)
+        return d3.extent([...extent, ...data])
+      throw RangeError("discreteFlag must be true or false, but is: " + discreteFlag.toString());
     }
 
     /**
@@ -300,7 +304,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         return globalExtent;
       for (let [fu, idx] of rt.fu2idx.entries()) {
         let discreteFlag = PQL.hasDiscreteYield(fu);
-        globalExtent.set(fu, _extentUnion(globalExtent.get(fu), rt.extent[idx]))
+        globalExtent.set(fu, _extentUnion(globalExtent.get(fu), rt.extent[idx], discreteFlag))
       }
       return globalExtent;
     }
