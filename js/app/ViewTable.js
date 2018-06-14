@@ -745,8 +745,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           xlen = getLevelSplits(qx).length,
           ylen = getLevelSplits(qy).length;
         if (fixedAxisWidth) {
-          templAxisSize.x = ylen=== 0 ? 0 : 1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSizePx.x);
-          templAxisSize.y = xlen=== 0 ? 0 : 1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSizePx.y);
+          templAxisSize.x = ylen === 0 ? 0 : (ylen * config.plots.layout.templ_axis_level_width.y / paneSizePx.x);
+          templAxisSize.y = xlen === 0 ? 0 : (xlen * config.plots.layout.templ_axis_level_width.x / paneSizePx.y);
         } else {
           templAxisSize.x = getLevelSplits(qy).length * config.plots.layout.templ_axis_level_ratio.y;
           templAxisSize.y = getLevelSplits(qx).length * config.plots.layout.templ_axis_level_ratio.x;
