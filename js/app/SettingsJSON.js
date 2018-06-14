@@ -10,7 +10,7 @@
  *   * all (user) configurable settings are stored in a JSON compatible format
  *   * any change to the settings results in a new JSON object representing the full settings
  *   * to these settings then augmentations are made:
- *      * utility functions are added whereever needed
+ *      * utility functions are added where ever needed
  *      * other non-json compatible things are added
  *    * the resulting augmented settings object is then made available in ViewSettings.js
  *    * and can be imported and used from other modules
@@ -18,8 +18,6 @@
  *  TODO:
  *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
  *    * TODO: add remaining dependencies
- *    * DONE: fix wrong encoding of color as strings
- *    * TODO: fix weird dependencies on color
  *    * TODO/DONE: make editor view more compact. I made some progress
  *    * DONE: make it hideable
  *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
@@ -906,7 +904,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         return title;
       return "<" + style + ">" + title + "</" + style + ">";
     };
-   c.plots.layout.ratio_marginal = used => (used ? c.plots.layout.main.marginal_used : c.plots.layout.main.marginal_unused);
+    c.plots.layout.ratio_marginal = used => (used ? c.plots.layout.main.marginal_used : c.plots.layout.main.marginal_unused);
 
     // .colors
     translateEnum(c.colors.density, ["primary_scale", "secondary_scale"], colorscalesEnum);
@@ -1126,11 +1124,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   return {
     makeSettings,
     updateSettings,
-    jsonSchema,  //
+    jsonSchema,
     jsonInitial,
     myTestSchema,
     myTestSchemaInitial: myTestInitial
-    //watch
   }
 
 });

@@ -29,24 +29,28 @@
  *  all atomic plots.
  *
  *  As said we need to link the various facets and atomic plots. The way these are linked is via the common 'parts' of
- *  their corresponding VisMEL and PQL query. This means we use the identical FieldUsages and BaseMaps in all the facets and atomic plots, where ever possible. This allows FieldUsages to act as
- *    (1) uniform keys for look ups of results in a result table (-> ResultTable) (i.e. the same FieldUsage will work in different result tables!)
- *    (2) uniform keys for look ups of extents within a single result table (-> ResultTable) (like above)
+ *  their corresponding VisMEL and PQL query. This means we use the identical FieldUsages and BaseMaps in all the facets
+ *  and atomic plots, where ever possible. This allows FieldUsages to act as
+ *    (1) uniform keys for look-ups of results in a result table (-> ResultTable) (i.e. the same FieldUsage will work in different result tables!)
+ *    (2) uniform keys for look-ups of extents within a single result table (-> ResultTable) (like above)
  *    (3) and since (2) Field Usages act as unique, global keys for the global extent of a Field Usage.
  *
  * In short: using the identical FieldUsage and FieldMaps across multiple PQL/VisMEL queries allows to link them!
  *
- * Challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we need to keep track of the FieldUsage and FieldMaps already created. Take, for example, the table of vismel queries created for the marginal densities. They should all reuse the same density FU, but at the moment are created independently from each other. How can we achieve the reuse here?
- *
- *
+ * Challenge: when deriving all these VisMEL queries for all the traces and atomic plots, we need to keep track of the
+ * FieldUsage and FieldMaps already created. Take, for example, the table of vismel queries created for the marginal
+ * densities. They should all reuse the same density FU, but at the moment are created independently from each other.
+ * How can we achieve the reuse here?
  *
  * An open question is: which FieldUsages should NOT be shared?
  *  * What about the filters created by the expansion of the table algebra expressions?
- *    Answer: We could reuse them, but it is not necessary because the linking is not required for such filters. So for the sake of simplicity we do not reuse them.
- *  * I cannot think of any.
+ *    Answer: We could reuse them, but it is not necessary because the linking is not required for such filters. So for
+ *    the sake of simplicity we do not reuse them.
+ *  * I cannot think of any other.
  *
- * Do the FieldUsages actually 'match', i.e. is it sufficient to look for matching FieldUsage in order to find common global extents?
- * Take a visualization that consists of a larger visualization table. Do the queries that should match between the cells actually match?
+ * Do the FieldUsages actually 'match', i.e. is it sufficient to look for matching FieldUsage in order to find common
+ * global extents? Take a visualization that consists of a larger visualization table. Do the queries that should match
+ * between the cells actually match?
  *   I think so. It seems to work for all (relevant) types of FieldUsages:
  *     * Aggregations (not density/probability): e.g. query = "predict sex given age"
  *       This query is identical across all cells, even though the condition for age might differ, e.g. because we split by age along x.
@@ -57,9 +61,11 @@
  * since the change is automatically "propagated" to all relevant queries - since they in fact use the same field usage.
  *
  * Issue: Rebasing models/queries:
- *    What about rebasing of queries? Can we even share all the field usages at all? The different vismel queries for different atomic plots are executed against different models. And different model have different instances of <Field> at their 'core'...
+ *    What about rebasing of queries? Can we even share all the field usages at all? The different vismel queries for
+ *    different atomic plots are executed against different models. And different model have different instances of
+ *    <Field> at their 'core'...
  *    Answer: Yes, this is a bit messy. The different models do have different instances of <Field>, even for the same dimensions. Read on
- *    TODO/Note: One way to make it cleaner: Decouple PQL/VisMEL queries and models stronger. Right now the coupling is the reference of a particular models Field in the query. This should not happen. It would be enough to reference the Field by its name, for example. Actually, however, the only real coupling here, is that Fields also store their extent and domain (since these are / could be different for each model, and are not directly relevant for the query statement. We do not use this information at any point _after_ we constructed the queries. Hence, we should be fine with leaving things as they are.
+ *    TODO/Note: One way to make it cleaner: Decouple PQL/VisMEL queries and models stronger. Right now the coupling is the reference of a particular model's Field in the query. This should not happen. It would be enough to reference the Field by its name, for example. Actually, however, the only real coupling here, is that Fields also store their extent and domain (since these are / could be different for each model, and are not directly relevant for the query statement. We do not use this information at any point _after_ we constructed the queries. Hence, we should be fine with leaving things as they are.
  *
  * TODO Issue: better way to derive queries:
  *
@@ -67,7 +73,7 @@
  *
  *   Better: user query -> base query -> specialized base queries --(expand each)--> specialized query tables
  *
- * Advantage: it would automatically solve the problem of reuse field usags along x and y axis.
+ * Advantage: it would automatically solve the problem of reuse field usages along x and y axis.
  *
  * @module VisMEL
  * @author Philipp Lucas
@@ -94,10 +100,9 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
 
 
   /**
-   * Either <hashmap> contains a mapping for obj.prop.toString(). Then the value of the hashmap replaces the value of <obj.prop>
-   * Or hashmap has no mapping for obj.prop.toString(). Then the value of obj.prop stay unchanged, but the mapping is added to hashmap.
-   * @param obj An object that has property <prop>
-   * @param prop A property name.
+   * Either <hashmap> contains a mapping for obj.toString(). Then the value of the hashmap replaces the value of <obj>
+   * Or hashmap has no mapping for obj.toString(). Then the value of obj stay unchanged, but the mapping is added to hashmap.
+   * @param obj An object
    * @param hashmap A hashmap.
    */
   function useUpdateHashmap (obj, hashmap) {
