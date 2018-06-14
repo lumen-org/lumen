@@ -61,7 +61,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      */
     function splitExtentToString (split) {
 
-      if (split.extent == undefined)
+      if (split.extent === undefined)
         throw RangeError("you must set the extent of a split before calling this function.");
 
       // setup formatter
@@ -91,8 +91,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     
     function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
-      for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
-        if (rt != undefined)
+      for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
+        if (rt !== undefined)
           rt.formatter = resultTableFormatter(rt);
 
       let traces = [],
@@ -106,7 +106,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // build all mappers
       let mapper = {};
-      if (aggrRT != undefined) {
+      if (aggrRT !== undefined) {
         let aggrVismel = aggrRT.vismel;
         mapper.aggrFillColor = MapperGen.markersFillColor(aggrVismel, 'aggr');
         mapper.aggrSize = MapperGen.markersSize(aggrVismel, config.map.aggrMarker.size);
@@ -114,17 +114,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         mapper.lineColor = MapperGen.lineColor(aggrVismel);
       }
 
-      if (dataRT != undefined || testDataRT != undefined) {
-        let dataVismel = (dataRT != undefined ? dataRT.vismel : testDataRT.vismel);
+      if (dataRT !== undefined || testDataRT !== undefined) {
+        let dataVismel = (dataRT !== undefined ? dataRT.vismel : testDataRT.vismel);
         mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
         mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
-        if (dataRT != undefined)
+        if (dataRT !== undefined)
           mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
-        if (testDataRT != undefined)
+        if (testDataRT !== undefined)
           mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
       }
 
-      if (p1dRT != undefined) {
+      if (p1dRT !== undefined) {
           let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
           mapper.marginalColor = MapperGen.marginalColor(pvismel);
       }
@@ -310,6 +310,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      * share object-identical field usages, whenever appropriate.
      * @param coll A collection of result tables. See ResultTable.js to understand result tables.
      * @param globalExtent A map of field usages to their global extents.
+     * @param attr The attribute of each entry in the collection where to attach the globelExtent.
      * @return {Map} The modified global extent maps.
      */
     function addCollectionExtents (coll, globalExtent, attr=undefined) {
@@ -418,7 +419,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let rt = resultColl[rIdx][cIdx],
             q = vismelColl.at[rIdx][cIdx];
 
-          if (rt == undefined)
+          if (rt === undefined)
             continue;
 
           // aesthetics extents
@@ -569,8 +570,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
-          let major = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
-          axes[xy + 'axis' + majorId] = major;
+          axes[xy + 'axis' + majorId] = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
         }
 
         repeat *= ticks.length;
@@ -865,9 +865,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               if (xy === 'x')
-                axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+                axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
               else
-                axis.showticklabels = idx[yx] == 0; // disables tick labels for all but one of the marginal
+                axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
 
               if (axis.side === 'right')
                 axis.side = 'left';
@@ -887,7 +887,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
-          if (used.x && used.y && biColl[0][0] != undefined) {
+          if (used.x && used.y && biColl[0][0] !== undefined) {
             let rt = biColl[idx.y][idx.x];
             // build up helper variables needed later and to check if we are in the quant-categorical case
             let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
