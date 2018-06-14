@@ -809,11 +809,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       };
       trace.marker = {
         color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
+        //color: cfg.stroke.color,
         size: applyMap(rt, mapper.size, aest.size.fu, fu2idx),
         sizemode: 'area',
         symbol: applyMap(rt, mapper.shape, aest.shape.fu, fu2idx),
         line: {
           color: cfg.stroke.color,
+          //color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
           width: cfg.stroke.width,
         },
         maxDisplayed: cfg.maxDisplayed

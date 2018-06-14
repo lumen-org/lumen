@@ -482,9 +482,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         width: 1.5,
       },
       size: {
-        min: 3, // HACK: used to be 8.
-        max: 160,
-        def: 14,
+        min: 10, // HACK: used to be 8.
+        max: 500,
+        def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
@@ -504,8 +504,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
     sampleMarker: {
       size: {
-        min: 6,
-        max: 40,
+        min: 10,
+        max: 500,
         def: 8,
       },
       stroke: {
@@ -859,9 +859,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
     // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
     c.shapes = {
-      open: _.range(100, 144),
-      filled: _.range(44),
+      // filled: _.range(44),
+      filled: [0 /*circle*/,  3/*plus*/, 1 /*square*/, 4 /*X*/, 2 /*diamond*/, 17 /*star*/, 5,6,7,8 /*triangles...*/],
     };
+    c.shapes.open = c.shapes.filled.map(n => n+100);
     return c;
   }
 
