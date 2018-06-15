@@ -7,6 +7,13 @@
  *   pane : the entire space take by a visualization
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
+ * Axis coupling / anchoring:
+ *   Certain axes should zoom together, such that the visualization stays comparable at all times. Here, we apply the following schema:
+ *     * marginal axes have fixed ranges: there is no need to zoom into them. In contrary, doing so accidentally distracts the user.
+ *     * all main axis that encode the same dimension (i.e. the corresponding FieldUsage has the same yield) are anchored.
+ *
+ *   Note: this is just about spatial axis anchoring.
+ *
  * @module ViewTable
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
@@ -61,7 +68,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      */
     function splitExtentToString (split) {
 
-      if (split.extent == undefined)
+      if (split.extent === undefined)
         throw RangeError("you must set the extent of a split before calling this function.");
 
       // setup formatter
@@ -89,41 +96,64 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return axis
     }
     
-    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, query, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
-
+    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
-      for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT == undefined ? [] : [p1dRT.x, p1dRT.y]))
-        if (rt != undefined)
+      for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
+        if (rt !== undefined)
           rt.formatter = resultTableFormatter(rt);
 
       let traces = [],
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0];
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0];
 
-      let used = {
-        color: aest.color instanceof VisMEL.ColorMap,
-        shape: aest.shape instanceof VisMEL.ShapeMap,
-        size: aest.size instanceof VisMEL.SizeMap,
-        details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
-        x: xfu !== undefined,
-        y: yfu !== undefined,
-      };
       // attach to query object, so we can reuse it internally
-      query.used = used;
+      let used = vismel.usages();
+      vismel.used = used;
 
       // build all mappers
-      let mapper = {
-        aggrFillColor: MapperGen.markersFillColor(query, 'aggr'),
-        dataFillColor: MapperGen.markersFillColor(query, 'data'),
-        testDataFillColor: MapperGen.markersFillColor(query, 'test data'),
-        aggrSize: MapperGen.markersSize(query, config.map.aggrMarker.size),
-        aggrShape: MapperGen.markersShape(query, 'filled'),
-        samplesShape: MapperGen.markersShape(query, 'filled'),
-        samplesSize: MapperGen.markersSize(query, config.map.sampleMarker.size),
-        lineColor: MapperGen.lineColor(query),
-      };
-      mapper.marginalColor = MapperGen.marginalColor(query, mapper.aggrFillColor);
+      let mapper = {};
+      if (aggrRT !== undefined) {
+        let aggrVismel = aggrRT.vismel;
+        mapper.aggrFillColor = MapperGen.markersFillColor(aggrVismel, 'aggr');
+        mapper.aggrSize = MapperGen.markersSize(aggrVismel, config.map.aggrMarker.size);
+        mapper.aggrShape = MapperGen.markersShape(aggrVismel, 'filled');
+        mapper.lineColor = MapperGen.lineColor(aggrVismel);
+      }
+
+      if (dataRT !== undefined || testDataRT !== undefined) {
+        let dataVismel = (dataRT !== undefined ? dataRT.vismel : testDataRT.vismel);
+        mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
+        mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
+        if (dataRT !== undefined)
+          mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
+        if (testDataRT !== undefined)
+          mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
+      }
+
+      if (p1dRT !== undefined) {
+          let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
+          mapper.marginalColor = MapperGen.marginalColor(pvismel);
+      }
+
+      // TODO: we will have color for p2dRT in the future - maybe.
+      // if (p2dRT != undefined) { ... }
+
+      // OLD: let mapper = {
+      //   aggrFillColor:  MapperGen.markersFillColor(vismel, 'aggr'),
+      //   dataFillColor: MapperGen.markersFillColor(vismel, 'data'),
+      //   testDataFillColor: MapperGen.markersFillColor(vismel, 'test data'),
+      //   aggrSize: MapperGen.markersSize(vismel, config.map.aggrMarker.size),
+      //   aggrShape: MapperGen.markersShape(vismel, 'filled'),
+      //   samplesShape: MapperGen.markersShape(vismel, 'filled'),
+      //   samplesSize: MapperGen.markersSize(vismel, config.map.sampleMarker.size),
+      //   lineColor: MapperGen.lineColor(vismel),
+      // };
+
+      // TODO:
+      // if there is an aggregation on color in the original vismel query:
+      // this aggr is turned to a split for p1drt and p2drt, but both result in a value of the same dimension
+      // we should really have an extent per yield dimension!
 
       // choose a neat chart type depending on data types
 
@@ -144,39 +174,39 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             if (used.color & !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
+              traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
             else { // if (used.shape) {
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
-              traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
-              traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-              traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-              traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+              traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+              traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+              traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
             }
 
           }
           // at least on is dependent -> line chart
           else {
-            traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
-            traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-            traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+            traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+            traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+            traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
           }
         }
 
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
 
           // hard to show splits of more than rows and cols: overlap in visualization
           // TODO: solve by creating a bubble plot/jittered plot
@@ -189,44 +219,44 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             // TODO: the next line is new, test it! should disallow other splits
             && !PQL.isSplit(aest.color.fu) && !used.shape && !used.size && !used.details) {
             // don't show bi density in this case
-            traces.push(...TraceGen.aggrHeatmap(aggrRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           }
         }
 
         // one is discrete, the other numerical
         else {
-          traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
-          traces.push(...TraceGen.biQC(p2dRT, query, mapper, mainAxis, catQuantAxisIds));
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis));
+          traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.biQC(p2dRT, mapper, mainAxis, catQuantAxisIds));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
         }
       }
 
       // only one of x-axis and y-axis is in use
       else if (used.x && !used.y || !used.x && used.y) {
         let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
-        traces.push(...TraceGen.uni(p1dRT, query, mapper, mainAxis, marginalAxis));
+        traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
         // the one in use is categorical
         if (PQL.hasDiscreteYield(axisFu)) {
           // anything special here to do?
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, query, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, query, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, query, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+          traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
-        traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+        traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       } else {
-        traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
+        traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       }
 
       return traces;
@@ -255,6 +285,95 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     /**
+     * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
+     * Note: it gracefully forgives undefined arguments in extent and newData
+     * @returns The updated extent
+     */
+    function _extentUnion(extent, data, discreteFlag) {
+      if (extent === undefined) extent = [];
+      if (data === undefined) data = [];
+      if (discreteFlag === true)
+        return _.union(extent, data)
+      else if (discreteFlag === false)
+        return d3.extent([...extent, ...data])
+      throw RangeError("discreteFlag must be true or false, but is: " + discreteFlag.toString());
+    }
+
+    /**
+     * Adds the extent of a result tables <rt> to the global extent. By construction all pql queries
+     * share object-identical field usages, whenever appropriate.
+     * @param rt A result tables. See ResultTable.js to understand result tables.
+     * @param globalExtent A map of field usages to their global extents.
+     * @return {Map} The modified global extent maps.
+     */
+    function addResultTableExtents (rt, globalExtent) {
+      if (rt === undefined)
+        return globalExtent;
+      for (let [fu, idx] of rt.fu2idx.entries()) {
+        let discreteFlag = PQL.hasDiscreteYield(fu);
+        globalExtent.set(fu, _extentUnion(globalExtent.get(fu), rt.extent[idx], discreteFlag))
+      }
+      return globalExtent;
+    }
+
+    /**
+     * Adds the extent of the result tables in collection <coll> to the global extent. By construction all pql queries
+     * share object-identical field usages, whenever appropriate.
+     * @param coll A collection of result tables. See ResultTable.js to understand result tables.
+     * @param globalExtent A map of field usages to their global extents.
+     * @param attr The attribute of each entry in the collection where to attach the globelExtent.
+     * @return {Map} The modified global extent maps.
+     */
+    function addCollectionExtents (coll, globalExtent, attr=undefined) {
+      let size = coll.size;
+      for (let rIdx = 0; rIdx < size.rows; ++rIdx)
+        for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
+          let rt = coll[rIdx][cIdx];
+          if (attr === undefined)
+            addResultTableExtents(rt, globalExtent);
+          else {
+            if (rt === undefined)
+              continue;  // rt is undefined if neither of the marginals are in use
+            addResultTableExtents(rt[attr], globalExtent);
+          }
+        }
+          
+      return globalExtent;
+    }
+
+    /**
+     * For each key in <globalExtent> (i.e. a FieldUsage) add its value (i.e. the global extent of that FieldUsage) to the key as the attribute .extent.
+     * @param fuExtent A Map of FieldUsages to their global extents.
+     */
+    function attachToFieldUsages(fuExtent) {
+      for (let [fu, extent] of fuExtent.entries())
+        fu.extent = extent;
+    }
+
+    function normalizeGlobalExtents (fuExtent) {
+      for (let [fu, extent] of fuExtent.entries())
+        if (PQL.hasNumericYield(fu))
+          fuExtent.set(fu, normalizeContinuousExtent(extent));
+    }
+
+    function getYieldExtent (fuExtent) {
+      let yieldExtent = new Map();
+      for (let [fu, extent] of fuExtent.entries()) {
+        let name = fu.yields;
+        let soFarExtent = yieldExtent.get(name);
+        let updatedExtent = _extentUnion(soFarExtent, extent, PQL.hasDiscreteYield(fu));
+        yieldExtent.set(name, updatedExtent);
+      }
+      return yieldExtent;
+    }
+
+    function updateWithYieldExtent (fuExtent, yieldExtent) {
+      for (let fu of fuExtent.keys())
+        fuExtent.set(fu, yieldExtent.get(fu.yields))
+      return fuExtent;
+    }
+
+    /**
      * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
      * inherited from templated query, extents are also available at the atomic query.
      *
@@ -270,15 +389,16 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
      *
      * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
      *
-     * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... Ah, it's just messy... :-(
+     * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... It's a bit messy... :-(
      *
-     * Note: you cannot use the .extent or .domain of any field of any field usage that query and queries consists of The reason is that these are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
+     * Note: you cannot use the .extent or .domain of any FIELD (not field usage) of any field usage that the vismel queries consists of. The reason is two fold:
+     *   (1) they have a different semantic, namely .extent stores a 'meaningful' range of values where the density function is considerably larger than 0, and .domain stores the allowed domain of the dimension of that model.
+     *   (2) these values are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
      *
-     * @param query
-     * @param queries
-     * @param results
+     * @param vismelColl
+     * @param resultColl
      */
-    var attachExtents = function (queries, results) {
+    function attachExtents (vismelColl, resultColl) {
       /**
        * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
        * Note: it gracefully forgives undefined arguments in extent and newData
@@ -293,7 +413,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
       // retrieve FieldUsages of aestetics for later reuse
       let aes = new Map();
-      let qa = queries.base.layers[0].aesthetics;
+      let qa = vismelColl.base.layers[0].aesthetics;
       if (qa.color instanceof VisMEL.ColorMap)
         aes.set('color', qa.color.fu);
       if (qa.shape instanceof VisMEL.ShapeMap)
@@ -303,14 +423,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       /// iterate over results for each atomic query
       // all aesthetics of all atomic queries simply refer to the base query one.
-      let row = new Array(queries.size.rows);
-      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
+      let row = new Array(vismelColl.size.rows);
+      for (let rIdx = 0; rIdx < vismelColl.size.rows; ++rIdx) {
         row[rIdx] = [];
-        for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-          let rt = results[rIdx][cIdx],
-            q = queries.at[rIdx][cIdx];
+        for (let cIdx = 0; cIdx < vismelColl.size.cols; ++cIdx) {
+          let rt = resultColl[rIdx][cIdx],
+            q = vismelColl.at[rIdx][cIdx];
 
-          if (rt == undefined)
+          if (rt === undefined)
             continue;
 
           // aesthetics extents
@@ -388,9 +508,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     /**
      * @param coll The collection to extract the extent of. An 3 dimensional array, where the first two dimensions represent 'y' and  'x' and the last dimension contains the values.
      * @param xy Get row-wise (xy === 'y') or column-wise (xy === 'x') extents.
-     * @param accessor Accessor function to extract the wanted attribute from a value of the collection.
      */
-    function xyCollectionExtent(coll, xy, accessor) {
+    function xyCollectionExtent(coll, xy) {
       let yx = _invXY(xy),
         extents = [],
         len = {
@@ -401,7 +520,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       for (idx[xy] = 0; idx[xy] < len[xy]; ++idx[xy]) {
         let xyExtent = []; // extent across one row or column
         for (idx[yx] = 0; idx[yx] < len[yx]; ++idx[yx]) {
-          let cellExtent = accessor(coll[idx.y][idx.x]); // extent of selected attribute for one atomic plot (of given collection)
+          let rt = coll[idx.y][idx.x][yx],
+            rowsOrCols = (xy === 'x'? 'cols': 'rows'),
+            fu = rt.vismel.layout[rowsOrCols][0],
+            i = rt.fu2idx.get(fu),
+            cellExtent = rt.extent[i];
           xyExtent = d3.extent([...xyExtent, ...cellExtent]);
         }
         extents.push(xyExtent);
@@ -458,15 +581,13 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             majorOffset = offset[xy] + majorLength*r;
 
           // new major axis (i.e. x axis for xy === x)
-          let major = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
-          axes[xy + 'axis' + majorId] = major;
+          axes[xy + 'axis' + majorId] = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
         }
 
         repeat *= ticks.length;
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        //let annotation = config.annotationGenerator.templ_level_title(split.yields, xy, minorId);
         let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
         annotations.push(annotation);
       });
@@ -487,47 +608,120 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
 
     /**
-     * A ViewTable takes a data collections and a query collection and turns it into an actual visual representation.
+     * A ViewTable takes data collections and a query collection and turns it into an actual visual representation.
      * This visualization is attached to the DOM within the given pane <div> object.
      *
      * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
      *
      * @param pane A <div> element. This must already have a width and height.
-     * @param aggrColl The {@link Collection} to visualize with this viewTable.
+     * @param aggrColl The {@link Collection} of predictions to visualize.
+     * @param dataColl The {@link Collection} of training data to visualize.
+     * @param testDataColl The {@link Collection} of test data to visualize.
+     * @param uniColl The {@link Collection} of marignal probability values to visualize.
+     * @param biColl The {@link Collection} of probability values to visualize.
      * @constructor
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, queries, queryConfig) {
+    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
       this.testDataCollection = testDataColl;
-      this.queries = queries;
       this.size = aggrColl.size;
       this.size.x = this.size.cols;
       this.size.y = this.size.rows;
-      let query = queries.base;
+      this.vismels = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
+      let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
-      // extents
-      initEmptyExtents(queries);
-      attachExtents(queries, this.aggrCollection);
-      //if (dataenabled)
-      attachExtents(queries, this.dataCollection);
-      attachExtents(queries, this.testDataCollection);
-      normalizeExtents(queries);
+      let globalExtent = new Map();
+      for (let obj of [aggrColl, dataColl, testDataColl, biColl])
+        addCollectionExtents(obj, globalExtent);
+      for (let xy of ['x', 'y'])
+        addCollectionExtents(uniColl, globalExtent, xy);
 
-      // shortcut to the queries layout attributes
-      // accessor to the layout fields usage for a certain row(y)/col(x) in the view table
-      let getFieldUsage = (idx, xy) => {
-        return xy === 'x' ? queries.at[0][idx].layout.cols[0] : queries.at[idx][0].layout.rows[0];
+      // // extents
+      // initEmptyExtents(vismelColl);
+      // attachExtents(vismelColl, this.aggrCollection);
+      // attachExtents(vismelColl, this.dataCollection);
+      // attachExtents(vismelColl, this.testDataCollection);
+      // // TODO: what about uniColl and BiColl?
+      // normalizeExtents(vismelColl);
+
+      // replace with new extents
+      let yieldExtent = getYieldExtent(globalExtent);
+      globalExtent = updateWithYieldExtent(globalExtent, yieldExtent);
+      normalizeGlobalExtents(globalExtent);
+      attachToFieldUsages(globalExtent);
+
+      // TODO: build mappers here!!
+      // build mappers for visual channels: fill, size, shape, (but not positional)
+
+      // /**
+      //  * Returns any vismel query of the collection, or undefined if there is none.
+      //  */
+      // function getAnyVismel(coll) {
+      //   if (!coll.enabled) {
+      //     return undefined;
+      //   }
+      //   if (coll.size.rows === 0 || coll.size.rows === 0)
+      //     return undefined;
+      //   return coll[0][0].vismel;
+      // }
+
+      // // mappers for aggregation facet
+      // if (aggrColl.enabled) {
+      //   let vismel = getAnyVismel(aggrColl); // TODO: in the future this could be replace with the templated query that expands to this collection
+      //   let used = vismel.used;
+      //   let aest = vismel.layers[0].aesthetics;
+      //   if (used.color) {
+      //     aest.color.aggrFillColorMapper = MapperGen.markersFillColor(vismel, 'aggr'); //MapperGen.markersFillColor(aest.color);
+      //     aest.color.lineColorMapper = MapperGen.lineColor(vismel); //MapperGen.markersFillColor(vismel, 'aggr');
+      //   }
+      //   if (used.size)
+      //     aest.size.aggrSizeMapper = MapperGen.markersSize(vismel, config.map.aggrMarker.size); //MapperGen.markersFillColor(aest.size);
+      //   if (used.shape)
+      //     aest.shape.aggrShapeMapper = MapperGen.markersShape(vismel, 'filled');// MapperGen.markersShape(aest.shape);
+      // }
+      //
+      // // mappers for sample facets
+      // for (let [coll, whichOne] of [[dataColl, 'training data'], [testDataColl, 'test data']]) {
+      //   if (coll.enabled) {
+      //     let vismel = getAnyVismel(coll);
+      //     let used = vismel.usages();
+      //     let aest = vismel.layers[0].aesthetics;
+      //     if (used.color) {
+      //       aest.color.lineColorMapper = MapperGen.lineColor(vismel);
+      //       if (whichOne === 'training data')
+      //         aest.color.dataFillColorMapper = MapperGen.markersFillColor(vismel, 'data');
+      //       else if (whichOne === 'test data')
+      //         aest.color.testDataFillColor = MapperGen.markersFillColor(vismel, 'test data');
+      //       else
+      //         throw RangeError("invalid whichOne value")
+      //     }
+      //     if (used.size)
+      //       aest.size.samplesSizeMapper = MapperGen.markersSize(vismel, config.map.sampleMarker.size);
+      //     if (used.shape)
+      //       aest.shape.samplesShapeMapper = MapperGen.markersShape(vismel, 'filled');
+      //   }
+      // }
+
+      // mappers for density
+      // TODO:
+
+      /*
+       * Shortcut to the layout attributes of a vismel query table.
+       * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
+       */
+      let getFieldUsage = (idx, xy, vismelQT) => {
+        return xy === 'x' ? vismelQT.at[0][idx].layout.cols[0] : vismelQT.at[idx][0].layout.rows[0];
       };
 
-      let qx = query.layout.cols,
-       qy = query.layout.rows;
+      let qx = vismel.layout.cols,
+       qy = vismel.layout.rows;
 
       // flag whether or not in an atomic plot the x axis (.x) (y axis (.y)) is in use, i.e. encodes some fieldusage of the model
       let used = {
@@ -558,8 +752,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           xlen = getLevelSplits(qx).length,
           ylen = getLevelSplits(qy).length;
         if (fixedAxisWidth) {
-          templAxisSize.x = ylen=== 0 ? 0 : 1 * (ylen * config.plots.layout.templ_axis_level_width.y / paneSizePx.x);
-          templAxisSize.y = xlen=== 0 ? 0 : 1 * (xlen * config.plots.layout.templ_axis_level_width.x / paneSizePx.y);
+          templAxisSize.x = ylen === 0 ? 0 : (ylen * config.plots.layout.templ_axis_level_width.y / paneSizePx.x);
+          templAxisSize.y = xlen === 0 ? 0 : (xlen * config.plots.layout.templ_axis_level_width.x / paneSizePx.y);
         } else {
           templAxisSize.x = getLevelSplits(qy).length * config.plots.layout.templ_axis_level_ratio.y;
           templAxisSize.y = getLevelSplits(qx).length * config.plots.layout.templ_axis_level_ratio.x;
@@ -622,14 +816,24 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // indexing over x and y
       let idx = {x:0, y:0};
 
-      // need some additional statistics on 1d density: row and column wise extent
-      uniColl.extent = {};
-      for (let xy of ['x','y']) {
-        let yx = _invXY(xy);
-        if (marginal[xy]) {  // marginal active?
-          uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
-          uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
-        }
+//       // need some additional statistics on 1d density: row and column wise extent
+//       uniColl.extent = {};
+//       for (let xy of ['x','y']) {
+//         let yx = _invXY(xy);
+//         if (marginal[xy]) {  // marginal active?
+//           //uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
+//           uniColl.extent[xy] = xyCollectionExtent(uniColl, xy);
+//           uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
+//         }
+//       }
+
+      // Mapping of yields to spatial axis. This is for anchoring all axis with the same yield together.
+      let yield2axis = new Map();
+      function getSetYield2Axis(yield_, yieldAxisId) {
+        let axis = yield2axis.get(yield_);
+        if (axis === undefined)  // never overwrite existing mappings. This maybe makes it easier to debug...
+          yield2axis.set(yield_, yieldAxisId);
+        return axis;
       }
 
       // loops over view cells
@@ -640,11 +844,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
         let yaxis = config.axisGenerator.main(mainOffset.y, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
-          yid = idgen.main.y++;
+          yid = idgen.main.y++;        
 
         if (used.y) {
+          let yYield = getFieldUsage(idx.y,'y',vismelColl).yields;
+          yaxis.scaleanchor = getSetYield2Axis(yYield, "y"+yid);
+
           let axisTitleAnno = config.annotationGenerator.axis_title(
-            getFieldUsage(idx.y, 'y').yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
+            getFieldUsage(idx.y, 'y', vismelColl).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
           axisTitles.push(axisTitleAnno);
         }
         layout["yaxis" + yid] = yaxis;
@@ -661,7 +868,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
             xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
-              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x').yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
+              let xYield = getFieldUsage(idx.x,'x',vismelColl).yields;
+              xaxis.scaleanchor = getSetYield2Axis(xYield, "x"+xid);
+                
+              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
               axisTitles.push(axisTitleAnno);
             }
             layout["xaxis" + xid] = xaxis;
@@ -681,16 +891,18 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               if (xy === 'x')
-                axis.showticklabels = idx[yx] == this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+                axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
               else
-                axis.showticklabels = idx[yx] == 0; // disables tick labels for all but one of the marginal
+                axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
 
               if (axis.side === 'right')
                 axis.side = 'left';
 
-              // [xy] is x or y axis; idx[xy] is index in view table, [1] is index of max of range.
-              let extent = uniColl.extent[xy][idx[xy]];
-              Object.assign(axis, getRangeAndTickMarks(extent, xy));
+              // [xy] is x or y axis; idx[xy] is index in view table
+              let rc = (xy === 'x' ? 'cols' : 'rows');
+              let uniVismel = uniColl[idx.y][idx.x][yx].vismel,
+                xyFu = uniVismel.layout[rc][0];
+              Object.assign(axis, getRangeAndTickMarks(xyFu.extent, xy));
 
               marginalAxisId[xy] = idgen.marginal[xy]++;
               layout[xy + "axis" + marginalAxisId[xy]] = axis;
@@ -701,20 +913,25 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
-          //OLD: dictionary of special cat-quant axis. Key is axis id, value is axis configuration.
-          //let catQuantAxes = {x: {}, y:{}};
-          if (used.x && used.y && biColl[0][0] != undefined) {
+          if (used.x && used.y && biColl[0][0] !== undefined) {
             let rt = biColl[idx.y][idx.x];
             // build up helper variables needed later and to check if we are in the quant-categorical case
-            let fu = {x: getFieldUsage(idx.x, 'x'), y: getFieldUsage(idx.y, 'y')},
-              fuType = {x: fu.x.yieldDataType, y: fu.y.yieldDataType},
-              catXY = (fuType.x === "string" ? 'x' : (fuType.y === "string" ? 'y' : undefined)),
-              quantXY = (fuType.x === "numerical" ? 'x' : (fuType.y === "numerical" ? 'y' : undefined));
+            let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
+              catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
+              quantXY = PQL.hasNumericYield(fu.x) ? 'x' : (PQL.hasNumericYield(fu.y) ? 'y' : undefined);
+
             if (catXY && quantXY) {
+              let catFu = fu[catXY],
+                catIdx = rt.fu2idx.get(catFu);
+
               // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
-              let catExtent = rt.extent[catXY === 'x' ? 0 : 1],
+              let catExtent = rt.extent[catIdx],
                 n = catExtent.length,
                 d = axisLength.main[catXY] / n;
+
+              let pFu = rt.vismel.layout[PQL.hasDiscreteYield(fu.x) ? 'cols' : 'rows'][1],
+                pIdx = rt.fu2idx.get(pFu),
+                pExtent = rt.extent[pIdx];
 
               // build additional axes along categorial dimension, i.e. the axes that will encode density
               // need as many axis as there is categories!
@@ -726,8 +943,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
                   axis = config.axisGenerator.marginal(o, d*(r-1)/r, mainOffset[quantXY], catXY);
                 axis.anchor = mainAxes[quantXY][idx[quantXY]];
 
-                // set axis labels and tick marks
-                let pExtent = biColl[idx.y][idx.x].extent[2];
+                // set axis labels and tick marks                
                 Object.assign(axis, getRangeAndTickMarks(pExtent,catXY));
                 //axis.showticklabels = false;
                 //axis.tickcolor
@@ -755,7 +971,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], queries.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
 
           traces.push(...atomicTraces);
         }
@@ -763,10 +979,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // add templating axis
       let [templx, annotationsx] = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, qx, idgen.templating);
-
       let [temply, annotationsy] = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
-
-
       Object.assign(layout, templx, temply);
 
       // add 'global' layout options

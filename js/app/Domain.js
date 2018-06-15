@@ -165,6 +165,10 @@ define(['./utils'], function (utils) {
         return [this.l, this.h];
     }
 
+    get values() {
+      return [this.l, this.h];
+    }
+
     /**
      * Returns a bounded version of this domain, where bounding is done by means of the given extent.
      */

@@ -4,7 +4,7 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function (Logger, d3c, d3, PQL, vismel2pql) {
+define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4Traces'], function (Logger, d3c, d3, PQL, vismel2pql, V4T) {
   "use strict";
 
   var logger = Logger.get('pl-ResultTable');
@@ -15,35 +15,36 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * Naturally this requires each row of the table to have equal number of items. A RangeError is raised otherwise.
    * Note that a result table is expected, which has the .idx2fu property.
    */
-  function _attachExtent(resulttable) {
-    if (resulttable.length === 0 || resulttable[0].length === 0)
-      resulttable.extent = [];
+  function _attachExtent(resultTable) {
+    if (resultTable.length === 0 || resultTable[0].length === 0)
+      resultTable.extent = [];
     else {
-      let cols = resulttable[0].length;
+      let cols = resultTable[0].length;
       let extent = new Array(cols);
       for (let i = 0; i < cols; ++i) {
-        if (resulttable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
-          extent[i] = d3.extent(resulttable, row => row[i]); // jshint ignore:line
-        else if (resulttable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
-          extent[i] = _.unique(_.map(resulttable, row => row[i]));
+        if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
+          extent[i] = d3.extent(resultTable, row => row[i]); // jshint ignore:line
+        else if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
+          extent[i] = _.unique(_.map(resultTable, row => row[i]));
         else
           throw new RangeError("invalid data type.");
       }
-      resulttable.extent = extent;
+      resultTable.extent = extent;
     }
-    return resulttable;
+    return resultTable;
   }
-
 
   /**
    * Utility function for multiple reuse in collection creation below.
    * @private
    */
-  function _runAndaddRTtoCollection(model, pql, idx2fu, fu2idx, collection, rIdx, cIdx, prop = undefined) {
+  function _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, prop = undefined) {
     return model.execute(pql).then(table => {
       table.idx2fu = idx2fu;
       table.fu2idx = fu2idx;
-      table.query = pql;
+      table.pql = pql;
+      table.vismel = vismel;
+      table.model = model;
       table = _attachExtent(table);
       if (prop) {
         if (!collection[rIdx][cIdx])
@@ -56,9 +57,10 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
   }
 
 
-  function getEmptyCollection (size) {
+  function getEmptyCollection (size, enabled) {
     let collection = new Array(size.rows);
     collection.size = size;
+    collection.enabled = enabled;
     for (let rIdx = 0; rIdx < size.rows; ++rIdx)
       collection[rIdx] = new Array(size.cols);
     return collection;
@@ -73,7 +75,9 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * It has additional properties as follows:
    *
    *  * .header: a list of names for the columns of the table
-   *  * .query: the PQL query whose execution resulted in this result table
+   *  * .pql: the PQL query whose execution resulted in this result table
+   *  * .vismel: the VisMEL query that the PQL query was derived from, if any
+   *  * .model: the model which the PQL query was executed on
    *  * .fu2idx, .idx2fu: see vismel2pql documentation.
    *
    *
@@ -82,20 +86,29 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * @param modelCollection
    * @return {Promise.<Array>}
    */
-  function aggrCollection(queryCollection, modelCollection, enabled=true) {
+   function aggrCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled=true) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
     let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        // generate and run PQL query
         let promise;
+
+        // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
+        let vismel = queryCollection.at[rIdx][cIdx];  // in this particular case, there is nothing to do
+        // unify identical field usages / maps!
+        vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
+
         try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.aggregation(queryCollection.at[rIdx][cIdx]);
-          promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+          // 2. convert this facet's atomic VisMEL query to PQL query
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
+
+          // 3. run this query and return promise to its result
+          promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+
         } catch (e) {
           if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
@@ -114,9 +127,9 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * @param model
    * @return {Promise.<Array>}
    */
-  function samplesCollection(queryCollection, modelTable, enabled=true, opts={}) {
+  function samplesCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled=true, opts={}) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
@@ -124,9 +137,18 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
         let promise;
+
         try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.samples(queryCollection.at[rIdx][cIdx], opts);
-          promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
+          // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
+          let vismel = V4T.samples(queryCollection.at[rIdx][cIdx]);
+          // unify identical field usages / maps!
+          vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
+
+          // 2. convert this facet's atomic VisMEL query to PQL query
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.sample(queryCollection.at[rIdx][cIdx], opts);
+
+          // 3. run this query and return promise to its result
+          promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
         } catch (e) {
           if (e instanceof vismel2pql.ConversionError)
             promise = Promise.resolve(undefined);
@@ -150,42 +172,48 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * @param model
    * @return {Promise.<Array>}
    */
-  function uniDensityCollection(queryCollection, modelTable, enabled=true) {
-  //function uniDensityCollection(queryCollection, model, enabled=true) {
+  function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
     let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        for(let [xOrY, colsOrRows] of [['x','cols'], ['y', 'rows']] ) {
-          let promise;
+        for (let [xOrY, colsOrRows] of [['x', 'cols'], ['y', 'rows']]) {
+          let promise,
+            model = modelTable.at[rIdx][cIdx];
           try {
-            let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, modelTable.at[rIdx][cIdx]);
-            promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY).then( 
-            tbl => {
-                // TODO: Hack for Paper: simulate correct scaling of model probability queries
-                let nester = d3c.nest();
-                nester.key(e => e[0]);
-                for (let _key of ["$model", "$data"]) {
-                  let probs = nester.map(tbl)[_key];
-                  if (probs != undefined) {
-                    // nested["$model"].map(e => prob_sum += e[2])
-                    let prob_sum = probs.reduce((s,e) => s+e[2], 0)
-                    probs.map(e => e[2] = e[2]/prob_sum)
-//                     console.log(_key)
-//                     console.log(probs.reduce((s,e) => s+e[2], 0))
-                  }
-                }
-                // rerun attachextent
-                _attachExtent(tbl);
-                return tbl;
-            });
+              // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
+            let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);
 
+            // unify identical field usages / maps!
+            vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
+
+            // 2. convert this facet's atomic VisMEL query to PQL query
+            let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
+
+            // 3. run this query and return promise to its result
+            promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY);
+              // .then(
+              // tbl => {
+              //   // TODO: Hack for Paper: simulate correct scaling of model probability queries
+              //   let nester = d3c.nest();
+              //   nester.key(e => e[0]);
+              //   for (let _key of ["$model", "$data"]) {
+              //     let probs = nester.map(tbl)[_key];
+              //     if (probs != undefined) {
+              //       let prob_sum = probs.reduce((s, e) => s + e[2], 0);
+              //       probs.map(e => e[2] = e[2] / prob_sum);
+              //     }
+              //   }
+              //   // rerun attachExtent
+              //   _attachExtent(tbl);
+              //   return tbl;
+              // });
           } catch (e) {
-            if (e instanceof vismel2pql.ConversionError)
+            if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)
               promise = Promise.resolve(undefined);
             else
               throw e;
@@ -203,22 +231,31 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL'], function 
    * @param model
    * @return {Promise.<Array>}
    */
-  function biDensityCollection(queryCollection, modelTable, enabled=true) {
+  function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled=true) {
     let size = queryCollection.size;
-    let collection = getEmptyCollection(size);
+    let collection = getEmptyCollection(size, enabled);
     if (!enabled)  // quit early if disabled
       return Promise.resolve(collection);
 
     let fetchPromises = new Set();
     for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
       for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
-        let promise;
+        let promise,
+          model = modelTable.at[rIdx][cIdx];
         try {
-          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.biDensity(queryCollection.at[rIdx][cIdx]);
-          promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, idx2fu, fu2idx, collection, rIdx, cIdx);
-        }
-        catch (e) {
-          if (e instanceof vismel2pql.ConversionError)
+          // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
+          let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx]);
+          // unify identical field usages / maps!
+          vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
+
+          // 2. convert this facet's atomic VisMEL query to PQL query
+          let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
+
+          // 3. run this query and return promise to its result
+          promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+
+        } catch (e) {
+          if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)
             promise = Promise.resolve(undefined);
           else
             throw e;

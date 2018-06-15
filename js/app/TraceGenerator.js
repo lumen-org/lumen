@@ -31,16 +31,16 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     }
 
     /**
-     * Returns the color for a uniDensity trace, for the case that the color channel is not used to encode any result table dimension.
-     * @param query
+     * Returns the color for a uniDensity trace for the case that the color channel is not explicitely used to encode any result table dimension.
+     * @param vismel
      * @param config
      * @return {*}
      */
-    function colorOfUniDensityTrace(query, xy, config) {
+    function colorOfUniDensityTrace(vismel, xy, config) {
       // uniTraces are always using the primary color. Unless there is no biDensity-Trace and adapt_to_color_usage is set:
       // in this case the uniTrace becomes the 'full' density representation and hence uses the secondary color (just like the biDensityTrace would)
       let yx = (xy === 'x'?'y':'x');
-      if (config.colors.density.adapt_to_color_usage && !query.used[yx])
+      if (config.colors.density.adapt_to_color_usage && !vismel.used[yx])
         return config.colors.density.secondary_single;
       else
         return config.colors.density.primary_single;
@@ -99,17 +99,19 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
     /**
      * Utility function. Splits the result table rt into hierarchical data for traces and returns this nested data.
-     * @param query A vismel query.
+     *
+     * This is originally written for tracer.aggr
+     * @param vismel A vismel query.
      * @param rt A result Table.
      */
-    function splitRTIntoTraceData(rt, query) {
+    function splitRTIntoTraceData(rt, vismel) {
       // split into more traces by all remaining splits on discrete field
       // i.e.: possibly details, color, shape, size
       let fu = {
-          x: query.layout.cols[0],
-          y: query.layout.rows[0],
+          x: vismel.layout.cols[0],
+          y: vismel.layout.rows[0],
         },
-        splits = query.fieldUsages(['layout'], 'exclude')
+        splits = vismel.fieldUsages(['layout'], 'exclude')
           .filter(PQL.isSplit); // TODO: should be: isOrdered()
 
       let num_splits = splits.filter(s => PQL.hasNumericYield(s)),
@@ -155,18 +157,51 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     }
 
 
+    /**
+     * Nests given data table by the field usage on aestetics and details of the given vismel query using the index look up map fu2idx.
+     *
+     * This is originally written for tracer.biQC.
+     * @param data
+     * @param fu2idx
+     * @param vismel
+     * @param nester [Optional] You may give a nester that is used and extended. Otherwise just pass nothing or undefined.
+     * @return Array: 2-element array of nested data and depth of applied nester.
+     */
+    function nestBySplits (data, fu2idx, vismel, nester=undefined, nesterlength=0) {
+      // collect splits
+      let splitIdxs = vismel.fieldUsages(['aesthetics', 'details'], 'include')
+        .filter(PQL.isSplit)
+        .map(split => fu2idx.get(split));
+
+      if (_.uniq(splitIdxs).length != splitIdxs.length)
+        throw "AssertionError: this should not happen.";
+
+      let l = splitIdxs.length;
+
+      // build nester
+      if (nester === undefined)
+        nester = d3c.nest();
+      for (let idx of splitIdxs)
+        nester.key(e => e[idx]);
+
+      // nest it
+      return [nester.map(data), l + nesterlength];
+    }
+
+
     let tracer = {};
 
-    tracer.aggrHeatmap = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.aggrHeatmap = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      let fu2idx = rt.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let vismel = rt.vismel,
+        fu2idx = rt.fu2idx,
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0],
         traces = [];
 
       // this may not be used if any mapping on shape or size is present in query!
@@ -207,7 +242,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         // no nesting necessary (no further splitting present)
         let trace = {
-          name: PQL.toString(rt.query),
+          name: PQL.toString(rt.pql),
           type: 'heatmap',
           x: selectColumn(rt, fu2idx.get(xfu)),
           y: selectColumn(rt, fu2idx.get(yfu)),
@@ -236,24 +271,27 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     /**
      * Build and return traces for aggregation scatter plot, grouped by splits.
      * @param rt
-     * @param query
+     * @param vismel
      * @return {Array}
      */
-    tracer.aggr = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.aggr = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      let fu2idx = rt.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let vismel = rt.vismel,
+        fu2idx = rt.fu2idx,
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0],
         traces = [],
         cfg = c.map.aggrMarker,
-        traceName = PQL.toString(rt.query);
+        traceName = PQL.toString(rt.pql);
 
-      let [nestedData, depth] = splitRTIntoTraceData(rt, query);
+      let colorIdx = fu2idx.get(aest.color.fu);
+
+      let [nestedData, depth] = splitRTIntoTraceData(rt, vismel);
 
       // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {
@@ -290,7 +328,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           trace.opacity = 0;
 
         let lcmap = mapper.lineColor;
-        trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][fu2idx.get(aest.color.fu)]) : lcmap;
+        trace.line.color = _.isFunction(lcmap) ? lcmap(data[0][colorIdx]) : lcmap;
         // TODO: problem: I cannot (easily) draw lines with changing color.
         //trace.line.color = applyMap(data, mapper.lineColor, aest.color.fu, fu2idx);
 
@@ -309,34 +347,31 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * marginal histogram / density traces
      * -> up to two traces per axis, one for a histogram of the data and one for a density line chart of the model
      * @param p1dRT
-     * @param query
      * @return {Array}
      */
-    tracer.uni = function (p1dRT, query, mapper, mainAxisId, marginalAxisId, fixedColor = undefined) {
+    tracer.uni = function (p1dRT, mapper, mainAxisId, marginalAxisId) {
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
 
       if (p1dRT == undefined)  // means 'disable this trace type'
         return [];
 
-      let aest = query.layers[0].aesthetics,
-        traceName = {"x": "setMe", "y": "setMe"};
+     let vismel = undefined,
+       traceName = {"x": "setMe", "y": "setMe"};
 
       /**
        * Returns a trace for marginal histogram/density of x or y axis.
        * @param data Data for trace.
        * @param xy 'x' ('y') if the trace is for x (y) axis.
-       * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
        * @param fu2idx
-       * @param fixedColor: optional. sets a color regardless of query specifications.
        * @return Object: A trace.
        */
-      function getUniTrace(data, xy, modelOrData, fu2idx) {
-        let xIdx = (xy === 'x' ? 1 : 2),
-          yIdx = (xy === 'x' ? 2 : 1);
+      function getUniTrace(data, xy, fu2idx) {
+        let xIdx = fu2idx.get(vismel.layout.cols[0]),
+          yIdx = fu2idx.get(vismel.layout.rows[0]);
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
-        let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
+        let axisFu = vismel.layout[xy === 'x' ? 'cols' : 'rows'][0];
 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
@@ -352,15 +387,19 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         let color = mapper.marginalColor;
         if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
-          color = colorOfUniDensityTrace(query, xy, c);
-        } else
+          color = colorOfUniDensityTrace(vismel, xy, c);
+        }
+        if (_.isFunction(color)) {
           // apply the color mapping that color represents
-          color = color(data[0][fu2idx.get(aest.color.fu)]);
+          let colorIdx = fu2idx.get(vismel.layers[0].aesthetics.color.fu);
+          color = color(data[0][colorIdx]);
+        } 
+        //else color = color;
+
 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
           _.extendOwn(trace, {
-            //type: modelOrData === 'model' ? 'scatter' : 'bar',
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
             type: 'scatter',
             mode: 'lines',
@@ -373,9 +412,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
-          if (modelOrData === 'data') {
-            trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
-          }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -395,27 +431,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       }
 
       /**
-       * Splits given data into subgroups by all splits of the vismel query (but not model vs data splits).
+       * Splits given data into subgroups by all splits of the vismel query.
        * For each subgroup an appropriate trace is generated. The array of all traces is returned.
        * @param data The data to split further.
        * @param fu2idx A map of FieldUsages to column indices in the data.
-       * @param xOrY 'x' ('y') if the trace is for x (y) axis.
-       * @param modelOrData 'model' ('data') if the trace is for data (step-wise line chart) or model (smooth curve).
+       * @param xy 'x' ('y') if the trace is for x (y) axis.
        * @return {Array} or traces.
        */
-      function getSplittedUniTraces(data, fu2idx, xOrY, modelOrData) {
-        // split into more traces by all remaining splits (but not model vs data splits)
-        let splits = query.fieldUsages(['layout'], 'exclude')
-          .filter(PQL.isSplit)
-          .filter(split => (split.name !== 'model vs data' && split.field.isDiscrete()));
-        let split_idxs = splits.map(split => fu2idx.get(split));
-
-        // TODO: this is a larger piece of work. We should create a __VisMEL__ uni trace query and then turn in to PQL ...
-        // split into more traces by all remaining discrete yield fields (but not model vs data splits)
-        // let splits = query.fieldUsages(['layout'], 'exclude')
-        //   .filter(PQL.hasDiscreteYield)
-        //   .filter(split => (split.name !== 'model vs data'));// && split.field.isDiscrete()));
-        // let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
+      function getSplittedUniTraces(data, fu2idx, xy) {
+        // split into more traces by all remaining splits
+        let splits = vismel.fieldUsages(['layout'], 'exclude').filter(PQL.isSplit);
+        let split_idxs = _.uniq( splits.map(split => fu2idx.get(split)) );
 
         // build nesting function
         let nester = d3c.nest();
@@ -426,7 +452,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let nestedData = nester.map(data);
 
         let traces = [];
-        dfs(nestedData, leafData => traces.push(getUniTrace(leafData, xOrY, modelOrData, fu2idx)), splits.length);
+        dfs(nestedData, leafData => traces.push(getUniTrace(leafData, xy, fu2idx)), split_idxs.length);
         return traces;
       }
 
@@ -435,18 +461,17 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        *
        * @param datam
        */
-      function getAccumulatedUniTrace(data, fu2idx, xy, modelOrData) {
+      function getAccumulatedUniTrace(data, fu2idx, xy) {
         // TODO: merge this with getUniTrace again?
-        // if (modelOrData === "data") {
-        //   logger.warn("accumulated traces for data are not implemented!");
-        //   //return [];
-        // }
-
         if (data.length === 0)
           return [];
 
         // accumulate density values
-        const xIdx = 1, yIdx = 2;
+        // TODO: this is buggy: we need to determine the index of the x and p(x) from the semantics of the field usage!
+        // However, what we really should do is implemment this cleanly in a different way, namely querying for the accumulated density!
+        let xIdx = fu2idx.get(vismel.layout.cols[0]),
+          yIdx = fu2idx.get(vismel.layout.rows[0]);
+
         let x = [], // the value of which the density is computed
           px = [], // the density
           currentX = data[0][xIdx], // [1] is by convention the column of which the density is computed
@@ -474,7 +499,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         // return getUniTrace(xOrY, modelOrData, );
 
         // is axis field usage numeric or categorical, i.e. histogram or barchar?
-        let axisFu = query.layout[xy === 'x' ? 'cols' : 'rows'][0];
+        let axisFu = vismel.layout[xy === 'x' ? 'cols' : 'rows'][0];
 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
@@ -482,8 +507,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let trace = {
           name: traceName[xy], // modelOrData + ' marginal on ' + xy,
           showlegend: false,
-          x: xy === 'x' ? x : px, //selectColumn(data, xIdx),
-          y: xy === 'x' ? px : x, //selectColumn(data, yIdx),
+          x: xy === 'x' ? x : px,
+          y: xy === 'x' ? px : x,
           xaxis: xAxis,
           yaxis: yAxis,
         };
@@ -494,7 +519,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         if (PQL.hasNumericYield(axisFu)) {
           // line chart trace
           _.extendOwn(trace, {
-            //type: modelOrData === 'model' ? 'scatter' : 'bar',
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
             type: 'scatter',
             mode: 'lines',
@@ -507,9 +531,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             //fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
           });
-          if (modelOrData === 'data') {
-            trace.line.shape = (xy === 'x' ? 'hvh' : 'vhv');
-          }
           // TODO: add trace annotations for shape support and other?
           // see: https://plot.ly/javascript/line-charts/#labelling-lines-with-annotations
         }
@@ -530,85 +551,101 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // code (not function defs) for tracer.uni starts here
       let traces = [];
-      let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
-      for (let xOrY of ['x', 'y']) // adds seperate traces for x and y uni-marginals
-        if (p1dRT[xOrY] !== undefined) {
-          let rt = nestByMvd.map(p1dRT[xOrY]); // FAIL HERE
-          traceName[xOrY] = PQL.toString(p1dRT[xOrY].query);
-          for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
-            let data = rt.get(modelOrData);
-            if (data !== undefined) {
-              if (!c.tweaks.hideAccuMarginals)
-              // if (c.views.accuMarginals.possible)
-                traces.push(...getAccumulatedUniTrace(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
-              //data.query = p1dRT[xOrY].query; // attach query to data, beacuse we might need it later
-              traces.push(...getSplittedUniTraces(data, p1dRT[xOrY].fu2idx, xOrY, modelOrData));
-            }
-          }
+
+      //let nestByMvd = d3c.nest().key(v => v[0]); // nest by value of first column, which is by convention the 'model vs data' column.
+      for (let xOrY of ['x', 'y']) { // adds seperate traces for x and y uni-marginals
+        let rt = p1dRT[xOrY];
+        if (rt !== undefined) {
+          vismel = rt.vismel;
+          vismel.used = vismel.usages();
+
+          //let rt = nestByMvd.map(rt); // FAIL HERE
+          traceName[xOrY] = PQL.toString(rt.pql);
+          // remove data trace.
+          //for (let modelOrData of ['model', 'data']) { // adds separate traces for model and data
+          //let data = rt.get(modelOrData);
+          //if (data !== undefined) {
+            //if (!c.tweaks.hideAccuMarginals)
+            // if (c.views.accuMarginals.possible)
+            // TODO: reenable: traces.push(...getAccumulatedUniTrace(rt, rt.fu2idx, xOrY));
+            //data.query = rt.query; // attach query to data, beacuse we might need it later
+
+          traces.push(...getSplittedUniTraces(rt, rt.fu2idx, xOrY));
+
+          //}
+          //}
         }
+      }
       return traces;
     };
 
     /** 2d density plot trace builder.
      *
      * The created trace depends on the data type of the fields on rows and cols:
-     *   * both numerical: greyscale contour map
-     *   * both discrete: greyscale heatmap
+     *   * both numerical: lightness contour map
+     *   * both discrete: lightness heatmap
      *   * mixed: no trace
      *
      * @param rt
-     * @param query
+     * @param vismel TODO: remove this param!
      * @return {Array}
      */
-    tracer.bi = function (rt, query, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      // note: the indexes are by convention!
-      let xfu = rt.idx2fu[0],
-        yfu = rt.idx2fu[1];
+      let vismel = rt.vismel;
 
-      let zdata = selectColumn(rt, 2), //.map(Math.sqrt),
+      if (!vismel.used)
+        vismel.used = vismel.usages();
+
+      let xFu = vismel.layout.cols[0],
+        yFu = vismel.layout.rows[0],
+        colorFu = vismel.layers[0].aesthetics.color.fu;
+
+      let xIdx = rt.fu2idx.get(xFu),
+        yIdx = rt.fu2idx.get(yFu),
+        colorIdx = rt.fu2idx.get(colorFu);
+
+      let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
 
-      // TODO: is that ok? We should normalize across ALL panes
-      let sortedZData = _.sortBy(zdata),
-        l = sortedZData.length;
-      // ignore all values smaller max*0.01
-      let lowerIdx = _.sortedIndex(sortedZData, _.last(sortedZData)*0.001);
-      // of the remaining values get the .98 quantile and choose this as the upper value of the scale
-      let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
-      // color is
+      // // TODO: should we apply some heuristic to reduce the impact of few, very large density value
+      // let sortedZData = _.sortBy(zdata),
+      //   l = sortedZData.length;
+      // // ignore all values smaller max*0.01
+      // let lowerIdx = _.sortedIndex(sortedZData, _.last(sortedZData)*0.001);
+      // // of the remaining values get the .98 quantile and choose this as the upper value of the scale
+      // let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
 
       let cd = c.colors.density,
-       colorscale = (cd.adapt_to_color_usage && !query.used.color) ? cd.secondary_scale : cd.primary_scale;
+       colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
 
       // merge color split data into one
       let trace = {
-        name: PQL.toString(rt.query),
+        name: PQL.toString(rt.pql),
         // name: '2d density',
         showlegend: false,
         showscale: false,
-        x: selectColumn(rt, 0),
-        y: selectColumn(rt, 1),
+        x: selectColumn(rt, xIdx),
+        y: selectColumn(rt, yIdx),
         z: zdata,
         xaxis: axisId.x,
         yaxis: axisId.y,
         //opacity: c.map.biDensity.opacity,
         opacity: 1,
         autocolorscale: false,
-        colorscale: colorscale, // c.map.biDensity.colorscale, OLD
+        colorscale: colorscale,
         zauto: false,
         zmin: 0,
-        zmax: rt.extent[2], // TODO: is that valid for c-c heat maps? NO!
-        //zmax: zmax, // TODO: is that valid for c-c heat maps? NO!
+        zmax: colorFu.extent[1],
         hoverinfo: 'text',
         text: ztext,
       };
 
-      if (PQL.hasNumericYield(xfu) && PQL.hasNumericYield(yfu)) {
+      if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {
         trace.type = 'contour';
         // trace.contours = {
         //   coloring: 'heatmap',
@@ -616,7 +653,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         trace.autocontour = false;
         trace.ncontours = c.map.biDensity.levels;
       }
-      else if (PQL.hasDiscreteYield(xfu) && PQL.hasDiscreteYield(yfu)) {
+      else if (PQL.hasDiscreteYield(xFu) && PQL.hasDiscreteYield(yFu)) {
         trace.type = 'heatmap';
         trace.xgap = c.map.heatmap.xgap;
         trace.ygap = c.map.heatmap.ygap;
@@ -630,67 +667,89 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * Creates a density line plot for each categorical value of the categorical dimension.
      *
      * @param rt
-     * @param query
+     * @param vismel
      * @param mapper
      * @param axisId
      * @param cqAxisIds
      * @return {{}}
      */
-    tracer.biQC = function (rt, query, mapper, axisId, cqAxisIds) {
+    tracer.biQC = function (rt, mapper, axisId, cqAxisIds) {
+
       if (rt == undefined)  // means 'disable this trace type'
         return [];
+
+      let vismel = rt.vismel;
 
       if (!axisId) throw RangeError("invalid axisId");
       if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
 
-      // note: the indexes are by convention!
-      let xfu = rt.idx2fu[0],
-        yfu = rt.idx2fu[1];
+      let xFu = vismel.layout.cols[0],
+        yFu = vismel.layout.rows[0];
 
-      let xYieldsCat = PQL.hasDiscreteYield(xfu), // flag: True if x encodes a categorical dimension
+      let xYieldsCat = PQL.hasDiscreteYield(xFu), // flag: True iff x encodes a categorical dimension
         catXy = xYieldsCat ? 'x' : 'y'; // where the categorical dimension is: on 'x' or 'y' ?
-      let catIdx = xYieldsCat ? 0 : 1, // index of the categorical dimension in the result table
-        numIdx = 1 - catIdx; // index of the numerical dimension in the result table
-      let traces = [];
 
-      // group by values of categorical dimension
-      let groupedData = d3c.nest().key(e => e[catIdx]).map(rt);
+      let xIdx = rt.fu2idx.get(xFu),
+        yIdx = rt.fu2idx.get(yFu),
+        pIdx = rt.fu2idx.get(vismel.layout[xYieldsCat ? 'cols' : 'rows'][1]); // density is encoded here
 
-      // get extent of categorical field usage
-      let catFu = xYieldsCat ? xfu : yfu, // the field usage with categorical yield
-        catExtent = rt.extent[catIdx];
+      let [catIdx, numIdx] = (xYieldsCat ? [xIdx, yIdx] : [yIdx, xIdx]); // index of the categorical and numerical dimension in the result table
 
+      // nest by values of categorical dimension, and then all remaining splits
+      let nesterCatAxis = d3c.nest().key(e => e[catIdx]);
+      let [groupedData2, depth] = nestBySplits(rt, rt.fu2idx, vismel, nesterCatAxis, 1);
+
+      let colorFu = vismel.layers[0].aesthetics.color.fu,
+        colorIdx = rt.fu2idx.get(colorFu);
+
+      /**
+       * generator for traces of line plots
+       * @param data a data table
+       * @param i index along the categorical axis' extent
+       */
+      function uniTrace4biQC(data, i) {
+        let color = mapper.marginalColor;
+        if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
+          // determine uniform fallback color
+          color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
+        } else {
+          // apply the color mapping that color represents. colorIdx is precomputed in the outer scope.
+          color = color(data[0][colorIdx]);  // data[0] because we simply need any data point of the trace, so the first one is good enough
+        }
+
+
+        let trace = {
+          name: PQL.toString(rt.pql),
+          type: 'scatter',
+          mode: 'lines',
+          showlegend: false,
+          [catXy]: selectColumn(data, pIdx), // the axis that encodes the categorical dimension, encodes the density on the new axis.
+          [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
+          xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
+          yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
+          //opacity: c.map.biDensity.mark.opacity,
+          line: {
+            width: c.map.biDensity.line.width,
+            color: color,
+          },
+          fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
+          //fill: 'none',
+          fillcolor: makeOpaque(color, c.map.biDensity.line.fillopacity),
+        };
+        return trace;
+      }
+
+      // iterate over groups in same order like given in extent
+      let catExtent = rt.extent[catIdx];
       if (catExtent.length != cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");
-
-      // then iterate over groups in same order like given in extent
+      let traces = [];
       for (let i = 0; i < cqAxisIds.length; ++i) {
-        let data = groupedData["$" + catExtent[i]];
-        // TODO: this is a hack. If a filter is applied on the categorical dimension, the above lookup fails because the fields extent wasn't updated
-        if (data !== undefined) {
-          // TODO: see https://ci.inf-i2.uni-jena.de/gemod/pmv/issues/19  . the process of determining the color should be more complicated then.
-          let color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
-          let trace = {
-            name: PQL.toString(rt.query),
-            type: 'scatter',
-            mode: 'lines',
-            showlegend: false,
-            [catXy]: selectColumn(data, 2), // the axis that encodes the categorical dimension, encodes the density on the new axis.
-            [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
-            xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
-            yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-            //opacity: c.map.biDensity.mark.opacity,
-            line: {
-              width: c.map.biDensity.line.width,
-              color: color,
-            },
-            fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
-            //fill: 'none',
-            fillcolor: makeOpaque(color, c.map.biDensity.line.fillopacity),
-          };
-
-          traces.push(trace);
-        }
+        let data = groupedData2["$" + catExtent[i]];
+        // TODO: this is a hack. If a filter is applied on the categorical dimension, the above access to groupedData fails because the fields extent wasn't updated
+        if (data !== undefined)
+          // create trace for each leave in the map for the grouped data:
+          dfs(data, leafData => traces.push(uniTrace4biQC(leafData, i)), depth-1);  // -1 because we already iterate over the first level
       }
       return traces;
     };
@@ -698,20 +757,21 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     /**
      * samples trace builder.
      * @param rt
-     * @param query
+     * @param vismel
      * @param mapper: A dictionary of mapper for the keys (and visual channels): fillColor, size, shape
      * @return {Array}
      */
-    tracer.samples = function (rt, query, mapper, mode, axisId) {
+    tracer.samples = function (rt, mapper, mode, axisId) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt == undefined)  // means 'disable this trace type'
         return [];
 
-      let fu2idx = rt.fu2idx,
-        aest = query.layers[0].aesthetics,
-        xfu = query.layout.cols[0],
-        yfu = query.layout.rows[0],
+      let vismel = rt.vismel,
+        fu2idx = rt.fu2idx,
+        aest = vismel.layers[0].aesthetics,
+        xfu = vismel.layout.cols[0],
+        yfu = vismel.layout.rows[0],
         cfg;
 
       if (mode === 'training data') {
@@ -744,7 +804,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         xaxis: axisId.x,
         yaxis: axisId.y,
         opacity: cfg.fill.opacity,
-        //opacity: fooOpac,
         hoverinfo: "text",
         text: rt.formatter(rt),
       };
@@ -756,7 +815,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         line: {
           color: cfg.stroke.color,
           width: cfg.stroke.width,
-          //width: 0,
         },
         maxDisplayed: cfg.maxDisplayed
       };
@@ -768,21 +826,22 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * It's meant to highlight theie difference....
      * @param predRT
      * @param testDataRT
-     * @param query
+     * @param vismel
      * @param mapper
      * @param axisId
      * @return {*}
      */
-    tracer.predictionOffset = function (predRT, testDataRT, query, mapper, axisId, queryConfig) {
+    tracer.predictionOffset = function (predRT, testDataRT, mapper, axisId, queryConfig) {
 
       if (!queryConfig.visConfig.predictionOffset.active || testDataRT == undefined || predRT == undefined)
         return [];
 
       // let aest = query.layers[0].aesthetics;
-      let fus = {
-        x: query.layout.cols[0],
-        y: query.layout.rows[0]
-      };
+      let vismel = predRT.vismel,
+        fus = {
+            x: vismel.layout.cols[0],
+            y: vismel.layout.rows[0]
+        };
 
       let pIdx = {},
         tIdx = {},

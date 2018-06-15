@@ -10,7 +10,7 @@
  *   * all (user) configurable settings are stored in a JSON compatible format
  *   * any change to the settings results in a new JSON object representing the full settings
  *   * to these settings then augmentations are made:
- *      * utility functions are added whereever needed
+ *      * utility functions are added where ever needed
  *      * other non-json compatible things are added
  *    * the resulting augmented settings object is then made available in ViewSettings.js
  *    * and can be imported and used from other modules
@@ -18,8 +18,6 @@
  *  TODO:
  *    * TODO: use default values for schema, instead of separate inital json file. this would simplify the maintainance
  *    * TODO: add remaining dependencies
- *    * DONE: fix wrong encoding of color as strings
- *    * TODO: fix weird dependencies on color
  *    * TODO/DONE: make editor view more compact. I made some progress
  *    * DONE: make it hideable
  *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
@@ -119,6 +117,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         properties: {
           "layout": {type: "integer"},
           "density": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"},
+          "probability": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"},
           "aggregation": {type: "integer"},
         }
       }
@@ -127,8 +126,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
-    resolution_1d: 100,
-    resolution_2d: 30,
+    // resolution_1d: 100,
+    // resolution_2d: 30,
+    resolution_1d: 20,
+    resolution_2d: 10,
     opacity: 0.7,
     levels: 16,
     splitCnts: {
@@ -479,9 +480,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         width: 1.5,
       },
       size: {
-        min: 3, // HACK: used to be 8.
-        max: 160,
-        def: 14,
+        min: 10, // HACK: used to be 8.
+        max: 500,
+        def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
@@ -501,8 +502,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
     sampleMarker: {
       size: {
-        min: 6,
-        max: 40,
+        min: 10,
+        max: 500,
         def: 8,
       },
       stroke: {
@@ -856,9 +857,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
 
     // shapes in plotly can be specified by a string number or a string 'name' identifier. see also https://plot.ly/javascript/reference/#scatterternary-marker-symbol
     c.shapes = {
-      open: _.range(100, 144),
-      filled: _.range(44),
+      // filled: _.range(44),
+      filled: [0 /*circle*/,  3/*plus*/, 1 /*square*/, 4 /*X*/, 2 /*diamond*/, 17 /*star*/, 5,6,7,8 /*triangles...*/],
     };
+    c.shapes.open = c.shapes.filled.map(n => n+100);
     return c;
   }
 
@@ -902,7 +904,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         return title;
       return "<" + style + ">" + title + "</" + style + ">";
     };
-   c.plots.layout.ratio_marginal = used => (used ? c.plots.layout.main.marginal_used : c.plots.layout.main.marginal_unused);
+    c.plots.layout.ratio_marginal = used => (used ? c.plots.layout.main.marginal_used : c.plots.layout.main.marginal_unused);
 
     // .colors
     translateEnum(c.colors.density, ["primary_scale", "secondary_scale"], colorscalesEnum);
@@ -1037,9 +1039,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         zerolinewidth: c.plots.marginal.axis.width,
         tickformat: '.3f',
         hoverformat: '.3f',
-        // autorange: 'false',
+        rangemode: 'nonnegative',
         autorange: 'false',
-        fixedrange: false,
+        fixedrange: true,
         tickmode: 'auto', // TODO:
         nticks: 3,
         side: xy === 'y' ? 'right' : 'top',
@@ -1122,11 +1124,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   return {
     makeSettings,
     updateSettings,
-    jsonSchema,  //
+    jsonSchema,
     jsonInitial,
     myTestSchema,
     myTestSchemaInitial: myTestInitial
-    //watch
   }
 
 });

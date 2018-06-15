@@ -28,6 +28,18 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     static DefaultMap(fu) {
       return new BaseMap(fu);
     }
+
+    toString() {
+      return "BaseMap " + this.fu.toString()
+    }
+  }
+
+  function isMap (o) {
+    return o instanceof BaseMap;
+  }
+
+  function isSplitMap(o) {
+    return (isMap(o) && PQL.isSplit(o.fu));
   }
 
   class ColorMap extends BaseMap {
@@ -51,6 +63,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     static DefaultMap(fu) {
       return new ColorMap(fu, 'rgb');
     }
+
+    toString() {
+      return "ColorMap on "+ this.channel + " of " + this.fu.toString();
+    }
   }
 
   //var DetailMap = BaseMap;
@@ -59,6 +75,16 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   var FilterMap = BaseMap;
   //var LayoutMap = BaseMap;
 
+  /**
+   * Converts given instance of (subclass of) BaseMap to a split map, i.e. a BaseMapp that has a Split as its FieldUsage.
+   * @param map_
+   */
+  function toSplitMap(map_) {
+    if (map_ instanceof ColorMap)
+      return new ColorMap(PQL.Split.FromFieldUsage(map_.fu));
+    else
+      return new BaseMap(PQL.Split.FromFieldUsage(map_.fu));
+  }
 
   /**
    * Constructs the sources part of a VisMEL query from a given source.
@@ -128,6 +154,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       };
 
       this.filters = [];
+      this.defaults = [];
       this.aesthetics = aesthetics;
     }
 
@@ -150,6 +177,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       // construct from shelves
       var layer = new Layer();
       layer.filters = shelves.filter.content();
+      layer.defaults = ('defaults' in shelves) ? shelves.defaults.content() : [];
       layer.aesthetics = {
         mark: "auto",
         // shelves that hold a single field usages
@@ -169,6 +197,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     shallowCopy() {
       var copy = new Layer();
       copy.filters = this.filters.slice();
+      copy.defaults = this.defaults.slice();
       copy.aesthetics.mark = this.aesthetics.mark;
       copy.aesthetics.color = this.aesthetics.color;
       copy.aesthetics.shape = this.aesthetics.shape;
@@ -240,7 +269,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       if (mode === 'exclude')
         excluded = new Set(what);
       else if (mode === 'include') {
-        const all = ['layout', 'details', 'filters', 'aesthetics'];
+        const all = ['layout', 'details', 'filters', 'aesthetics', 'defaults'];
         excluded = new Set(_.difference(all, what));
       } else
         throw RangeError("mode must be 'exclude' or 'include'");
@@ -253,6 +282,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         excluded.has('layout') ? undefined : layout.cols.fieldUsages(),
         excluded.has('details') ? undefined : aesthetics.details,
         excluded.has('filters') ? undefined : layer.filters,
+        excluded.has('defaults') ? undefined : layer.defaults,
         excluded.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
       );
       let fus = usedVars.filter(PQL.isFieldUsage);
@@ -278,6 +308,34 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         else
           throw TypeError("unknown type of field usage");
       }
+    }
+
+    /**
+     * Returns a dictionary with keys 'color', 'shape', 'size', 'details', 'x', 'y' and value true or false, where true
+     * indicates that the semantic is used in the query.
+     */
+    usages () {
+      let aest = this.layers[0].aesthetics;
+      return {
+        color: aest.color instanceof ColorMap,
+        shape: aest.shape instanceof ShapeMap,
+        size: aest.size instanceof SizeMap,
+        details:  aest.details.filter( s => s.method !== 'identity').length > 0, // identity splits can be ignored
+        x: this.layout.cols[0] !== undefined,
+        y: this.layout.rows[0] !== undefined,
+        atomic: this.isAtomic()
+      };
+    }
+
+    /**
+     * Returns True iff the VisMEL query is atomic. This is equivalent to:
+     *   * the query is not templated
+     *   * the expansion of the the table algebra expression on this.layout.rows / cols leads to actually no expansion
+     *   * there is at most one FieldUsage on this.layout.rows / cols
+     */
+    isAtomic () {
+      return ((this.layout.cols.length == 1 && PQL.isFieldUsage(this.layout.cols[0])) &&
+              (this.layout.rows.length == 1 && PQL.isFieldUsage(this.layout.rows[0])));
     }
   }
 
@@ -351,6 +409,9 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     ColorMap: ColorMap,
     ShapeMap: ShapeMap,
     SizeMap: SizeMap,
-    FilterMap: FilterMap
+    FilterMap: FilterMap,
+    isMap: isMap,
+    isSplitMap,
+    toSplitMap,
   };
 });

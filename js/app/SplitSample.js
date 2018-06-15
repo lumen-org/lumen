@@ -26,12 +26,24 @@ define(['d3', './Domain', './PQL'], function (d3, Domain, PQL) {
     //let values = splitToValues(split);
     let field = split.field;
     let domains =  Splitter[split.method](field.domain.bounded(field.extent), false /*valueflag*/, split.args);
-    // create filter for each split value
+
     //return domains.map( domain => new PQL.Filter(split.field, 'equals', domain) );
-    return domains.map( domain => {
-      let method = domain.isSingular() ? PQL.FilterMethodT.equals : PQL.FilterMethodT.in;
-      return new PQL.Filter(split.field, method, domain);
-    } );
+    function domainToFilter (domain) {
+      let method = split.method;
+      let op = undefined;
+      if (method === 'equidist')
+      // if the split results in single points then we use "==" for the filter
+        op = PQL.FilterMethodT.equals;
+      else if (method === 'equiinterval' || method === 'elements' || method === 'identity')
+      // otherwise we use "in"
+        op = PQL.FilterMethodT.in;
+      else
+        throw RangeError("invalid split method: " + method.toString());
+      //let op = domain.isSingular() ? PQL.FilterMethodT.equals : PQL.FilterMethodT.in;
+      return new PQL.Filter(split.field, op, domain);
+    }
+
+    return domains.map(domainToFilter);
   }
 
   /**

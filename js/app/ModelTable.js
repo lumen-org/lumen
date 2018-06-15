@@ -30,6 +30,7 @@ define(['./PQL'], function(PQL) {
     return model.model(
       PQL.fields(query.fieldUsages()),
       query.layers[0].filters,
+      query.layers[0].defaults,
       makeBaseModelName(model.name, rIdx, cIdx));
 
     // TODO: apply all remaining filters on independent variables

@@ -124,7 +124,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   var isAggregationMethod = (m) => (m === AggregationMethods.argavg || m === AggregationMethods.argmax);
 
   var DensityMethodT = Object.freeze({
-    density: 'density'
+    density: 'density',
+    probability: 'probability'
   });
   var isDensityMethod = (m) => m === DensityMethodT.density;
 
@@ -170,11 +171,11 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
      * @param newDomain
      */
     setDomain (newDomain) {
-      // need to convert method?
-      if (this.method == FilterMethodT.in && newDomain.isSingular())
-        this.method = FilterMethodT.equals;
-      else if (this.method == FilterMethodT.equals && !newDomain.isSingular())
-        this.method = FilterMethodT.in;
+      // OLD: need to convert method?
+      // if (this.method == FilterMethodT.in && newDomain.isSingular())
+      //   this.method = FilterMethodT.equals;
+      // else if (this.method == FilterMethodT.equals && !newDomain.isSingular())
+      //   this.method = FilterMethodT.in;
       this.args = newDomain;
     }
 
@@ -182,16 +183,6 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       let extent = field.extent;
       let method = extent.isSingular() ? FilterMethodT.equals : FilterMethodT.in;
       return new Filter(field, method, extent);
-    }
-
-    static ModelVsDataFilter(model, value) {
-      if(value !== 'model' && value !== 'data')
-        throw RangeError("value must be 'model' or 'data' but is " + value.toString());
-      return new Filter(
-        model.fields.get('model vs data'),
-        FilterMethodT.equals,
-        new domain.Discrete('model')
-      );
     }
 
     get name() {return this.field.name;}
@@ -204,12 +195,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return {        
         name: f.name,
         operator: f.method,
-        value: f.args.value
+        value: f.args.values
       };
     }
 
     toString() {
-      return this.field.name + " " + this.method + " " + this.args;
+      return "FILTER: " + this.field.name + " " + this.method + " " + this.args;
     }
 
     /**
@@ -257,7 +248,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString() {
-      return this.method  + " of " + this.field.name + " with args:" + " " + this.args;
+      return "SPLIT " + this.method  + " of " + this.field.name + " with args:" + " " + this.args;
     }
 
     copy () {
@@ -286,22 +277,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     static DefaultSplit (field, mode = "layout") {
       // TODO: move to settings.
       let split_cnt = config.tweaks.splitCnts[mode];
-      // 5;
-      // if (mode === 'density')
-      //   split_cnt = 50;
-      // else if (mode === 'aggregation')
-      //   split_cnt = 25;
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
         return new Split(field, SplitMethod.equiinterval, [split_cnt]);
       else
         throw new RangeError("invalid data type");
-    }
-
-    static ModelVsDataSplit (model, method = "elements") {
-      let mvd = model.fields.get("model vs data");
-      return new Split(mvd, method, []);
     }
 
     static toJSON (a) {
@@ -316,7 +297,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   class Aggregation extends FieldUsage {
     constructor(fields, method, yields, args = []) {
       super();
-      fields = utils.listify(fields);
+      fields = _.sortBy(utils.listify(fields), 'name');
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
       if (!isAggregationMethod(method))
@@ -365,7 +346,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static toJSON (a) {
       return {
-        name: a.names,
+        name: a.names.sort(),
         aggregation: a.method,
         yields: a.yields,
         args: a.args
@@ -373,18 +354,18 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString () {
-      return this.method  + " of [" + this.names + "] with args: [" + this.args + "]";
+      return this.method  + " of [" + this.names.sort() + "] with args: [" + this.args + "]";
     }
   }
 
   class Density extends FieldUsage {
-    constructor(fields) {
+    constructor(fields, method=DensityMethodT.density) {
       super();
-      fields = utils.listify(fields);
+      fields = _.sortBy(utils.listify(fields), 'name');
       if (!fields.every(isField))
         throw TypeError("fields must be a single or an array of fields");
       this.fields = fields;
-      this.method = DensityMethodT.density;
+      this.method = method;
       this.yieldDataType = FieldT.DataType.num;
     }
 
@@ -406,7 +387,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static toJSON(d) {
       return {
-        name: d.names,
+        name: d.names.sort(),
         aggregation: d.method,
         args: d.args
       };
@@ -422,7 +403,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toString () {
-      return this.method  + " of [" + this.names + "]";
+      return this.method  + " of [" + this.names.sort() + "]";
     }
   }
 
@@ -477,6 +458,51 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   }
 
   /**
+   * Returns a subset of the given FieldUsages in fus.
+   * This method is stable, i.e. the order of FieldUsages in fus is maintained.
+   *
+   * @param fus
+   * @return {Array}
+   * @private
+   */
+  function cleanFieldUsages(fus) {
+
+    // there may be no two Splits on the same Field. Exception: one has split method 'identity'
+    let cleanedFus = [],
+      usedSplits = new Map();
+
+    for (let fu of fus) {
+      if (isSplit(fu) && (fu.method !== SplitMethod.identity)) {
+        let name = fu.field.name,
+          used = usedSplits.get(name);
+        if (used == undefined) {
+          usedSplits.set(name, fu);
+          cleanedFus.push(fu);
+        }
+        else {
+          // TODO: I'm not entirely sure if this is a sane way of dealing with the underlying problem...
+          // TODO: no it's not. Instead the two identical splits should actually be the same...
+          // Problem is, for example: if we change the split count in one - which one will be used?
+          if (used.method !== fu.method) {
+            // turn into identity split if methods equal the one saved
+            throw ConversionError("Conflicting splits of the same field, i.e. splits with unequal")
+          }
+          // else {
+          //   same method. simply remove it from the field usages, i.e. don't push it to cleanedFus
+          // }
+        }
+      } else {
+        cleanedFus.push(fu);
+      }
+    }
+
+    // TODO: more checks for correctness of query
+
+    return cleanedFus;
+  }
+
+
+  /**
    * PQL: create JSON-formatted queries from internal-format
    */
   var toJSON = {
@@ -488,25 +514,33 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
      * @returns {Object} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
     predict: function (from, predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
+      let json = {};
+
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
+
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
+      json.FROM = from;
+
       if (!where.every(isFilter)) throw new TypeError("'where' must be all of type Filter.");
+      if (where.length > 0)
+        json.WHERE = where.map(Filter.toJSON);
+
       if (!splitBy.every(isSplit)) throw new TypeError("'splitby' must be all of type Split.");
-      return {
-        "PREDICT": predict.map(p => {
-          if (_.isString(p)) // its just the name of a field then
-            return p;
-          if (isField(p) || isSplit(p))
-            return p.name;
-          else if (isAggregation(p) || isDensity(p))
-            return p.toJSON();
-          else
-            throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
-        }),
-        "FROM": from,
-        "WHERE": where.map(Filter.toJSON),
-        "SPLIT BY": splitBy.map(Split.toJSON)
-      };
+      if (splitBy.length > 0)
+        json["SPLIT BY"] = splitBy.map(Split.toJSON);
+
+      predict = predict.map(p => {
+        if (_.isString(p)) // its just the name of a field then
+          return p;
+        if (isField(p) || isSplit(p))
+          return p.name;
+        else if (isAggregation(p) || isDensity(p))
+          return p.toJSON();
+        else
+          throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
+      });
+      json.PREDICT = predict;
+      return json;
     },
 
     select: function (from, select, where=undefined, opts=undefined) {
@@ -531,23 +565,61 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return jsonQuery;
     },
 
-    model: function (from, model, as_, where = []) {
+    model: function (from, model, as_, where = [], defaults = []) {
+      let json = {};
+
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
+      json.FROM = from;
+
       if (model !== "*") {
         model = utils.listify(model);
         if(!model.every( o => isField(o) || _.isString(o) )) throw new TypeError("'model' must be all strings or fields");
         model = model.map( o => isField(o) ? o.name : o);
       }
+      json.MODEL = model;
+
       where = utils.listify(where);
       if(!where.every(isFilter)) throw new TypeError("'where' must be all filters.");
-      if(!_.isString(as_)) throw new TypeError("'name' must be a string");
+      if (where.length > 0)
+        json.WHERE = where.map(Filter.toJSON);
 
-      return {
-        "MODEL": model,
-        "FROM": from,
-        "WHERE": where.map(Filter.toJSON),
-        "AS": as_
-      };
+      if(!_.isString(as_)) throw new TypeError("'name' must be a string");
+      if (as_.length > 0)
+        json.AS = as_;
+
+      // get default values and subsets
+      let default_values = {}, any_default_values = false,
+        default_subsets = {}, any_default_subsets = false;
+      for (let {field: {name: name}, method: op, args: domain} of defaults) {
+        // let domain = d.args,
+        //   op = d.method,
+        //   name = d.field.name;
+        if (op === FilterMethodT.equals) {
+          default_values[name] = domain.value;
+          any_default_values = true;
+        } else if (op === FilterMethodT.in) {
+          default_subsets[name] = domain.values;
+          any_default_subsets = true;
+        } else
+            throw RangeError("Invalid filter operator: " + op.toString());
+        //
+        // if (domain.isSingular()) {
+        //   default_values[name] = domain.value;
+        //   any_default_values = true;
+        // }
+        // else {
+        //   default_subsets[name] = domain.values;
+        //   any_default_subsets = true;
+        // }
+      }
+
+      if (any_default_values)
+        json["DEFAULT_VALUE"] = default_values;
+
+      if (any_default_subsets)
+        json["DEFAULT_SUBSET"] = default_subsets;
+
+      return json;
     },
 
     copy: function (from, as_) {
@@ -623,6 +695,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
   }
 
+
+
   return {
     Field: Field,
     FieldT: FieldT,
@@ -644,6 +718,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     fields: fields,
     hasDiscreteYield: hasDiscreteYield,
     hasNumericYield: hasNumericYield,
+    cleanFieldUsages,
     toJSON: toJSON,
     toString: toString,
   };

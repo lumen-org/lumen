@@ -91,7 +91,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     }
   };
 
-  /** What is the color of a line?
+  /**
+   * What is the color of a line?
    * if split on color:
    *   if discrete split: each line gets uniform color anyway
    *   else: color of the average value of the extent
@@ -131,31 +132,22 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
    *
    * Generates a mapper for the color of the lines/bars in the 1d marginal density plots.
    *
-   * Note that there is some "inconsistency": the passed in VisMEL query is the query for the main plot,
-   * and only implicitly describes the marginal plot. TODO: In fact this is a major flaw and should be fixed.
-   *
    * There are the following cases:
-   *
-   *   * Color is not used: grey
-   *   * Color is used by a FieldUsage that has discrete yield: We will split the bars/lines by the discrete outcomes of that aggregation/split and encode them differently to allow visual distinction.
-   *   * TODO: Color is used by a FieldUsage that has continuous yield: Then use ColorMap for main plot and apply it to the average of the domain of the ColorMap field. This way there is a better visual correspondence. ATM: just grey. but its implemented. just uncomment.
+   *   * Color is not used: return undefined. The value undefined indicates that we should use the default value for marginal densities. However, the exact value depends on other things that we can only know later.
+   *   * Color is used: (discrete or not) we encode it accordingly
+   *   * OLD (breaks new semantic): Color is used by a FieldUsage that has discrete yield: We will split the bars/lines by the discrete outcomes of that aggregation/split and encode them differently to allow visual distinction.
    *
    * @param query A VisMEL query.
    */
-  gen.marginalColor = function (query, mainColorMap) {
+  gen.marginalColor = function (query) {
     let color = query.layers[0].aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       let fu = color.fu;
-      if (PQL.hasDiscreteYield(fu)) {
-        let scale = ScaleGen.color(color, fu.extent);
-        return _averaged(scale);  // compute on demand
-      }
-      // else {
-      //   return mainColorMap(_valueOrAvg(fu.extent)); // scalar value, namely color for the average of the domain.
-      // }
+      let scale = ScaleGen.color(color, fu.extent);
+      return _averaged(scale);
     }
-    return undefined; // TODO: this is a workaround: the value undefined indicates that we should use the default value for marginal densities (which depends on other things)
-    // return c.map.uniDensity.color.def;
+    return undefined;
+    // OLD: return c.map.uniDensity.color.def;
   };
 
   return gen;

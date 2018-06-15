@@ -132,7 +132,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
       if (qtype === 'predict')
         return this.predict(query.predict, query.where, query.splitby, query.mode);
       if (qtype === 'model')
-        return this.model(query.model, query.where, query.as);
+        return this.model(query.model, query.where, query.defaults, query.as);
       if (qtype === 'select')
         return this.select(query.select, query.where, query.opts);
       throw Error("not yet impemented");
@@ -160,7 +160,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
      * (2) marginalizing that variable out of the model
      */
     condition(constraints, name = this.name) {
-      return this.model("*", constraints, name);
+      return this.model("*", constraints, [], name);
     }
 
     marginalize(what, how="remove", name=this.name) {
@@ -169,12 +169,12 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
         what =  _.without(this.names(), ...what);
       else if (how !== "keep")
         throw RangeError("invalid value for 'how': " + how);
-      return this.model(what, [], name);
+      return this.model(what, [], [], name);
     }
 
-    model(model, where = [], as_ = this.name) {
-      var jsonPQL = PQL.toJSON.model(this.name, model, as_, where);
-      var newModel = (as_ !== this.name ? new RemoteModel(as_, this.url) : this);
+    model(model, where = [], defaults = [], as_ = this.name) {
+      let jsonPQL = PQL.toJSON.model(this.name, model, as_, where, defaults);
+      let newModel = (as_ !== this.name ? new RemoteModel(as_, this.url) : this);
       return executeRemotely(jsonPQL, this.url)
         .then(jsonHeader => newModel._updateHeader(jsonHeader));
     }
@@ -249,7 +249,8 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     }
 
     /**
-     * Returns a copy of this object. This does not actually copy any model on the remote host. It simply copies the local object and does not run any remote queries at all.
+     * Returns a copy of this object. This does not actually copy any model on the remote host.
+     * It simply copies the local object and does not run any remote queries at all.
      */
     localCopy() {
       var clone = new RemoteModel(this.name, this.url);

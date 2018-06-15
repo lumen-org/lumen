@@ -6,8 +6,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
-  function (Emitter, d3, init, PQL, VisMEL, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
+define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
+  function (Emitter, d3, init, PQL, VisMEL, V4T, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -22,8 +22,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-        drop(shelves.column, shelves.meas.at(0));
-        drop(shelves.row, shelves.meas.at(1));
+        drop(shelves.column, shelves.dim.at(0));
+        drop(shelves.column, shelves.meas.at(1));
     }
 
     /**
@@ -79,33 +79,54 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             console.log("updating!");
             try {
               let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
-              c.model = c.basemodel.localCopy();
-              c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.model, mode);
-              c.query.rebase(c.model);  // important! rebase on the basemodel's copy to prevent modification of basemodel
-              //c.config = staticConfig();
-              c.queryTable = new QueryTable(c.query);
-              c.modelTable = new ModelTable(c.queryTable);
+
+              c.basemodel = c.model.localCopy();
+
+              // get user query
+              c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel, mode);
+              c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
+
+              // TODO: apply global filters and remove them from query
+              // i.e. change basemodel, and basequery
+              c.basequery = c.query;
+
+              c.baseQueryTable = new QueryTable(c.basequery);
+              c.baseModelTable = new ModelTable(c.baseQueryTable);
+
+              // let foo = V4T.uniDensity(c.query, 'rows');
+              // console.log(foo);
             }
             catch (error) {
               console.error(error);
               infoBox.message(error);
             }
-            c.modelTable.model()
+
+            // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
+            // this is crucial to link corresponding axis and results in the visualization
+            // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
+            let fieldUsageCacheMap = new Map();
+
+            c.baseModelTable.model()
               .then(() => infoBox.hide())
 
-              .then(() => RT.aggrCollection(c.queryTable, c.modelTable, c.config.visConfig.aggregations.active))
+              .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
-              .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.data.active, {data_category:'training data'}))
+
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data'}))
               .then(res => c.dataRT = res)
-              .then(() => RT.samplesCollection(c.queryTable, c.modelTable, c.config.visConfig.testData.active, {data_category:'test data'}))
+
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data'}))
               .then(res => c.testDataRT = res)
-              .then(() => RT.uniDensityCollection(c.queryTable, c.modelTable,
+
+              .then(() => RT.uniDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap,
                 c.config.visConfig.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
               )
               .then(res => c.uniDensityRT = res)
-              .then(() => RT.biDensityCollection(c.queryTable, c.modelTable, c.config.visConfig.contour.active))
+
+              .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
-              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable, c.config))
+
+              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!
@@ -130,14 +151,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         }
 
         // server and model
-        // note that basemodel is expected to be constant, i.e. it never is changed
+        // note that model is expected to be constant, i.e. it never is changed
         this.server = server;
         if (server !== undefined)
           this.modelbase = new Remote.ModelBase(server);
         if (modelName !== undefined && server !== undefined)
-          this.basemodel = new Remote.Model(modelName, server);
+          this.model = new Remote.Model(modelName, server);
         else
-          this.basemodel = {};
+          this.model = {};
 
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
@@ -161,8 +182,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
 
         // the stages of the pipeline: query -> ... -> visualization
         this.query = {};
-        this.queryTable = {};
-        this.modelTable = {};
+        this.baseQueryTable = {};
+        this.baseModelTable = {};
         this.aggrRT = {};
         this.dataRT = {};
         this.testDataRT = {};
@@ -274,7 +295,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
        */
       copy () {
         // TODO: undo/redo states are lost on copy
-        let copiedContext = new Context(this.server, this.basemodel.name, this.copyShelves());
+        let copiedContext = new Context(this.server, this.model.name, this.copyShelves());
 
         // additional stuff to copy
         copiedContext.config = JSON.parse(JSON.stringify(this.config));
@@ -282,7 +303,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         // all the following objects are entirely recreated on a shelves change
         // hence we do not need to deep-copy, but can simply link to them!
         // TODO: i get the feeling that I should implement some sort of state machine at the same time, that manages that only required parts of the pipeline are updated
-        // for (let name of ['query', 'queryTable', 'modelTable', 'aggrRT', 'dataRT', 'testDataRT', 'uniDensityRT', 'biDensityRT', 'viewTable'])
+        // for (let name of ['query', 'baseQueryTable', 'baseModelTable', 'aggrRT', 'dataRT', 'testDataRT', 'uniDensityRT', 'biDensityRT', 'viewTable'])
         //   copiedContext[name] = this[name]
 
         // now make it visual
@@ -313,7 +334,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               let c = context;
               // redraw
               // TODO: what is visPanel, ... ?
-              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.queryTable, c.config);
+              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
         $vis.draggable(); // yeah, that was easy. just made it draggable!
@@ -460,8 +481,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
               contextQueue.add(context);
 
               // fetch model
-              context.basemodel.update()
-                .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas))
+              context.model.update()
+                .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
                 .then(() => activate(context, ['visualization', 'visPanel']))
                 .catch((err) => {
                   console.error(err);
@@ -540,7 +561,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
             contextQueue.add(contextCopy);
 
             // fetch model
-            contextCopy.basemodel.update()
+            contextCopy.model.update()
               .then(() => activate(contextCopy, ['visualization', 'visPanel']))
               .then(() => contextCopy.update())
               .catch((err) => {
@@ -866,8 +887,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMELShelfDroppi
         activate(context, ['visualization', 'visPanel']);
 
         // fetch model
-        context.basemodel.update()
-          .then(() => sh.populate(context.basemodel, context.shelves.dim, context.shelves.meas)) // on model change
+        context.model.update()
+          .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .catch((err) => {
             console.error(err);
