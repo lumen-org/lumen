@@ -250,10 +250,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
           traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
-          traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis)); // TODO: plot this after the aggregations?
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
+        traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+        traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
         traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       } else {
         traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
