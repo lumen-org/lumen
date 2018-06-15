@@ -261,9 +261,6 @@ main {
     min-height: 1em;
 }
 
-.shelf-list-item {
-}
-
 /* a (even just transparent) border is required to make highlighting possible without flickering */
 .shelf, .shelf-list-item {
     border: solid 2px transparent;

@@ -52,6 +52,12 @@ body {
     padding: 0.2rem;
 }
 
+.pl-field:hover {
+    cursor:move;
+    background-color: #f8f8f8;
+    transition: background-color 200ms;
+}
+
 .pl-method {
     position: absolute;
     top: 3px;
