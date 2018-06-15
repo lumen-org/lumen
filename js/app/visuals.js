@@ -307,10 +307,10 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
 
     var button = $(/*jshint multistr: true */
             '<div class="pl-button-container pl-hidden">\
-             <span class="pl-aggregation-button">A</span>\
-             <span class="pl-density-button">D</span>\
+             <span class="pl-aggregation-button">P</span>\
              <span class="pl-split-button pl-active">S</span>\
              </div>');
+             // <span class="pl-density-button">D</span>
     button.find('.pl-aggregation-button').click(()=>{
       translate(record, PQL.Aggregation);
     });
