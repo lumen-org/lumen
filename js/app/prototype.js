@@ -698,6 +698,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $detailsHideButton, $configHideButton,  $clone, $undo,/* $save,*/ $redo, $clear, $query, $reload);
 
+
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $query, $clone, $undo,/* $save,*/ $redo, $clear, $detailsHideButton, $configHideButton, $reload);
+
         if(context !== undefined)
           this.setContext(context);
       }

@@ -196,6 +196,11 @@ main {
     font-size:small;
 }
 
+.pl-swap-button:hover {
+    background-color: #ffffff;
+    cursor: pointer;
+}
+
 .pl-details {
     border-left: 2px solid #f3f3f3;
     background-color: #f8f8f8;
