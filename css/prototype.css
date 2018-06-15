@@ -162,6 +162,22 @@ main {
     cursor: pointer;
 }
 
+.pl-swapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.pl-swap-button {
+    border-radius: 5px;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    background-color: #f9f9f9;
+    border: 1px solid #93a0a8;
+}
+
 /*.drop-hover {
     background-color: #4c55dd;
 }*/

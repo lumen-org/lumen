@@ -413,8 +413,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
           .map(
-          // TODO: HACK for paper
-          // let checkBoxes = ['contour', 'marginals', 'aggregations'].map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')
@@ -528,7 +526,37 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     }
 
     /**
+     * A ShelfSwapper swaps the contents of two shelves of a common context.
+     * After instantiation its GUI is available under the .$visual attribute.
+     */
+    class ShelfSwapper {
+      constructor (context) {
+
+        let $swapButton = $('<div class="pl-swap-button"> Swap X and Y </div>').click( () => {
+          let shelves = this._context.shelves;
+          sh.swap(shelves.row, shelves.column);
+        });
+        this.$visual = $('<div class="pl-swapper">').append($swapButton);
+
+        if(context !== undefined)
+          this.setContext(context);
+      }
+
+      /**
+       * Sets the context that it controls.
+       * @param context A context.
+       */
+      setContext (context) {
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
+
+        this._context = context;
+      }
+    }
+
+    /**
      * A toolbar to control a context.
+     * After instantiation its GUI is available under the .$visual attribute.
      */
     class Toolbar {
 
@@ -600,7 +628,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         this._context = context;
         this._modelSelector.setContext(context);
-
       }
     }
 
@@ -735,8 +762,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         // add marking for new active visualization
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
-        // TODO: replace this with context
         toolbar.setContext(context);
+        swapper.setContext(context);
 
         // emit signal that context is now active
         context.emit("ContextActivatedEvent", context);
@@ -752,12 +779,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     inter.asRemoveElem($(document.body).find('main'));
 
     // create info box
-    var infoBox = new InfoBox("info-box");
+    let infoBox = new InfoBox("info-box");
     infoBox.$visual.insertAfter($('main'));
 
     // create toolbar
-    var toolbar = new Toolbar();
+    let toolbar = new Toolbar();
     toolbar.$visual.appendTo($('#pl-toolbar-container'));
+
+    // create x-y swap button
+    let swapper = new ShelfSwapper();
+    swapper.$visual.appendTo($('#pl-layout-container'));
 
     // context queue
     let contextQueue = new ContextQueue();
@@ -767,12 +798,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
     // setup editor for settings
     SettingsEditor.setEditor(document.getElementById('pl-config-editor-container2'));
-    // NOTE: SettingsEditor represents a singelton! The returned editor by setEditor() is an instance of jsoneditor (something different, whcih is encapsulated)
+    // NOTE: SettingsEditor represents a singelton! The returned editor by setEditor() is an instance of jsoneditor (something different, which is encapsulated)
 
     // watch for changes
     // TODO: implement smart reload (i.e. only redraw, for example)
     SettingsEditor.watch('root', () => {
-        infoBox.message("somethign changed!");
+        infoBox.message("something changed!");
         console.log(Config);
         contextQueue.first().update();
     });

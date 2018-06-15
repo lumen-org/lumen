@@ -73,12 +73,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    * @param dimShelf
    * @param measShelf
    */
-  function populate(model, dimShelf, measShelf, modeldataShelf) {
+  function populate(model, dimShelf, measShelf) {
     for (let field of model.fields.values()) {
-      // TODO: HACK for paper
-      // if (field.name === 'model vs data') {
-      //   // nothing
-      // } else
       if (field.dataType === PQL.FieldT.DataType.num)
         measShelf.append(field);
       else if (field.dataType === PQL.FieldT.DataType.string)
@@ -86,10 +82,25 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       else
         throw new RangeError('invalid value in field.dataType: ' + field.dataType);
     }
-    // finally add model vs data field
-    //modeldataShelf
   }
 
+  /**
+   * Swaps the contents of shelves A and B.
+   */
+  function swap(shelfA, shelfB) {
+    let lenA = shelfA.length,
+      lenB = shelfB.length;
+
+    for (let i=0;i<lenA;++i) {
+      shelfB.append(shelfA.at(0));
+      shelfA.remove(0);
+    }
+
+    for (let i=0;i<lenB;++i) {
+      shelfA.append(shelfB.at(0));
+      shelfB.remove(0);
+    }
+  }
 
   /**
    * Enumeration on the possible shelf types.
@@ -275,11 +286,11 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
   }
 
   return {
-    Shelf: Shelf,
-   // ShelfIterator: ShelfIterator,
-    ShelfTypeT: ShelfTypeT,
-    Record: Record,
-    populate: populate,
-    construct: construct
+    Shelf,
+    ShelfTypeT,
+    Record,
+    populate,
+    swap,
+    construct,
   };
 });
