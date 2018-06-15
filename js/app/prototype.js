@@ -60,15 +60,22 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     class Context {
       /**
        * Creates an new context. If no parameters are given, the context is empty.
-       * However, you can also specify the server, or the server and the modelName, or the server, the modelname and existing shelves for these.
+       * However, you can also specify the server, or the server and the modelName, or the server, the model name and existing shelves for these.
        *
-       * Note that the context is not immediately visual when instanciated. Call this.makeGUI for that.
+       * Note that the context is not immediately visual when instantiated. Call this.makeGUI for that.
+       *
+       * Contexts emit signals as follows:
+       *
+       *   * "ContextDeletedEvent" if it is deconstructed / deleted.
+       *   * "ContextQueryFinishSuccessEvent": iff the context successfully finished its update cycle.
        */
       constructor (server, modelName, shelves) {
 
         /**
          * Creates and returns a function to update a context. _On calling this function the
          * context does not need to be provided again!_
+         *
+         * The update function emits a number of signals, see documentation of the constructor.
          *
          * @param c the context.
          */
@@ -136,6 +143,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               .then(() => {
                 console.log("context: ");
                 console.log(c);
+              })
+              .then(() => {
+                c.emit("ContextQueryFinishSuccessEvent", this);
               })
               .catch((reason) => {
                 console.error(reason);
@@ -531,7 +541,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
      */
     class ShelfSwapper {
       constructor (context) {
-
         let $swapButton = $('<div class="pl-swap-button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
           sh.swap(shelves.row, shelves.column);
@@ -549,8 +558,73 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
       setContext (context) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
-
         this._context = context;
+      }
+    }
+
+    /**
+     * A DetailsView shows more detailed information about the currently active context, such as:
+     *
+     *  * model name
+     *  * model class
+     *  * query
+     *  * query results (?)
+     *  * query statistics (timings?)
+     */
+    class DetailsView {
+      constructor (context) {
+        this._$modelInfo = $('<div>');
+        this._$queryInfo = $('<div>');
+        this._$resultInfo = $('<div>');
+
+        this.$visual = $('<div class>')
+          .append('<div class="pl-details-heading pl-details-model">Model</h3>')
+          .append(this._$modelInfo)
+          .append('<div class="pl-details-heading pl-details-query">Query</div>')
+          .append(this._$queryInfo)
+          .append('<div class="pl-details-heading pl-details-result">Result</div>')
+          .append(this._$resultInfo);
+
+        if(context !== undefined) {
+          this.setContext(context);
+          this.update();
+        }
+      }
+
+      /**
+       * Update the view with the current state of the view context.
+       */
+      update() {
+        this.updateModelInfo();
+        this.updateQueryInfo();
+        this.updateResultInfo();
+      }
+
+      updateQueryInfo() {
+        // TODO
+      }
+
+      updateResultInfo() {
+        // TODO
+      }
+
+      updateModelInfo () {
+        let model = this._context.model;
+        this._$modelInfo.empty()
+          .append("Model name: " + model.name + "\n")
+          .append("Model class: " + "NOT IMPLEMENTED");
+      }
+
+      /**
+       * Sets the context that it controls.
+       * @param context A context.
+       */
+      setContext (context) {
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
+        this._context = context;
+        // bind to events of this context
+        this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
       }
     }
 
@@ -764,6 +838,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         toolbar.setContext(context);
         swapper.setContext(context);
+        detailsView.setContext(context);
 
         // emit signal that context is now active
         context.emit("ContextActivatedEvent", context);
@@ -790,6 +865,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     let swapper = new ShelfSwapper();
     swapper.$visual.appendTo($('#pl-layout-container'));
 
+    // details view
+    let detailsView = new DetailsView();
+    detailsView.$visual.appendTo($('#pl-details-container'));
+
+
     // context queue
     let contextQueue = new ContextQueue();
     contextQueue.on("ContextQueueEmpty", () => {
@@ -797,7 +877,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     });
 
     // setup editor for settings
-    SettingsEditor.setEditor(document.getElementById('pl-config-editor-container2'));
+    SettingsEditor.setEditor(document.getElementById('pl-config-editor-container'));
     // NOTE: SettingsEditor represents a singelton! The returned editor by setEditor() is an instance of jsoneditor (something different, which is encapsulated)
 
     // watch for changes

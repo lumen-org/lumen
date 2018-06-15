@@ -19,6 +19,7 @@ main {
 
 .pl-column-title {
     margin-left: 1em;
+    margin-right: 1em;
     font-size: large;
     font-weight: bolder;
 }
@@ -104,7 +105,7 @@ main {
     margin-right: 0.5rem;
 }
 
-#pl-config-editor-container2 {
+#pl-config-editor-container {
     overflow: auto;
     height: 100%;
 }
