@@ -167,6 +167,7 @@ main {
 .pl-toolbar-button {
     background-color: #f0f0f0;
     border-radius: 5px;
+    border: 1px solid #c5c5c5;
     margin: 0;
     padding-top: 0;
     padding-bottom: 0;
@@ -192,7 +193,7 @@ main {
     padding-left: 2rem;
     padding-right: 2rem;
     background-color: #f9f9f9;
-    border: 1px solid #93a0a8;
+    border: 1px solid #cbcbcb;
     font-size:small;
 }
 
