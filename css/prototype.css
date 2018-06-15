@@ -3,7 +3,7 @@
 main {
     display: flex;
     flex-direction: row;
-    height: 90%;
+    flex-grow: 1;
 }
 
 .shelf-title {
@@ -39,6 +39,8 @@ main {
 
 .pl-dashboard {
     background-color: #ffffff;
+    min-width: 50%;
+    flex-grow: 1;
 }
 
 #header-bar, #footer-bar {
