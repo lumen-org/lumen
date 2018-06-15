@@ -34,7 +34,9 @@ main {
 }
 
 .pl-spec {
-    background-color: #f3f3f3;
+    background-color: #f8f8f8;    
+    border-left: 2px solid #f3f3f3;
+    border-right: 2px solid #f3f3f3;
     min-width: 200px; /* for constant minimal width*/
 }
 
@@ -100,9 +102,15 @@ main {
 
 }
 
+.pl-config-onoff {
+    font-size: smaller;
+}
+
 .pl-config-onoff input {
     margin-left: 0rem;
     margin-right: 0.5rem;
+    margin-bottom: 0;
+    margin-top: 0;
 }
 
 #pl-config-editor-container {
@@ -185,6 +193,24 @@ main {
     background-color: #f9f9f9;
     border: 1px solid #93a0a8;
     font-size:small;
+}
+
+.pl-details.pl-column {
+    border-left: 2px solid #f3f3f3;
+    background-color: #f8f8f8;
+}
+
+#pl-details-container {
+    padding: 0.5rem;
+}
+
+#pl-details-container div {
+    font-size: small;
+    color: #6f6f6f;
+}
+
+#pl-details-container .pl-details-heading {
+    font-weight: bold;
 }
 
 /*.drop-hover {

@@ -383,7 +383,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
-          $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual);
+          $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
         // HACK for paper
         // visual.mappings = $('<div class="pl-mappings"></div>').append(
         //  shelves.filter.$visual, $('<hr>'));
@@ -438,6 +438,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
           }
         );
         let $visConfig = $('<div class="pl-config-visualization shelf vertical"></div>').append(
+          //$('<hr>'),
           title,
           ...checkBoxes
         );
@@ -573,16 +574,16 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
      */
     class DetailsView {
       constructor (context) {
-        this._$modelInfo = $('<div>');
-        this._$queryInfo = $('<div>');
-        this._$resultInfo = $('<div>');
+        this._$modelInfo = $('<div>'); // pl-details-model
+        this._$queryInfo = $('<div>'); // pl-details-query
+        this._$resultInfo = $('<div>'); // pl-details-result
 
         this.$visual = $('<div class>')
-          .append('<div class="pl-details-heading pl-details-model">Model</h3>')
+          .append('<div class="pl-details-heading">Model</div>')
           .append(this._$modelInfo)
-          .append('<div class="pl-details-heading pl-details-query">Query</div>')
+          .append('<div class="pl-details-heading">Query</div>')
           .append(this._$queryInfo)
-          .append('<div class="pl-details-heading pl-details-result">Result</div>')
+          .append('<div class="pl-details-heading">Result</div>')
           .append(this._$resultInfo);
 
         if(context !== undefined) {
@@ -611,8 +612,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
       updateModelInfo () {
         let model = this._context.model;
         this._$modelInfo.empty()
-          .append("Model name: " + model.name + "\n")
-          .append("Model class: " + "NOT IMPLEMENTED");
+          .append('<div>Model name: ' + model.name + '</div>')
+          .append('<div>Model class: " + to come</div>');
       }
 
       /**
