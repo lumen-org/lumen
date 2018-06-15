@@ -31,6 +31,7 @@ main {
 
 .pl-schema {
     background-color: #FFFFFF;
+    min-width: 175px;
 }
 
 .pl-spec {
@@ -195,9 +196,10 @@ main {
     font-size:small;
 }
 
-.pl-details.pl-column {
+.pl-details {
     border-left: 2px solid #f3f3f3;
     background-color: #f8f8f8;
+    min-width: 150px;
 }
 
 #pl-details-container {

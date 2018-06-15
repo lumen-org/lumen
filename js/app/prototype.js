@@ -547,6 +547,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
           sh.swap(shelves.row, shelves.column);
         });
         this.$visual = $('<div class="pl-swapper">').append($swapButton);
+        this.$visual.hide(); // hide on default
 
         if(context !== undefined)
           this.setContext(context);
@@ -560,6 +561,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
+        this._context.on("ContextDeletedEvent", () => this.$visual.hide());
+        this.$visual.show();
       }
     }
 
@@ -599,6 +602,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         this.updateModelInfo();
         this.updateQueryInfo();
         this.updateResultInfo();
+        this.$visual.show();
       }
 
       updateQueryInfo() {
@@ -626,6 +630,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         this._context = context;
         // bind to events of this context
         this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
+        this._context.on("ContextDeletedEvent", () => this.$visual.hide());
       }
     }
 
