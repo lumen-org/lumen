@@ -7,6 +7,13 @@
  *   pane : the entire space take by a visualization
  *   canvas : the actual drawing area of a pane, i.e. without margin and boarder
  *
+ * Axis coupling / anchoring:
+ *   Certain axes should zoom together, such that the visualization stays comparable at all times. Here, we apply the following schema:
+ *     * marginal axes have fixed ranges: there is no need to zoom into them. In contrary, doing so accidentally distracts the user.
+ *     * all main axis that encode the same dimension (i.e. the corresponding FieldUsage has the same yield) are anchored.
+ *
+ *   Note: this is just about spatial axis anchoring.
+ *
  * @module ViewTable
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)

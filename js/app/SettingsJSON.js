@@ -1041,7 +1041,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
         hoverformat: '.3f',
         rangemode: 'nonnegative',
         autorange: 'false',
-        fixedrange: false,
+        fixedrange: true,
         tickmode: 'auto', // TODO:
         nticks: 3,
         side: xy === 'y' ? 'right' : 'top',
