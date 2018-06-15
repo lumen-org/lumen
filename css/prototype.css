@@ -181,6 +181,7 @@ main {
     padding-right: 2rem;
     background-color: #f9f9f9;
     border: 1px solid #93a0a8;
+    font-size:small;
 }
 
 /*.drop-hover {
