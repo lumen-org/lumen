@@ -424,7 +424,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
                 // ... trigger an update
                 context.update()
               });
-            return $('<div class="pl-config-onoff">  </div>').append($checkBox);
+            return $('<div class="pl-config-onoff"></div>').append($checkBox);
           }
         );
         let $visConfig = $('<div class="pl-config-visualization shelf vertical"></div>').append(

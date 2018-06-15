@@ -97,6 +97,11 @@ main {
 
 }
 
+.pl-config-onoff input {
+    margin-left: 0rem;
+    margin-right: 0.5rem;
+}
+
 #pl-config-editor-container2 {
     overflow: auto;
     height: 100%;
