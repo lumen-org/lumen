@@ -130,7 +130,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     let aest = vismel.layers[0].aesthetics;
     for (let prop of ['color', 'shape', 'size']) {
       if (vismel.used[prop])
-        aest[prop] = useUpdateHashmap(aest[prop], hashmap)
+        aest[prop].fu = useUpdateHashmap(aest[prop].fu, hashmap)
     }
 
     let details = aest.details;
@@ -226,7 +226,8 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     // prune layout shelves and convert to split and density FieldUsage
     // create new split for univariate density (always new splits!)
     let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'probability');
-    densitySplit.args[0] = c.map.uniDensity.resolution;
+    if (!PQL.hasDiscreteYield(densitySplit))
+      densitySplit.args[0] = c.map.uniDensity.resolution;
 
     let layout = uniVismel.layout;
     layout[rowsOrCols].splice(0);
@@ -278,7 +279,8 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     let xSplit = PQL.Split.FromFieldUsage(vismel.layout.cols[0], 'probability');
     let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'probability');
     for (let s of [xSplit, ySplit])
-      s.args[0] = c.map.biDensity.resolution;
+      if (!PQL.hasDiscreteYield(s))
+        s.args[0] = c.map.biDensity.resolution;
 
     // should we generate the special trace biQC ?
     let posFu = [vismel.layout.cols[0], vismel.layout.rows[0]];
@@ -296,8 +298,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
       else
         aestNew.color = aestOld.color;  
 
-      // TODO: 
-      // convert shape and size to splits in details
+      // TODO: convert shape and size to splits in details
       // for (let key of ['shape', 'size'])
       //   if (vismel.used[key]) {
       //     if (VisMEL.isSplitMap(aestOld[key]))

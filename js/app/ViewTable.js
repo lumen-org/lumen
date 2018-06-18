@@ -987,6 +987,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         title: "",
         //title: "Model: " + query.sources[0].name,
         barmode: 'group',
+        bargroupgap: 0.05,
         margin: config.plots.layout.margin,
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
