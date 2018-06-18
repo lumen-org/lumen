@@ -545,10 +545,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     /**
+     * @xy 'x' ('y') if its an x-axis (y-axis)
      * @offset: .x (.y) is the offset in normalized coordinates for the templating axes
      * @size: .x (.y) is the size in normalized coordinates for the templating axes
      * @fus the stack of field usages that make up the templating axes
-     * @xy 'x' ('y') if its an x-axis (y-axis)
      * @id .x (.y) is the first free axis integer index for x (y) axis
      * @returns {} An array of axis objects for the layout part of a plotly plot configuration.
      */
@@ -588,7 +588,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
+        //let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
+        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], 0);
         annotations.push(annotation);
       });
 
@@ -760,6 +761,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         }
       }
 
+      let paneSize = {
+        x: 1 - templAxisSize.x,
+        y: 1 - templAxisSize.y,
+      };
+
       // width and heights of a single view cell in normalized coordinates
       let cellSize = {
         x: (1 - templAxisSize.x) / this.size.cols,
@@ -788,6 +794,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // padding between neighboring main axes in relative coordiantes
       // padding is always applied on the right/up side of an axis.
+      // TODO: axis padding is applied equally to both sides of an axis
       // we don't need padding if we have marginal plots, as they separate the main axis anyway...
       // TODO: do we rather want it in fixed pixel?
       axisLength.padding = {
@@ -843,7 +850,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
-        let yaxis = config.axisGenerator.main(mainOffset.y, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
+        let yaxis = config.axisGenerator.main(mainOffset.y + 0.5*axisLength.padding.y, axisLength.main.y - 0.5*axisLength.padding.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;        
 
         if (used.y) {
@@ -865,14 +872,18 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let xaxis, xid;
           if (idx.y === 0) {
             mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
-            xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
+            xaxis = config.axisGenerator.main(mainOffset.x + 0.5*axisLength.padding.x, axisLength.main.x - 0.5*axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
               let xYield = getFieldUsage(idx.x,'x',vismelColl).yields;
               xaxis.scaleanchor = getSetYield2Axis(xYield, "x"+xid);
-                
+              
               let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
-              axisTitles.push(axisTitleAnno);
+//            TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)              
+//               if (idx.x === 0) {
+//                   let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', paneOffset.x, paneSize.x, templAxisSize.y);                  
+//                   axisTitles.push(axisTitleAnno);
+//               }             
             }
             layout["xaxis" + xid] = xaxis;
             xid = "x" + xid;
