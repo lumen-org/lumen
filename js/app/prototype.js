@@ -6,8 +6,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
-  function (Emitter, d3, init, PQL, VisMEL, V4T, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
+define(['lib/emitter', 'd3', 'd3-legend', './init', './PQL', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
+  function (Emitter, d3, d3l, init, PQL, VisMEL, V4T, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -906,6 +906,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        * Starts the application.
        */
       start: function () {
+        //
+        console.log(d3l);
+        console.log(d3.legend);
+
         // create initial context with model
         let context =  new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);

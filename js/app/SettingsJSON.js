@@ -86,21 +86,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     colorscalesKeys = Object.keys(colorscalesEnum),
     colorscalesValues = Object.values(colorscalesEnum);
 
-  ////////// test
-  let myTestSchema = {
-    type: "object",
-    title: "myTest",
-    properties: {
-      color_Enum: {type: "string", enum: colorscalesKeys,},
-    },
-    //defaultProperties: ["colorEnum"],
-  };
-
-  let myTestInitial = {
-    color_Enum: "blues"
-  };
-  ////////// <<<<< test
-
   let tweaksSchema = {
     type: "object",
     //format: "grid",
@@ -120,7 +105,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
           "probability": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"},
           "aggregation": {type: "integer"},
         }
-      }
+      },
+      "data_point_limit": {type: "integer"},
     },
   };
   let tweaksInitial = {
@@ -128,15 +114,16 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     hideAccuMarginals: true,
     // resolution_1d: 100,
     // resolution_2d: 30,
-    resolution_1d: 20,
-    resolution_2d: 10,
+    resolution_1d: 15,
+    resolution_2d: 15,
     opacity: 0.7,
     levels: 16,
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches
-      aggregation: 25,
-    }
+      aggregation: 15,
+    },
+    data_point_limit: 2000,
   };
   tweaksInitial.splitCnts.density = tweaksInitial.resolution_1d;
 
@@ -825,14 +812,12 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       "tweaks": {"$ref": "#/definitions/tweaks"},
       "map": {"$ref": "#/definitions/map"},
       "colors": {"$ref": "#/definitions/colors"},
-      // "myTest": {"$ref": "#/definitions/myTest"},
       "plots": {"$ref": "#/definitions/plots"},
     },
     definitions: {
       "tweaks": tweaksSchema,
       "map": mapSchema,
       "colors": colorsSchema,
-      // "myTest": myTestSchema,
       "plots": plotsSchema,
     }
   };
@@ -841,7 +826,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     map: mapInitial,
     tweaks: tweaksInitial,
     colors: colorsInitial,
-    // myTest: myTestInitial,
     plots: plotsInitial,
   };
 
@@ -1126,8 +1110,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     updateSettings,
     jsonSchema,
     jsonInitial,
-    myTestSchema,
-    myTestSchemaInitial: myTestInitial
   }
 
 });

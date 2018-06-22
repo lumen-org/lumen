@@ -15,7 +15,8 @@ require.config({
 
   // rules to resolve module IDs (i.e. explicit additional rules)
   paths: {
-    d3: 'lib/d3.min'
+    d3: 'lib/d3.min',
+    'd3-legend': 'lib/d3-legend',
   }
 });
 
