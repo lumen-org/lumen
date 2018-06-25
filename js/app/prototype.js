@@ -7,7 +7,7 @@
  */
 
 define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Config, ActivityLogger) {
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -180,12 +180,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // other configuration
         this.config = {
           visConfig: {
-            aggregations: { active: Config.views.aggregations.active },
-            data: { active: Config.views.data.active, },
-            testData: { active: Config.views.testData.active, },
-            marginals: { active: Config.views.marginals.active },
-            contour: { active: Config.views.contour.active },
-            predictionOffset: { active: Config.views.predictionOffset.active},
+            aggregations: { active: Settings.views.aggregations.active },
+            data: { active: Settings.views.data.active, },
+            testData: { active: Settings.views.testData.active, },
+            marginals: { active: Settings.views.marginals.active },
+            contour: { active: Settings.views.contour.active },
+            predictionOffset: { active: Settings.views.predictionOffset.active},
           }
         };
         // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
@@ -265,7 +265,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       loadShelves (shelves) {
         // make new visual representations
         this.shelves = shelves;
-        var $newVis = Context._makeShelvesGUI(this);
+        let $newVis = Context._makeShelvesGUI(this);
 
         // replace current visuals with the ones
         // some more details, by the example of the '.pl-model'-div
@@ -285,7 +285,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * Returns a deep copy of the shelves of this context (excluding any visuals).
        */
       copyShelves() {
-        var shelvesCopy = {};
+        let shelvesCopy = {};
         for (const key of Object.keys(this.shelves))
           shelvesCopy[key] = this.shelves[key].copy();
         return shelvesCopy;
@@ -359,7 +359,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * @private
        */
       static _makeShelvesGUI (context) {
-        var shelves = context.shelves;
+        let shelves = context.shelves;
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
@@ -375,7 +375,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         shelves.column.beVisual({label: 'X-Axis'}).beInteractable();
         shelves.row.beVisual({label: 'Y-Axis'}).beInteractable();
 
-        var visual = {};
+        let visual = {};
 
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
@@ -458,7 +458,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * are not managed like this.
        */
       static _makeGUI(context) {
-        var visual = Context._makeShelvesGUI(context);
+        let visual = Context._makeShelvesGUI(context);
         visual.visConfig = Context._makeFacetWidget(context);
         visual.visualization = Context._makeVisualization(context);
         visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
@@ -488,11 +488,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         let $modelInput = $('<input type="text" list="models"/>')
           .keydown( (event) => {
-            var modelName = event.target.value;
+            let modelName = event.target.value;
             if (event.keyCode === 13) {
 
               // create new context and visualization with that model if it exists
-              var context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
+              let context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
               contextQueue.add(context);
 
               // fetch model
@@ -648,28 +648,28 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       constructor (context) {
 
-        var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
+        let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasUndo)
             c.loadShelves(c.unredoer.undo());
           else
             infoBox.message("no undo left!");
         });
-        /*var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
+        /*let $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
          let c = this._context;
          c.unredoer.commit(c.copyShelves());
          console.log("saved it!");
          });*/
-        var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
+        let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasRedo)
             c.loadShelves(c.unredoer.redo());
           else
             infoBox.message("no redo left!");
         });
-        var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
+        let $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
           () => this._context.clearShelves(['dim','meas']));
-        var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
+        let $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
           () => {
             let contextCopy = this._context.copy();
             contextQueue.add(contextCopy);
@@ -686,10 +686,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           }
         );
 
-        var $query = $('<div class="pl-toolbar-button">Query!</div>').click(
+        let $query = $('<div class="pl-toolbar-button">Query!</div>').click(
           () => this._context.update());
 
-        var $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
+        let $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
           () => this._context.modelbase.reload());
 
         this._modelSelector = new ModelSelector(context);
@@ -722,6 +722,24 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this._context = context;
         this._modelSelector.setContext(context);
       }
+    }
+
+    /**
+     * A widget for user studies.
+     * It allow a subject to report feedback.
+     *
+     * After instantiation its GUI is available under the .$visual attribute.
+     */
+    class SurveyWidget {
+
+      constructor () {
+        // provides a input field for subject id
+
+        // provides a text field to describe gained insight
+
+        // provides a button to commit insight
+      }
+
     }
 
     /**
@@ -836,9 +854,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      * It hides all visuals of the current context, except those specified.
      * @param context Context to activate.
      */
-    var activate = (function(){
+    let activate = (function(){
       // don't get confused. In the end it returns a function. And that function has a closure to hold its private variable _currentContext. That's it.
-      var _currentContext = {};
+      let _currentContext = {};
 
       function _activate (context, except = []) {
         /// disable old context
@@ -911,10 +929,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     ActivityLogger.enable(true);
     console.log(ActivityLogger.ready() ? "ready" : "not ready");
 
-    // set suitable user id on change
-    SettingsEditor.watch('root.tweaks.userId', () => {
-      console.log("CHANGED USER ID: ");
-    });
+//     // set suitable user id on change
+//     SettingsEditor.watch('root.tweaks.userId', () => {
+//       console.log("CHANGED USER ID: ");
+//       console.log(Settings.tweaks.userId);
+//     });
 
     return {
       /**

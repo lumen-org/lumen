@@ -27,7 +27,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
    * @returns {boolean}
    */
   function ready() {
-    return _enabled && _initialized;
+    return _enabled && _logPath !== undefined && _logServerUrl !== undefined;
   }
 
   /**
@@ -93,11 +93,12 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
    * @param jsonSerializableObj
    * @private
    */
-  function _log(jsonSerializableObj) {
+  function log(jsonSerializableObj, activityType='NO_TYPE') {
     if (!enabled)
       return;
 
     // add some more attributes to log
+    jsonSerializableObj.activityType = activityType;
     jsonSerializableObj.timestamp = Date.now(); // number of milliseconds since
     jsonSerializableObj.logPath = _logPath;  // log path
     jsonSerializableObj.logAppend = _appendContent;  // reset log file?
@@ -131,6 +132,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
     logPath,
     logServerUrl,
     ready,
+    log
   };
 
 });
