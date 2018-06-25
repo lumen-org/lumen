@@ -119,10 +119,10 @@ define(['lib/emitter', 'd3', 'd3-legend', './init', './PQL', './VisMEL', './VisM
               .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data'}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data', data_point_limit:Config.tweaks.data_point_limit}))
               .then(res => c.dataRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data'}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data', data_point_limit:Config.tweaks.data_point_limit}))
               .then(res => c.testDataRT = res)
 
               .then(() => RT.uniDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap,
