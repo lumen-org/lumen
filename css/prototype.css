@@ -221,6 +221,29 @@ main {
     font-weight: bold;
 }
 
+
+.pl-survey-title {
+    margin-bottom: 0.2rem;
+    font-weight: bolder;
+    font-size: small;
+}
+
+.pl-survey-content {
+    margin-left:1rem;
+    margin-bottom: 0.2rem;
+    margin-right:0.5rem;
+    /* width:100%; */
+    /* right: 0px; */
+}
+
+textarea.pl-survey-content {
+    min-height: 10rem;
+}
+
+.pl-toolbar-button.pl-survey-content {
+    width: 70%;
+}
+
 /*.drop-hover {
     background-color: #4c55dd;
 }*/
@@ -335,3 +358,4 @@ main {
 .pl-resizing {
     border: solid 2px rgba(56,172,221,0.8);
 }
+

@@ -739,7 +739,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       _makeUserIdWidget () {
 
         // make input field for user id
-        let $userIdInput = $('<input type="text" name="UserID" value="UNSET">');
+        let $userIdInput = $('<input class="pl-survey-content" type="text" name="UserID" value="UNSET">');
 
         // listen to changes
         $userIdInput.change(()=>{
@@ -748,18 +748,21 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // compose to whole widget
         return $('<div></div>')
-          .append('User Id: ')
+          .append('<div class="pl-survey-title">User Id</div>')
           .append($userIdInput);
       }
 
       static
       _makeInsightWidget () {
-        let $insightTextarea = $('<textarea name="insight">your insight here...</textarea>');
-        let $commitButton = $('<div>COMMIT</div>')
+        let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
+        let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">COMMIT</div>')
           .click( () => {
             console.log($insightTextarea.val());
           });
-        return $('<div></div>').append($insightTextarea).append($commitButton);
+        return $('<div></div>')
+          .append('<div class="pl-survey-title">Report Insight</div>')
+          .append($insightTextarea)
+          .append($commitButton);
       }
 
       constructor () {
@@ -767,7 +770,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this._$content = $('<div class=""></div>')
           .append([SurveyWidget._makeUserIdWidget(), SurveyWidget._makeInsightWidget()]);
 
-        this._$visual = $('<div id="pl-survey-container"></div>')
+        this.$visual = $('<div id="pl-survey-container"></div>')
           .append(this._$title)
           .append(this._$content);
       }
@@ -936,6 +939,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // details view
     let detailsView = new DetailsView();
     detailsView.$visual.appendTo($('#pl-details-container'));
+
+    // create survey widget
+    let surveyWidget = new SurveyWidget();
+    surveyWidget.$visual.appendTo($('#pl-survey-widget'));
 
     // context queue
     let contextQueue = new ContextQueue();
