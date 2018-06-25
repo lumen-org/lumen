@@ -83,7 +83,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
           // Note that this function accesses the file scope!
           function update (commit = true) {
-            console.log("updating!");
+            //console.log("updating!");
             try {
               let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
 
@@ -141,7 +141,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
                 }
               })
               .then(() => {
-                console.log("context: ");
+                //  console.log("context: ");
                 console.log(c);
               })
               .then(() => {
