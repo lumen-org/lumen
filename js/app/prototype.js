@@ -27,6 +27,24 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         drop(shelves.column, shelves.meas.at(1));
     }
 
+    // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
+    // but i guess cleanup requires deeper adaptions...
+    let _facetNameMap = {
+      'aggregations': 'prediction',
+      'marginals': 'marginal',
+      'contour': 'density',
+      'data': 'data',
+      'testData': 'test data',
+      'predictionOffset': 'prediction offset',
+    };
+
+    function _getFacetActiveState () {
+      let obj = {};
+      Object.keys(_facetNameMap).map(
+        facetName => obj[_facetNameMap[facetName]] = Settings.views[facetName].active );
+      return obj;
+    }
+
     /**
      * An info box receives messages that it shows.
      */
@@ -98,7 +116,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
               // log this activity
-              ActivityLogger.log({'VISMEL': c.query, 'facets': {}}, 'VISMEL_query');
+              ActivityLogger.log({'VISMEL': c.query, 'facets': _getFacetActiveState()}, 'VISMEL_query');
 
               // TODO: apply global filters and remove them from query
               // i.e. change basemodel, and basequery
@@ -412,25 +430,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * @private
        */
       static _makeFacetWidget (context) {
-
-        // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
-        // but i guess cleanup requires deeper adaptions...
-        let nameMap = {
-          'aggregations': 'prediction',
-          'marginals': 'marginal',
-          'contour': 'density',
-          'data': 'data',
-          'testData': 'test data',
-          'predictionOffset': 'prediction offset',
-        };
-
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
           .map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
-            let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')
+            let $checkBox = $('<input type="checkbox">' + _facetNameMap[what] + '</input>')
               .prop("checked", context.config.visConfig[what].active)
               .prop("disabled", context.config.visConfig[what].possible)
               .change( (e) => {
@@ -438,7 +444,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 context.config.visConfig[what].active = e.target.checked;
 
                 // log user activity
-                ActivityLogger.log({'facet': nameMap[what], 'value': e.target.checked}, "Facet_Change");
+                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': _getFacetActiveState()}, "Facet_Change");
 
                 // ... trigger an update
                 context.update()
