@@ -24,6 +24,10 @@ main {
     font-weight: bolder;
 }
 
+.pl-column-content {
+    margin: 0.5rem;
+}
+
 .pl-column-sep {
     width: 5px;
     background-color: #1a1a1a;
@@ -202,7 +206,7 @@ main {
     cursor: pointer;
 }
 
-.pl-details {
+#pl-right-column {
     border-left: 2px solid #f3f3f3;
     background-color: #f8f8f8;
     min-width: 150px;
@@ -232,6 +236,7 @@ main {
     margin-left:1rem;
     margin-bottom: 0.2rem;
     margin-right:0.5rem;
+    font-size: small;
     /* width:100%; */
     /* right: 0px; */
 }
@@ -242,6 +247,11 @@ textarea.pl-survey-content {
 
 .pl-toolbar-button.pl-survey-content {
     width: 70%;
+}
+
+.pl-column-separator {
+    margin-left: 1rem;
+    margin-right: 1rem;
 }
 
 /*.drop-hover {

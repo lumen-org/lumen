@@ -767,7 +767,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       constructor () {
         this._$title = $('<div class="pl-column-title">User Study</div>');
-        this._$content = $('<div class=""></div>')
+        this._$content = $('<div class="pl-column-content"></div>')
           .append([SurveyWidget._makeUserIdWidget(), SurveyWidget._makeInsightWidget()]);
 
         this.$visual = $('<div id="pl-survey-container"></div>')
