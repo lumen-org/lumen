@@ -247,6 +247,7 @@ textarea.pl-survey-content {
 
 .pl-toolbar-button.pl-survey-content {
     width: 70%;
+    text-align: center;
 }
 
 .pl-column-separator {

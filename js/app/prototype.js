@@ -40,11 +40,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       hide () {
-        this.$visual.hide();
+        this.$visual.fadeOut(400);
       }
 
       show () {
-        this.$visual.show();
+        this.$visual.fadeIn(100);
       }
 
       message (str, type="error") {
@@ -52,7 +52,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this.show();
 
         let that = this;
-        setTimeout( () => that.hide(), 2500);
+        setTimeout( () => that.hide(), 3500);
       }
 
       get $visual () {
@@ -758,7 +758,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       static
       _makeInsightWidget (callback) {
         let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
-        let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">COMMIT</div>')
+        let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report now</div>')
           .click( () => {
             console.log($insightTextarea.val());
             callback($insightTextarea.val());
