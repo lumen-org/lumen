@@ -732,14 +732,45 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class SurveyWidget {
 
-      constructor () {
-        // provides a input field for subject id
+      /**
+       * Creates and returns a widget that provides a input field for subject id, a text field to describe gained insight and a button to commit insight.
+       */
+      static
+      _makeUserIdWidget () {
 
-        // provides a text field to describe gained insight
+        // make input field for user id
+        let $userIdInput = $('<input type="text" name="UserID" value="UNSET">');
 
-        // provides a button to commit insight
+        // listen to changes
+        $userIdInput.change(()=>{
+          console.log($(this).val());
+        });
+
+        // compose to whole widget
+        return $('<div></div>')
+          .append('User Id: ')
+          .append($userIdInput);
       }
 
+      static
+      _makeInsightWidget () {
+        let $insightTextarea = $('<textarea name="insight">your insight here...</textarea>');
+        let $commitButton = $('<div>COMMIT</div>')
+          .click( () => {
+            console.log($insightTextarea.val());
+          });
+        return $('<div></div>').append($insightTextarea).append($commitButton);
+      }
+
+      constructor () {
+        this._$title = $('<div class="pl-column-title">User Study</div>');
+        this._$content = $('<div class=""></div>')
+          .append([SurveyWidget._makeUserIdWidget(), SurveyWidget._makeInsightWidget()]);
+
+        this._$visual = $('<div id="pl-survey-container"></div>')
+          .append(this._$title)
+          .append(this._$content);
+      }
     }
 
     /**
