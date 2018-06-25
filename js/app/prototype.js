@@ -6,17 +6,18 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
-  function (Emitter, d3, init, PQL, VisMEL, V4T, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Config, ActivityLogger) {
     'use strict';
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'mcg_crabs_map';
+    const DEFAULT_MODEL = 'mcg_iris_map';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
     const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000/webservice';
+    const DEFAULT_ACTIVITY_LOGGER_URL = 'http://127.0.0.1:5000/activitylogger';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -93,15 +94,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel, mode);
               c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
+              // log this activity
+              ActivityLogger.log({'VISMEL': c.query, 'facets': {}}, 'VISMEL_query');
+
               // TODO: apply global filters and remove them from query
               // i.e. change basemodel, and basequery
               c.basequery = c.query;
 
               c.baseQueryTable = new QueryTable(c.basequery);
               c.baseModelTable = new ModelTable(c.baseQueryTable);
-
-              // let foo = V4T.uniDensity(c.query, 'rows');
-              // console.log(foo);
             }
             catch (error) {
               console.error(error);
@@ -399,17 +400,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
       }
 
       /**
-       * Creates and returns GUI for visualization config.
+       * Creates and returns GUI to visible facets .
        *
-       * An context update is triggered, if the state of the config is changed.
+       * An context update is triggered if the state of the config is changed.
        *
        * @param context
        * @return {void|*|jQuery}
        * @private
        */
-      static _makeVisConfig (context) {
+      static _makeFacetWidget (context) {
 
         // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
+        // but i guess cleanup requires deeper adaptions...
         let nameMap = {
           'aggregations': 'prediction',
           'marginals': 'marginal',
@@ -431,6 +433,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               .change( (e) => {
                 // update the config and ...
                 context.config.visConfig[what].active = e.target.checked;
+
+                // log user activity
+                ActivityLogger.log({'facet': nameMap[what], 'value': e.target.checked}, "Facet_Change");
+
                 // ... trigger an update
                 context.update()
               });
@@ -453,7 +459,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        */
       static _makeGUI(context) {
         var visual = Context._makeShelvesGUI(context);
-        visual.visConfig = Context._makeVisConfig(context);
+        visual.visConfig = Context._makeFacetWidget(context);
         visual.visualization = Context._makeVisualization(context);
         visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
         return visual;
@@ -882,7 +888,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     let detailsView = new DetailsView();
     detailsView.$visual.appendTo($('#pl-details-container'));
 
-
     // context queue
     let contextQueue = new ContextQueue();
     contextQueue.on("ContextQueueEmpty", () => {
@@ -896,9 +901,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     // watch for changes
     // TODO: implement smart reload (i.e. only redraw, for example)
     SettingsEditor.watch('root', () => {
-        infoBox.message("something changed!");
-        console.log(Config);
         contextQueue.first().update();
+    });
+
+    // activity logger
+    ActivityLogger.logPath("user_log.json");
+    ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
+    ActivityLogger.additionalFixedContent({'user_id':'NOT_SET'});
+    ActivityLogger.enable(true);
+    console.log(ActivityLogger.ready() ? "ready" : "not ready");
+
+    // set suitable user id on change
+    SettingsEditor.watch('root.tweaks.userId', () => {
+      console.log("CHANGED USER ID: ");
     });
 
     return {
