@@ -355,6 +355,7 @@ textarea.pl-survey-content {
     color: rgb(255, 54, 3);
     font-weight: bold;
     display: none;
+    background-color: rgba(220,220,220,0.7);
 }
 
 .pl-model-selector {

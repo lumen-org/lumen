@@ -50,6 +50,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       message (str, type="error") {
         this._$visual.text(str);
         this.show();
+
+        let that = this;
+        setTimeout( () => that.hide(), 2500);
       }
 
       get $visual () {
@@ -725,10 +728,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     }
 
     /**
-     * A widget for user studies.
-     * It allow a subject to report feedback.
+     * A widget for user studies. It allow a subject to report feedback.
      *
-     * After instantiation its GUI is available under the .$visual attribute.
+     * After instantiation its GUI is available under the .$visual attribute as a jQuery object
      */
     class SurveyWidget {
 
@@ -736,14 +738,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * Creates and returns a widget that provides a input field for subject id, a text field to describe gained insight and a button to commit insight.
        */
       static
-      _makeUserIdWidget () {
+      _makeUserIdWidget (callback) {
 
         // make input field for user id
         let $userIdInput = $('<input class="pl-survey-content" type="text" name="UserID" value="UNSET">');
 
         // listen to changes
         $userIdInput.change(()=>{
-          console.log($(this).val());
+          console.log($userIdInput.val());
+          callback($userIdInput.val());
         });
 
         // compose to whole widget
@@ -753,11 +756,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       static
-      _makeInsightWidget () {
+      _makeInsightWidget (callback) {
         let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
         let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">COMMIT</div>')
           .click( () => {
             console.log($insightTextarea.val());
+            callback($insightTextarea.val());
           });
         return $('<div></div>')
           .append('<div class="pl-survey-title">Report Insight</div>')
@@ -765,10 +769,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .append($commitButton);
       }
 
-      constructor () {
+      /**
+       * @param onIdChange Callback for user id change.
+       * @param onInsightReport Callback for reporting.
+       */
+      constructor (onIdChange, onInsightReport) {
         this._$title = $('<div class="pl-column-title">User Study</div>');
         this._$content = $('<div class="pl-column-content"></div>')
-          .append([SurveyWidget._makeUserIdWidget(), SurveyWidget._makeInsightWidget()]);
+          .append([SurveyWidget._makeUserIdWidget(onIdChange), SurveyWidget._makeInsightWidget(onInsightReport)]);
 
         this.$visual = $('<div id="pl-survey-container"></div>')
           .append(this._$title)
@@ -924,6 +932,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
     inter.asRemoveElem($(document.body).find('main'));
 
+    // activity logger
+    ActivityLogger.logPath("user_log.json");
+    ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
+    ActivityLogger.additionalFixedContent({'user_id':'NOT_SET'});
+    ActivityLogger.enable(true);
+
     // create info box
     let infoBox = new InfoBox("info-box");
     infoBox.$visual.insertAfter($('main'));
@@ -941,7 +955,16 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     detailsView.$visual.appendTo($('#pl-details-container'));
 
     // create survey widget
-    let surveyWidget = new SurveyWidget();
+    let surveyWidget = new SurveyWidget(
+      newID  => {
+        infoBox.message("set user id to: " + newID.toString());
+        ActivityLogger.additionalFixedContent({'user_id': newID})
+      },
+      report => {
+        infoBox.message("reported insight: " + report.toString());
+        ActivityLogger.log({'report': report}, 'insight')
+      }
+    );
     surveyWidget.$visual.appendTo($('#pl-survey-widget'));
 
     // context queue
@@ -959,19 +982,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     SettingsEditor.watch('root', () => {
         contextQueue.first().update();
     });
-
-    // activity logger
-    ActivityLogger.logPath("user_log.json");
-    ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
-    ActivityLogger.additionalFixedContent({'user_id':'NOT_SET'});
-    ActivityLogger.enable(true);
-    console.log(ActivityLogger.ready() ? "ready" : "not ready");
-
-//     // set suitable user id on change
-//     SettingsEditor.watch('root.tweaks.userId', () => {
-//       console.log("CHANGED USER ID: ");
-//       console.log(Settings.tweaks.userId);
-//     });
 
     return {
       /**
