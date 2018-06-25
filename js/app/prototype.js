@@ -758,10 +758,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       static
       _makeInsightWidget (callback) {
         let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
-        let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report now</div>')
+        let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report & clear</div>')
           .click( () => {
             console.log($insightTextarea.val());
             callback($insightTextarea.val());
+            $insightTextarea.val("");
           });
         return $('<div></div>')
           .append('<div class="pl-survey-title">Report Insight</div>')
