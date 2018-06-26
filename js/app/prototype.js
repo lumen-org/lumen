@@ -2,7 +2,7 @@
  * Main component that assembles and manages the actual GUI of the PMV web client.
  *
  * Activity Logging:
- *   * user_id: the subjects unique id (configured by its own GUI widget)
+ *   * userId: the subjects unique id (configured by its own GUI widget)
  *   *
  *
  *
@@ -975,7 +975,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // activity logger
     ActivityLogger.logPath("user_log.json");
     ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
-    ActivityLogger.additionalFixedContent({'user_id':'NOT_SET'});
+    ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
     ActivityLogger.enable(true);
 
     // create info box
@@ -998,7 +998,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     let surveyWidget = new SurveyWidget(
       newID  => {
         infoBox.message("set user id to: " + newID.toString());
-        ActivityLogger.additionalFixedContent({'user_id': newID})
+        ActivityLogger.additionalFixedContent({'userId': newID})
       },
       (report, context) => {
         infoBox.message("reported insight: " + report.toString());        
