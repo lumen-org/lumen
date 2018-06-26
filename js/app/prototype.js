@@ -360,10 +360,18 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         copiedContext.makeGUI();
 
         // size of visualization
-        copiedContext.$visuals.visualization.css({
-          width: this.$visuals.visualization.css('width'),
-          height: this.$visuals.visualization.css('height'),
+        let $visCopy = copiedContext.$visuals.visualization,
+          $vis = this.$visuals.visualization;
+        $visCopy.css({
+          width: $vis.css('width'),
+          height: $vis.css('height'),
         });
+
+        // position  
+        let pos = $vis.position();
+        pos.top += 20;
+        pos.left += 20;
+        $visCopy.css(pos)
 
         return copiedContext;
       }
