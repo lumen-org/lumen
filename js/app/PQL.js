@@ -102,6 +102,14 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     copy () {
       return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy());
     }
+
+    toJSON () {
+      return {
+        name: this.name,
+        dataType: this.dataType
+      }
+    }
+
   }
 
   function isField (obj) {
