@@ -1,13 +1,18 @@
 /**
  * Main component that assembles and manages the actual GUI of the PMV web client.
  *
+ * Activity Logging:
+ *   * user_id: the subjects unique id (configured by its own GUI widget)
+ *   *
+ *
+ *
  * @module main
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', '/.utils'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -184,6 +189,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // server and model
         // note that model is expected to be constant, i.e. it never is changed
+        this.uuid = utils.uuid();
         this.server = server;
         if (server !== undefined)
           this.modelbase = new Remote.ModelBase(server);
@@ -230,6 +236,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // emitter mixin
         Emitter(this);
+
+        ActivityLogger(this.getNameAndUUID(), 'CreateContext');
       }
 
       /**
@@ -241,6 +249,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           if ($visuals.hasOwnProperty(visual))
             $visuals[visual].remove();
         }
+        ActivityLogger(this.getNameAndUUID(), 'CloseContext');
         this.emit("ContextDeletedEvent", this);
       }
 
@@ -320,6 +329,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       /**
+       * Returns am object with the name of the model and the universally unique ID, both of this context.
+       * @returns {{name, uuid: *}}
+       */
+      getNameAndUUID () {
+         return {'name': this.model.name, 'uuid': this.uuid};
+      }
+
+      /**
        * Creates a deep copy of this context.
        *
        * This means a new (local view on the) model is created, as well as a copy of the shelves and their contents. As the standard new context it is already "visual" (i.e. attachVisuals is called), but its "hidden" before (i.e. hideVisuals() is called.
@@ -358,14 +375,17 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let $nav = $removeButton;
         let $vis = $('<div class="pl-visualization"></div>')
           .append($paneDiv, $nav)
-          .click( () => activate(context, ['visualization', 'visPanel']) )
+          .click( () => {
+            activate(context, ['visualization', 'visPanel']);
+            ActivityLogger.log(context.getNameAndUUID(), 'ActivateContext');
+          })
           .resizable({
             ghost: true,
             helper: "pl-resizing",
             stop: (event, ui) => {
               let c = context;
+              ActivityLogger.log(c.getNameAndUUID(), 'Resize');
               // redraw
-              // TODO: what is visPanel, ... ?
               c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
@@ -659,8 +679,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let c = this._context;
-          if (c.unredoer.hasUndo)
+          if (c.unredoer.hasUndo) {
+            ActivityLogger.log({}, 'Undo');
             c.loadShelves(c.unredoer.undo());
+          }
           else
             infoBox.message("no undo left!");
         });
@@ -671,15 +693,21 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
          });*/
         let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
-          if (c.unredoer.hasRedo)
+          if (c.unredoer.hasRedo) {
+            ActivityLogger.log({}, 'Redo');
             c.loadShelves(c.unredoer.redo());
+          }
           else
             infoBox.message("no redo left!");
         });
         let $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
-          () => this._context.clearShelves(['dim','meas']));
+          () => {
+            ActivityLogger.log({}, 'Clear');
+            this._context.clearShelves(['dim','meas']);
+          });
         let $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
           () => {
+            ActivityLogger.log({}, 'Clone');
             let contextCopy = this._context.copy();
             contextQueue.add(contextCopy);
 

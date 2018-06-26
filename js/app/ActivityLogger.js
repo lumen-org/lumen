@@ -1,9 +1,11 @@
 /**
  * Module for logging of user actions.
  *
- * Usage:
- *   1. set logPath (
- *
+ * Example Usage:
+ *   ActivityLogger.logPath("user_log.json");
+ *   ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
+ *   ActivityLogger.additionalFixedContent({'user_id':'NOT_SET'});
+ *   ActivityLogger.enable(true);
  *
  * @module UserActionLogger
  * @author Philipp Lucas
