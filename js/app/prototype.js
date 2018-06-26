@@ -436,8 +436,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves)) {
           shelves[key].on(Emitter.ChangedEvent, context.update);
-          shelves[key].on(sh.Shelf.Event.Add, record => ActivityLogger.log({shelf:record.shelf.type, content: record.content.toJSON()}, sh.Shelf.Event.Add) );
-          shelves[key].on(sh.Shelf.Event.Remove, record => ActivityLogger.log({shelf:record.shelf.type, content: record.content.toJSON()}, sh.Shelf.Event.Remove) );
+          shelves[key].on(sh.Shelf.Event.Add, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON()}, sh.Shelf.Event.Add) );
+          shelves[key].on(sh.Shelf.Event.Remove, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON()}, sh.Shelf.Event.Remove) );
         }
         return visual;
       }
