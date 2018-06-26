@@ -126,9 +126,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
-    // resolution_1d: 100,
-    // resolution_2d: 30,
-    resolution_1d: 25,
+    resolution_1d: 15,
     resolution_2d: 15,
     opacity: 0.7,
     levels: 16,
@@ -868,11 +866,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     c.views = {
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
-        active: false, // true if the view is active (i.e.. computed and visible) BY DEFAULT false if not
+        active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
       data: {
         possible: true,
-        active: false,
+        active: true,
       },
       testData: {
         possible: true,

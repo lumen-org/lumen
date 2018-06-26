@@ -17,7 +17,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'mcg_iris_map';
+    //const DEFAULT_MODEL = 'mcg_iris_map';
+    const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
     // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
@@ -668,9 +669,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
+        let that = this;
+        that.update();
         // bind to events of this context
-        this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
-        this._context.on("ContextDeletedEvent", () => this.$visual.hide());
+        this._context.on("ContextQueryFinishSuccessEvent", () => that.update());
+        this._context.on("ContextDeletedEvent", () => that.$visual.hide());
       }
     }
 
@@ -1000,7 +1003,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     let surveyWidget = new SurveyWidget(
       newID  => {
         infoBox.message("set user id to: " + newID.toString());
-        ActivityLogger.additionalFixedContent({'userId': newID})
+        ActivityLogger.log({'newUserId': newID}, 'userid.change');
+        ActivityLogger.additionalFixedContent({'userId': newID});
+
       },
       (report, context) => {
         infoBox.message("reported insight: " + report.toString());        
