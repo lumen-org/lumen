@@ -561,6 +561,30 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
       }
 
+      _setModels(models) {
+        let $datalist = this._$modelsDatalist;
+        $datalist.empty();
+        for (let name of models) {
+          // filter any names that begin with "__" since these are only 'internal' models
+          if (!name.startsWith("__"))
+            $datalist.append($("<option>").attr('value',name).text(name))
+        }
+      }
+
+      /**
+       * Refetch the available models on the server.
+       */
+      refetchModels() {
+        this._context.modelbase.listModels().then( res => this._setModels(res.models) );
+      }
+
+      /**
+       * Trigger a reloading of available models on the server side and then refetch the available models
+       */
+      reloadModels () {
+        this._context.modelbase.reload().then( res => this._setModels(res.models) );
+      }
+
       /**
        * Sets the context that the toolbar controls.
        * @param context A context.
@@ -569,18 +593,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        let that = this;
-        context.modelbase.listModels().then(
-          res => {          
-            let $datalist = that._$modelsDatalist;
-            $datalist.empty();
-            for (let name of res.models) {
-              // filter any names that begin with "__" since these are only 'internal' models
-              if (!name.startsWith("__"))
-                $datalist.append($("<option>").attr('value',name).text(name))
-            }            
-          }
-        );
+        this.refetchModels();
       }
     }
 
@@ -698,6 +711,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       constructor (context) {
 
+        this._modelSelector = new ModelSelector(context);
+
         let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasUndo) {
@@ -750,9 +765,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           () => this._context.update());
 
         let $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
-          () => this._context.modelbase.reload());
-
-        this._modelSelector = new ModelSelector(context);
+          () => this._modelSelector.reloadModels());
 
         let $configHideButton = $('<div class="pl-toolbar-button">Config</div>').click( () => {
           $('.pl-config').toggle()
