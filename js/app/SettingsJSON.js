@@ -859,6 +859,13 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       filled: [0 /*circle*/,  3/*plus*/, 1 /*square*/, 4 /*X*/, 2 /*diamond*/, 17 /*star*/, 5,6,7,8 /*triangles...*/],
     };
     c.shapes.open = c.shapes.filled.map(n => n+100);
+
+
+    // some static configuration parts of the GUI
+    c.gui = {
+      clone_offset: 30, // visualize cloned context with some offset from the original position [px]
+    };
+
     return c;
   }
 

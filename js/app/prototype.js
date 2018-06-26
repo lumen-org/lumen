@@ -369,9 +369,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // position  
         let pos = $vis.position();
-        pos.top += 20;
-        pos.left += 20;
-        $visCopy.css(pos)
+        pos.top += Settings.gui.clone_offset;
+        pos.left += Settings.gui.clone_offset;
+        $visCopy.css(pos);
 
         return copiedContext;
       }
