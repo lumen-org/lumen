@@ -128,8 +128,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     hideAccuMarginals: true,
     // resolution_1d: 100,
     // resolution_2d: 30,
-    resolution_1d: 20,
-    resolution_2d: 10,
+    resolution_1d: 25,
+    resolution_2d: 15,
     opacity: 0.7,
     levels: 16,
     splitCnts: {

@@ -581,6 +581,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       constructor (context) {
         let $swapButton = $('<div class="pl-swap-button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
+          ActivityLogger.log(this.context.getNameAndUUID(), 'swap_x_y');
           sh.swap(shelves.row, shelves.column);
         });
         this.$visual = $('<div class="pl-swapper">').append($swapButton);
