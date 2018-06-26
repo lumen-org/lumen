@@ -602,7 +602,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        this._context.on("ContextDeletedEvent", () => this.$visual.hide());
+        this._context.on("ContextDeletedEvent", (c) => {
+          if (this._context.uuid == c.uuid)
+            this.$visual.hide()
+        });
         this.$visual.show();
       }
     }
@@ -669,11 +672,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        let that = this;
-        that.update();
+        this.update();
         // bind to events of this context
-        this._context.on("ContextQueryFinishSuccessEvent", () => that.update());
-        this._context.on("ContextDeletedEvent", () => that.$visual.hide());
+        this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
+        this._context.on("ContextDeletedEvent", c => {
+          if (this._context.uuid == c.uuid)
+            this.$visual.hide()
+        });
       }
     }
 
