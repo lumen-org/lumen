@@ -52,6 +52,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     }
 
     /**
+     * monotone z-index generator. used to push activated contexts visually to the front.
+     * Usage: zIndex = zIndexGenerator++;
+     */
+    let zIndexGenerator = 1;
+
+    /**
      * An info box receives messages that it shows.
      */
     class InfoBox {
@@ -986,6 +992,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // add marking for new active visualization
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
+        // move it to the front
+        _currentContext.$visuals.visualization.css("z-index",zIndexGenerator++);
+
+        // TODO: let it listen to some event instead
         toolbar.setContext(context);
         swapper.setContext(context);
         detailsView.setContext(context);
