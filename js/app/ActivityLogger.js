@@ -109,18 +109,16 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
     jsonSerializableObj = Object.assign(jsonSerializableObj, _additionalFixedContent);  // additional content
 
     // DEBUG
-    console.log(jsonSerializableObj.activityType);
-    console.log(jsonSerializableObj);
+    // console.log(jsonSerializableObj.activityType);
+    // console.log(jsonSerializableObj);
 
     // serialize
     let serializedObject = JSON.stringify(jsonSerializableObj);
 
     // send to log server
-    //console.error(serializedObject.toString());
-    // TODO:
-    // d3.json(_logServerUrl)
-    //   .header("Content-Type", "application/json")
-    //   .post(serializedObject, (err, json) => err ? _logFailed(err) : console.log(json.toString()));
+    d3.json(_logServerUrl)
+      .header("Content-Type", "application/json")
+      .post(serializedObject, (err, json) => err ? _logFailed(err) : 0);
   }
 
   function _logFailed(err) {
