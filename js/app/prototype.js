@@ -249,7 +249,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           if ($visuals.hasOwnProperty(visual))
             $visuals[visual].remove();
         }
-        ActivityLogger({'context': this.getNameAndUUID()}, 'context.close');
+        ActivityLogger.log({'context': this.getNameAndUUID()}, 'context.close');
         this.emit("ContextDeletedEvent", this);
       }
 
@@ -376,8 +376,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let $vis = $('<div class="pl-visualization"></div>')
           .append($paneDiv, $nav)
           .click( () => {
-            activate(context, ['visualization', 'visPanel']);
-            ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
+            if (contextQueue.first().uuid !== context.uuid) {
+              activate(context, ['visualization', 'visPanel']);
+              ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
+            }
           })
           .resizable({
             ghost: true,
@@ -834,7 +836,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      *  * if a context is activated, the corresponding element is moved to the beginning of the queue.
      *  * if the last context is deleted, a ContextQueueEmpty event is emitted.
      *
-     *  Note that contexts are not automatically added to this this queue when instanciated, but need to be by calling .append().
+     *  Note that contexts are not automatically added to this this queue when instantiated, but need to be by calling .append().
      */
     class ContextQueue {
 
