@@ -121,7 +121,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
               // log this activity
-              ActivityLogger.log({'VISMEL': c.query, 'facets': _getFacetActiveState()}, 'vismel_query');
+              ActivityLogger.log({'VISMEL': c.query, 'facets': _getFacetActiveState(), 'context': c.getNameAndUUID()}, 'vismel_query');
 
               // TODO: apply global filters and remove them from query
               // i.e. change basemodel, and basequery
@@ -237,7 +237,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // emitter mixin
         Emitter(this);
 
-        ActivityLogger.log(this.getNameAndUUID(), 'context.create');
+        ActivityLogger.log({'context': this.getNameAndUUID()}, 'context.create');
       }
 
       /**
@@ -249,7 +249,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           if ($visuals.hasOwnProperty(visual))
             $visuals[visual].remove();
         }
-        ActivityLogger(this.getNameAndUUID(), 'context.close');
+        ActivityLogger({'context': this.getNameAndUUID()}, 'context.close');
         this.emit("ContextDeletedEvent", this);
       }
 
@@ -377,14 +377,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .append($paneDiv, $nav)
           .click( () => {
             activate(context, ['visualization', 'visPanel']);
-            ActivityLogger.log(context.getNameAndUUID(), 'context.activate');
+            ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
           })
           .resizable({
             ghost: true,
             helper: "pl-resizing",
             stop: (event, ui) => {
               let c = context;
-              ActivityLogger.log(c.getNameAndUUID(), 'resize');
+              ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
               // redraw
               c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
@@ -436,8 +436,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves)) {
           shelves[key].on(Emitter.ChangedEvent, context.update);
-          shelves[key].on(sh.Shelf.Event.Add, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON()}, sh.Shelf.Event.Add) );
-          shelves[key].on(sh.Shelf.Event.Remove, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON()}, sh.Shelf.Event.Remove) );
+          shelves[key].on(sh.Shelf.Event.Add, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON(), 'context': context.getNameAndUUID()}, sh.Shelf.Event.Add) );
+          shelves[key].on(sh.Shelf.Event.Remove, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON(), 'context': context.getNameAndUUID()}, sh.Shelf.Event.Remove) );
         }
         return visual;
       }
@@ -466,7 +466,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 context.config.visConfig[what].active = e.target.checked;
 
                 // log user activity
-                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': _getFacetActiveState()}, "facet.change");
+                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': _getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
 
                 // ... trigger an update
                 context.update()
@@ -581,7 +581,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       constructor (context) {
         let $swapButton = $('<div class="pl-swap-button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
-          ActivityLogger.log(this.context.getNameAndUUID(), 'swap_x_y');
+          ActivityLogger.log({'context': this._context.getNameAndUUID()}, 'swap_x_y');
           sh.swap(shelves.row, shelves.column);
         });
         this.$visual = $('<div class="pl-swapper">').append($swapButton);
@@ -683,7 +683,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasUndo) {
-            ActivityLogger.log({}, 'undo');
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'undo');
             c.loadShelves(c.unredoer.undo());
           }
           else
@@ -697,7 +697,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
           if (c.unredoer.hasRedo) {
-            ActivityLogger.log({}, 'redo');
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'redo');
             c.loadShelves(c.unredoer.redo());
           }
           else
@@ -705,13 +705,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         });
         let $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
           () => {
-            ActivityLogger.log({}, 'clear');
-            this._context.clearShelves(['dim','meas']);
+            let c = this._context;
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'clear');
+            c.clearShelves(['dim','meas']);
           });
         let $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
           () => {
-            ActivityLogger.log({}, 'clone');
-            let contextCopy = this._context.copy();
+            let c = this._context;
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
+            let contextCopy = c.copy();
             contextQueue.add(contextCopy);
 
             // fetch model
@@ -998,9 +1000,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         infoBox.message("set user id to: " + newID.toString());
         ActivityLogger.additionalFixedContent({'user_id': newID})
       },
-      report => {
-        infoBox.message("reported insight: " + report.toString());
-        ActivityLogger.log({'report': report}, 'insight')
+      (report, context) => {
+        infoBox.message("reported insight: " + report.toString());        
+        ActivityLogger.log({'report': report}, 'insight');
       }
     );
     surveyWidget.$visual.appendTo($('#pl-survey-widget'));
