@@ -24,6 +24,10 @@ main {
     font-weight: bolder;
 }
 
+.pl-column-content {
+    margin: 0.5rem;
+}
+
 .pl-column-sep {
     width: 5px;
     background-color: #1a1a1a;
@@ -202,7 +206,7 @@ main {
     cursor: pointer;
 }
 
-.pl-details {
+#pl-right-column {
     border-left: 2px solid #f3f3f3;
     background-color: #f8f8f8;
     min-width: 150px;
@@ -219,6 +223,37 @@ main {
 
 #pl-details-container .pl-details-heading {
     font-weight: bold;
+}
+
+
+.pl-survey-title {
+    margin-bottom: 0.2rem;
+    font-weight: bolder;
+    font-size: small;
+}
+
+.pl-survey-content {
+    margin-left:1rem;
+    margin-bottom: 0.2rem;
+    margin-right:0.5rem;
+    font-size: small;
+    /* width:100%; */
+    /* right: 0px; */
+}
+
+textarea.pl-survey-content {
+    min-height: 10rem;
+}
+
+.pl-toolbar-button.pl-survey-content {
+    width: 72%;
+    text-align: center;
+    padding: 0
+}
+
+.pl-column-separator {
+    margin-left: 1rem;
+    margin-right: 1rem;
 }
 
 /*.drop-hover {
@@ -322,6 +357,7 @@ main {
     color: rgb(255, 54, 3);
     font-weight: bold;
     display: none;
+    background-color: rgba(220,220,220,0.7);
 }
 
 .pl-model-selector {
@@ -335,3 +371,4 @@ main {
 .pl-resizing {
     border: solid 2px rgba(56,172,221,0.8);
 }
+

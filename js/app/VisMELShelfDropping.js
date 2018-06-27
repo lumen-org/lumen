@@ -165,9 +165,12 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
         fu.emitInternalChanged();
       } else {
         onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
+        //console.log(target, target.shelf, source, source.shelf, overlap);
       }
-    } else if (target instanceof sh.Shelf)
+    } else if (target instanceof sh.Shelf) {
       onDrop[target.type](undefined, target, source, source.shelf, overlap);
+      //console.log(undefined, target, source, source.shelf, overlap);
+    }
     else
       throw new TypeError('target must be a Record or a Shelf');
   }

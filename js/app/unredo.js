@@ -14,8 +14,7 @@ define([], function() {
 
   class UnRedo {
 
-    constructor(/*limit = 100*/) {
-      // this._limit = limit;
+    constructor() {
       this._undo = [];
       this._redo = [];
       this._current = undefined;
@@ -51,18 +50,7 @@ define([], function() {
     commit(state) {
       // push (old) current state to undo stack
       this._undo.push(this._current);
-
       this._current = state;
-
-      // loses all redos
-      //this._redo = [];
-      //
-      // // truncate list to limit
-      // if (this._current === this._limit) {
-      //   this._queue = this._queue.slice(1);
-      //   this._current--;
-      //   this._present--;
-      // }
     }
 
     /**
@@ -73,13 +61,6 @@ define([], function() {
       this._redo = [];
       this._current = undefined;
     }
-
-    /**
-     * @returns the maximum number of states stored in the manager.
-     */
-    /*get limit() {
-      return this._limit;
-    }*/
 
     /**
      * @returns {boolean} True iff there is a previous to the current state.

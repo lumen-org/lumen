@@ -112,8 +112,6 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
-    // resolution_1d: 100,
-    // resolution_2d: 30,
     resolution_1d: 15,
     resolution_2d: 15,
     opacity: 0.7,
@@ -845,6 +843,20 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       filled: [0 /*circle*/,  3/*plus*/, 1 /*square*/, 4 /*X*/, 2 /*diamond*/, 17 /*star*/, 5,6,7,8 /*triangles...*/],
     };
     c.shapes.open = c.shapes.filled.map(n => n+100);
+
+
+    // some static configuration parts of the GUI
+    c.gui = {
+      clone_offset: 30, // visualize cloned context with some offset from the original position [px]
+    };
+
+    c.meta = {
+      activity_logging_mode: "remote", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_filename: "user_log.json", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_subdomain: '/activitylogger',
+      modelbase_subdomain: '/webservice',
+    };
+
     return c;
   }
 
@@ -852,11 +864,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
     c.views = {
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
-        active: false, // true if the view is active (i.e.. computed and visible) BY DEFAULT false if not
+        active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
       data: {
         possible: true,
-        active: false,
+        active: true,
       },
       testData: {
         possible: true,

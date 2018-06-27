@@ -43,17 +43,16 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     function logIt (json) {
       logger.debug("RECEIVED:");
       logger.debug(JSON.stringify(json, null, 2));
-      logger.debug(json);
       return json;
     }
 
     return new Promise((resolve, reject) => {
+      let jsonPQLasStr = JSON.stringify(jsonPQL)
       logger.debug("SENT:");
-      logger.debug(JSON.stringify(jsonPQL));
-      logger.debug(jsonPQL);
+      logger.debug(jsonPQLasStr);
       d3.json(remoteUrl)
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(jsonPQL), (err, json) => err ? reject(err) : resolve(logIt(json)));
+        .post(jsonPQLasStr, (err, json) => err ? reject(err) : resolve(logIt(json)));
     });
   }
 

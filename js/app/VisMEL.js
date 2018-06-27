@@ -32,6 +32,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     toString() {
       return "BaseMap " + this.fu.toString()
     }
+
+    toJSON () {
+      return this.fu.toJSON();
+    }
   }
 
   function isMap (o) {
