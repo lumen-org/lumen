@@ -67,18 +67,20 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
 
   /**
    * If no path is given it returns the currently set output path.
-   * If a path is given it is set as the new output path.
-   * This will close any previously set log file and then open the new one. If you set append to true then previous contents are kept. Otherwise it is overwritten.
+   *
+   * If a path is given it is set as the new output path. This causes the previously opened logfile to be closed and the
+   * new one to be opened. The . If you set replaceFlag to true the contents of the new log files are overwritten, else
+   * they are apended (the default).
    * @param path
    */
-  function logPath(path = undefined, append=true) {
+  function logPath(path = undefined, replaceFlag=false) {
     if (path === undefined) {
       return _logPath;
     } else {
       // set a new log file on the server
       _logPath = path;
       // if append is set to true the single next log command will have append=true and hence overwrite all of the previous log file
-      _appendContent = append;
+      _appendContent = !replaceFlag;
     }
   }
 
