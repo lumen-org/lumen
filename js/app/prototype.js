@@ -1030,19 +1030,21 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     detailsView.$visual.appendTo($('#pl-details-container'));
 
     // create survey widget
-    let surveyWidget = new SurveyWidget(
-      newID  => {
-        infoBox.message("set user id to: " + newID.toString());
-        ActivityLogger.log({'newUserId': newID}, 'userid.change');
-        ActivityLogger.additionalFixedContent({'userId': newID});
+    if (Settings.userStudy.enabled) {
+      let surveyWidget = new SurveyWidget(
+        newID  => {
+          infoBox.message("set user id to: " + newID.toString());
+          ActivityLogger.log({'newUserId': newID}, 'userid.change');
+          ActivityLogger.additionalFixedContent({'userId': newID});
 
-      },
-      (report, context) => {
-        infoBox.message("reported insight: " + report.toString());        
-        ActivityLogger.log({'report': report}, 'insight');
-      }
-    );
-    surveyWidget.$visual.appendTo($('#pl-survey-widget'));
+        },
+        (report, context) => {
+          infoBox.message("reported insight: " + report.toString());
+          ActivityLogger.log({'report': report}, 'insight');
+        }
+      );
+      surveyWidget.$visual.appendTo($('#pl-survey-widget'));
+    }
 
     // context queue
     let contextQueue = new ContextQueue();

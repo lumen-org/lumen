@@ -209,7 +209,7 @@ main {
 #pl-right-column {
     border-left: 2px solid #f3f3f3;
     background-color: #f8f8f8;
-    min-width: 150px;
+    min-width: 10px; 
 }
 
 #pl-details-container {

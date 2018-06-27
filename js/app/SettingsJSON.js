@@ -861,6 +861,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       modelbase_subdomain: '/webservice',
     };
 
+    c.userStudy = {
+      enabled: false && (c.meta.activity_logging_mode !== "disabled"),
+    };
+
     return c;
   }
 
