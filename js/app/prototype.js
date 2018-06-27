@@ -537,7 +537,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             if (event.keyCode === 13) {
 
               // create new context and visualization with that model if it exists
-              let context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
+              let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
               contextQueue.add(context);
 
               // fetch model
