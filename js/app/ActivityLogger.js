@@ -4,6 +4,7 @@
  * Example Usage:
  *   ActivityLogger.logPath("user_log.json");
  *   ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
+ *   ActivityLogger.mode('remote');
  *   ActivityLogger.additionalFixedContent({'user_id':'NOT_SET'});
  *   ActivityLogger.enable(true);
  *
@@ -46,6 +47,22 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
    */
   function enabled() {
     return _enabled;
+  }
+
+  /**
+   * Sets the mode for this logger or returns the currently set mode.
+   * @param mode Mode to set, one of "disabled", "console.err", "console.log", "remote".
+   */
+  function mode(mode=undefined) {
+    const validModes = new Set(["disabled", "console.error", "console.log", "remote"]);
+
+    if (mode == undefined)
+      return this._mode;
+
+    if (!validModes.has(mode))
+      throw RangeError("invalid mode. must be one of " + [...validModes]);
+
+    this._mode = mode;
   }
 
   /**
@@ -108,28 +125,29 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
       _appendContent = true;
     jsonSerializableObj = Object.assign(jsonSerializableObj, _additionalFixedContent);  // additional content
 
-    // DEBUG
-    // console.log(jsonSerializableObj.activityType);
-    // console.log(jsonSerializableObj);
-
     // serialize
     let serializedObject = JSON.stringify(jsonSerializableObj);
 
-    // send to log server
-    d3.json(_logServerUrl)
-      .header("Content-Type", "application/json")
-      .post(serializedObject, (err, json) => err ? _logFailed(err) : 0);
+    if (this._mode == 'console.log')
+      console.log(serializedObject);
+    else if (this._mode == 'console.error')
+      console.error(serializedObject);
+    else
+      // send to log server
+      d3.json(_logServerUrl)
+        .header("Content-Type", "application/json")
+        .post(serializedObject, (err, json) => err ? _logFailed(err) : 0);
   }
 
   function _logFailed(err) {
-    logger.info(err.toString());
+    logger.warn("something went wrong");
+    logger.warn(err.toString());
   }
 
   // exports of this module
   return {
     additionalFixedContent,
-    enable,
-    enabled,
+    mode,
     logPath,
     logServerUrl,
     ready,

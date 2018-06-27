@@ -866,6 +866,13 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './SplitSample', './Domain
       clone_offset: 30, // visualize cloned context with some offset from the original position [px]
     };
 
+    c.meta = {
+      activity_logging_mode: "remote", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_filename: "user_log.json", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_subdomain: '/activitylogger',
+      modelbase_subdomain: '/webservice',
+    };
+
     return c;
   }
 

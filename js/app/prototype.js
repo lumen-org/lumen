@@ -21,9 +21,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
-    // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
-    const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000/webservice';
-    const DEFAULT_ACTIVITY_LOGGER_URL = 'http://127.0.0.1:5000/activitylogger';
+    const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
+    // const DEFAULT_SERVER_ADDRESS = 'http://lumen.inf-i2.uni-jena.de';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -117,7 +116,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
           // Note that this function accesses the file scope!
           function update (commit = true) {
-            //console.log("updating!");
             try {
               let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
 
@@ -175,7 +173,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 }
               })
               .then(() => {
-                //  console.log("context: ");
                 console.log(c);
               })
               .then(() => {
@@ -731,7 +728,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         /*let $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
          let c = this._context;
          c.unredoer.commit(c.copyShelves());
-         console.log("saved it!");
          });*/
         let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
@@ -821,7 +817,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // listen to changes
         $userIdInput.change(()=>{
-          console.log($userIdInput.val());
           callback($userIdInput.val());
         });
 
@@ -836,7 +831,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
         let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report & clear</div>')
           .click( () => {
-            console.log($insightTextarea.val());
             callback($insightTextarea.val());
             $insightTextarea.val("");
           });
@@ -1014,10 +1008,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     inter.asRemoveElem($(document.body).find('main'));
 
     // activity logger
-    ActivityLogger.logPath("user_log.json");
-    ActivityLogger.logServerUrl(DEFAULT_ACTIVITY_LOGGER_URL);
+    ActivityLogger.logPath(Settings.meta.activity_logging_filename);
+    ActivityLogger.logServerUrl(DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
     ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
-    ActivityLogger.enable(true);
+    ActivityLogger.mode(Settings.meta.activity_logging_mode);
 
     // create info box
     let infoBox = new InfoBox("info-box");
@@ -1072,7 +1066,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       start: function () {
         // create initial context with model
-        let context =  new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL).makeGUI();
+        let context =  new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);
 
         // activate that context
