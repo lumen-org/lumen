@@ -1,22 +1,28 @@
 /**
  * Main component that assembles and manages the actual GUI of the PMV web client.
  *
+ * Activity Logging:
+ *   * userId: the subjects unique id (configured by its own GUI widget)
+ *   *
+ *
+ *
  * @module main
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './visuals', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './TraceGenerator', './RemoteModelling', './SettingsJSON', './SettingsEditor', './ViewSettings'],
-  function (Emitter, d3, init, PQL, VisMEL, V4T, drop, sh, vis, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, AtomicPlotly, Remote, Settings, SettingsEditor, Config ) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils) {
     'use strict';
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'mcg_crabs_map';
+    //const DEFAULT_MODEL = 'mcg_iris_map';
+    const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
-    // const DEFAULT_SERVER_ADDRESS = 'http://probmodvis.pythonanywhere.com/webservice';
-    const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000/webservice';
+    const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
+    // const DEFAULT_SERVER_ADDRESS = 'http://lumen.inf-i2.uni-jena.de';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -25,6 +31,30 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         drop(shelves.column, shelves.dim.at(0));
         drop(shelves.column, shelves.meas.at(1));
     }
+
+    // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
+    // but i guess cleanup requires deeper adaptions...
+    let _facetNameMap = {
+      'aggregations': 'prediction',
+      'marginals': 'marginal',
+      'contour': 'density',
+      'data': 'data',
+      'testData': 'test data',
+      'predictionOffset': 'prediction offset',
+    };
+
+    function _getFacetActiveState () {
+      let obj = {};
+      Object.keys(_facetNameMap).map(
+        facetName => obj[_facetNameMap[facetName]] = Settings.views[facetName].active );
+      return obj;
+    }
+
+    /**
+     * monotone z-index generator. used to push activated contexts visually to the front.
+     * Usage: zIndex = zIndexGenerator++;
+     */
+    let zIndexGenerator = 1;
 
     /**
      * An info box receives messages that it shows.
@@ -39,16 +69,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
       }
 
       hide () {
-        this.$visual.hide();
+        this.$visual.fadeOut(400);
       }
 
       show () {
-        this.$visual.show();
+        this.$visual.fadeIn(100);
       }
 
       message (str, type="error") {
         this._$visual.text(str);
         this.show();
+
+        let that = this;
+        setTimeout( () => that.hide(), 3500);
       }
 
       get $visual () {
@@ -83,7 +116,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
           // Note that this function accesses the file scope!
           function update (commit = true) {
-            console.log("updating!");
             try {
               let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
 
@@ -93,15 +125,15 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel, mode);
               c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
+              // log this activity
+              ActivityLogger.log({'VISMEL': c.query, 'facets': _getFacetActiveState(), 'context': c.getNameAndUUID()}, 'vismel_query');
+
               // TODO: apply global filters and remove them from query
               // i.e. change basemodel, and basequery
               c.basequery = c.query;
 
               c.baseQueryTable = new QueryTable(c.basequery);
               c.baseModelTable = new ModelTable(c.baseQueryTable);
-
-              // let foo = V4T.uniDensity(c.query, 'rows');
-              // console.log(foo);
             }
             catch (error) {
               console.error(error);
@@ -119,10 +151,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
               .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.aggregations.active))
               .then(res => c.aggrRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data'}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data', data_point_limit:Settings.tweaks.data_point_limit}))
               .then(res => c.dataRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data'}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data', data_point_limit:Settings.tweaks.data_point_limit}))
               .then(res => c.testDataRT = res)
 
               .then(() => RT.uniDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap,
@@ -141,7 +173,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
                 }
               })
               .then(() => {
-                console.log("context: ");
                 console.log(c);
               })
               .then(() => {
@@ -162,6 +193,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         // server and model
         // note that model is expected to be constant, i.e. it never is changed
+        this.uuid = utils.uuid();
         this.server = server;
         if (server !== undefined)
           this.modelbase = new Remote.ModelBase(server);
@@ -179,12 +211,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         // other configuration
         this.config = {
           visConfig: {
-            aggregations: { active: Config.views.aggregations.active },
-            data: { active: Config.views.data.active, },
-            testData: { active: Config.views.testData.active, },
-            marginals: { active: Config.views.marginals.active },
-            contour: { active: Config.views.contour.active },
-            predictionOffset: { active: Config.views.predictionOffset.active},
+            aggregations: { active: Settings.views.aggregations.active },
+            data: { active: Settings.views.data.active, },
+            testData: { active: Settings.views.testData.active, },
+            marginals: { active: Settings.views.marginals.active },
+            contour: { active: Settings.views.contour.active },
+            predictionOffset: { active: Settings.views.predictionOffset.active},
           }
         };
         // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
@@ -208,6 +240,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         // emitter mixin
         Emitter(this);
+
+        ActivityLogger.log({'context': this.getNameAndUUID()}, 'context.create');
       }
 
       /**
@@ -219,6 +253,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
           if ($visuals.hasOwnProperty(visual))
             $visuals[visual].remove();
         }
+        ActivityLogger.log({'context': this.getNameAndUUID()}, 'context.close');
         this.emit("ContextDeletedEvent", this);
       }
 
@@ -264,7 +299,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
       loadShelves (shelves) {
         // make new visual representations
         this.shelves = shelves;
-        var $newVis = Context._makeShelvesGUI(this);
+        let $newVis = Context._makeShelvesGUI(this);
 
         // replace current visuals with the ones
         // some more details, by the example of the '.pl-model'-div
@@ -284,7 +319,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        * Returns a deep copy of the shelves of this context (excluding any visuals).
        */
       copyShelves() {
-        var shelvesCopy = {};
+        let shelvesCopy = {};
         for (const key of Object.keys(this.shelves))
           shelvesCopy[key] = this.shelves[key].copy();
         return shelvesCopy;
@@ -295,6 +330,14 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        */
       getVisConfig () {
         this.$visuals.visConfig
+      }
+
+      /**
+       * Returns am object with the name of the model and the universally unique ID, both of this context.
+       * @returns {{name, uuid: *}}
+       */
+      getNameAndUUID () {
+         return {'name': this.model.name, 'uuid': this.uuid};
       }
 
       /**
@@ -320,10 +363,18 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         copiedContext.makeGUI();
 
         // size of visualization
-        copiedContext.$visuals.visualization.css({
-          width: this.$visuals.visualization.css('width'),
-          height: this.$visuals.visualization.css('height'),
+        let $visCopy = copiedContext.$visuals.visualization,
+          $vis = this.$visuals.visualization;
+        $visCopy.css({
+          width: $vis.css('width'),
+          height: $vis.css('height'),
         });
+
+        // position  
+        let pos = $vis.position();
+        pos.top += Settings.gui.clone_offset;
+        pos.left += Settings.gui.clone_offset;
+        $visCopy.css(pos);
 
         return copiedContext;
       }
@@ -336,14 +387,19 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         let $nav = $removeButton;
         let $vis = $('<div class="pl-visualization"></div>')
           .append($paneDiv, $nav)
-          .click( () => activate(context, ['visualization', 'visPanel']) )
+          .click( () => {
+            if (contextQueue.first().uuid !== context.uuid) {
+              activate(context, ['visualization', 'visPanel']);
+              ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
+            }
+          })
           .resizable({
             ghost: true,
             helper: "pl-resizing",
             stop: (event, ui) => {
               let c = context;
+              ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
               // redraw
-              // TODO: what is visPanel, ... ?
               c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
@@ -358,7 +414,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        * @private
        */
       static _makeShelvesGUI (context) {
-        var shelves = context.shelves;
+        let shelves = context.shelves;
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
@@ -374,7 +430,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         shelves.column.beVisual({label: 'X-Axis'}).beInteractable();
         shelves.row.beVisual({label: 'Y-Axis'}).beInteractable();
 
-        var visual = {};
+        let visual = {};
 
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
@@ -392,45 +448,40 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         // Enables user querying for shelves
         // shelves emit ChangedEvent. Now we bind to it.
-        for (const key of Object.keys(shelves))
+        for (const key of Object.keys(shelves)) {
           shelves[key].on(Emitter.ChangedEvent, context.update);
-
+          shelves[key].on(sh.Shelf.Event.Add, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON(), 'context': context.getNameAndUUID()}, sh.Shelf.Event.Add) );
+          shelves[key].on(sh.Shelf.Event.Remove, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON(), 'context': context.getNameAndUUID()}, sh.Shelf.Event.Remove) );
+        }
         return visual;
       }
 
       /**
-       * Creates and returns GUI for visualization config.
+       * Creates and returns GUI to visible facets .
        *
-       * An context update is triggered, if the state of the config is changed.
+       * An context update is triggered if the state of the config is changed.
        *
        * @param context
        * @return {void|*|jQuery}
        * @private
        */
-      static _makeVisConfig (context) {
-
-        // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
-        let nameMap = {
-          'aggregations': 'prediction',
-          'marginals': 'marginal',
-          'contour': 'density',
-          'data': 'data',
-          'testData': 'test data',
-          'predictionOffset': 'prediction offset',
-        };
-
+      static _makeFacetWidget (context) {
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
           .map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
-            let $checkBox = $('<input type="checkbox">' + nameMap[what] + '</input>')
+            let $checkBox = $('<input type="checkbox">' + _facetNameMap[what] + '</input>')
               .prop("checked", context.config.visConfig[what].active)
               .prop("disabled", context.config.visConfig[what].possible)
               .change( (e) => {
                 // update the config and ...
                 context.config.visConfig[what].active = e.target.checked;
+
+                // log user activity
+                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': _getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
+
                 // ... trigger an update
                 context.update()
               });
@@ -452,8 +503,8 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        * are not managed like this.
        */
       static _makeGUI(context) {
-        var visual = Context._makeShelvesGUI(context);
-        visual.visConfig = Context._makeVisConfig(context);
+        let visual = Context._makeShelvesGUI(context);
+        visual.visConfig = Context._makeFacetWidget(context);
         visual.visualization = Context._makeVisualization(context);
         visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
         return visual;
@@ -482,11 +533,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
         let $modelInput = $('<input type="text" list="models"/>')
           .keydown( (event) => {
-            var modelName = event.target.value;
+            let modelName = event.target.value;
             if (event.keyCode === 13) {
 
               // create new context and visualization with that model if it exists
-              var context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
+              let context = new Context(DEFAULT_SERVER_ADDRESS, modelName).makeGUI();
               contextQueue.add(context);
 
               // fetch model
@@ -513,6 +564,30 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         }
       }
 
+      _setModels(models) {
+        let $datalist = this._$modelsDatalist;
+        $datalist.empty();
+        for (let name of models) {
+          // filter any names that begin with "__" since these are only 'internal' models
+          if (!name.startsWith("__"))
+            $datalist.append($("<option>").attr('value',name).text(name))
+        }
+      }
+
+      /**
+       * Refetch the available models on the server.
+       */
+      refetchModels() {
+        this._context.modelbase.listModels().then( res => this._setModels(res.models) );
+      }
+
+      /**
+       * Trigger a reloading of available models on the server side and then refetch the available models
+       */
+      reloadModels () {
+        this._context.modelbase.reload().then( res => this._setModels(res.models) );
+      }
+
       /**
        * Sets the context that the toolbar controls.
        * @param context A context.
@@ -521,18 +596,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        let that = this;
-        context.modelbase.listModels().then(
-          res => {          
-            let $datalist = that._$modelsDatalist;
-            $datalist.empty();
-            for (let name of res.models) {
-              // filter any names that begin with "__" since these are only 'internal' models
-              if (!name.startsWith("__"))
-                $datalist.append($("<option>").attr('value',name).text(name))
-            }            
-          }
-        );
+        this.refetchModels();
       }
     }
 
@@ -544,6 +608,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
       constructor (context) {
         let $swapButton = $('<div class="pl-swap-button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
+          ActivityLogger.log({'context': this._context.getNameAndUUID()}, 'swap_x_y');
           sh.swap(shelves.row, shelves.column);
         });
         this.$visual = $('<div class="pl-swapper">').append($swapButton);
@@ -561,7 +626,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        this._context.on("ContextDeletedEvent", () => this.$visual.hide());
+        this._context.on("ContextDeletedEvent", (c) => {
+          if (this._context.uuid == c.uuid)
+            this.$visual.hide()
+        });
         this.$visual.show();
       }
     }
@@ -628,9 +696,13 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
+        this.update();
         // bind to events of this context
         this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
-        this._context.on("ContextDeletedEvent", () => this.$visual.hide());
+        this._context.on("ContextDeletedEvent", c => {
+          if (this._context.uuid == c.uuid)
+            this.$visual.hide()
+        });
       }
     }
 
@@ -642,30 +714,41 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
 
       constructor (context) {
 
-        var $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
+        this._modelSelector = new ModelSelector(context);
+
+        let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
           let c = this._context;
-          if (c.unredoer.hasUndo)
+          if (c.unredoer.hasUndo) {
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'undo');
             c.loadShelves(c.unredoer.undo());
+          }
           else
             infoBox.message("no undo left!");
         });
-        /*var $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
+        /*let $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
          let c = this._context;
          c.unredoer.commit(c.copyShelves());
-         console.log("saved it!");
          });*/
-        var $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
+        let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
           let c = this._context;
-          if (c.unredoer.hasRedo)
+          if (c.unredoer.hasRedo) {
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'redo');
             c.loadShelves(c.unredoer.redo());
+          }
           else
             infoBox.message("no redo left!");
         });
-        var $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
-          () => this._context.clearShelves(['dim','meas']));
-        var $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
+        let $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
           () => {
-            let contextCopy = this._context.copy();
+            let c = this._context;
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'clear');
+            c.clearShelves(['dim','meas']);
+          });
+        let $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
+          () => {
+            let c = this._context;
+            ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
+            let contextCopy = c.copy();
             contextQueue.add(contextCopy);
 
             // fetch model
@@ -680,13 +763,11 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
           }
         );
 
-        var $query = $('<div class="pl-toolbar-button">Query!</div>').click(
+        let $query = $('<div class="pl-toolbar-button">Query!</div>').click(
           () => this._context.update());
 
-        var $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
-          () => this._context.modelbase.reload());
-
-        this._modelSelector = new ModelSelector(context);
+        let $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
+          () => this._modelSelector.reloadModels());
 
         let $configHideButton = $('<div class="pl-toolbar-button">Config</div>').click( () => {
           $('.pl-config').toggle()
@@ -719,6 +800,62 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     }
 
     /**
+     * A widget for user studies. It allow a subject to report feedback.
+     *
+     * After instantiation its GUI is available under the .$visual attribute as a jQuery object
+     */
+    class SurveyWidget {
+
+      /**
+       * Creates and returns a widget that provides a input field for subject id, a text field to describe gained insight and a button to commit insight.
+       */
+      static
+      _makeUserIdWidget (callback) {
+
+        // make input field for user id
+        let $userIdInput = $('<input class="pl-survey-content" type="text" name="UserID" value="UNSET">');
+
+        // listen to changes
+        $userIdInput.change(()=>{
+          callback($userIdInput.val());
+        });
+
+        // compose to whole widget
+        return $('<div></div>')
+          .append('<div class="pl-survey-title">User Id</div>')
+          .append($userIdInput);
+      }
+
+      static
+      _makeInsightWidget (callback) {
+        let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
+        let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report & clear</div>')
+          .click( () => {
+            callback($insightTextarea.val());
+            $insightTextarea.val("");
+          });
+        return $('<div></div>')
+          .append('<div class="pl-survey-title">Report Insight</div>')
+          .append($insightTextarea)
+          .append($commitButton);
+      }
+
+      /**
+       * @param onIdChange Callback for user id change.
+       * @param onInsightReport Callback for reporting.
+       */
+      constructor (onIdChange, onInsightReport) {
+        this._$title = $('<div class="pl-column-title">User Study</div>');
+        this._$content = $('<div class="pl-column-content"></div>')
+          .append([SurveyWidget._makeUserIdWidget(onIdChange), SurveyWidget._makeInsightWidget(onInsightReport)]);
+
+        this.$visual = $('<div id="pl-survey-container"></div>')
+          .append(this._$title)
+          .append(this._$content);
+      }
+    }
+
+    /**
      * A managed queue for Contexts.
      *
      * Its purpose is to keep track of the open contexts and their order of use.
@@ -728,7 +865,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
      *  * if a context is activated, the corresponding element is moved to the beginning of the queue.
      *  * if the last context is deleted, a ContextQueueEmpty event is emitted.
      *
-     *  Note that contexts are not automatically added to this this queue when instanciated, but need to be by calling .append().
+     *  Note that contexts are not automatically added to this this queue when instantiated, but need to be by calling .append().
      */
     class ContextQueue {
 
@@ -830,9 +967,9 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
      * It hides all visuals of the current context, except those specified.
      * @param context Context to activate.
      */
-    var activate = (function(){
+    let activate = (function(){
       // don't get confused. In the end it returns a function. And that function has a closure to hold its private variable _currentContext. That's it.
-      var _currentContext = {};
+      let _currentContext = {};
 
       function _activate (context, except = []) {
         /// disable old context
@@ -849,6 +986,10 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
         // add marking for new active visualization
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
+        // move it to the front
+        _currentContext.$visuals.visualization.css("z-index",zIndexGenerator++);
+
+        // TODO: let it listen to some event instead
         toolbar.setContext(context);
         swapper.setContext(context);
         detailsView.setContext(context);
@@ -866,6 +1007,12 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
     inter.asRemoveElem($(document.body).find('main'));
 
+    // activity logger
+    ActivityLogger.logPath(Settings.meta.activity_logging_filename);
+    ActivityLogger.logServerUrl(DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
+    ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
+    ActivityLogger.mode(Settings.meta.activity_logging_mode);
+
     // create info box
     let infoBox = new InfoBox("info-box");
     infoBox.$visual.insertAfter($('main'));
@@ -882,6 +1029,20 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     let detailsView = new DetailsView();
     detailsView.$visual.appendTo($('#pl-details-container'));
 
+    // create survey widget
+    let surveyWidget = new SurveyWidget(
+      newID  => {
+        infoBox.message("set user id to: " + newID.toString());
+        ActivityLogger.log({'newUserId': newID}, 'userid.change');
+        ActivityLogger.additionalFixedContent({'userId': newID});
+
+      },
+      (report, context) => {
+        infoBox.message("reported insight: " + report.toString());        
+        ActivityLogger.log({'report': report}, 'insight');
+      }
+    );
+    surveyWidget.$visual.appendTo($('#pl-survey-widget'));
 
     // context queue
     let contextQueue = new ContextQueue();
@@ -896,8 +1057,6 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
     // watch for changes
     // TODO: implement smart reload (i.e. only redraw, for example)
     SettingsEditor.watch('root', () => {
-        infoBox.message("something changed!");
-        console.log(Config);
         contextQueue.first().update();
     });
 
@@ -907,7 +1066,7 @@ define(['lib/emitter', 'd3', './init', './PQL', './VisMEL', './VisMEL4Traces', '
        */
       start: function () {
         // create initial context with model
-        let context =  new Context(DEFAULT_SERVER_ADDRESS, DEFAULT_MODEL).makeGUI();
+        let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);
 
         // activate that context

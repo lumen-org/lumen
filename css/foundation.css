@@ -114,7 +114,8 @@ img {
 
 textarea {
   height: auto;
-  min-height: 50px; }
+  min-height: 50px;
+  }
 
 select {
   width: 100%;
@@ -1559,7 +1560,8 @@ textarea[rows] {
 
 /* Not allow resize out of parent */
 textarea {
-  max-width: 100%; }
+  max-width: 100%;
+  }
 
 /* Add height value for select elements to match text input height */
 select {
@@ -3704,7 +3706,8 @@ hr {
   border-width: 1px 0 0;
   clear: both;
   margin: 1.25rem 0 1.1875rem;
-  height: 0; }
+  height: 0;
+  }
 
 /* Helpful Typography Defaults */
 em,

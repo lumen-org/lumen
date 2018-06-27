@@ -102,6 +102,15 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     copy () {
       return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy());
     }
+
+    toJSON () {
+      return {
+        class: 'Field',
+        name: this.name,
+        dataType: this.dataType
+      }
+    }
+
   }
 
   function isField (obj) {
@@ -192,10 +201,11 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     static toJSON (f) {
-      return {        
+      return {
         name: f.name,
         operator: f.method,
-        value: f.args.values
+        value: f.args.values,
+        class: 'Filter',
       };
     }
 
@@ -289,7 +299,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return {
         name: a.name,
         split: a.method,
-        args: a.args
+        args: a.args,
+        class: 'Split',
       };
     }
   }
@@ -349,7 +360,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
         name: a.names.sort(),
         aggregation: a.method,
         yields: a.yields,
-        args: a.args
+        args: a.args,
+        class: 'Aggregation',
       };
     }
 
@@ -389,7 +401,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return {
         name: d.names.sort(),
         aggregation: d.method,
-        args: d.args
+        args: d.args,
+        class: 'Density',
       };
     }
 

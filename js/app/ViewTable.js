@@ -14,6 +14,31 @@
  *
  *   Note: this is just about spatial axis anchoring.
  *
+ * Extents:
+ *
+ *   For visualization the extents over _all_ result tables are required, as we need uniform
+ *   extents over all atomic panes for a visually uniform visualization. More specifically, we want the global
+ *   extent with respect to a particular 'yield'. Here 'yield' means the dimension that a FieldUsage (or BaseMap)
+ *   yields when a query is processed.
+ *   
+ *   We attach extents to the FieldUsages of the queries under the attribute .extent.
+ *   
+ *   As FieldUsages of atomic queries are
+ *   inherited from templated query, extents are also available at the atomic query.
+ *   
+ *   Note that extents may take different forms:
+ *    - single value (discrete FU)
+ *    - interval (continuous FU), or
+ *    - set of single values (discrete FU, where the splitting functions splits not into single values but sets of values).
+ *   
+ *   For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
+ *   
+ *   For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
+ *   
+ *   Note: you cannot use the .extent or .domain of any FIELD (not field usage) of any field usage that the vismel queries consists of. The reason is two fold:
+ *     (1) they have a different semantic, namely .extent stores a 'meaningful' range of values where the density function is considerably larger than 0, and .domain stores the allowed domain of the dimension of that model.
+ *     (2) these values are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
+ *
  * @module ViewTable
  * @author Philipp Lucas
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
@@ -29,7 +54,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     function _invXY(xy) {
       return (xy === 'x'?'y':'x');
     }
-
 
     /**
      * Builds and returns a formatter for this result table.
@@ -86,6 +110,14 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return split.extent.map(formatter);
     }
 
+    /**
+     * Utility function. Generates an object with attribtues .range, .tickmode and .tickvals, essentially being a
+     * template for an plotly axis.
+     * @param extent
+     * @param xy
+     * @param cfg
+     * @returns {{}}
+     */
     function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
       let axis = {};
       axis.range = [0, extent[1]*cfg.maxPrct];
@@ -95,7 +127,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       axis.tickvals = [0, (extent[1] * cfg.linePrct).toPrecision(1)]; // draw a line at 0 and ~maxPrct%
       return axis
     }
-    
+
+
     function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
@@ -138,17 +171,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // TODO: we will have color for p2dRT in the future - maybe.
       // if (p2dRT != undefined) { ... }
-
-      // OLD: let mapper = {
-      //   aggrFillColor:  MapperGen.markersFillColor(vismel, 'aggr'),
-      //   dataFillColor: MapperGen.markersFillColor(vismel, 'data'),
-      //   testDataFillColor: MapperGen.markersFillColor(vismel, 'test data'),
-      //   aggrSize: MapperGen.markersSize(vismel, config.map.aggrMarker.size),
-      //   aggrShape: MapperGen.markersShape(vismel, 'filled'),
-      //   samplesShape: MapperGen.markersShape(vismel, 'filled'),
-      //   samplesSize: MapperGen.markersSize(vismel, config.map.sampleMarker.size),
-      //   lineColor: MapperGen.lineColor(vismel),
-      // };
 
       // TODO:
       // if there is an aggregation on color in the original vismel query:
@@ -262,28 +284,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return traces;
     }
 
-
-    function initEmptyExtents(queries) {
-      let query = queries.base;
-      let qa = query.layers[0].aesthetics;
-      if (qa.color instanceof VisMEL.ColorMap)
-        qa.color.fu.extent = [];
-      if (qa.shape instanceof VisMEL.ShapeMap)
-        qa.shape.fu.extent = [];
-      if (qa.size instanceof VisMEL.SizeMap)
-        qa.size.fu.extent = [];
-
-      // init empty extent for measure on ROWS/COLS
-      [...query.layout.cols, ...query.layout.rows].filter(PQL.isFieldUsage).forEach(
-        m => {
-          // TODO: this is a not so nice hack. extent of templating splits is added elsewhere...
-          // and in fact it doesn't work...
-          if (m.extent === undefined)
-            m.extent = [];
-        }
-      );
-    }
-
     /**
      * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
      * Note: it gracefully forgives undefined arguments in extent and newData
@@ -350,12 +350,28 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         fu.extent = extent;
     }
 
-    function normalizeGlobalExtents (fuExtent) {
+    function normalizeExtents (fuExtent) {
       for (let [fu, extent] of fuExtent.entries())
         if (PQL.hasNumericYield(fu))
           fuExtent.set(fu, normalizeContinuousExtent(extent));
     }
 
+
+    function getGlobalExtent (aggrColl, dataColl, testDataColl, biColl, uniColl) {
+      let globalExtent = new Map();
+      for (let obj of [aggrColl, dataColl, testDataColl, biColl])
+        addCollectionExtents(obj, globalExtent);
+      for (let xy of ['x', 'y'])
+        addCollectionExtents(uniColl, globalExtent, xy);
+      return globalExtent;
+    }
+
+
+    /**
+     * Converts a Map of FieldUsages to their extents to a Map of their yields to their extents.
+     * @param fuExtent
+     * @returns {Map<any, any>}
+     */
     function getYieldExtent (fuExtent) {
       let yieldExtent = new Map();
       for (let [fu, extent] of fuExtent.entries()) {
@@ -367,87 +383,17 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return yieldExtent;
     }
 
+    /**
+     * Updates the mapping of FieldUsages to their extents based on the yieldExtents (which are based on yield dimensions)
+     * @param fuExtent
+     * @param yieldExtent
+     * @returns {*}
+     */
     function updateWithYieldExtent (fuExtent, yieldExtent) {
       for (let fu of fuExtent.keys())
         fuExtent.set(fu, yieldExtent.get(fu.yields))
       return fuExtent;
     }
-
-    /**
-     * Attaches the extents to the {@link FieldUsage}s of the templated query. As FieldUsages of atomic queries are
-     * inherited from templated query, extents are also available at the atomic query.
-     *
-     * The point is that for visualization the extents over _all_ result tables are required, as we need uniform
-     * extents over all atomic panes for a visually uniform visualization.
-     *
-     * Note that extents may take different forms:
-     *  - single value (discrete FU)
-     *  - interval (continuous FU), or
-     *  - set of single values (discrete FU, where the splitting functions splits not into single values but sets of values).
-     *
-     * For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
-     *
-     * For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
-     *
-     * TODO/HACK/Note: extents for templating splits are attached elsewhere, namely in TableAlgebra. Results are generated on a atomic query level and hence its hard to infer the extent of them from the result table... It's a bit messy... :-(
-     *
-     * Note: you cannot use the .extent or .domain of any FIELD (not field usage) of any field usage that the vismel queries consists of. The reason is two fold:
-     *   (1) they have a different semantic, namely .extent stores a 'meaningful' range of values where the density function is considerably larger than 0, and .domain stores the allowed domain of the dimension of that model.
-     *   (2) these values are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
-     *
-     * @param vismelColl
-     * @param resultColl
-     */
-    function attachExtents (vismelColl, resultColl) {
-      /**
-       * Utility function. Takes the "so-far extent", new data to update the extent for and a flag that informs about the kind of data: discrete or continuous.
-       * Note: it gracefully forgives undefined arguments in extent and newData
-       * @returns The updated extent
-       */
-      function _extentUnion(extent, newData, discreteFlag) {
-        if (extent === undefined) extent = [];
-        if (newData === undefined) newData = [];
-        return (discreteFlag ? _.union(extent, newData) : d3.extent([...extent, ...newData]) );
-      }
-
-      // note: row and column extent mean the extent of the single measure left on row / column for atomic queries. these are are common across one row / column of the view table
-      // retrieve FieldUsages of aestetics for later reuse
-      let aes = new Map();
-      let qa = vismelColl.base.layers[0].aesthetics;
-      if (qa.color instanceof VisMEL.ColorMap)
-        aes.set('color', qa.color.fu);
-      if (qa.shape instanceof VisMEL.ShapeMap)
-        aes.set('shape', qa.shape.fu);
-      if (qa.size instanceof VisMEL.SizeMap)
-        aes.set('size', qa.size.fu);
-
-      /// iterate over results for each atomic query
-      // all aesthetics of all atomic queries simply refer to the base query one.
-      let row = new Array(vismelColl.size.rows);
-      for (let rIdx = 0; rIdx < vismelColl.size.rows; ++rIdx) {
-        row[rIdx] = [];
-        for (let cIdx = 0; cIdx < vismelColl.size.cols; ++cIdx) {
-          let rt = resultColl[rIdx][cIdx],
-            q = vismelColl.at[rIdx][cIdx];
-
-          if (rt === undefined)
-            continue;
-
-          // aesthetics extents
-          for (let fu of aes.values())
-            fu.extent = _extentUnion(fu.extent, rt.extent[rt.fu2idx.get(fu)], PQL.hasDiscreteYield(fu));
-
-          // row and column extents
-          // note that lc.extent and lr.extent reference to the _same_ fieldUsage for all queries in one column / row. that's why this works.
-          let lr = q.layout.rows[0];
-          if (PQL.isFieldUsage(lr))
-            lr.extent = _extentUnion(lr.extent, rt.extent[rt.fu2idx.get(lr)], PQL.hasDiscreteYield(lr));
-          let lc = q.layout.cols[0];
-          if (PQL.isFieldUsage(lc))
-            lc.extent = _extentUnion(lc.extent, rt.extent[rt.fu2idx.get(lc)], PQL.hasDiscreteYield(lc));
-        }
-      }
-    };
 
     /**
      * Tweaks the given (continuous) extents of a given FieldUsage (for nicer displaying).  Note that it modifies the provided extent _and_ returns the modfied extent!
@@ -476,63 +422,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       return extent;
     }
 
-    function normalizeExtents(queries) {
-      /**
-       * Tweaks the given (continuous) extents of a given FieldUsage (for nicer displaying). For discrete FieldUsages it leaves the extent unchanged.
-       */
-      function _normalizeExtent(fu) {
-        if (!PQL.hasDiscreteYield(fu))
-          normalizeContinuousExtent(fu.extent);
-      }
-
-      for (let cIdx = 0; cIdx < queries.size.cols; ++cIdx) {
-        let lc = queries.at[0][cIdx].layout.cols[0];
-        if (PQL.isFieldUsage(lc))
-          _normalizeExtent(lc);
-      }
-      for (let rIdx = 0; rIdx < queries.size.rows; ++rIdx) {
-        let lr = queries.at[rIdx][0].layout.rows[0];
-        if (PQL.isFieldUsage(lr))
-          _normalizeExtent(lr);
-      }
-
-      let qa = queries.base.layers[0].aesthetics;
-      if (qa.color instanceof VisMEL.ColorMap)
-        _normalizeExtent(qa.color.fu);
-      if (qa.shape instanceof VisMEL.ShapeMap)
-        _normalizeExtent(qa.shape.fu);
-      if (qa.size instanceof VisMEL.SizeMap)
-        _normalizeExtent(qa.size.fu);
-    }
-
-    /**
-     * @param coll The collection to extract the extent of. An 3 dimensional array, where the first two dimensions represent 'y' and  'x' and the last dimension contains the values.
-     * @param xy Get row-wise (xy === 'y') or column-wise (xy === 'x') extents.
-     */
-    function xyCollectionExtent(coll, xy) {
-      let yx = _invXY(xy),
-        extents = [],
-        len = {
-          x: coll.size.cols,
-          y: coll.size.rows
-        },
-        idx = {};
-      for (idx[xy] = 0; idx[xy] < len[xy]; ++idx[xy]) {
-        let xyExtent = []; // extent across one row or column
-        for (idx[yx] = 0; idx[yx] < len[yx]; ++idx[yx]) {
-          let rt = coll[idx.y][idx.x][yx],
-            rowsOrCols = (xy === 'x'? 'cols': 'rows'),
-            fu = rt.vismel.layout[rowsOrCols][0],
-            i = rt.fu2idx.get(fu),
-            cellExtent = rt.extent[i];
-          xyExtent = d3.extent([...xyExtent, ...cellExtent]);
-        }
-        extents.push(xyExtent);
-      }
-      return extents;
-    }
-
-
     /**
      * Returns the split usages that make up templating axis level splits, from outermost to innermost templating axis split.
      * @fus the stack of field usages that make up the templating axes
@@ -545,10 +434,10 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
     }
 
     /**
+     * @xy 'x' ('y') if its an x-axis (y-axis)
      * @offset: .x (.y) is the offset in normalized coordinates for the templating axes
      * @size: .x (.y) is the size in normalized coordinates for the templating axes
      * @fus the stack of field usages that make up the templating axes
-     * @xy 'x' ('y') if its an x-axis (y-axis)
      * @id .x (.y) is the first free axis integer index for x (y) axis
      * @returns {} An array of axis objects for the layout part of a plotly plot configuration.
      */
@@ -588,7 +477,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
+        //let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
+        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], 0);
         annotations.push(annotation);
       });
 
@@ -637,80 +527,20 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
-      let globalExtent = new Map();
-      for (let obj of [aggrColl, dataColl, testDataColl, biColl])
-        addCollectionExtents(obj, globalExtent);
-      for (let xy of ['x', 'y'])
-        addCollectionExtents(uniColl, globalExtent, xy);
-
-      // // extents
-      // initEmptyExtents(vismelColl);
-      // attachExtents(vismelColl, this.aggrCollection);
-      // attachExtents(vismelColl, this.dataCollection);
-      // attachExtents(vismelColl, this.testDataCollection);
-      // // TODO: what about uniColl and BiColl?
-      // normalizeExtents(vismelColl);
-
-      // replace with new extents
+      // create global extent (i.e. across all result collections as far as it makes sense!)
+      // globalExtent is a Map that maps of FieldUsages to their extents
+      let globalExtent = getGlobalExtent(aggrColl, dataColl, testDataColl, biColl, uniColl);
+      // generate yield-based extents from it
       let yieldExtent = getYieldExtent(globalExtent);
       globalExtent = updateWithYieldExtent(globalExtent, yieldExtent);
-      normalizeGlobalExtents(globalExtent);
+      // normalize extents
+      normalizeExtents(globalExtent);
+      // now finally attach to the field usages, i.e.:
+      // each FieldUsage gets a .extent attribute that has its global extent (wrt its yield)!
       attachToFieldUsages(globalExtent);
 
       // TODO: build mappers here!!
       // build mappers for visual channels: fill, size, shape, (but not positional)
-
-      // /**
-      //  * Returns any vismel query of the collection, or undefined if there is none.
-      //  */
-      // function getAnyVismel(coll) {
-      //   if (!coll.enabled) {
-      //     return undefined;
-      //   }
-      //   if (coll.size.rows === 0 || coll.size.rows === 0)
-      //     return undefined;
-      //   return coll[0][0].vismel;
-      // }
-
-      // // mappers for aggregation facet
-      // if (aggrColl.enabled) {
-      //   let vismel = getAnyVismel(aggrColl); // TODO: in the future this could be replace with the templated query that expands to this collection
-      //   let used = vismel.used;
-      //   let aest = vismel.layers[0].aesthetics;
-      //   if (used.color) {
-      //     aest.color.aggrFillColorMapper = MapperGen.markersFillColor(vismel, 'aggr'); //MapperGen.markersFillColor(aest.color);
-      //     aest.color.lineColorMapper = MapperGen.lineColor(vismel); //MapperGen.markersFillColor(vismel, 'aggr');
-      //   }
-      //   if (used.size)
-      //     aest.size.aggrSizeMapper = MapperGen.markersSize(vismel, config.map.aggrMarker.size); //MapperGen.markersFillColor(aest.size);
-      //   if (used.shape)
-      //     aest.shape.aggrShapeMapper = MapperGen.markersShape(vismel, 'filled');// MapperGen.markersShape(aest.shape);
-      // }
-      //
-      // // mappers for sample facets
-      // for (let [coll, whichOne] of [[dataColl, 'training data'], [testDataColl, 'test data']]) {
-      //   if (coll.enabled) {
-      //     let vismel = getAnyVismel(coll);
-      //     let used = vismel.usages();
-      //     let aest = vismel.layers[0].aesthetics;
-      //     if (used.color) {
-      //       aest.color.lineColorMapper = MapperGen.lineColor(vismel);
-      //       if (whichOne === 'training data')
-      //         aest.color.dataFillColorMapper = MapperGen.markersFillColor(vismel, 'data');
-      //       else if (whichOne === 'test data')
-      //         aest.color.testDataFillColor = MapperGen.markersFillColor(vismel, 'test data');
-      //       else
-      //         throw RangeError("invalid whichOne value")
-      //     }
-      //     if (used.size)
-      //       aest.size.samplesSizeMapper = MapperGen.markersSize(vismel, config.map.sampleMarker.size);
-      //     if (used.shape)
-      //       aest.shape.samplesShapeMapper = MapperGen.markersShape(vismel, 'filled');
-      //   }
-      // }
-
-      // mappers for density
-      // TODO:
 
       /*
        * Shortcut to the layout attributes of a vismel query table.
@@ -760,6 +590,11 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         }
       }
 
+      let paneSize = {
+        x: 1 - templAxisSize.x,
+        y: 1 - templAxisSize.y,
+      };
+
       // width and heights of a single view cell in normalized coordinates
       let cellSize = {
         x: (1 - templAxisSize.x) / this.size.cols,
@@ -788,6 +623,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
       // padding between neighboring main axes in relative coordiantes
       // padding is always applied on the right/up side of an axis.
+      // TODO: axis padding is applied equally to both sides of an axis
       // we don't need padding if we have marginal plots, as they separate the main axis anyway...
       // TODO: do we rather want it in fixed pixel?
       axisLength.padding = {
@@ -816,17 +652,6 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // indexing over x and y
       let idx = {x:0, y:0};
 
-//       // need some additional statistics on 1d density: row and column wise extent
-//       uniColl.extent = {};
-//       for (let xy of ['x','y']) {
-//         let yx = _invXY(xy);
-//         if (marginal[xy]) {  // marginal active?
-//           //uniColl.extent[xy] = xyCollectionExtent(uniColl, xy, (e) => e[yx].extent[2]);
-//           uniColl.extent[xy] = xyCollectionExtent(uniColl, xy);
-//           uniColl.extent[xy].forEach(e=>normalizeContinuousExtent(e, 0.1));
-//         }
-//       }
-
       // Mapping of yields to spatial axis. This is for anchoring all axis with the same yield together.
       let yield2axis = new Map();
       function getSetYield2Axis(yield_, yieldAxisId) {
@@ -843,7 +668,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
 
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
-        let yaxis = config.axisGenerator.main(mainOffset.y, axisLength.main.y - axisLength.padding.y, templAxisSize.x, used.y),
+        let yaxis = config.axisGenerator.main(mainOffset.y + 0.5*axisLength.padding.y, axisLength.main.y - 0.5*axisLength.padding.y, templAxisSize.x, used.y),
           yid = idgen.main.y++;        
 
         if (used.y) {
@@ -865,14 +690,18 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
           let xaxis, xid;
           if (idx.y === 0) {
             mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
-            xaxis = config.axisGenerator.main(mainOffset.x, axisLength.main.x - axisLength.padding.x, templAxisSize.y, used.x);
+            xaxis = config.axisGenerator.main(mainOffset.x + 0.5*axisLength.padding.x, axisLength.main.x - 0.5*axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
               let xYield = getFieldUsage(idx.x,'x',vismelColl).yields;
               xaxis.scaleanchor = getSetYield2Axis(xYield, "x"+xid);
-                
+              
               let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
-              axisTitles.push(axisTitleAnno);
+//            TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)              
+//               if (idx.x === 0) {
+//                   let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', paneOffset.x, paneSize.x, templAxisSize.y);                  
+//                   axisTitles.push(axisTitleAnno);
+//               }             
             }
             layout["xaxis" + xid] = xaxis;
             xid = "x" + xid;
@@ -987,6 +816,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         title: "",
         //title: "Model: " + query.sources[0].name,
         barmode: 'group',
+        bargroupgap: 0.05,
         margin: config.plots.layout.margin,
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
