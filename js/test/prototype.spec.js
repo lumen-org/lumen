@@ -56,6 +56,7 @@ define(['app/shelves', 'app/PQL'], function (sh, f) {
     //var c = context;
     var mb = new Remote.ModelBase(server);
     var query, iris, pw, pl, sw, sl;
+    var queryTable, modelTable, resultTable, viewTable;
     mb.get('iris')
       .then( iris_ => {
         iris = iris_;

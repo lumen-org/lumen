@@ -76,15 +76,17 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this.$visual.fadeIn(200);
       }
 
-      message (str, type="warning") {
+      message (str, type="warning", timeout=3500) {
+        if (type != "warning" && type != "info")
+          throw RangeError('Invalid message type: ' + type);
         let toAdd =  "pl-info-box_" + (type == "warning"?"warning":"information"),
           toRemove =  "pl-info-box_" + (type == "warning"?"information":"warning");
-
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
         this.show();
-
         let that = this;
-        setTimeout( () => that.hide(), 3500);
+        setTimeout( () => {
+            that.hide()
+        }, 3500);
       }
 
       get $visual () {
@@ -545,13 +547,18 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
               // fetch model
               context.model.update()
-                .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
-                .then(() => activate(context, ['visualization', 'visPanel']))
                 .catch((err) => {
                   console.error(err);
                   infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
                   // TODO: remove vis and everything else ...
-                });
+                })
+                .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
+                .then(() => activate(context, ['visualization', 'visPanel']))
+                .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
+                .catch((err) => {
+                  console.error(err);
+                  infoBox.message("Internal error: " + err.toString());
+                })
             }
           });
 

@@ -477,8 +477,8 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
         axes[yx + 'axis' + minorId] = minor;
 
         // add title once per level
-        //let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
-        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], 0);
+        let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], stackOffset);
+        //let annotation = config.annotationGenerator.axis_title(split.yields, xy, offset[xy], size[xy], 0);
         annotations.push(annotation);
       });
 
