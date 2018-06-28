@@ -697,6 +697,7 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
               xaxis.scaleanchor = getSetYield2Axis(xYield, "x"+xid);
               
               let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
+              axisTitles.push(axisTitleAnno);
 //            TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)              
 //               if (idx.x === 0) {
 //                   let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', paneOffset.x, paneSize.x, templAxisSize.y);                  

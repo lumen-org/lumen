@@ -73,11 +73,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       show () {
-        this.$visual.fadeIn(100);
+        this.$visual.fadeIn(200);
       }
 
-      message (str, type="error") {
-        this._$visual.text(str);
+      message (str, type="warning") {
+        let toAdd =  "pl-info-box_" + (type == "warning"?"warning":"information"),
+          toRemove =  "pl-info-box_" + (type == "warning"?"information":"warning");
+
+        this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
         this.show();
 
         let that = this;
