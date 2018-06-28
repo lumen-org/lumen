@@ -44,8 +44,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSettings', './TraceGenerator'],
-  function (Logger, d3, PQL, VisMEL, MapperGen, config, TraceGen) {
+define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './MapperGenerator', './ViewSettings', './TraceGenerator'],
+  function (Logger, d3, d3legend, PQL, VisMEL, MapperGen, config, TraceGen) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -522,7 +522,9 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       this.size.x = this.size.cols;
       this.size.y = this.size.rows;
       this.vismels = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
+
       let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
+      vismel.used = vismel.usages();
 
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
@@ -845,6 +847,34 @@ define(['lib/logger', 'd3', './PQL', './VisMEL', './MapperGenerator', './ViewSet
       // plot everything
       Plotly.purge(pane);
       Plotly.plot(pane, traces, layout, plConfig);
+
+      // add color legend
+      function colorLegend(svgG, scale) {
+
+
+        let ordinal = d3.scale.ordinal()
+          .domain(["a", "b", "c", "d", "e"])
+          .range([ "rgb(153, 107, 195)", "rgb(56, 106, 197)", "rgb(93, 199, 76)", "rgb(223, 199, 31)", "rgb(234, 118, 47)"]);
+
+        let svg = d3.select("#my-svg");
+
+        svg.append("g")
+          .attr("class", "legendOrdinal")
+          .attr("transform", "translate(20,20)");
+
+        let legendOrdinal = d3.legend.color()
+          .shape("rect")
+          .shapePadding(10)
+          .scale(ordinal);
+
+        svg.select(".legendOrdinal")
+          .call(legendOrdinal);
+      }
+
+      if (vismel.used.color) {
+        let colorMap = vismel.layers[0].aesthetics.color;
+      }
+
     };
 
     return ViewTable;
