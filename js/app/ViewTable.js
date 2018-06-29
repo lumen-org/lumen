@@ -44,8 +44,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './MapperGenerator', './ViewSettings', './TraceGenerator'],
-  function (Logger, d3, d3legend, PQL, VisMEL, MapperGen, config, TraceGen) {
+define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator'],
+  function (Logger, d3, d3legend, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -513,7 +513,7 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './MapperGenerator'
      * @alias module:ViewTable
      */
     var ViewTable;
-    ViewTable = function (pane, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
+    ViewTable = function (pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
 
       this.aggrCollection = aggrColl;
       this.dataCollection = dataColl;
@@ -849,30 +849,62 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './MapperGenerator'
       Plotly.plot(pane, traces, layout, plConfig);
 
       // add color legend
-      function colorLegend(svgG, scale) {
+      function colorLegend(divD3, colorMap) {
+        let svgD3 = divD3.append("svg").classed('pl-legend-svg', true);
 
+        //let legendD3 = d3.select('#pl-legend-svg');
+        //svgD3.selectAll("*").remove();
 
-        let ordinal = d3.scale.ordinal()
-          .domain(["a", "b", "c", "d", "e"])
-          .range([ "rgb(153, 107, 195)", "rgb(56, 106, 197)", "rgb(93, 199, 76)", "rgb(223, 199, 31)", "rgb(234, 118, 47)"]);
+        // build scale again ...
+        // TODO: reuse the ones build in atomicplots...
+        let colorScale = ScaleGen.color(colorMap, colorMap.fu.extent);
 
-        let svg = d3.select("#my-svg");
-
-        svg.append("g")
-          .attr("class", "legendOrdinal")
-          .attr("transform", "translate(20,20)");
+        let legendG = svgD3.append("g")         
+          .attr('class', 'pl-legend-color-g');
+          //.attr('transform', 'translate(20,20)');
 
         let legendOrdinal = d3.legend.color()
           .shape("rect")
-          .shapePadding(10)
-          .scale(ordinal);
+          .shapePadding(7)
+          .scale(colorScale);
 
-        svg.select(".legendOrdinal")
-          .call(legendOrdinal);
+        //d3.select(".pl-legend-color-g").call(legendOrdinal);
+        legendG.call(legendOrdinal);
+        
+
+        // if (colorMap.scale === 'linear') {
+        //
+        // } else if (colorMap.scale === 'ordinal') {
+        //
+        // }
+
+        // let ordinal = d3.scale.ordinal()
+        //   .domain(["a", "b", "c", "d", "e"])
+        //   .range([ "rgb(153, 107, 195)", "rgb(56, 106, 197)", "rgb(93, 199, 76)", "rgb(223, 199, 31)", "rgb(234, 118, 47)"]);
+        //
+        // let svg = d3.select("#my-svg");
+        //
+        // svg.append("g")
+        //   .attr("class", "legendOrdinal")
+        //   .attr("transform", "translate(20,20)");
+
+        // let legendOrdinal = d3.legend.color()
+        //   .shape("rect")
+        //   .shapePadding(10)
+        //   .scale(ordinal);
+        //
+        // svg.select(".legendOrdinal")
+        //   .call(legendOrdinal);
       }
 
+      // clear legend
+      let legendD3 = d3.select(legend);
+      legendD3.selectAll("*").remove();
+
+      // add legends one after another
       if (vismel.used.color) {
         let colorMap = vismel.layers[0].aesthetics.color;
+        colorLegend(legendD3, colorMap)
       }
 
     };

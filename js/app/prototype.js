@@ -170,7 +170,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
 
-              .then(() => c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
+              .then(() => c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!
@@ -388,10 +388,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let $paneDiv = $('<div class="pl-visualization-pane"></div>');
         let $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
+        let $legendDiv = $('<div class="pl-legend-pane"></div>');
 
         let $nav = $removeButton;
         let $vis = $('<div class="pl-visualization"></div>')
-          .append($paneDiv, $nav)
+          .append($paneDiv, $nav, $legendDiv)
           .click( () => {
             if (contextQueue.first().uuid !== context.uuid) {
               activate(context, ['visualization', 'visPanel']);
@@ -405,7 +406,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               let c = context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
               // redraw
-              c.viewTable = new ViewTable(c.$visuals.visPanel.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
+              c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
         $vis.draggable(); // yeah, that was easy. just made it draggable!
@@ -511,7 +512,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let visual = Context._makeShelvesGUI(context);
         visual.visConfig = Context._makeFacetWidget(context);
         visual.visualization = Context._makeVisualization(context);
-        visual.visPanel = $('div.pl-visualization-pane', visual.visualization);
+        visual.visPane = $('div.pl-visualization-pane', visual.visualization);
+        visual.legendPane = $('div.pl-legend-pane', visual.visualization);
         return visual;
       }
 

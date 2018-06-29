@@ -149,6 +149,20 @@ main {
 .pl-visualization-pane {
     width: 100%;
     height: 100%;
+    position: absolute;
+}
+
+.pl-legend-pane {
+    position: absolute;
+    height: 100%;
+    left: 100%;
+    width: 10rem;
+    padding: 1rem;
+}
+.pl-legend-svg {
+    height: 100%;
+    width: 100%;
+    position: relative;
 }
 
 .pl-plotly-atomic-div {

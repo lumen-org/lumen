@@ -45,6 +45,7 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
           })
           .then(() => {
             console.log(resultTable);
+            // TODO: this is old and doesn't work anymore
             viewTable = new ViewTable(paneD3, resultTable, queryTable);
           });
     }
