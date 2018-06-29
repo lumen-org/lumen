@@ -80,8 +80,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
   };
 
   gen.markersShape = function (query, mode = 'filled') {
-    if (mode !== 'filled' && mode !== 'open')
-      throw RangeError("mode must be 'filled' or 'open', but is: " + mode.toString());
+    if (mode !== 'filled' && mode !== 'open' && mode !== 'svgPath ')
+      throw RangeError("mode must be 'filled' or 'open' or 'svgPath', but is: " + mode.toString());
     let aesthetics = query.layers[0].aesthetics,
       shape = aesthetics.shape;
     if (shape instanceof VisMEL.ShapeMap) {

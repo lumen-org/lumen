@@ -44,8 +44,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator'],
-  function (Logger, d3, d3legend, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen) {
+define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator'],
+  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -863,30 +863,49 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
         let colorScale = ScaleGen.color(colorMap, colorMap.fu.extent);
         let legendG = svgD3.append("g")
           .attr('class', 'pl-legend-color-g')
-          .attr('transform', `translate(0,${heightOffset + 10})`);
+          .attr('transform', `translate(0,${heightOffset})`);
 
-        let legendOrdinal = d3.legend.color()
+        let legend = d3.legend.color()
           .shape("rect")
           .shapePadding(7)
+          .title(colorMap.fu.yields)
+          //.classPrefix('pl-')
           .scale(colorScale);
 
-        return legendG.call(legendOrdinal);
+        return legendG.call(legend);
       }
 
       function shapeLegend(svgD3, shapeMap, heightOffset) {
-        // build scale again ...
-        // TODO: reuse the ones build in atomicplots...
-        let shapeScale = ScaleGen.shape(shapeMap, shapeMap.fu.extent);
+        let shapeScale = ScaleGen.shape(shapeMap, shapeMap.fu.extent, 'svgPath'); // use hand-built svg paths - plotly does not naturally expoze them...
         let legendG = svgD3.append("g")
           .attr('class', 'pl-legend-shape-g')
-          .attr('transform', `translate(0,${heightOffset + 10})`);
+          // need to move 5 to the right because of some svg issue with the shapes
+          .attr('transform', `translate(5,${heightOffset + 20})`);
 
-        let legendOrdinal = d3.legend.symbol()
-        //.shape("rect")
+        let legend = d3.legend.symbol()
           .shapePadding(7)
+          .labelOffset(5)
+          .title(shapeMap.fu.yields)
           .scale(shapeScale);
 
-        legendG.call(legendOrdinal);
+        return legendG.call(legend);
+      }
+
+      function sizeLegend(svgD3, sizeMap, heightOffset) {
+        let sizeScale = ScaleGen.size(sizeMap, sizeMap.fu.extent, [3,20]);
+
+        let legendG = svgD3.append("g")
+          .attr('class', 'pl-legend-size-g')
+          .attr('transform', `translate(0,${heightOffset + 40})`);
+
+        let legend = d3.legend.size()
+          .shape('circle')
+          .shapePadding(7)
+          //.labelOffset(5)
+          .title(sizeMap.fu.yields)
+          .scale(sizeScale);
+
+        return legendG.call(legend);
       }
 
 
@@ -896,7 +915,7 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
       let svgD3 = legendD3.append("svg").classed('pl-legend-svg', true);
 
       // add legends one after another
-      let height = 0;
+      let height = 20;
       if (vismel.used.color) {
         let clrLegend = colorLegend(svgD3, vismel.layers[0].aesthetics.color, height);
         height += clrLegend.node().getBBox().height;
@@ -905,10 +924,9 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
         let shpLegend = shapeLegend(svgD3, vismel.layers[0].aesthetics.shape, height);
         height += shpLegend.node().getBBox().height;
       }
-//       if (vismel.used.size) {
-//         let szLegend = sizeLegend(svgD3, vismel.layers[0].aesthetics.size, height);
-//         //height += szLegend.node().getBBox().height;
-//       }
+      if (vismel.used.size) {
+        sizeLegend(svgD3, vismel.layers[0].aesthetics.size, height);
+      }
 
     };
 

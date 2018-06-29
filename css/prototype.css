@@ -82,7 +82,7 @@ main {
 }
 
 .pl-visualization > div {
-    font-weight: bold;
+    /* font-weight: bold; */
 }
 
 .pl-visualization > .pl-remove-button {
@@ -158,11 +158,32 @@ main {
     left: 100%;
     width: 10rem;
     padding: 1rem;
+    /* margin-top: 4rem; */
 }
 .pl-legend-svg {
     height: 100%;
     width: 100%;
     position: relative;
+}
+
+.pl-legend-svg .label {
+    font-size: 10pt;
+    fill: grey;
+    /*fill: rgb(179, 179, 179);*/
+}
+
+.pl-legend-svg .swatch {
+    /*fill: #ff7f00;*/
+    stroke: grey;
+    stroke-width: 1pt;
+    fill: grey
+}
+
+.pl-legend-svg .legendTitle {
+    font-weight: bold;
+    font-style: italic;
+    font-size: 13pt;
+    fill: rgb(179, 179, 179);
 }
 
 .pl-plotly-atomic-div {
