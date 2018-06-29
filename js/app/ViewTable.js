@@ -553,7 +553,7 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
       };
 
       let qx = vismel.layout.cols,
-       qy = vismel.layout.rows;
+        qy = vismel.layout.rows;
 
       // flag whether or not in an atomic plot the x axis (.x) (y axis (.y)) is in use, i.e. encodes some fieldusage of the model
       let used = {
@@ -635,10 +635,10 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
 
       // starting ids for the axis of different types. id determines z-order!
       let idgen = {
-        templating: {x:2, y:1000},
+        templating: {x: 2, y: 1000},
         bicatquant: {x: 2000, y: 3000},
-        main: {x:4000, y:5000},
-        marginal: {x:6000, y:7000},
+        main: {x: 4000, y: 5000},
+        marginal: {x: 6000, y: 7000},
       };
 
       // init layout and traces of plotly plotting specification
@@ -652,10 +652,11 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
       // offset of main plot relative to view cell origin
       let mainOffset = {};
       // indexing over x and y
-      let idx = {x:0, y:0};
+      let idx = {x: 0, y: 0};
 
       // Mapping of yields to spatial axis. This is for anchoring all axis with the same yield together.
       let yield2axis = new Map();
+
       function getSetYield2Axis(yield_, yieldAxisId) {
         let axis = yield2axis.get(yield_);
         if (axis === undefined)  // never overwrite existing mappings. This maybe makes it easier to debug...
@@ -670,19 +671,19 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
 
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
-        let yaxis = config.axisGenerator.main(mainOffset.y + 0.5*axisLength.padding.y, axisLength.main.y - 0.5*axisLength.padding.y, templAxisSize.x, used.y),
-          yid = idgen.main.y++;        
+        let yaxis = config.axisGenerator.main(mainOffset.y + 0.5 * axisLength.padding.y, axisLength.main.y - 0.5 * axisLength.padding.y, templAxisSize.x, used.y),
+          yid = idgen.main.y++;
 
         if (used.y) {
-          let yYield = getFieldUsage(idx.y,'y',vismelColl).yields;
-          yaxis.scaleanchor = getSetYield2Axis(yYield, "y"+yid);
+          let yYield = getFieldUsage(idx.y, 'y', vismelColl).yields;
+          yaxis.scaleanchor = getSetYield2Axis(yYield, "y" + yid);
 
           let axisTitleAnno = config.annotationGenerator.axis_title(
             getFieldUsage(idx.y, 'y', vismelColl).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
           axisTitles.push(axisTitleAnno);
         }
         layout["yaxis" + yid] = yaxis;
-        yid = "y"+yid;
+        yid = "y" + yid;
         mainAxes.y.push(yid);
 
         for (idx.x = 0; idx.x < this.size.x; ++idx.x) {
@@ -692,12 +693,12 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
           let xaxis, xid;
           if (idx.y === 0) {
             mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
-            xaxis = config.axisGenerator.main(mainOffset.x + 0.5*axisLength.padding.x, axisLength.main.x - 0.5*axisLength.padding.x, templAxisSize.y, used.x);
+            xaxis = config.axisGenerator.main(mainOffset.x + 0.5 * axisLength.padding.x, axisLength.main.x - 0.5 * axisLength.padding.x, templAxisSize.y, used.x);
             xid = idgen.main.x++;
             if (used.x) {
-              let xYield = getFieldUsage(idx.x,'x',vismelColl).yields;
-              xaxis.scaleanchor = getSetYield2Axis(xYield, "x"+xid);
-              
+              let xYield = getFieldUsage(idx.x, 'x', vismelColl).yields;
+              xaxis.scaleanchor = getSetYield2Axis(xYield, "x" + xid);
+
               let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
               axisTitles.push(axisTitleAnno);
 //            TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)              
@@ -715,11 +716,11 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
 
           // create marginal axes as needed
           let marginalAxisId = {};
-          for (let [xy, yx] of [['x','y'], ['y','x']]) {
+          for (let [xy, yx] of [['x', 'y'], ['y', 'x']]) {
             if (marginal[xy]) { // marginal activate?
 
               let axisOffset = paneOffset[xy] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[xy]),
-               axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
+                axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               if (xy === 'x')
@@ -767,16 +768,16 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
 
               // build additional axes along categorial dimension, i.e. the axes that will encode density
               // need as many axis as there is categories!
-              for (let i=0; i<n; ++i) {
+              for (let i = 0; i < n; ++i) {
                 const r = 2.0; // sets position of axis
                 // offset of axis (i.e. along the categorical dimension)
-                let o = mainOffset[catXY] + i*d + d/r,
+                let o = mainOffset[catXY] + i * d + d / r,
                   id_ = idgen.bicatquant[catXY]++,
-                  axis = config.axisGenerator.marginal(o, d*(r-1)/r, mainOffset[quantXY], catXY);
+                  axis = config.axisGenerator.marginal(o, d * (r - 1) / r, mainOffset[quantXY], catXY);
                 axis.anchor = mainAxes[quantXY][idx[quantXY]];
 
                 // set axis labels and tick marks                
-                Object.assign(axis, getRangeAndTickMarks(pExtent,catXY));
+                Object.assign(axis, getRangeAndTickMarks(pExtent, catXY));
                 //axis.showticklabels = false;
                 //axis.tickcolor
                 //axis.ticklen = -210;
@@ -803,15 +804,24 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
           }
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {x:xid,y:yid}, marginalAxisId, catQuantAxisIds, queryConfig);
+          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {
+            x: xid,
+            y: yid
+          }, marginalAxisId, catQuantAxisIds, queryConfig);
 
           traces.push(...atomicTraces);
         }
       }
 
       // add templating axis
-      let [templx, annotationsx] = createTemplatingAxis('x', {x:templAxisSize.x, y:0}, {x:1-templAxisSize.x, y:templAxisSize.y}, qx, idgen.templating);
-      let [temply, annotationsy] = createTemplatingAxis('y', {x:0, y:templAxisSize.y}, {x:templAxisSize.x, y:1-templAxisSize.y}, qy, idgen.templating);
+      let [templx, annotationsx] = createTemplatingAxis('x', {x: templAxisSize.x, y: 0}, {
+        x: 1 - templAxisSize.x,
+        y: templAxisSize.y
+      }, qx, idgen.templating);
+      let [temply, annotationsy] = createTemplatingAxis('y', {x: 0, y: templAxisSize.y}, {
+        x: templAxisSize.x,
+        y: 1 - templAxisSize.y
+      }, qy, idgen.templating);
       Object.assign(layout, templx, temply);
 
       // add 'global' layout options
@@ -842,70 +852,63 @@ define(['lib/logger', 'd3', 'd3legend', './PQL', './VisMEL', './ScaleGenerator',
         // modeBarButtonsToAdd: [],
       };
 
-      //console.log(layout);
-
       // plot everything
       Plotly.purge(pane);
       Plotly.plot(pane, traces, layout, plConfig);
 
       // add color legend
-      function colorLegend(divD3, colorMap) {
-        let svgD3 = divD3.append("svg").classed('pl-legend-svg', true);
-
-        //let legendD3 = d3.select('#pl-legend-svg');
-        //svgD3.selectAll("*").remove();
-
+      function colorLegend(svgD3, colorMap, heightOffset) {
         // build scale again ...
         // TODO: reuse the ones build in atomicplots...
         let colorScale = ScaleGen.color(colorMap, colorMap.fu.extent);
-
-        let legendG = svgD3.append("g")         
-          .attr('class', 'pl-legend-color-g');
-          //.attr('transform', 'translate(20,20)');
+        let legendG = svgD3.append("g")
+          .attr('class', 'pl-legend-color-g')
+          .attr('transform', `translate(0,${heightOffset + 10})`);
 
         let legendOrdinal = d3.legend.color()
           .shape("rect")
           .shapePadding(7)
           .scale(colorScale);
 
-        //d3.select(".pl-legend-color-g").call(legendOrdinal);
-        legendG.call(legendOrdinal);
-        
-
-        // if (colorMap.scale === 'linear') {
-        //
-        // } else if (colorMap.scale === 'ordinal') {
-        //
-        // }
-
-        // let ordinal = d3.scale.ordinal()
-        //   .domain(["a", "b", "c", "d", "e"])
-        //   .range([ "rgb(153, 107, 195)", "rgb(56, 106, 197)", "rgb(93, 199, 76)", "rgb(223, 199, 31)", "rgb(234, 118, 47)"]);
-        //
-        // let svg = d3.select("#my-svg");
-        //
-        // svg.append("g")
-        //   .attr("class", "legendOrdinal")
-        //   .attr("transform", "translate(20,20)");
-
-        // let legendOrdinal = d3.legend.color()
-        //   .shape("rect")
-        //   .shapePadding(10)
-        //   .scale(ordinal);
-        //
-        // svg.select(".legendOrdinal")
-        //   .call(legendOrdinal);
+        return legendG.call(legendOrdinal);
       }
+
+      function shapeLegend(svgD3, shapeMap, heightOffset) {
+        // build scale again ...
+        // TODO: reuse the ones build in atomicplots...
+        let shapeScale = ScaleGen.shape(shapeMap, shapeMap.fu.extent);
+        let legendG = svgD3.append("g")
+          .attr('class', 'pl-legend-shape-g')
+          .attr('transform', `translate(0,${heightOffset + 10})`);
+
+        let legendOrdinal = d3.legend.symbol()
+        //.shape("rect")
+          .shapePadding(7)
+          .scale(shapeScale);
+
+        legendG.call(legendOrdinal);
+      }
+
 
       // clear legend
       let legendD3 = d3.select(legend);
       legendD3.selectAll("*").remove();
+      let svgD3 = legendD3.append("svg").classed('pl-legend-svg', true);
 
       // add legends one after another
+      let height = 0;
       if (vismel.used.color) {
-        let colorMap = vismel.layers[0].aesthetics.color;
-        colorLegend(legendD3, colorMap)
+        let clrLegend = colorLegend(svgD3, vismel.layers[0].aesthetics.color, height);
+        height += clrLegend.node().getBBox().height;
       }
+      if (vismel.used.shape) {
+        let shpLegend = shapeLegend(svgD3, vismel.layers[0].aesthetics.shape, height);
+        height += shpLegend.node().getBBox().height;
+      }
+//       if (vismel.used.size) {
+//         let szLegend = sizeLegend(svgD3, vismel.layers[0].aesthetics.size, height);
+//         //height += szLegend.node().getBBox().height;
+//       }
 
     };
 
