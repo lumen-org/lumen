@@ -409,7 +409,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
-        $vis.draggable(); // yeah, that was easy. just made it draggable!
+        $vis.draggable(
+          {stop:
+            (event, ui) => ActivityLogger.log({'context': c.getNameAndUUID()}, 'move')
+          }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position!
         return $vis;
       }
