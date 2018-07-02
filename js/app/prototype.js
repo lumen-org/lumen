@@ -1095,10 +1095,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             infoBox.message("Could not load remote model from Server!");
           });
 
-        // PLAYGROUND D3 D3Legend
-        let foo_ordinal = d3.scale.ordinal();
-        let foo_legend2 = d3.legend.color();
-
       }
     };
 

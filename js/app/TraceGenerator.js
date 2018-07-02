@@ -316,7 +316,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               width: cfg.stroke.width
             },
             showscale: false,
-            sizemode: 'area',
+            sizemode: 'diameter', // 'area' or 'diameter'
           },
           hoverinfo: "text",
           text: rt.formatter(data),
@@ -810,7 +810,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       trace.marker = {
         color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
         size: applyMap(rt, mapper.size, aest.size.fu, fu2idx),
-        sizemode: 'area',
+        sizemode: 'diameter', // 'area' or 'diameter'
         symbol: applyMap(rt, mapper.shape, aest.shape.fu, fu2idx),
         line: {
           color: cfg.stroke.color,

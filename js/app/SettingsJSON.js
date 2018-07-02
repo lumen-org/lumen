@@ -465,8 +465,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         width: 1.5,
       },
       size: {
-        min: 10, // HACK: used to be 8.
-        max: 500,
+        min: 6, // HACK: used to be 8.
+        max: 40,
         def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
@@ -487,9 +487,9 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
 
     sampleMarker: {
       size: {
-        min: 10,
-        max: 500,
-        def: 8,
+        min: 6,
+        max: 40,
+        def: 10,
       },
       stroke: {
         color: greys(0.0),
@@ -852,8 +852,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     c.shapes.open = c.shapes.filled.map(n => n+100);
     // precompute svg paths for shapes. unfortunately I cannot access plotly shape svg paths directly...
     c.shapes.svgPath =
-      c.shapes.filledName.map(name => plotlyShapes[name].f(c.legend.symbolSize));
-      //c.shapes.filledName.map(name => `M${c.legend.symbolSize*5} 0 ${plotlyShapes[name].f(c.legend.symbolSize)}`);
+      c.shapes.filledName.map(name => `M${c.legend.symbolSize*5} 0 ${plotlyShapes[name].f(c.legend.symbolSize)}`);
 
     // some static configuration parts of the GUI
     c.gui = {
@@ -872,7 +871,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     };
 
     c.userStudy = {
-      enabled: false && (c.meta.activity_logging_mode !== "disabled"),
+      enabled: true && (c.meta.activity_logging_mode !== "disabled"),
     };
 
     return c;
