@@ -240,7 +240,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         //this.remove = remove;
 
         // update is not an instance method that needs to be called with a proper this. it always knows its context.
-        this.update = _.debounce(makeContextedUpdateFct(this), 200);
+        this.update = _.debounce(makeContextedUpdateFct(this), 150);
         this.unredoer = new UnRedo(20);
 
         // emitter mixin
@@ -411,7 +411,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           });
         $vis.draggable(
           {stop:
-            (event, ui) => ActivityLogger.log({'context': c.getNameAndUUID()}, 'move')
+            (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move')
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position!
         return $vis;
@@ -459,6 +459,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves)) {
           shelves[key].on(Emitter.ChangedEvent, context.update);
+          shelves[key].on(Emitter.ChangedEvent, event => {
+             // heuristic to detect ChangedEvents that are not already covered with the Shelf.Event.* events below
+             if (event.hasOwnProperty('type')) {
+               let logEvent = Object.assign({'context': context.getNameAndUUID()}, event);
+               delete logEvent.type;
+               ActivityLogger.log(logEvent, event.type);
+             }
+          });
           shelves[key].on(sh.Shelf.Event.Add, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON(), 'context': context.getNameAndUUID()}, sh.Shelf.Event.Add) );
           shelves[key].on(sh.Shelf.Event.Remove, record => ActivityLogger.log({shelf:record.shelf.type, what: record.content.toJSON(), 'context': context.getNameAndUUID()}, sh.Shelf.Event.Remove) );
         }
@@ -1048,13 +1056,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     if (Settings.userStudy.enabled) {
       let surveyWidget = new SurveyWidget(
         newID  => {
-          infoBox.message("set user id to: " + newID.toString());
+          infoBox.message("set user id to: " + newID.toString(), "info");
           ActivityLogger.log({'newUserId': newID}, 'userid.change');
           ActivityLogger.additionalFixedContent({'userId': newID});
 
         },
         (report, context) => {
-          infoBox.message("reported insight: " + report.toString());
+          infoBox.message("reported insight: " + report.toString(), "info");
           ActivityLogger.log({'report': report}, 'insight');
         }
       );

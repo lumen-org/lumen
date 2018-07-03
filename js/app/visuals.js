@@ -2,6 +2,13 @@
  * Visuals module. It provides self-contained views for shelves, records, Fields, FieldUsages, and Maps. They are
  * self-contained in the sense that are automatically synchronized with their model, if that changes.
  *
+ * If the visuals are changed (i.e. typcially by a user interaction with the GUI) a visual emits a Emitter.InternalChangedEvent signal to indicate that. That signal include an object with information about it, i.e. it has keys and values as follows:
+ *   * 'type': the type of change, such as 'args.changed', 'method.changed', or 'translation'
+ *   * 'value.old': the old value of what has changed
+ *   * 'value.new': the new value of what has changed
+
+ *
+ *
  * @module visuals
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
@@ -267,10 +274,17 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       let curValue = $methodDiv.html();
       let newIdx = (options.indexOf(curValue) + 1) % options.length;
       $methodDiv.html(options[newIdx]);
+      let change = {
+        'type': 'fu.method.changed',
+        'class': fu.constructor.name,
+        'name': fu.yields,
+        'value.old': fu.method,
+        'value.new': options[newIdx],
+      };
       fu.method = options[newIdx];
       // TODO: because of the above todo i refrain from automatically triggering an update. fix that later
-      //fu.emit(Emitter.InternalChangedEvent);
-      // fu.emit(Emitter.ChangedEvent);
+      //fu.emit(Emitter.InternalChangedEvent, change);
+      // fu.emit(Emitter.ChangedEvent, change);
     });
     return($methodDiv);
   }
@@ -295,12 +309,22 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
   function conversionButtons (record) {
 
     function translate (record, TargetType) {
-      let content = record.content;
-      let isBaseMap = content instanceof VisMEL.BaseMap;
-      // construct new FU
-      let newFU = TargetType.FromFieldUsage(isBaseMap ? content.fu : content);
-      // construct new Mapping if necessary
-      let newContent = isBaseMap ? content.constructor.DefaultMap(newFU) : newFU;
+      let content = record.content,
+        isBaseMap = content instanceof VisMEL.BaseMap,
+        fu = isBaseMap ? content.fu : content,
+        // construct new FU
+        newFU = TargetType.FromFieldUsage(fu),
+        // construct new Mapping if necessary
+        newContent = isBaseMap ? content.constructor.DefaultMap(newFU) : newFU;
+
+      let change = {
+        'type': 'fu.translate',
+        'name': fu.yields,
+        'class.from': TargetType.name,
+        'class.to': fu.constructor.name,
+      };
+      fu.emit(Emitter.InternalChangedEvent, change);
+
       // and replace the old one
       record.replaceBy(newContent);
     }
@@ -327,9 +351,19 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
     function submitOnEnter(elem) {
       if (event.keyCode == 13) {
         try{
-          fu.args = JSON.parse(elem.target.value);
-          fu.emit(Emitter.InternalChangedEvent);
-        } catch (e) { }
+          let args = JSON.parse(elem.target.value);
+          let change = {
+            'type': 'fu.args.changed',
+            'class': fu.constructor.name,
+            'name': fu.yields,
+            'value.old': fu.args,
+            'value.new': args,
+          };
+          fu.args = args;
+          fu.emit(Emitter.InternalChangedEvent, change);
+        } catch (e) { 
+          console.log(e);
+        }
       }
     }
 
@@ -346,9 +380,17 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
       if (event.keyCode == 13) {
         try{
           // create domain of same type as in fu
-          let input = JSON.parse(elem.target.value);
-          fu.setDomain(new fu.args.constructor(input));
-          fu.emit(Emitter.InternalChangedEvent);
+          let input = JSON.parse(elem.target.value),
+            newDomain = new fu.args.constructor(input);
+          let change = {
+            'type': 'filter.changed',
+            'class': fu.constructor.name,
+            'name': fu.name,
+            'value.old': fu.args,
+            'value.new': newDomain,
+          };
+          fu.setDomain(newDomain);
+          fu.emit(Emitter.InternalChangedEvent, change);
         } catch (e) {
           console.log("invalid arguments for FU");
         }

@@ -166,7 +166,8 @@ define([], function () {
 
   Emitter.prototype.bubbleEventUp = function(child, what, as_=what) {
     var that = this;
-    child.on(what, () => that.emit(as_));
+    child.on(what, (...args) => that.emit(as_, ...args));
+    //child.on(what, () => that.emit(as_));
   };
 
   Emitter.prototype.bubbleChangedEventUp = function(child) {
