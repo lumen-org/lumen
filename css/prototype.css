@@ -1,4 +1,4 @@
-/* copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 main {
     display: flex;
@@ -39,7 +39,7 @@ main {
 }
 
 .pl-spec {
-    background-color: #f8f8f8;    
+    background-color: #f8f8f8;
     border-left: 2px solid #f3f3f3;
     border-right: 2px solid #f3f3f3;
     min-width: 200px; /* for constant minimal width*/
@@ -244,7 +244,7 @@ main {
 #pl-right-column {
     border-left: 2px solid #f3f3f3;
     background-color: #f8f8f8;
-    min-width: 10px; 
+    min-width: 10px;
 }
 
 #pl-details-container {
@@ -296,23 +296,24 @@ textarea.pl-survey-content {
 }*/
 
 /*.drop-allow {*/
-    /*!*background-color: #8AC007;*!*/
-    /*border: solid 5px #8AC007;*/
-    /*border-radius: 5px*/
+/*!*background-color: #8AC007;*!*/
+/*border: solid 5px #8AC007;*/
+/*border-radius: 5px*/
 /*}*/
 
 /*.drop-deny {*/
-    /*!*background-color: #ffa5a9;*!*/
-    /*border: solid 5px #ffa5a9;*/
-    /*border-radius: 5px*/
+/*!*background-color: #ffa5a9;*!*/
+/*border: solid 5px #ffa5a9;*/
+/*border-radius: 5px*/
 /*}*/
 
 .shelf {
     /*background-color: #f5f5f5;*/
     /*margin-bottom: 0.4em;*/
     margin: 0.5rem;
-    padding: 0.2rem;
+    padding-right: 0.2rem;
     display: flex;
+    padding-left: 0.2rem;
 }
 
 .shelf.horizontal {
@@ -414,4 +415,3 @@ textarea.pl-survey-content {
 .pl-resizing {
     border: solid 2px rgba(56,172,221,0.8);
 }
-

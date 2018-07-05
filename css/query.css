@@ -1,8 +1,9 @@
-/* copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
 @font-face {
     font-family: Comfortaa;
     src: url(../fonts/Comfortaa_Regular.ttf);
 }
+
 @font-face {
     font-family: Quicksand;
     src: url(../fonts/Quicksand-Regular.otf);
@@ -10,11 +11,11 @@
 
 .noselect {
     -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none;   /* Chrome/Safari/Opera */
-    -khtml-user-select: none;    /* Konqueror */
-    -moz-user-select: none;      /* Firefox */
-    -ms-user-select: none;       /* Internet Explorer/Edge */
-    user-select: none;           /* Non-prefixed version, currently not supported by any browser */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently not supported by any browser */
 }
 
 body {
@@ -27,9 +28,9 @@ body {
 
 .pl-fu {
     border: 1px solid;
-    min-width:9em;
+    min-width: 9em;
     /*height:67px;*/ /* prepaper kdd*/
-    height:33px;
+    height: 28px;
     transition: height 200ms;
     display: flex;
     justify-content: center;
@@ -49,11 +50,11 @@ body {
     border-radius: 0.3em;
     display: flex;
     justify-content: center;
-    padding: 0.2rem;
+    padding: 0.1rem;
 }
 
 .pl-field:hover {
-    cursor:move;
+    cursor: move;
     background-color: #f8f8f8;
     transition: background-color 200ms;
 }
@@ -63,6 +64,7 @@ body {
     top: 3px;
     font-size: 0.7em;
 }
+
 .pl-field-name {
     font-family: Quicksand;
     font-size: 1.0em;
@@ -71,7 +73,7 @@ body {
 
 .pl-fields-in-fu {
     position: absolute;
-    top: 0.3rem;
+    /* top: 0.3rem; */
     transition: top 200ms;
     max-width: 170px;
     display: flex;
@@ -117,7 +119,7 @@ body {
     right: 2em;
     top: 37px;
     font-size: .8em;
-    height: 1.4em;
+    height: 1.2em;
     width: 130px;
     margin: 0;
     padding: 0;
@@ -128,17 +130,15 @@ body {
     color: black;
 }
 
-
 .pl-hidden {
     visibility: hidden;
     opacity: 0;
     transition: visibility 150ms, opacity 150ms;
 }
 
-
 .pl-field-name:hover > .pl-hidden,
 .pl-fu:hover > .pl-hidden {
-    visibility:visible;
+    visibility: visible;
     opacity: 1;
     transition: visibility 150ms, opacity 150ms;
 }
@@ -180,7 +180,7 @@ body {
     /*background-color: #F25D50;*/
     /*background-color: #FABCAF;*/
     /*background-color: #FFCDC3;*/
-    background-color: rgb(255,226,219);
+    background-color: rgb(255, 226, 219);
     border-color: #CDBDB5;
 }
 
@@ -234,6 +234,6 @@ body {
     stroke-width: 2.0px;
 }
 
-.pl-data-marks .point  {
+.pl-data-marks .point {
     stroke-width: 1.5px;
 }
