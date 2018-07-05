@@ -222,6 +222,14 @@ body {
     min-width: 10rem;
 }
 
+#pl-cytoscape-container {
+    position: absolute;
+    left: 500px;
+    min-width: 300px;
+    min-height: 300px;
+    border: solid red 1px;
+}
+
 .pl-aggr-marks .point {
     stroke-width: 2.0px;
 }

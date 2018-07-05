@@ -49,6 +49,10 @@ define(['./PQL'], function (PQL) {
       return field instanceof PQL.Field && (this.fields.get(field.name) === field);
     }
 
+    get dim () {
+      return this.fields.size+1;
+    }
+
   }
 
   return Model;

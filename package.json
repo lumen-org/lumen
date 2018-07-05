@@ -1,17 +1,19 @@
 {
   "name": "PMV",
-  "version": "0.2",  
+  "version": "0.2",
   "description": "a webinterface for exploratory visualization of probability models",
   "author": {
-    "name" : "Philipp Lucas",
-	"email" : "philipp.lucas@uni-jena.de"
+    "name": "Philipp Lucas",
+    "email": "philipp.lucas@uni-jena.de"
   },
-  "repository" : {
-    "type" : "git",
-    "url" : "git@bitbucket.org:phlpp/pmv.git"
+  "repository": {
+    "type": "git",
+    "url": "."
   },
   "private": true,
   "dependencies": {
+    "cytoscape": "^3.2.14",
+    "cytoscape-cola": "^2.2.3",
     "js-logger": "^1.2.0",
     "modernizr": "^3.3.1",
     "requirejs": "^2.1.15"
@@ -29,10 +31,6 @@
   "scripts": {
     "test": "js/test-entry.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "."
-  },
   "license": "(c) Philipp Lucas, All Rights Reserved",
   "jshintConfig": {
     "globals": {
@@ -45,8 +43,14 @@
     "unused": "vars",
     "esnext": true
   },
-  "babel":{
-    "presets": ["es2015", "stage-3"],
-    "plugins": ["syntax-async-functions", "transform-runtime"]
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-3"
+    ],
+    "plugins": [
+      "syntax-async-functions",
+      "transform-runtime"
+    ]
   }
 }

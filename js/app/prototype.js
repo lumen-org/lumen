@@ -11,9 +11,69 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, DepGraph) {
     'use strict';
+
+    function makeDummyGraph (context) {
+
+      function makeNode(data) {
+        return {
+          group: 'nodes',
+          data: data
+        };
+      }
+
+      function makeEdge(s,t) {
+        return {
+          group: 'edges',
+          data: {
+            source: s,
+            target: t,
+            weight: 1+Math.random()*10
+          }
+        };
+      }
+
+      /**
+       * Given an iterable sequence of Fields it returns an iterable sequence of JSON formatted nodes.
+       *
+       * @param fields
+       */
+      function field2node(field) {
+        return makeNode({
+          id: field.name,
+          dataType: field.dataType,
+          field: field,
+        });
+      }
+
+      let model = context.model,
+        nodes = Array.from(model.fields.values()).map(field2node),
+        edges = [];
+
+      // add edges
+      for (let i=1; i<model.dim-1; i++) {
+        let s = nodes[i-1].data.id,
+          t = nodes[i].data.id;             
+        if (s === t)
+            continue;
+        edges.push(makeEdge(s, t))
+      }
+
+      // add some more edges
+      let connect = _.sample(nodes, Math.ceil(model.dim/2)*2);
+      for (let i=0; i<connect.length; i+=2) {
+        edges.push(makeEdge(connect[i].data.id, connect[i+1].data.id))
+      }
+
+      return {
+        nodes,
+        edges
+      };
+    }
+
+
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
@@ -395,7 +455,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .append($paneDiv, $nav, $legendDiv)
           .click( () => {
             if (contextQueue.first().uuid !== context.uuid) {
-              activate(context, ['visualization', 'visPanel']);
+              activate(context, ['visualization', 'visPane']);
               ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
             }
           })
@@ -566,7 +626,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                   // TODO: remove vis and everything else ...
                 })
                 .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
-                .then(() => activate(context, ['visualization', 'visPanel']))
+                .then(() => activate(context, ['visualization', 'visPane']))
                 .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
                 .catch((err) => {
                   console.error(err);
@@ -776,7 +836,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
             // fetch model
             contextCopy.model.update()
-              .then(() => activate(contextCopy, ['visualization', 'visPanel']))
+              .then(() => activate(contextCopy, ['visualization', 'visPane']))
               .then(() => contextCopy.update())
               .catch((err) => {
                 console.error(err);
@@ -1059,7 +1119,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           infoBox.message("set user id to: " + newID.toString(), "info");
           ActivityLogger.log({'newUserId': newID}, 'userid.change');
           ActivityLogger.additionalFixedContent({'userId': newID});
-
         },
         (report, context) => {
           infoBox.message("reported insight: " + report.toString(), "info");
@@ -1085,6 +1144,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         contextQueue.first().update();
     });
 
+
+    // TODO: make container for Graph Widget
+
     return {
       /**
        * Starts the application.
@@ -1095,12 +1157,18 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         contextQueue.add(context);
 
         // activate that context
-        activate(context, ['visualization', 'visPanel']);
+        activate(context, ['visualization', 'visPane']);
 
         // fetch model
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
+          .then(() => {
+            // TODO: blubdibub
+            let myGraph = makeDummyGraph(context);
+            DepGraph.makeWidget('#pl-cytoscape-container', myGraph);
+            console.log(JSON.stringify(myGraph, undefined, 2))
+          })
           .catch((err) => {
             console.error(err);
             infoBox.message("Could not load remote model from Server!");
