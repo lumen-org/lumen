@@ -38,6 +38,25 @@ main {
     min-width: 175px;
 }
 
+.pl-column-left {
+    min-width: 200px;
+    min-height: 50px;
+    background-color: #1cc7ff;
+}
+
+.pl-lower {
+    min-width: 200px;
+    height: 33%;
+}
+
+.pl-upper{
+    min-width: 200px;
+    height: 67%;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+}
+
 .pl-spec {
     background-color: #f8f8f8;
     border-left: 2px solid #f3f3f3;

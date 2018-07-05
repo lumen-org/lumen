@@ -75,26 +75,35 @@
 <!-- main content -->
 <div id="pl-toolbar-container"></div>
 <main>
+    <div class="pl-column-left">
+        <div class="pl-upper">
+            <div class="pl-column pl-schema">
+                <div class="pl-column-title">Schema</div>
+                <div id="pl-model-container"> </div>
+            </div>
+            <div class="pl-column pl-spec">
+                <div class="pl-column-title">Specification</div>
+                <div id="pl-layout-container"></div>
+                <div id="pl-mappings-container"></div>
+                <div id="pl-config-container"></div>
+            </div>
+        </div>
+
+        <div class="pl-lower">
+            <div id="pl-cytoscape-container"></div>
+        </div>
+    </div>
+
     <div class="pl-column pl-config" style="display:none;">
         <div class="pl-column-title">Configuration</div>
         <div id="pl-config-editor-container"> </div>
     </div>
-    <div class="pl-column pl-schema">
-        <div class="pl-column-title">Schema</div>
-        <div id="pl-model-container"> </div>
-    </div>
-    <div class="pl-column pl-spec">
-        <div class="pl-column-title">Specification</div>
-        <div id="pl-layout-container"></div>
-        <div id="pl-mappings-container"></div>
-        <div id="pl-config-container"></div>
-    </div>
+
     <div class="pl-column pl-dashboard">
         <div class="pl-column-title">Dash Board</div>
         <div id="pl-visualization-container"></div>
-        <div id="pl-cytoscape-container"></div>
-        <div id="debug-stuff"></div>
     </div>
+
     <div class="pl-column" id="pl-right-column">
         <div id='pl-survey-widget'> </div>
         <div class="pl-details" style="display:none;">
