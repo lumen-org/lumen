@@ -41,17 +41,30 @@ main {
 .pl-column-left {
     min-width: 200px;
     min-height: 50px;
-    background-color: #1cc7ff;
+    background-color: #FFFFFF;
 }
 
 .pl-lower {
     min-width: 200px;
-    height: 33%;
+    height: 28%;
+    border-top: 2px solid #f3f3f3;
+    border-right: 2px solid #f3f3f3;
+}
+
+.pl-lower .pl-column-title {
+    height: 10%;
+    text-align: center;
+}
+
+#pl-mid {
+    height: 20%;
+    min-width: 200px;
+    background-color: #ecfaff;
 }
 
 .pl-upper{
     min-width: 200px;
-    height: 67%;
+    height: 47%;  /*67%*/
     display: flex;
     flex-direction: row;
     flex-grow: 1;
@@ -359,7 +372,10 @@ textarea.pl-survey-content {
 }
 
 .shelf + hr {
-    margin: 0.5rem;
+    margin-left: 1.5em;
+    margin-right: 1.5em;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .overlap-center {

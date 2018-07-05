@@ -30,7 +30,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           data: {
             source: s,
             target: t,
-            weight: 1+Math.random()*10
+            weight: Math.random(),
           }
         };
       }
@@ -1144,8 +1144,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         contextQueue.first().update();
     });
 
-
-    // TODO: make container for Graph Widget
+    let plMid = document.getElementById('pl-mid');
+    plMid.addEventListener("mouseenter", event => console.log("DETECTED THE MOUSE ENTER EVENT"));
+    plMid.addEventListener("contextmenu", e => e.preventDefault(), false);
+    plMid.addEventListener("mouseup", event => {
+        if (event.button == 2) 
+            console.log("DETECTED THE -right- MOUSE UP EVENT")
+        else 
+            console.log("DETECTED THE -left- MOUSE UP EVENT")
+      });
 
     return {
       /**
@@ -1164,10 +1171,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .then(() => {
-            // TODO: blubdibub
             let myGraph = makeDummyGraph(context);
-            DepGraph.makeWidget('#pl-cytoscape-container', myGraph);
-            console.log(JSON.stringify(myGraph, undefined, 2))
+            let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
           })
           .catch((err) => {
             console.error(err);

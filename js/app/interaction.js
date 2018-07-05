@@ -9,7 +9,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
   'use strict';
 
   var logger = Logger.get('pl-interaction');
-  logger.setLevel(Logger.WARN);
+  logger.setLevel(Logger.DEBUG);
 
   var _OverlapEnum = Object.freeze({
     left: 'left',
