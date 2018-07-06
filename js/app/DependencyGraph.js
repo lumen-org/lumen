@@ -227,21 +227,42 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
 
   };
 
+
+  /**
+   * Registers drag'n'drop handlers for the DOM element domElem.
+   *
+   * You may specify any of the handlers dragEnter, dragLeave, dragOver, drop as key : value pairs in the handlers object.
+   * The semantic is as follows:
+   *  * dragEnter: called if domElem or any of its childred is entered during the drag of an element of this GraphWidget
+   *  * dragLeave: ... is left ...
+   *  * drag: called continuously if a drag is moved over domElem
+   *  * drop: called if mouseup occurs on domElem during drag.
+   *
+   * The handlers are called with one object as an arguments that has two keys:
+   *  * event: the underlying event that occured
+   *  * dragged: a dict with various information about the object being dragged.
+   *
+   * @param domElem
+   * @param handlers
+   * @param eventFilter
+   */
   GraphWidget.prototype.addDropTarget = function (domElem, handlers, eventFilter = () => true) {
     if (!this._isDraggable)
       throw "Cannot add drop target to undraggable GraphWidget. Call .draggable() before!";
-
+    
     /**
-     * Augments a given handler by only calling it if there is currently a drag under go.
+     * Augments a given handler by:
+     *   * only calling it if there is currently a drag under go.
+     *   * changing the arguments to provide information on the dragged object
      * @param handler
      * @returns {function(...[*])}
      */
+    let that = this;
     function augmentHandler (handler) {
       return (...args) => {
-        if (this.dragState == 'dragging' && eventFilter(...args))
+        if (that.dragState == 'dragging' && eventFilter(...args))
           // only if currently draggin!
-          return handler(...args);
-        return;
+          return handler({event:args[0], dragged: that.draggedObject});
       }
     }
 
