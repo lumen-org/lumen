@@ -1144,15 +1144,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         contextQueue.first().update();
     });
 
-    let plMid = document.getElementById('pl-mid');
-    plMid.addEventListener("mouseenter", event => console.log("DETECTED THE MOUSE ENTER EVENT"));
-    plMid.addEventListener("contextmenu", e => e.preventDefault(), false);
-    plMid.addEventListener("mouseup", event => {
-        if (event.button == 2) 
-            console.log("DETECTED THE -right- MOUSE UP EVENT")
-        else 
-            console.log("DETECTED THE -left- MOUSE UP EVENT")
-      });
+    // let plMid = document.getElementById('pl-mid');
+    // plMid.addEventListener("mouseenter", event => console.log("DETECTED THE MOUSE ENTER EVENT"));
+    // plMid.addEventListener("contextmenu", e => e.preventDefault(), false);
+    // plMid.addEventListener("mouseup", event => {
+    //     if (event.button == 2)
+    //         console.log("DETECTED THE -right- MOUSE UP EVENT")
+    //     else
+    //         console.log("DETECTED THE -left- MOUSE UP EVENT")
+    //   });
 
     return {
       /**
@@ -1173,66 +1173,16 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .then(() => {
             let myGraph = makeDummyGraph(context);
             let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
-            widget.draggable();
-            let plmid = document.getElementById('pl-mid');
-            plmid.addEventListener('dragover', (ev) => console.log(ev));
-            widget.addDropTarget(plmid,
-              { // need to adapt my events to the events already understood by the shelves
+            ShelfGraphConnector.connect(widget, context.shelves);
 
-                // not really needed
-                dragEnter: (ev) => console.log("enter"),
+            // widget.draggable();
+            // let plmid = document.getElementById('pl-mid');
+            // plmid.addEventListener('dragover', (ev) => console.log(ev));
+            // widget.addDropTarget(plmid, handlers);
 
-                // not really needed
-                dragLeave: (ev) => console.log("leave"),
 
-                // adaption of ShelfInteractionMixin
-                drop: ({event, dragged}) => {
-                  console.log("drop of "+ dragged.field.toString());
 
-                  let $curTarget = $(event.currentTarget), // is shelf-visual
-                    $target = $(event.target); // is shelf-visual or record-visual
-                  // a drop may also occur on the record-visuals - however, we 'delegate' it to the shelf. i.e. it will be bubble up
-                  if ($curTarget.hasClass('shelf')) {
-                    logger.debug('dropping on');
-                    logger.debug($curTarget);
-                    logger.debug($target);
 
-                    let targetShelf = $curTarget.data(vis.AttachStringT.shelf),
-                      // find closest ancestor that is a shelf-list-item
-                      target = $target.parentsUntil('.shelf', '.shelf-list-item');
-
-                    target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
-
-                    // how to get source!?
-                    let source = ShelfGraphConnector.getRecordByDimensionName(context.shelves.dim, dragged.field.name);
-                    if (source === undefined)
-                      source = ShelfGraphConnector.getRecordByDimensionName(context.shelves.meas, dragged.field.name);
-                    if (source === undefined)
-                      throw RangeError("INTERNAL ERROR: could not find matching record");
-
-                    // find correct record in schema shelves
-                    //let source = $(_draggedElem).data(vis.AttachStringT.record),
-
-                      overlap = inter.overlap([event.pageX, event.pageY], event.target);
-
-                    drop(target, source, overlap);
-
-                    event.stopPropagation();
-                    event.preventDefault();
-                  }
-                  inter.clearHighlight(event.currentTarget);
-                },
-
-                // needed: need to trigger a 'dragover' event on the target element. it requires the correct position of the event to be set - because it triggers the highlighting!
-                dragOver: ({event, dragged}) => {
-                  console.log("over");
-                  let mousePos = [event.pageX, event.pageY],
-                    dropElem = event.currentTarget,
-                    overlap = inter.overlap(mousePos, dropElem);
-                  inter.setHighlight(dropElem, overlap);
-                  event.preventDefault();
-                }
-              });
           })
           .catch((err) => {
             console.error(err);
