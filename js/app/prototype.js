@@ -1173,6 +1173,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .then(() => {
             let myGraph = makeDummyGraph(context);
             let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
+            widget.draggable();
           })
           .catch((err) => {
             console.error(err);

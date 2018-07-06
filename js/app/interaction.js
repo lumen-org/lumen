@@ -126,6 +126,12 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
   var _draggedElem = null;
 
   /**
+   * A fallback drop targe, i.e. the lastly entered element
+   * @private
+   */
+  var _fallBackDropTarget = null;
+
+  /**
    * @type {{clear: _highlight.clear, set: _highlight.set}}
    * @private
    */
@@ -168,6 +174,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
   function onDragEnterHandler (event) {
     logger.debug('entering');
     logger.debug(event.currentTarget);
+    _fallBackDropTarget = event.currentTarget;
   }
 
   /**
@@ -210,6 +217,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
       var overlap = _geom.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
       drop(target, source, overlap);
       _draggedElem = null;
+      _fallBackDropTarget = null;
       event.stopPropagation();
       event.preventDefault();
     }
@@ -238,6 +246,13 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals'], functi
     fct('dragover',  onDragOverHandler);
     fct('dragleave', onDragLeaveHandler);
     fct('drop', onDropHandler);
+
+    fct('mouseover', event => {
+      console.log("mouse over");
+    });
+    fct('mouseup', event => {
+      console.log("mouse up");
+    });
   }
 
   /**

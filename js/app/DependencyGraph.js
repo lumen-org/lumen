@@ -19,7 +19,7 @@
  *    * nodes may be manually moved around in the drawing cancas.
  *
  */
-define(['cytoscape', 'cytoscape-cola', './PQL'], function (cytoscape, cola, PQL) {
+define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cytoscape, cola, inter, PQL) {
 
   cola(cytoscape); // register cola extension
 
@@ -104,11 +104,7 @@ define(['cytoscape', 'cytoscape-cola', './PQL'], function (cytoscape, cola, PQL)
       } 
       lastClick = now;
     });
-  };
-
-//   function () {
-    
-//   }
+  }
 
 
   class GraphWidget {
@@ -127,51 +123,19 @@ define(['cytoscape', 'cytoscape-cola', './PQL'], function (cytoscape, cola, PQL)
       this.remaining = cy.collection();
       this.allNodes = cy.nodes();
 
-      let dragDiv = undefined;
-
-      //see http://js.cytoscape.org/#events
-      this.allNodes
-        .on('select', this.onNodeSelect.bind(this))
-        .on('unselect', this.onNodeUnselect.bind(this))
-        .on('cxttapstart', ev => {
-          console.log("drag start");
-          let node =  ev.target;
-          dragDiv = $('<div></div>').css({
-              position: 'absolute',
-              left: node.renderedPosition('x'),
-              top: node.renderedPosition('y'),
-              width: "34px",
-              height: "34px",
-              'border-radius': "17px",
-              border: "2px solid #404040",
-              'background-color': 'grey',
-            })
-            .appendTo(domDiv);
-        })
-        .on('cxtdrag', (ev) => {
-          //console.log(ev);
-          dragDiv.css({
-            // this prevents the mouse from being directly above this div and hence blocking event triggerings
-            left: ev.renderedPosition.x+2,
-            top: ev.renderedPosition.y+2,
-          });           
-        })
-      .on('cxttapend', ev => {
-        console.log("HITHIT");
-        dragDiv.remove();
-      })
-
-
       this.updateNodes();
       this.allNodes.addClass('pl-default');
       onDoubleClick(this._cy, ev => this._cy.fit());
 
+      this.allNodes
+        .on('select', this.onNodeSelect.bind(this))
+        .on('unselect', this.onNodeUnselect.bind(this));
     }
 
     updateNodes() {
       this.allNodes.removeClass('pl-adjacent pl-remaining');
 
-      if (this.selected.size() == 0) {
+      if (this.selected.size() === 0) {
         this.allNodes.addClass('pl-default');
       } else {
         this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
@@ -183,7 +147,7 @@ define(['cytoscape', 'cytoscape-cola', './PQL'], function (cytoscape, cola, PQL)
 
     onNodeSelect(ev) {
       //this._cy.batchStart();
-      if (this.selected.size() == 0)
+      if (this.selected.size() === 0)
         this.allNodes.removeClass('pl-default');
 
       let node = ev.target;
@@ -203,11 +167,107 @@ define(['cytoscape', 'cytoscape-cola', './PQL'], function (cytoscape, cola, PQL)
       this.updateNodes();
       // this._cy.batchEnd();
     }
-
-
   }
 
+
+  function makeDragGhostForNode(node) {
+    return $('<div></div>').css({
+      position: 'absolute',
+      left: node.renderedPosition('x'),
+      top: node.renderedPosition('y'),
+      width: "34px",
+      height: "34px",
+      'border-radius': "17px",
+      border: "2px solid #404040",
+      'background-color': 'grey',
+    })
+  };
+
+  /**
+   * Mixin to make a GraphWidget draggable on calling.
+   */
+  GraphWidget.prototype._reset_drag = function () {
+    this.draggedObject = {};
+    if (this.dragGhost)
+      this.dragGhost.remove();
+    this.dragState = "not_dragging";
+    this.dropTargets = new Set();
+  };
+
+  GraphWidget.prototype.draggable = function () {
+    this._reset_drag();
+    this._isDraggable = true;
+    let that = this;
+
+    //see http://js.cytoscape.org/#events
+    this.allNodes
+      .on('cxttapstart', ev => {
+        console.log("drag start");
+        let node = ev.target;
+        that.draggedObject.node = node;
+        that.dragGhost = makeDragGhostForNode(node)
+          .appendTo(that._cy.container());
+        that.dragState = "dragging";
+      })
+      .on('cxtdrag', (ev) => {
+        that.dragGhost.css({
+          // this prevents the mouse from being directly above this div and hence blocking event triggerings
+          left: ev.renderedPosition.x+2,
+          top: ev.renderedPosition.y+2,
+        });
+      })
+      .on('cxttapend', ev => {
+        console.log("HITHIT");
+        // call all drop handlers
+        for (let {domElem, handler} of that.dropTargets) {
+          continue;
+        }
+        that._reset_drag();
+      })
+
+  };
+
+  GraphWidget.prototype.addDropTarget = function (domElem, handlers, eventFilter = () => true) {
+    if (!this._isDraggable)
+      throw "Cannot add drop target to undraggable GraphWidget. Call .draggable() before!";
+
+    /**
+     * Augments a given handler by only calling it if there is currently a drag under go.
+     * @param handler
+     * @returns {function(...[*])}
+     */
+    function augmentHandler (handler) {
+      return (...args) => {
+        if (this.dragState == 'dragging' && eventFilter(...args))
+          // only if currently draggin!
+          return handler(...args);
+        return;
+      }
+    }
+
+    // augment all handlers and assign
+    for (let key in handlers)
+      handlers[key] = augmentHandler(handlers[key]);
+
+    // register handler: dragEnterHandler, dragLeaveHandler, dragOverHandler, dropHandler
+    // see also: https://developer.mozilla.org/en-US/docs/Web/Events
+    if (handlers.dragEnter) {
+      domElem.addEventListener('mouseover', handlers.dragEnter)
+    }
+    if (handlers.dragLeave) {
+      domElem.addEventListener('mouseout', handlers.dragLeave)
+    }
+    if (handlers.drop) {
+      domElem.addEventListener('mouseup', handlers.drop)
+    }
+    if (handlers.dragOver) {
+      domElem.addEventListener('mousemove', handlers.dragOver)
+    }
+
+    // TODO: remove handler if domElem is destroyed
+  };
+
   return {
-    GraphWidget
+    GraphWidget,
   };
 });
