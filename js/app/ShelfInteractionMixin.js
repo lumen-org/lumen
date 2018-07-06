@@ -50,7 +50,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   function onDragOverHandler (event) {
     var mousePos = [event.pageX, event.pageY];
     var dropElem = event.currentTarget;
-    var overlap = interaction.overlap(mousePos, dropElem, _OverlapMargins);
+    var overlap = interaction.overlap(mousePos, dropElem);
     interaction.setHighlight(dropElem, overlap);
     event.preventDefault();
   }
@@ -80,7 +80,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
       var target = $target.parentsUntil('.shelf','.shelf-list-item');
       target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
       var source= $(_draggedElem).data(vis.AttachStringT.record);
-      var overlap = interaction.overlap([event.pageX, event.pageY], event.target, _OverlapMargins);
+      var overlap = interaction.overlap([event.pageX, event.pageY], event.target);
       drop(target, source, overlap);
       _draggedElem = null;
       _fallBackDropTarget = null;

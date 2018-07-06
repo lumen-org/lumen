@@ -220,11 +220,7 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
         });
       })
       .on('cxttapend', ev => {
-        console.log("HITHIT");
-        // call all drop handlers
-        for (let {domElem, handler} of that.dropTargets) {
-          continue;
-        }
+        console.log("widget drag end");
         that._reset_drag();
       })
 
@@ -262,30 +258,48 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
      */
     let that = this;
     function augmentHandler (handler) {
-      return (...args) => {
-        if (that.dragState == 'dragging' && eventFilter(...args))
-          // only if currently draggin!
-          return handler({event:args[0], dragged: that.draggedObject});
+
+      let myhandler = handler;
+
+      function augmentedHandler (event, ...args) {
+        if (that.dragState == 'dragging' && eventFilter(event, ...args))
+        // only if currently draggin!
+          return myhandler({event:event, dragged: that.draggedObject, args: args});
       }
+
+      return augmentedHandler;
+
+      // return (event, ...args) => {
+      //   if (that.dragState == 'dragging' && eventFilter(event, ...args))
+      //     // only if currently draggin!
+      //     return handler({event:event, dragged: that.draggedObject, args: args});
+      // }
+
+//       return (...args) => {
+//         if (that.dragState == 'dragging' && eventFilter(...args))
+//           // only if currently draggin!
+//           return handler({event:args[0], dragged: that.draggedObject});
+//       }
     }
 
     // augment all handlers and assign
+    let augmentedHandlers = {};
     for (let key in handlers)
-      handlers[key] = augmentHandler(handlers[key]);
+      augmentedHandlers[key] = augmentHandler(handlers[key]);
 
     // register handler: dragEnterHandler, dragLeaveHandler, dragOverHandler, dropHandler
     // see also: https://developer.mozilla.org/en-US/docs/Web/Events
     if (handlers.dragEnter) {
-      domElem.addEventListener('mouseover', handlers.dragEnter)
+      domElem.addEventListener('mouseover', augmentedHandlers.dragEnter)
     }
     if (handlers.dragLeave) {
-      domElem.addEventListener('mouseout', handlers.dragLeave)
+      domElem.addEventListener('mouseout', augmentedHandlers.dragLeave)
     }
     if (handlers.drop) {
-      domElem.addEventListener('mouseup', handlers.drop)
+      domElem.addEventListener('mouseup', augmentedHandlers.drop)
     }
     if (handlers.dragOver) {
-      domElem.addEventListener('mousemove', handlers.dragOver)
+      domElem.addEventListener('mousemove', augmentedHandlers.dragOver)
     }
 
     // TODO: remove handler if domElem is destroyed

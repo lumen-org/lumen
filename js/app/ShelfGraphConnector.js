@@ -3,7 +3,7 @@
  * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
-define(['lib/logger', './PQL'], function (Logger, PQL) {
+define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './VisMELShelfDropping'], function (Logger, inter, PQL, sh, vis, drop) {
   'use strict';
 
   var logger = Logger.get('pl-ShelfGraphConnector');
@@ -35,13 +35,19 @@ define(['lib/logger', './PQL'], function (Logger, PQL) {
    *
    * The handlers need the context of the shelves - which provided by this closure.
    */
-    let handler = {
+    const handler = {
 
       // not really needed
-      dragEnter: (ev) => console.log("enter"),
+      dragEnter: (ev) => {
+        console.log("enter")
+      },
 
       // not really needed
-      dragLeave: (ev) => console.log("leave"),
+      dragLeave: ({event, dragged}) => {
+        console.log("leave")
+        inter.clearHighlight(event.currentTarget);
+      },
+
 
       // adaption of ShelfInteractionMixin
       'drop': function ({event, dragged}) {
@@ -75,7 +81,7 @@ define(['lib/logger', './PQL'], function (Logger, PQL) {
 
           drop(target, source, overlap);
 
-          event.stopPropagation();
+          //event.stopPropagation();
           event.preventDefault();
         }
         inter.clearHighlight(event.currentTarget);
@@ -100,13 +106,13 @@ define(['lib/logger', './PQL'], function (Logger, PQL) {
       let shelf = shelves[key];
 
       // add all shelves and existing records as drop targets
-      widget.addDropTarget(shelf.$visual, handler);
+      widget.addDropTarget(shelf.$visual[0], handler);
       for (const record of shelf)
-        widget.addDropTarget(record.$visual, handler)
+        widget.addDropTarget(record.$visual[0], handler)
 
       // listen for any added or deleted drop targets
       shelves[key].on(sh.Shelf.Event.Add,
-          record => widget.addDropTarget(record.$visual, handler));
+          record => widget.addDropTarget(record.$visual[0], handler));
       // shelves[key].on(sh.Shelf.Event.Remove,
       //   record => widget.addDropTarget(record.$visual, handlers));
     }

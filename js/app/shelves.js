@@ -108,7 +108,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    * @alias module:shelves.ShelfTypeT
    */
   var ShelfTypeT = Object.freeze({
-    modeldata: 'mvdShelf',
+    //modeldata: 'mvdShelf',
     dimension: 'dimensionShelf',
     measure: 'measureShelf',
     row: 'rowShelf',
@@ -271,7 +271,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    */
   function construct() {
     return {
-      modeldata: new Shelf(ShelfTypeT.modeldata),
+      //modeldata: new Shelf(ShelfTypeT.modeldata),
       dim: new Shelf(ShelfTypeT.dimension),
       meas: new Shelf(ShelfTypeT.measure),
       detail: new Shelf(ShelfTypeT.detail),
