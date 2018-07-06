@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, DepGraph) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, DepGraph) {
     'use strict';
 
     function makeDummyGraph (context) {
@@ -1088,7 +1088,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     })();
 
     // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
-    inter.asRemoveElem($(document.body).find('main'));
+    shInteract.asRemoveElem($(document.body).find('main'));
 
     // activity logger
     ActivityLogger.logPath(Settings.meta.activity_logging_filename);
@@ -1175,10 +1175,66 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
             widget.draggable();
             let plmid = document.getElementById('pl-mid');
+            plmid.addEventListener('dragover', (ev) => console.log(ev));
             widget.addDropTarget(plmid,
-              {
-                dragEnter: (ev) => console.log(ev),
-                dragLeave: (ev) => console.log(ev),
+              { // need to adapt my events to the events already understood by the shelves
+
+                // not really needed
+                dragEnter: (ev) => console.log("enter"),
+
+                // not really needed
+                dragLeave: (ev) => console.log("leave"),
+
+                /* need to set in 'drop' event:
+                  current target: the shelf visual
+                  target: shelf-visual or record visual
+                  currentTarget.data(vis.AttachStringT.shelf) -> targetShelf
+                  target.data(vis.AttachStringT.record)
+                  $(_draggedElem).data(vis.AttachStringT.record);
+
+                  event.pageX, event.pageY
+                */
+                drop: ({event, dragged}) => {
+                  console.log("drop of "+ dragged.field.toString());
+
+                  let $curTarget = $(event.currentTarget), // is shelf-visual
+                    $target = $(event.target); // is shelf-visual or record-visual
+                  // a drop may also occur on the record-visuals - however, we 'delegate' it to the shelf. i.e. it will be bubble up
+                  if ($curTarget.hasClass('shelf')) {
+                    logger.debug('dropping on');
+                    logger.debug($curTarget);
+                    logger.debug($target);
+
+                    let targetShelf = $curTarget.data(vis.AttachStringT.shelf),
+                      // find closest ancestor that is a shelf-list-item
+                      target = $target.parentsUntil('.shelf', '.shelf-list-item');
+
+                    target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
+
+                    // how to get source!?
+                    // find correct record in schema shelves
+
+                    let source = $(_draggedElem).data(vis.AttachStringT.record),
+
+                      overlap = inter.overlap([event.pageX, event.pageY], event.target);
+
+                    drop(target, source, overlap);
+
+                    event.stopPropagation();
+                    event.preventDefault();
+                  }
+                  inter.clearHighlight(event.currentTarget);
+                },
+
+                // needed: need to trigger a 'dragover' event on the target element. it requires the correct position of the event to be set - because it triggers the highlighting!
+                dragOver: ({event, dragged}) => {
+                  console.log("over");
+                  let mousePos = [event.pageX, event.pageY],
+                    dropElem = event.currentTarget,
+                    overlap = inter.overlap(mousePos, dropElem);
+                  inter.setHighlight(dropElem, overlap);
+                  event.preventDefault();
+                }
               });
           })
           .catch((err) => {

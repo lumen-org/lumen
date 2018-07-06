@@ -204,7 +204,10 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
       .on('cxttapstart', ev => {
         console.log("drag start");
         let node = ev.target;
+
         that.draggedObject.node = node;
+        that.draggedObject.field = node.data('field');
+
         that.dragGhost = makeDragGhostForNode(node)
           .appendTo(that._cy.container());
         that.dragState = "dragging";
