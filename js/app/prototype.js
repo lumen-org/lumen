@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, DepGraph) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, DepGraph) {
     'use strict';
 
     function makeDummyGraph (context) {
@@ -1185,15 +1185,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 // not really needed
                 dragLeave: (ev) => console.log("leave"),
 
-                /* need to set in 'drop' event:
-                  current target: the shelf visual
-                  target: shelf-visual or record visual
-                  currentTarget.data(vis.AttachStringT.shelf) -> targetShelf
-                  target.data(vis.AttachStringT.record)
-                  $(_draggedElem).data(vis.AttachStringT.record);
-
-                  event.pageX, event.pageY
-                */
+                // adaption of ShelfInteractionMixin
                 drop: ({event, dragged}) => {
                   console.log("drop of "+ dragged.field.toString());
 
@@ -1212,9 +1204,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                     target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
 
                     // how to get source!?
-                    // find correct record in schema shelves
+                    let source = ShelfGraphConnector.getRecordByDimensionName(context.shelves.dim, dragged.field.name);
+                    if (source === undefined)
+                      source = ShelfGraphConnector.getRecordByDimensionName(context.shelves.meas, dragged.field.name);
+                    if (source === undefined)
+                      throw RangeError("INTERNAL ERROR: could not find matching record");
 
-                    let source = $(_draggedElem).data(vis.AttachStringT.record),
+                    // find correct record in schema shelves
+                    //let source = $(_draggedElem).data(vis.AttachStringT.record),
 
                       overlap = inter.overlap([event.pageX, event.pageY], event.target);
 
