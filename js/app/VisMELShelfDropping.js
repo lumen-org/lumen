@@ -80,35 +80,6 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       return _getFieldUsage(record);
   }
 
-  function _fixDropTarget(fu, tShelf, tRecord, overlap) {
-    if (tRecord === undefined)
-      throw new RangeError("tRecord may not be undefined");
-    if (overlap === 'center')
-      return tRecord;
-    if (PQL.isAggregationOrDensity(fu)) {
-      // find index of last split after tRecord
-      // let lastSplitIdx = -1;
-      // exclude tRecord for that search, if it's anyway replaced or the new record is inserted after it
-      let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 1 : 0);
-      // for (let idx = tRecord.index() + offset; idx < tShelf.length; idx++) {
-      //   let fu = tShelf.contentAt(idx);
-      //   if (PQL.isSplit(fu))
-      //     lastSplitIdx = idx;
-      // }
-      // if (lastSplitIdx !== -1) {
-      //   // fix position
-      // }
-      for (let idx = tRecord.index() + offset; idx < tShelf.length; idx++)
-        if (PQL.isSplit(tShelf.contentAt(idx)))
-          tRecord = tShelf.at(idx);
-
-    } else {
-      // move it in front of the first aggregation and density
-    }
-
-    return tRecord;
-  }
-
   function _lastSplitAfter (tRecord, overlap) {
     let lastSplit;
     let offset = (overlap === 'center' || overlap === 'right' || overlap === 'bottom' ? 1 : 0);

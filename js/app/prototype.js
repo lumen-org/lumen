@@ -1144,16 +1144,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         contextQueue.first().update();
     });
 
-    // let plMid = document.getElementById('pl-mid');
-    // plMid.addEventListener("mouseenter", event => console.log("DETECTED THE MOUSE ENTER EVENT"));
-    // plMid.addEventListener("contextmenu", e => e.preventDefault(), false);
-    // plMid.addEventListener("mouseup", event => {
-    //     if (event.button == 2)
-    //         console.log("DETECTED THE -right- MOUSE UP EVENT")
-    //     else
-    //         console.log("DETECTED THE -left- MOUSE UP EVENT")
-    //   });
-
     return {
       /**
        * Starts the application.
@@ -1171,17 +1161,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .then(() => {
+            // TODO: extent to use with every context
             let myGraph = makeDummyGraph(context);
             let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
             ShelfGraphConnector.connect(widget, context.shelves);
-
-            // widget.draggable();
-            // let plmid = document.getElementById('pl-mid');
-            // plmid.addEventListener('dragover', (ev) => console.log(ev));
-            // widget.addDropTarget(plmid, handlers);
-
-
-
 
           })
           .catch((err) => {

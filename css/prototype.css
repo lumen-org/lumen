@@ -56,15 +56,15 @@ main {
     text-align: center;
 }
 
-#pl-mid {
-    height: 20%;
-    min-width: 200px;
-    background-color: #ecfaff;
-}
+/*#pl-mid {*/
+    /*height: 20%;*/
+    /*min-width: 200px;*/
+    /*background-color: #ecfaff;*/
+/*}*/
 
 .pl-upper{
     min-width: 200px;
-    height: 47%;  /*67%*/
+    height: 67%;
     display: flex;
     flex-direction: row;
     flex-grow: 1;

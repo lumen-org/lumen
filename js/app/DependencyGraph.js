@@ -181,7 +181,7 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
       border: "2px solid #404040",
       'background-color': 'grey',
     })
-  };
+  }
 
   /**
    * Mixin to make a GraphWidget draggable on calling.
@@ -191,12 +191,12 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
     if (this.dragGhost)
       this.dragGhost.remove();
     this.dragState = "not_dragging";
-    this.dropTargets = new Set();
   };
 
   GraphWidget.prototype.draggable = function () {
     this._reset_drag();
     this._isDraggable = true;
+    this._dropTargets = new Set();
     let that = this;
 
     //see http://js.cytoscape.org/#events
@@ -225,7 +225,6 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
       })
 
   };
-
 
   /**
    * Registers drag'n'drop handlers for the DOM element domElem.
@@ -258,28 +257,11 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
      */
     let that = this;
     function augmentHandler (handler) {
-
-      let myhandler = handler;
-
-      function augmentedHandler (event, ...args) {
-        if (that.dragState == 'dragging' && eventFilter(event, ...args))
-        // only if currently draggin!
-          return myhandler({event:event, dragged: that.draggedObject, args: args});
+      return (event, ...args) => {
+        if (that.dragState === 'dragging' && eventFilter(event, ...args))
+          // only if currently draggin!
+          return handler({event:event, dragged: that.draggedObject, args: args});
       }
-
-      return augmentedHandler;
-
-      // return (event, ...args) => {
-      //   if (that.dragState == 'dragging' && eventFilter(event, ...args))
-      //     // only if currently draggin!
-      //     return handler({event:event, dragged: that.draggedObject, args: args});
-      // }
-
-//       return (...args) => {
-//         if (that.dragState == 'dragging' && eventFilter(...args))
-//           // only if currently draggin!
-//           return handler({event:args[0], dragged: that.draggedObject});
-//       }
     }
 
     // augment all handlers and assign
@@ -303,6 +285,7 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
     }
 
     // TODO: remove handler if domElem is destroyed
+    // TODO: add to dropTargets?
   };
 
   return {

@@ -82,15 +82,15 @@ define(['lib/logger'], function (Logger) {
       // calculate dimensions of inner rectangle
       var i;
       if (options) {
-        console.assert(options.type && options.type == 'abs' || options.type == 'rel', "invalid options!");
-        if (options.type == 'rel') {
+        console.assert(options.type && options.type === 'abs' || options.type === 'rel', "invalid options!");
+        if (options.type === 'rel') {
           i = {
             left: o.center.x - (1 - options.left) * 0.5 * o.width,
             top: o.center.y - (1 - options.top) * 0.5 * o.height,
             right: o.center.x + (1 - options.right) * 0.5 * o.width,
             bottom: o.center.y + (1 - options.bottom) * 0.5 * o.height
           };
-        } else if (type == 'abs') {
+        } else if (type === 'abs') {
           i = {
             left: o.center.x - options.left,
             top: o.center.y - options.top,

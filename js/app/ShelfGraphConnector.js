@@ -39,19 +39,17 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
 
       // not really needed
       dragEnter: (ev) => {
-        console.log("enter")
+        logger.debug("enter")
       },
 
-      // not really needed
       dragLeave: ({event, dragged}) => {
-        console.log("leave")
+        logger.debug("leave");
         inter.clearHighlight(event.currentTarget);
       },
 
-
       // adaption of ShelfInteractionMixin
       'drop': function ({event, dragged}) {
-        console.log("drop of " + dragged.field.toString());
+        logger.debug("drop of " + dragged.field.toString());
 
         let $curTarget = $(event.currentTarget), // is shelf-visual
           $target = $(event.target); // is shelf-visual or record-visual
@@ -67,15 +65,12 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
 
           target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
 
-          // how to get source!?
+          // get source!
           let source = getRecordByDimensionName(shelves.dim, dragged.field.name);
           if (source === undefined)
             source = getRecordByDimensionName(shelves.meas, dragged.field.name);
           if (source === undefined)
             throw RangeError("INTERNAL ERROR: could not find matching record");
-
-          // find correct record in schema shelves
-          //let source = $(_draggedElem).data(vis.AttachStringT.record),
 
           let overlap = inter.overlap([event.pageX, event.pageY], event.target);
 
@@ -113,11 +108,8 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
       // listen for any added or deleted drop targets
       shelves[key].on(sh.Shelf.Event.Add,
           record => widget.addDropTarget(record.$visual[0], handler));
-      // shelves[key].on(sh.Shelf.Event.Remove,
-      //   record => widget.addDropTarget(record.$visual, handlers));
     }
   }
-
 
   return {
     connect,
