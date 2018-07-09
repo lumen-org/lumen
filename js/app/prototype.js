@@ -938,39 +938,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       _removeContext (context) {
-        // let widget = this._context2widgetMap.get(context),
-        //   domEle = widget.container();
-        //
-        // // remove the node from DOM
-        // domEle.remove();
-        //
-        // // remove the mapping
-        // this._context2widgetMap.delete(context);
-
         // remove from the set
         this._contextSet.delete(context);
-      }
 
-
-      _addContext (context) {
-        if (this._has(context))
-          throw RangeError("context has been added before! cannot overwrite!");
-
-        // remove on context deletion
-        let that = this;
-        context.on("ContextDeletedEvent", context => that._removeContext(context));
-
-        // create a new div to draw on
-        let $vis = $('<div class=pl-graph-pane></div>').hide();
-        this.$visual.append($vis);
-
-        // create graph widget
-        let widget = new GraphWidget($vis[0], makeDummyGraph(context));
-        ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
-
-        // add to map and set
-        this._set(context, widget);
-        this._contextSet.add(context);
+        // hide it if it is the current one
+        if (context === this._context)
+          $(this._get(context).container()).hide();
       }
 
       /**
@@ -997,18 +970,33 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * Sets the context that the toolbar controls.
        * @param context A context. It does not matter whether the context have been set before or not.
        */
-      setContext (context) {
+      setContext(context) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
 
-        let widget = this._get(context);
-        if (widget === undefined) {
-          // create widget and mapping
-          this._addContext(context);
-        } else if(!this._contextSet.has(context)) {
-          //  connect the existing widget to the new context's shelves
+        let widget = this._get(context),
+          hasContext = this._contextSet.has(context),
+          that = this;
+
+        if (widget === undefined || !hasContext) {
+
+          if (widget === undefined) {
+            if (hasContext)
+              throw RangeError("context has been added before! cannot overwrite!");
+
+            // create a new div to draw on
+            let $vis = $('<div class=pl-graph-pane></div>').hide();
+            this.$visual.append($vis);
+
+            // create graph widget and add to map
+            widget = new GraphWidget($vis[0], makeDummyGraph(context));
+            this._set(context, widget);
+          }
+
           ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
           this._contextSet.add(context);
+          // remove on context deletion
+          context.on("ContextDeletedEvent", context => that._removeContext(context));
         }
         // else: context not new at all ... nothing to do!
 
