@@ -9,7 +9,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   'use strict';
 
   var logger = Logger.get('pl-ShelfInteractionMixin');
-  logger.setLevel(Logger.DEBUG);
+  logger.setLevel(Logger.INFO);
 
 
   /**
