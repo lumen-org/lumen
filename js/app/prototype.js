@@ -12,7 +12,7 @@
  */
 
 define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, DepGraph) {
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget) {
     'use strict';
 
     function makeDummyGraph (context) {
@@ -600,6 +600,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
     }
 
+
     /**
      * A model selector, i.e. an input field whose value is used as a model name.
      * On input confirmation a new context is created, the according model is fetched and activated.
@@ -608,7 +609,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       constructor (context) {
         this._context = context;
-
         let $modelInput = $('<input type="text" list="models"/>')
           .keydown( (event) => {
             let modelName = event.target.value;
@@ -883,6 +883,94 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     }
 
     /**
+     * A wrapper around a GraphWidget that manages GraphWidgets for contexts.
+     *
+     * It always shows the GraphWidget for the active Context, creates them transparently if a not-seen-before context is set and remember previously set contexts. It automatically removes GraphWidgets for destroyed contexts.
+     *
+     * Internal notes:
+     *
+     * This applies a different design choice than for example the way visualizations of a context are managed. The reasons are:
+     *   * the graph widget is optional, in contrast to the visualization or the specification panel
+     *   * I've learned and now believe this would overall be the better strategy because it decouples functionality better
+     *
+     * This applies also applies a different design choice than used for the Toolbar, DetailsView etc. This is because a GraphWidget creates state beyond what is already existent in a context, and we need a construct to make that state persistent.
+     */
+    class GraphWidgetManager {
+
+      constructor (context, domDivContainer) {
+        this._context = context;
+        this._context2widgetMap = new Map();
+        this.$visual = $(domDivContainer); // jQuery reference to its visual representation
+        if(context !== undefined) {
+          this.setContext(context);
+        }
+      }
+
+      _removeContext (context) {
+        let widget = this._context2widgetMap.get(context),
+          domEle = widget.container();
+
+        // remove the node from DOM
+        domEle.remove();
+
+        // remove the mapping
+        this._context2widgetMap.delete(context);
+      }
+
+      _addContext (context) {
+        if (this._context2widgetMap.has(context))
+          throw RangeError("context has been added before! cannot overwrite!");
+
+        // remove on context deletion
+        let that = this;
+        context.on("ContextDeletedEvent", context => that._removeContext(context));
+
+        // create a new div to draw on
+        let $vis = $('<div class=pl-graph-pane></div>').hide();
+        this.$visual.append($vis);
+
+        // create graph widget
+        let widget = new GraphWidget($vis[0], makeDummyGraph(context));
+
+        // add mapping
+        this._context2widgetMap.set(context, widget);
+      }
+
+      activate(context) {
+        let map = this._context2widgetMap;
+
+        // hide current one
+        if (this._context != undefined)
+            $(map.get(this._context).container()).hide();
+
+        // show new one
+        this._context = context;
+        let widget = map.get(this._context);
+        $(widget.container()).show();
+        widget.redraw();
+      }
+
+      /**
+       * Sets the context that the toolbar controls.
+       * @param context A context.
+       */
+      setContext (context) {
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
+
+        //let widget = this._context2widgetMap.map.has(context);
+
+        // create widget and mapping if necessary
+        if (!this._context2widgetMap.has(context)) {
+          this._addContext(context);
+        }
+
+        // now activate it
+        this.activate(context);
+      }
+    }
+
+    /**
      * A widget for user studies. It allow a subject to report feedback.
      *
      * After instantiation its GUI is available under the .$visual attribute as a jQuery object
@@ -1047,7 +1135,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     /**
      * Activates a context and enables interactive editing of a query on/for it.
-     * It hides all visuals of the current context, except those specified.
+     * It hides the visuals of the current context, and show those of the new context. It also sets the new context
+     * in those widgets that are singeltons and require a set context.
+     *
+     * Note: This is the single point of control over what to do when activating a new context!
+     *
      * @param context Context to activate.
      */
     let activate = (function(){
@@ -1072,20 +1164,22 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // move it to the front
         _currentContext.$visuals.visualization.css("z-index",zIndexGenerator++);
 
-        // TODO: let it listen to some event instead
+        // set context in singelton widgets
         toolbar.setContext(context);
         swapper.setContext(context);
         detailsView.setContext(context);
+        graphWidgetManager.setContext(context);
 
-        // emit signal that context is now active
+        // emit signal from the new context, that the new context is now active
         context.emit("ContextActivatedEvent", context);
 
-        // TODO: later maybe its nicer to emit a signal on context change. but for now its easier this way.
-        //activate.emit("ContextChanged");
+        // emit signal from this activate function with new context as argument
+        activate.emit("ContextChanged", context);
       }
 
       return _activate;
     })();
+    Emitter(activate);
 
     // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
     shInteract.asRemoveElem($(document.body).find('main'));
@@ -1128,6 +1222,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       surveyWidget.$visual.appendTo($('#pl-survey-widget'));
     }
 
+    // dependency graph widget
+    let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-manager-container'));
+
     // context queue
     let contextQueue = new ContextQueue();
     contextQueue.on("ContextQueueEmpty", () => {
@@ -1162,9 +1259,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .then(() => {
             // TODO: extent to use with every context
-            let myGraph = makeDummyGraph(context);
-            let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
-            ShelfGraphConnector.connect(widget, context.shelves);
+            // let myGraph = makeDummyGraph(context);
+            // let widget = new DepGraph.GraphWidget('#pl-graph-container', myGraph);
+            // ShelfGraphConnector.connect(widget, context.shelves);
 
           })
           .catch((err) => {

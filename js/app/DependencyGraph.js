@@ -19,7 +19,7 @@
  *    * nodes may be manually moved around in the drawing cancas.
  *
  */
-define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cytoscape, cola, inter, PQL) {
+define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
 
   cola(cytoscape); // register cola extension
 
@@ -45,6 +45,7 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
           return 4 + 10 * ele.data('weight')
         },
         'line-color': '#ccc',
+        //'curve-style': 'bezier',
       }
     },
 
@@ -167,6 +168,14 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
       this.updateNodes();
       // this._cy.batchEnd();
     }
+
+    container () {
+      return this._cy.container();
+    }
+
+    redraw () {
+      this._cy.resize();
+    }
   }
 
 
@@ -209,7 +218,7 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
         that.draggedObject.field = node.data('field');
 
         that.dragGhost = makeDragGhostForNode(node)
-          .appendTo(that._cy.container());
+          .appendTo(that.container());
         that.dragState = "dragging";
       })
       .on('cxtdrag', (ev) => {
@@ -288,7 +297,5 @@ define(['cytoscape', 'cytoscape-cola', './interaction', './PQL'], function (cyto
     // TODO: add to dropTargets?
   };
 
-  return {
-    GraphWidget,
-  };
+  return GraphWidget;
 });
