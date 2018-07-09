@@ -362,7 +362,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
           fu.args = args;
           fu.emit(Emitter.InternalChangedEvent, change);
         } catch (e) { 
-          console.log(e);
+          console.error(e);
         }
       }
     }
@@ -392,7 +392,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
           fu.setDomain(newDomain);
           fu.emit(Emitter.InternalChangedEvent, change);
         } catch (e) {
-          console.log("invalid arguments for FU");
+          console.error("invalid arguments for FU");
         }
       }
     }

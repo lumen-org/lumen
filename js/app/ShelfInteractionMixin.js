@@ -112,13 +112,6 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
     fct('dragover',  onDragOverHandler);
     fct('dragleave', onDragLeaveHandler);
     fct('drop', onDropHandler);
-
-    fct('mouseover', event => {
-      console.log("mouse over");
-    });
-    fct('mouseup', event => {
-      console.log("mouse ");
-    });
   }
 
   /**

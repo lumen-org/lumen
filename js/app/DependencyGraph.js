@@ -211,7 +211,6 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     //see http://js.cytoscape.org/#events
     this.allNodes
       .on('cxttapstart', ev => {
-        console.log("drag start");
         let node = ev.target;
 
         that.draggedObject.node = node;
@@ -229,7 +228,6 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
         });
       })
       .on('cxttapend', ev => {
-        console.log("widget drag end");
         that._reset_drag();
       })
 

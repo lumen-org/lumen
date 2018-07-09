@@ -693,12 +693,10 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
               logger.warn("aggregation.toString string is imprecise because it aggregates over multiple variables.");
             let conditionPart = (splits.length + filters.length === 0) ? "" : ("|" + splits.concat(filters).join());
             str = "m(" + variate.yields + conditionPart + ")";
-            //console.log(str);
             variates.push(str);
           } else if (isDensity(variate)) {
             let conditionPart = filters.length === 0 ? "" : ("|" + filters.join());
             str = "p(" + variate.names + conditionPart + ")";
-            //console.log(str);
             variates.push(str);
           }
         }

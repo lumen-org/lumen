@@ -7,7 +7,7 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
   'use strict';
 
   var logger = Logger.get('pl-ShelfGraphConnector');
-  logger.setLevel(Logger.DEBUG);
+  logger.setLevel(Logger.INFO);
 
 
   /**
@@ -84,7 +84,6 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
 
       // needed: need to trigger a 'dragover' event on the target element. it requires the correct position of the event to be set - because it triggers the highlighting!
       dragOver: ({event, dragged}) => {
-        console.log("over");
         let mousePos = [event.pageX, event.pageY],
           dropElem = event.currentTarget,
           overlap = inter.overlap(mousePos, dropElem);

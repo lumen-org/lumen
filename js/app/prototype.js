@@ -931,6 +931,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // create graph widget
         let widget = new GraphWidget($vis[0], makeDummyGraph(context));
+        ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
 
         // add mapping
         this._context2widgetMap.set(context, widget);
@@ -942,6 +943,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // hide current one
         if (this._context != undefined)
             $(map.get(this._context).container()).hide();
+            // $(map.get(this._context).container()).hide();
 
         // show new one
         this._context = context;
@@ -1250,13 +1252,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);
 
-        // activate that context
-        activate(context, ['visualization', 'visPane']);
-
         // fetch model
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
+          .then(() => activate(context, ['visualization', 'visPane']))  // activate that context
           .then(() => {
             // TODO: extent to use with every context
             // let myGraph = makeDummyGraph(context);
