@@ -887,6 +887,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      *
      * It always shows the GraphWidget for the active Context, creates them transparently if a not-seen-before context is set and remember previously set contexts. It automatically removes GraphWidgets for destroyed contexts.
      *
+     * Visual consistency across contexts:
+     *
+     * In order to get the identical layout of the graph across different contexts over the same model a GraphWidgetManager actually maps by model name instead of by context instance.
+     * In that settings a mapping cannot always be deleted when a context is destructed. Hence, for the sake of simplicity, we simply keep all and never delete.
+     *
      * Internal notes:
      *
      * This applies a different design choice than for example the way visualizations of a context are managed. The reasons are:
@@ -897,13 +902,39 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class GraphWidgetManager {
 
-      constructor (context, domDivContainer) {
+      constructor (context, domContainer) {
         this._context = context;
         this._context2widgetMap = new Map();
-        this.$visual = $(domDivContainer); // jQuery reference to its visual representation
+        this.$visual = $(domContainer); // jQuery reference to its visual representation
         if(context !== undefined) {
           this.setContext(context);
         }
+      }
+
+      /**
+       * Returns the chosen key for mapping a given context.
+       * @param context
+       * @returns {string}
+       * @private
+       */
+      static _contextKey(context) {
+        return context.model.name;
+        // return context; // old
+      }
+
+      // just a short cut
+      _get(context) {
+        return this._context2widgetMap.get(GraphWidgetManager._contextKey(context))
+      }
+
+      // just a short cut
+      _has(context) {
+        return this._context2widgetMap.has(GraphWidgetManager._contextKey(context))
+      }
+
+      // just a short cut
+      _set(context, value) {
+        return this._context2widgetMap.set(GraphWidgetManager._contextKey(context), value);
       }
 
       _removeContext (context) {
@@ -918,7 +949,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       _addContext (context) {
-        if (this._context2widgetMap.has(context))
+        if (this._has(context))
           throw RangeError("context has been added before! cannot overwrite!");
 
         // remove on context deletion
@@ -934,7 +965,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
 
         // add mapping
-        this._context2widgetMap.set(context, widget);
+        this._set(context, widget);
       }
 
       activate(context) {
@@ -942,14 +973,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // hide current one
         if (this._context != undefined)
-            $(map.get(this._context).container()).hide();
-            // $(map.get(this._context).container()).hide();
+          $(this._get(this._context).container()).hide();
 
         // show new one
-        this._context = context;
-        let widget = map.get(this._context);
+        let widget = this._get(context);
         $(widget.container()).show();
         widget.redraw();
+        this._context = context;
       }
 
       /**
@@ -960,11 +990,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
 
-        //let widget = this._context2widgetMap.map.has(context);
-
-        // create widget and mapping if necessary
-        if (!this._context2widgetMap.has(context)) {
+        let widget = this._get(context);
+        if (widget === undefined) {
+          // create widget and mapping if necessary
           this._addContext(context);
+        } else {
+          // at least connect the existing widget to the contexts shelves
+          ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
         }
 
         // now activate it
@@ -1226,6 +1258,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // dependency graph widget
     let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-manager-container'));
+    if (!Settings.graphWidget.enable) {
+      $('.pl-lower').hide();
+      $('.pl-upper').css('height', '95%');
+    }
 
     // context queue
     let contextQueue = new ContextQueue();

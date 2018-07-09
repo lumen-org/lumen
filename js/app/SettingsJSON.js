@@ -874,6 +874,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       enabled: true && (c.meta.activity_logging_mode !== "disabled"),
     };
 
+    c.graphWidget = {
+      enable: true,  // enable or disable the graph widget
+    };
+
     return c;
   }
 
