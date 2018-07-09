@@ -13,6 +13,7 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
   /**
    * Given a Shelf return the first record that has content that is a Field with name == dimName.
    * @param shelf
+   * @param dimName
    */
   function getRecordByDimensionName(shelf, dimName) {
     for (let record of shelf) {
