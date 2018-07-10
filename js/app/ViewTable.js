@@ -44,8 +44,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator'],
-  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen) {
+define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend'],
+  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -856,78 +856,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       Plotly.purge(pane);
       Plotly.plot(pane, traces, layout, plConfig);
 
-      // add color legend
-      function colorLegend(svgD3, colorMap, heightOffset) {
-        // build scale again ...
-        // TODO: reuse the ones build in atomicplots...
-        let colorScale = ScaleGen.color(colorMap, colorMap.fu.extent);
-        let legendG = svgD3.append("g")
-          .attr('class', 'pl-legend-color-g')
-          .attr('transform', `translate(0,${heightOffset})`);
-
-        let legend = d3.legend.color()
-          .shape("rect")
-          .shapePadding(7)
-          .title(colorMap.fu.yields)
-          //.classPrefix('pl-')
-          .scale(colorScale);
-
-        return legendG.call(legend);
-      }
-
-      function shapeLegend(svgD3, shapeMap, heightOffset) {
-        let shapeScale = ScaleGen.shape(shapeMap, shapeMap.fu.extent, 'svgPath'); // use hand-built svg paths - plotly does not naturally expoze them...
-        let legendG = svgD3.append("g")
-          .attr('class', 'pl-legend-shape-g')
-          // need to move 5 to the right because of some svg issue with the shapes
-          .attr('transform', `translate(5,${heightOffset + 20})`);
-
-        let legend = d3.legend.symbol()
-          .shapePadding(7)
-          .labelOffset(5)
-          .title(shapeMap.fu.yields)
-          .scale(shapeScale);
-
-        return legendG.call(legend);
-      }
-
-      function sizeLegend(svgD3, sizeMap, heightOffset) {
-        let sizeScale = ScaleGen.size(sizeMap, sizeMap.fu.extent, [3,20]);
-
-        let legendG = svgD3.append("g")
-          .attr('class', 'pl-legend-size-g')
-          .attr('transform', `translate(0,${heightOffset + 40})`);
-
-        let legend = d3.legend.size()
-          .shape('circle')
-          .shapePadding(7)
-          //.labelOffset(5)
-          .title(sizeMap.fu.yields)
-          .scale(sizeScale);
-
-        return legendG.call(legend);
-      }
-
-
-      // clear legend
-      let legendD3 = d3.select(legend);
-      legendD3.selectAll("*").remove();
-      let svgD3 = legendD3.append("svg").classed('pl-legend-svg', true);
-
-      // add legends one after another
-      let height = 20;
-      if (vismel.used.color) {
-        let clrLegend = colorLegend(svgD3, vismel.layers[0].aesthetics.color, height);
-        height += clrLegend.node().getBBox().height;
-      }
-      if (vismel.used.shape) {
-        let shpLegend = shapeLegend(svgD3, vismel.layers[0].aesthetics.shape, height);
-        height += shpLegend.node().getBBox().height;
-      }
-      if (vismel.used.size) {
-        sizeLegend(svgD3, vismel.layers[0].aesthetics.size, height);
-      }
-
+      // redraw the legend
+      VisLegend(vismel, legend);
     };
 
     return ViewTable;
