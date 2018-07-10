@@ -72,8 +72,10 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    */
   function onDropHandler (event) {
 
-    logger.debug("drop occured:");
+    logger.debug("drop occured:");    
     logger.debug(event);
+    logger.debug("dragged elem:");
+    logger.debug(_draggedElem);
 
     let $curTarget = $(event.currentTarget); // is shelf-visual
     let $target = $(event.target); // is shelf-visual or record-visual
@@ -84,6 +86,8 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
       // find closest ancestor that is a shelf-list-item
       let target = $target.parentsUntil('.shelf','.shelf-list-item');
       target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
+      logger.debug("dropping on target: ");
+      logger.debug(target);
       let source= $(_draggedElem).data(vis.AttachStringT.record);
       let overlap = interaction.overlap([event.pageX, event.pageY], event.target);
       drop(target, source, overlap);
@@ -91,6 +95,11 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
       _fallBackDropTarget = null;
       event.stopPropagation();
       event.preventDefault();
+    } else if ($curTarget.hasClass('shelf-list-item')) {
+      logger.debug('processing drop on shelf-list-item - no immediate effect');
+    } else {
+      logger.warn('processing drop somewhere weird:');
+      logger.warn(event.$currentTarget);
     }
     interaction.clearHighlight(event.currentTarget);
   }
@@ -165,7 +174,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   function asRemoveElem ($elem) {
     $elem.get(0).addEventListener('dragover', event => event.preventDefault());
     $elem.get(0).addEventListener('drop', event => {
-      drop(new sh.Shelf(sh.ShelfTypeT.remove), $(_draggedElem).data(vis.AttachStringT.record), {});
+      drop(new sh.Shelf(sh.ShelfTypeT.remove), $(_draggedElem).data(vis.AttachStringT.record), 'center');
       _draggedElem = null;
       event.stopPropagation();
     });

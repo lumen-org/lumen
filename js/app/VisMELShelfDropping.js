@@ -14,7 +14,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   let logger = Logger.get('pl-vismelShelfDropping');
   logger.setLevel(Logger.DEBUG);
 
-  let _OverlapEnum = Object.freeze({
+  const _OverlapEnum = Object.freeze({
     left: 'left',
     top: 'top',
     right: 'right',
@@ -22,6 +22,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     center: 'center',
     none: 'none'
   });
+  const _OverlapEnumValueSet = new Set(Object.values(_OverlapEnum));
 
   function _isDimOrMeasureShelf (shelf) {
     return (shelf.type === sh.ShelfTypeT.dimension || shelf.type === sh.ShelfTypeT.measure);
@@ -122,10 +123,22 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
      */
 
 
+    logger.debug("executing real drop: ");
+    logger.debug("target: ");
+    logger.debug(target);
+    logger.debug("source: ");
+    logger.debug(source);
+    logger.debug("overlap: " + overlap);
 
     if (!(source instanceof sh.Record)) {
       throw new TypeError('source must be a Record');
     }
+
+    if (! _OverlapEnumValueSet.has(overlap)) {
+      logger.warn("invalid overlap value: " + overlap.toString());
+      overlap = _OverlapEnum.center
+    }
+
     // delegate to correct handler
     if (target instanceof sh.Record) {
       // TODO: what if record is no field usage but just a field!?
@@ -198,6 +211,9 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
           tRecord.append(content);
         else if (overlap === 'left' || overlap === 'top')
           tRecord.prepend(content);
+        else {
+          throw new RangeError("invalid overlap = " + overlap);
+        }
       }
     }
     if (!_isDimOrMeasureShelf(sShelf)) sRecord.remove();
