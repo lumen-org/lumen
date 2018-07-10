@@ -521,7 +521,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           shelves[key].on(Emitter.ChangedEvent, context.update);
           shelves[key].on(Emitter.ChangedEvent, event => {
              // heuristic to detect ChangedEvents that are not already covered with the Shelf.Event.* events below
-             if (event.hasOwnProperty('type')) {
+             if (event && event.hasOwnProperty('type')) {
                let logEvent = Object.assign({'context': context.getNameAndUUID()}, event);
                delete logEvent.type;
                ActivityLogger.log(logEvent, event.type);

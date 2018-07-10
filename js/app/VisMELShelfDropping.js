@@ -3,7 +3,6 @@
  * mouse-style dragging and dropping, but an abstract one:
  *
  * drop(target, source, overlap=_OverlapEnum.center): drop source (a Record of another shelf)
- *   d
  *
  * @module interaction
  * @author Philipp Lucas
@@ -12,10 +11,10 @@
 define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'], function (Logger, util, sh, vis, PQL, VisMEL) {
   'use strict';
 
-  var logger = Logger.get('pl-vismelShelfDropping');
-  logger.setLevel(Logger.WARN);
+  let logger = Logger.get('pl-vismelShelfDropping');
+  logger.setLevel(Logger.DEBUG);
 
-  var _OverlapEnum = Object.freeze({
+  let _OverlapEnum = Object.freeze({
     left: 'left',
     top: 'top',
     right: 'right',
@@ -121,6 +120,9 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
      *  * tShelf: target shelf
      *  * sShelf: source shelf
      */
+
+
+
     if (!(source instanceof sh.Record)) {
       throw new TypeError('source must be a Record');
     }
@@ -142,6 +144,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     else
       throw new TypeError('target must be a Record or a Shelf');
   }
+
 
   var onDrop = {};
   onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {

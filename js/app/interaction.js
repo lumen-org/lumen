@@ -1,5 +1,5 @@
 /**
- * Adds Drag and Drop capability the visuals of to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
+ .
  *
  * @module interaction
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
@@ -8,10 +8,10 @@
 define(['lib/logger'], function (Logger) {
   'use strict';
 
-  var logger = Logger.get('pl-interaction');
+  let logger = Logger.get('pl-interaction');
   logger.setLevel(Logger.DEBUG);
 
-  var _OverlapEnum = Object.freeze({
+  let _OverlapEnum = Object.freeze({
     left: 'left',
     top: 'top',
     right: 'right',
@@ -20,7 +20,7 @@ define(['lib/logger'], function (Logger) {
     none: 'none'
   });
 
-  var _OverlapMargins = Object.freeze({
+  let _OverlapMargins = Object.freeze({
     type: 'rel',
     top: 0.35, left: 0.3,
     bottom: 0.35, right: 0.3
@@ -31,13 +31,13 @@ define(['lib/logger'], function (Logger) {
    * @type {{center: Function, within: Function, overlap: Function}}
    * @private
    */
-  var _geom = {
+  let _geom = {
     /**
      * Returns the center as {x,y} of the first element of the $selection relative to the document
      * @param elem DOM element.
      */
     center: function (elem) {
-      var _pos = elem.getBoundingClientRect();
+      let _pos = elem.getBoundingClientRect();
       return {
         x: _pos.left + _pos.width / 2,
         y: _pos.top + _pos.height / 2
@@ -54,12 +54,15 @@ define(['lib/logger'], function (Logger) {
       // credits to: https://github.com/substack/point-in-polygon
       // ray-casting algorithm based on
       // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-      var x = point[0], y = point[1];
-      var inside = false;
-      for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-        var xi = vs[i][0], yi = vs[i][1];
-        var xj = vs[j][0], yj = vs[j][1];
-        var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      let x = point[0], y = point[1],
+        inside = false,
+        xi, xj, yi, yj, intersect;
+      for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        xi = vs[i][0];
+        yi = vs[i][1];
+        xj = vs[j][0];
+        yj = vs[j][1];
+        intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
         if (intersect) inside = !inside;
       }
       return inside;
@@ -74,13 +77,13 @@ define(['lib/logger'], function (Logger) {
      * @param {string} options.type - How to interpret the remaining parameters: absolute pixel distances, or relative to dimensions of elem.
      */
     overlap: function (relPos, elem, options=_OverlapMargins) {
-      var o = $.extend({}, elem.getBoundingClientRect());
+      let o = $.extend({}, elem.getBoundingClientRect());
       o.width = o.right - o.left;
       o.height = o.bottom - o.top;
       o.center = _geom.center(elem);
 
       // calculate dimensions of inner rectangle
-      var i;
+      let i;
       if (options) {
         console.assert(options.type && options.type === 'abs' || options.type === 'rel', "invalid options!");
         if (options.type === 'rel') {
@@ -103,19 +106,20 @@ define(['lib/logger'], function (Logger) {
       }
 
       // check overlap
+      let ovrlp = _OverlapEnum.none;
       if (_geom.within(relPos, [[o.left, o.top], [i.left, i.top], [i.left, i.bottom], [o.left, o.bottom]])) {
-        return _OverlapEnum.left;
+        ovrlp = _OverlapEnum.left;
       } else if (_geom.within(relPos, [[o.left, o.top], [o.right, o.top], [i.right, i.top], [i.left, i.top]])) {
-        return _OverlapEnum.top;
+        ovrlp = _OverlapEnum.top;
       } else if (_geom.within(relPos, [[i.right, i.top], [o.right, o.top], [o.right, o.bottom], [i.right, i.bottom]])) {
-        return _OverlapEnum.right;
+        ovrlp = _OverlapEnum.right;
       } else if (_geom.within(relPos, [[i.left, i.bottom], [i.right, i.bottom], [o.right, o.bottom], [o.left, o.bottom]])) {
-        return _OverlapEnum.bottom;
-      } else if (_geom.within(relPos, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
-        return _OverlapEnum.center;
-      } else {
-        return _OverlapEnum.none;
+        ovrlp = _OverlapEnum.bottom;
+      } if (_geom.within(relPos, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
+        ovrlp = _OverlapEnum.center;
       }
+      logger.debug("overlap: " + ovrlp);
+      return ovrlp;
     }
   };
 
@@ -124,7 +128,7 @@ define(['lib/logger'], function (Logger) {
    * @type {{clear: _highlight.clear, set: _highlight.set}}
    * @private
    */
-  var _highlight = {
+  let _highlight = {
     /**
      * Clears the highlighting of the given droppable
      * @param elem

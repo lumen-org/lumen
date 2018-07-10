@@ -2,27 +2,27 @@
  * Adds Drag and Drop capability the visuals of to {@link module:shelves.Shelf}s and {@link module:shelves.Record}s.
  *
  * @module interaction
- * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  * @author Philipp Lucas
  */
 define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './interaction'], function (Logger, sh, drop, vis, interaction) {
   'use strict';
 
-  var logger = Logger.get('pl-ShelfInteractionMixin');
-  logger.setLevel(Logger.INFO);
+  let logger = Logger.get('pl-ShelfInteractionMixin');
+  logger.setLevel(Logger.DEBUG);
 
 
   /**
    * The currently dragged DOM element.
    * @private
    */
-  var _draggedElem = null;
+  let _draggedElem = null;
 
   /**
    * A fallback drop targe, i.e. the lastly entered element
    * @private
    */
-  var _fallBackDropTarget = null;
+  let _fallBackDropTarget = null;
 
   /**
    * Called when a drag started on the element that was dragged.
@@ -41,6 +41,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
     logger.debug('entering');
     logger.debug(event.currentTarget);
     _fallBackDropTarget = event.currentTarget;
+    event.preventDefault();
   }
 
   /**
@@ -48,9 +49,9 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    * @param event
    */
   function onDragOverHandler (event) {
-    var mousePos = [event.pageX, event.pageY];
-    var dropElem = event.currentTarget;
-    var overlap = interaction.overlap(mousePos, dropElem);
+    let mousePos = [event.pageX, event.pageY];
+    let dropElem = event.currentTarget;
+    let overlap = interaction.overlap(mousePos, dropElem);
     interaction.setHighlight(dropElem, overlap);
     event.preventDefault();
   }
@@ -70,17 +71,21 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    * @param event
    */
   function onDropHandler (event) {
-    var $curTarget = $(event.currentTarget); // is shelf-visual
-    var $target = $(event.target); // is shelf-visual or record-visual
+
+    logger.debug("drop occured:");
+    logger.debug(event);
+
+    let $curTarget = $(event.currentTarget); // is shelf-visual
+    let $target = $(event.target); // is shelf-visual or record-visual
     // a drop may also occur on the record-visuals - however, we 'delegate' it to the shelf. i.e. it will be bubble up
     if ($curTarget.hasClass('shelf')) {
       logger.debug('dropping on'); logger.debug($curTarget); logger.debug($target);
-      var targetShelf = $curTarget.data(vis.AttachStringT.shelf);
+      let targetShelf = $curTarget.data(vis.AttachStringT.shelf);
       // find closest ancestor that is a shelf-list-item
-      var target = $target.parentsUntil('.shelf','.shelf-list-item');
+      let target = $target.parentsUntil('.shelf','.shelf-list-item');
       target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
-      var source= $(_draggedElem).data(vis.AttachStringT.record);
-      var overlap = interaction.overlap([event.pageX, event.pageY], event.target);
+      let source= $(_draggedElem).data(vis.AttachStringT.record);
+      let overlap = interaction.overlap([event.pageX, event.pageY], event.target);
       drop(target, source, overlap);
       _draggedElem = null;
       _fallBackDropTarget = null;
@@ -96,7 +101,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    */
   function _setRecordDraggable($record, flag=true) {
     $record.attr('draggable', flag);
-    var domRecord = $record.get(0);
+    let domRecord = $record.get(0);
     let fct = (flag ? domRecord.addEventListener : domRecord.removeEventListener).bind(domRecord);
     fct('dragstart', onDragStartHandler);
   }
@@ -106,7 +111,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    * @param flag true makes it droppable, false removes that
    */
   function _setRecordDroppable($record, flag=true) {
-    var domRecord = $record.get(0);
+    let domRecord = $record.get(0);
     let fct = (flag ? domRecord.addEventListener : domRecord.removeEventListener).bind(domRecord);
     fct('dragenter',  onDragEnterHandler);
     fct('dragover',  onDragOverHandler);
@@ -119,7 +124,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    * @param flag true makes it droppable, false removes that
    */
   function _setShelfDroppable($shelf, flag=true) {
-    var domShelf = $shelf.get(0);
+    let domShelf = $shelf.get(0);
     let fct = (flag ? domShelf.addEventListener : domShelf.removeEventListener).bind(domShelf);
     fct('dragenter', onDragEnterHandler);
     fct('dragover',  onDragOverHandler);
