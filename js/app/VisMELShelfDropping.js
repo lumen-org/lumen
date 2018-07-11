@@ -144,10 +144,13 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       // TODO: what if record is no field usage but just a field!?
       let fu = _getFieldUsage(target);
       if (PQL.isAggregationOrDensity(fu) && overlap === _OverlapEnum.center) {
-        // add field to list of fields for that field usage
-        let newFields = util.listify(_getField(source));
-        fu.fields = _.union(fu.fields, newFields);
-        fu.emitInternalChanged();
+        let sourceField = _getField(source),
+         targetFields = fu.fields;
+        if (!targetFields.names().includes(sourceField.name)) {
+          // add field to list of fields for that field usage
+          fu.fields = _.union(targetFields, util.listify(sourceField));
+          fu.emitInternalChanged();
+        }        
       } else {
         onDrop[target.shelf.type](target, target.shelf, source, source.shelf, overlap);
       }
