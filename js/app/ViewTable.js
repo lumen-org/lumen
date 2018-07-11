@@ -706,7 +706,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       };
 
       // init layout and traces of plotly plotting specification
-      let layout = {}, traces = [];
+      let layout = {}, traces = [], shapes = [];
       // array of main axis along view cell of view table, for both, x and y axis. The values are axis ids.
       let mainAxes = {x: [], y: []};
       // custom titles for axis
@@ -750,8 +750,6 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
           // make main axis
           for (let [xy, yx] of [['y', 'x'], ['x', 'y']]) {
-
-            // make main y axis
             axis[xy] = config.axisGenerator.main(
               mainOffset[xy] + 0.5 * axisLength.padding[xy],
               axisLength.main[xy] - 0.5 * axisLength.padding[xy],
@@ -760,28 +758,26 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             id[xy] = idgen.main[xy]++;  // id of the current main y-axis
             if (used[xy]) {
               let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
-              // store the mapping of yield to y-axis for later reuse
+              // store the mapping of yield-to-axis for later reuse
               axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]);
               // tick labels and title only for the first axis
-              // if (idx[yx] === 0 || idx[xy] === 0) {
               if (idx[yx] === 0) {
-                // create axis title
                 let axisTitleAnno = config.annotationGenerator.axis_title(
                   getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
                 axisTitles.push(axisTitleAnno);
-                // TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)
-                //    if (idx.x === 0) {
-                //        let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', paneOffset.x, paneSize.x, templAxisSize.y);
-                //        axisTitles.push(axisTitleAnno);
-                //    }
               } else {
                 axis[xy].showticklabels = false;
               }
             }
-            // add to plotly layout and
+            // add to plotly layout
             layout[xy + "axis" + id[xy]] = axis[xy];
             id[xy] = xy + id[xy];
             mainAxes[xy].push(id[xy]);
+          }
+
+          // make bounding box - iff it is not just a marginal plot
+          if (used.x && used.y ) {
+            shapes.push(config.annotationGenerator.bounding_rect(axis.x, axis.y));
           }
 
           // create marginal axes as needed
@@ -849,6 +845,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         bargroupgap: 0.05,
         //margin: config.plots.layout.margin, // TODO: this creates a gap where x- and y-axis would meet otherwise
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
+        shapes: shapes,
         editable: true,
         hovermode: 'closest',
         paper_bgcolor: "rgba(255,255,255,0.9)",

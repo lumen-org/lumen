@@ -998,6 +998,23 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         anno[xy+'shift'] =  c.plots.layout.margin[xy === 'x' ? 'r' : 't'] - 20; // shift right/up off axis line (tick labels not over axis title)
         return anno;
       },
+
+      bounding_rect(xaxis, yaxis) {
+        return {
+          type: 'rect',
+          layer: 'above',
+          xref: 'paper',
+          yref: 'paper',
+          x0: xaxis.domain[0],
+          x1: xaxis.domain[1],
+          y0: yaxis.domain[0],
+          y1: yaxis.domain[1],
+          line: {
+            color: c.plots.main.axis.zerolinecolor,
+            width: c.plots.main.axis.zerolinewidth,
+          }
+        }
+      },
     };
 
     c.axisGenerator = {
