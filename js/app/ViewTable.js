@@ -664,7 +664,11 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         return axis;
       }
 
-      // loops over view cells
+      /*
+       * loops over view cells:
+       * * draw axis as required
+       * * get trace for atomic plot of each cell
+       */
       this.at = new Array(this.size.rows);
       for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
         this.at[idx.y] = new Array(this.size.x);
