@@ -8,8 +8,8 @@
 define(['lib/logger'], function (Logger) {
   'use strict';
 
-  let logger = Logger.get('pl-interaction');
-  logger.setLevel(Logger.DEBUG);
+  // let logger = Logger.get('pl-interaction');
+  // logger.setLevel(Logger.INFO);
 
   let _OverlapEnum = Object.freeze({
     left: 'left',
@@ -118,7 +118,6 @@ define(['lib/logger'], function (Logger) {
       } if (_geom.within(relPos, [[i.left, i.top], [i.right, i.top], [i.right, i.bottom], [i.left, i.bottom]])) {
         ovrlp = _OverlapEnum.center;
       }
-      logger.debug("overlap: " + ovrlp);
       return ovrlp;
     }
   };

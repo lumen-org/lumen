@@ -12,7 +12,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   'use strict';
 
   let logger = Logger.get('pl-vismelShelfDropping');
-  logger.setLevel(Logger.DEBUG);
+  logger.setLevel(Logger.WARN);
 
   const _OverlapEnum = Object.freeze({
     left: 'left',
@@ -122,7 +122,6 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
      *  * sShelf: source shelf
      */
 
-
     logger.debug("executing real drop: ");
     logger.debug("target: ");
     logger.debug(target);
@@ -134,7 +133,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       throw new TypeError('source must be a Record');
     }
 
-    if (! _OverlapEnumValueSet.has(overlap)) {
+    if (! _OverlapEnumValueSet.has(overlap) || overlap == _OverlapEnumValueSet.none) {
       logger.warn("invalid overlap value: " + overlap.toString());
       overlap = _OverlapEnum.center
     }
