@@ -115,8 +115,9 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
         container: $(domDiv),
         elements: [...graph.nodes, ...graph.edges],
         style: style,
-        layout: layout
       });
+      this._layout = this._cy.layout(layout)
+      this._layout.run();
       let cy = this._cy;
 
       this.selected = cy.collection();
@@ -126,7 +127,9 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
 
       this.updateNodes();
       this.allNodes.addClass('pl-default');
-      onDoubleClick(this._cy, ev => this._cy.fit());
+      onDoubleClick(this._cy, ev => {
+        this._layout.run(); // rerun layout!
+      });
 
       this.allNodes
         .on('select', this.onNodeSelect.bind(this))
@@ -290,9 +293,6 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     if (handlers.dragOver) {
       domElem.addEventListener('mousemove', augmentedHandlers.dragOver)
     }
-
-    // TODO: remove handler if domElem is destroyed
-    // TODO: add to dropTargets?
   };
 
   return GraphWidget;

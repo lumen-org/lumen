@@ -1002,7 +1002,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       bounding_rect(xaxis, yaxis) {
         return {
           type: 'rect',
-          layer: 'above',
+          layer: 'below',
           xref: 'paper',
           yref: 'paper',
           x0: xaxis.domain[0],
