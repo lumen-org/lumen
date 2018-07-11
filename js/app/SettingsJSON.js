@@ -1001,6 +1001,14 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     };
 
     c.axisGenerator = {
+      /**
+       * Explanation for a y-axis. For x-axis it is analogous.
+       * @param offset y offset
+       * @param length lenght along y-direction
+       * @param position x position
+       * @param used
+       * @returns {*}
+       */
       main: (offset, length, position, used) => {
         if (used)
           return {

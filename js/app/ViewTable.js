@@ -14,6 +14,14 @@
  *
  *   Note: this is just about spatial axis anchoring.
  *
+ * Axis drawing:
+ *
+ *   Axes serve several purposes:
+ *     * read off a value
+ *     * bounding box of a atomic vis
+ *     * hierarchy indication (templating axes)
+ *     *
+ *
  * Extents:
  *
  *   For visualization the extents over _all_ result tables are required, as we need uniform
@@ -485,6 +493,62 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       return [axes, annotations];
     }
 
+    function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxes, idx, catQuantAxisIds, layout) {
+      // build up helper variables needed later and to check if we are in the quant-categorical case
+      let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
+        catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
+        quantXY = PQL.hasNumericYield(fu.x) ? 'x' : (PQL.hasNumericYield(fu.y) ? 'y' : undefined);
+
+      if (catXY && quantXY) {
+        let catFu = fu[catXY],
+          catIdx = rt.fu2idx.get(catFu);
+
+        // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
+        let catExtent = rt.extent[catIdx],
+          n = catExtent.length,
+          d = axisLength.main[catXY] / n;
+
+        let pFu = rt.vismel.layout[PQL.hasDiscreteYield(fu.x) ? 'cols' : 'rows'][1],
+          pIdx = rt.fu2idx.get(pFu),
+          pExtent = rt.extent[pIdx];
+
+        // build additional axes along categorial dimension, i.e. the axes that will encode density
+        // need as many axis as there is categories!
+        for (let i = 0; i < n; ++i) {
+          const r = 2.0; // sets position of axis
+          // offset of axis (i.e. along the categorical dimension)
+          let o = mainOffset[catXY] + i * d + d / r,
+            id_ = idgen.bicatquant[catXY]++,
+            axis = config.axisGenerator.marginal(o, d * (r - 1) / r, mainOffset[quantXY], catXY);
+          axis.anchor = mainAxes[quantXY][idx[quantXY]];
+
+          // set axis labels and tick marks
+          Object.assign(axis, getRangeAndTickMarks(pExtent, catXY));
+          //axis.showticklabels = false;
+          //axis.tickcolor
+          //axis.ticklen = -210;
+          let cd = config.colors.density;
+          axis.color = cd.primary_single;
+          axis.tickfont = {
+            color: cd.adapt_to_color_usage ? cd.secondary_single : cd.primary_single
+          };
+
+          // hack to shorten inside axis // doesn't really work, because the tick at 0 is special...
+          axis.ticks = "inside";
+          axis.ticklen = 12;
+          axis.tickwidth = 2;
+          axis.tickcolor = "#FFFFFF";
+          axis.mirror = "ticks";
+          axis.zerolinecolor = "#878787";
+          //axis.tickcolor = "#FF0000";
+          //axis.side  = (catXY === 'y' ? "left" : "bottom");
+
+          catQuantAxisIds.push(catXY + id_); // store for later reuse
+          layout[catXY + "axis" + id_] = axis; // add to layout
+        }
+      }
+    }
+
     /**
      * Using annotations to title templating axis:
      *
@@ -647,13 +711,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       let mainAxes = {x: [], y: []};
       // custom titles for axis
       let axisTitles = [];
-      // offset to origin of a view cell
-      let paneOffset = {};
-      // offset of main plot relative to view cell origin
-      let mainOffset = {};
       // indexing over x and y
       let idx = {x: 0, y: 0};
-
       // Mapping of yields to spatial axis. This is for anchoring all axis with the same yield together.
       let yield2axis = new Map();
 
@@ -673,49 +732,56 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
         this.at[idx.y] = new Array(this.size.x);
 
+        // ids for x axis and y axis - for looping
+        let id = {x: undefined, y: undefined};
+        // x axis and y axis - for looping
+        let axis = {x: undefined, y: undefined};
+        // offset to origin of a view cell
+        let paneOffset = {x: undefined, y: undefined};
+        // offset of main plot relative to view cell origin
+        let mainOffset = {x: undefined, y: undefined};
+
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
-        let yaxis = config.axisGenerator.main(mainOffset.y + 0.5 * axisLength.padding.y, axisLength.main.y - 0.5 * axisLength.padding.y, templAxisSize.x, used.y),
-          yid = idgen.main.y++;
-
-        if (used.y) {
-          let yYield = getFieldUsage(idx.y, 'y', vismelColl).yields;
-          yaxis.scaleanchor = getSetYield2Axis(yYield, "y" + yid);
-
-          let axisTitleAnno = config.annotationGenerator.axis_title(
-            getFieldUsage(idx.y, 'y', vismelColl).yields, 'y', mainOffset.y, axisLength.main.y, templAxisSize.x);
-          axisTitles.push(axisTitleAnno);
-        }
-        layout["yaxis" + yid] = yaxis;
-        yid = "y" + yid;
-        mainAxes.y.push(yid);
 
         for (idx.x = 0; idx.x < this.size.x; ++idx.x) {
           paneOffset.x = templAxisSize.x + cellSize.x * idx.x;
+          mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
 
-          // create main axis
-          let xaxis, xid;
-          if (idx.y === 0) {
-            mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
-            xaxis = config.axisGenerator.main(mainOffset.x + 0.5 * axisLength.padding.x, axisLength.main.x - 0.5 * axisLength.padding.x, templAxisSize.y, used.x);
-            xid = idgen.main.x++;
-            if (used.x) {
-              let xYield = getFieldUsage(idx.x, 'x', vismelColl).yields;
-              xaxis.scaleanchor = getSetYield2Axis(xYield, "x" + xid);
+          // make main axis
+          for (let [xy, yx] of [['y', 'x'], ['x', 'y']]) {
 
-              let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', mainOffset.x, axisLength.main.x, templAxisSize.y);
-              axisTitles.push(axisTitleAnno);
-//            TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)              
-//               if (idx.x === 0) {
-//                   let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', paneOffset.x, paneSize.x, templAxisSize.y);                  
-//                   axisTitles.push(axisTitleAnno);
-//               }             
+            // make main y axis
+            axis[xy] = config.axisGenerator.main(
+              mainOffset[xy] + 0.5 * axisLength.padding[xy],
+              axisLength.main[xy] - 0.5 * axisLength.padding[xy],
+              paneOffset[yx],
+              used[xy]);
+            id[xy] = idgen.main[xy]++;  // id of the current main y-axis
+            if (used[xy]) {
+              let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
+              // store the mapping of yield to y-axis for later reuse
+              axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]);
+              // tick labels and title only for the first axis
+              // if (idx[yx] === 0 || idx[xy] === 0) {
+              if (idx[yx] === 0) {
+                // create axis title
+                let axisTitleAnno = config.annotationGenerator.axis_title(
+                  getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
+                axisTitles.push(axisTitleAnno);
+                // TODO: reduce number of axis labels, if possible (i.e. FL,RW without split on ROWS still needs two labels, not one!)
+                //    if (idx.x === 0) {
+                //        let axisTitleAnno = config.annotationGenerator.axis_title(getFieldUsage(idx.x, 'x', vismelColl).yields, 'x', paneOffset.x, paneSize.x, templAxisSize.y);
+                //        axisTitles.push(axisTitleAnno);
+                //    }
+              } else {
+                axis[xy].showticklabels = false;
+              }
             }
-            layout["xaxis" + xid] = xaxis;
-            xid = "x" + xid;
-            mainAxes.x.push(xid);
-          } else {
-            xid = mainAxes.x[idx.x];
+            // add to plotly layout and
+            layout[xy + "axis" + id[xy]] = axis[xy];
+            id[xy] = xy + id[xy];
+            mainAxes[xy].push(id[xy]);
           }
 
           // create marginal axes as needed
@@ -750,67 +816,14 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
-          if (used.x && used.y && biColl[0][0] !== undefined) {
-            let rt = biColl[idx.y][idx.x];
-            // build up helper variables needed later and to check if we are in the quant-categorical case
-            let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
-              catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
-              quantXY = PQL.hasNumericYield(fu.x) ? 'x' : (PQL.hasNumericYield(fu.y) ? 'y' : undefined);
+          if (used.x && used.y && biColl[0][0] !== undefined)
+            makeCategoricalQuantitativeAxis(biColl[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxes, idx, catQuantAxisIds, layout);
 
-            if (catXY && quantXY) {
-              let catFu = fu[catXY],
-                catIdx = rt.fu2idx.get(catFu);
-
-              // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]
-              let catExtent = rt.extent[catIdx],
-                n = catExtent.length,
-                d = axisLength.main[catXY] / n;
-
-              let pFu = rt.vismel.layout[PQL.hasDiscreteYield(fu.x) ? 'cols' : 'rows'][1],
-                pIdx = rt.fu2idx.get(pFu),
-                pExtent = rt.extent[pIdx];
-
-              // build additional axes along categorial dimension, i.e. the axes that will encode density
-              // need as many axis as there is categories!
-              for (let i = 0; i < n; ++i) {
-                const r = 2.0; // sets position of axis
-                // offset of axis (i.e. along the categorical dimension)
-                let o = mainOffset[catXY] + i * d + d / r,
-                  id_ = idgen.bicatquant[catXY]++,
-                  axis = config.axisGenerator.marginal(o, d * (r - 1) / r, mainOffset[quantXY], catXY);
-                axis.anchor = mainAxes[quantXY][idx[quantXY]];
-
-                // set axis labels and tick marks                
-                Object.assign(axis, getRangeAndTickMarks(pExtent, catXY));
-                //axis.showticklabels = false;
-                //axis.tickcolor
-                //axis.ticklen = -210;
-                let cd = config.colors.density;
-                axis.color = cd.primary_single;
-                axis.tickfont = {
-                  color: cd.adapt_to_color_usage ? cd.secondary_single : cd.primary_single
-                };
-
-                // hack to shorten inside axis // doesn't really work, because the tick at 0 is special...
-                axis.ticks = "inside";
-                axis.ticklen = 12;
-                axis.tickwidth = 2;
-                axis.tickcolor = "#FFFFFF";
-                axis.mirror = "ticks";
-                axis.zerolinecolor = "#878787";
-                //axis.tickcolor = "#FF0000";
-                //axis.side  = (catXY === 'y' ? "left" : "bottom");
-
-                catQuantAxisIds.push(catXY + id_); // store for later reuse
-                layout[catXY + "axis" + id_] = axis; // add to layout
-              }
-            }
-          }
 
           // create traces for one atomic plot
           let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {
-            x: xid,
-            y: yid
+            x: id.x,
+            y: id.y
           }, marginalAxisId, catQuantAxisIds, queryConfig);
 
           traces.push(...atomicTraces);
@@ -834,7 +847,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         //title: "Model: " + query.sources[0].name,
         barmode: 'group',
         bargroupgap: 0.05,
-        margin: config.plots.layout.margin,
+        //margin: config.plots.layout.margin, // TODO: this creates a gap where x- and y-axis would meet otherwise
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         editable: true,
         hovermode: 'closest',
