@@ -50,7 +50,8 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
 
       // adaption of ShelfInteractionMixin
       'drop': function ({event, dragged}) {
-        logger.debug("drop of " + dragged.field.toString());
+        let fieldName = dragged.node.data('id');
+        logger.debug("drop of " + fieldName);
 
         let $curTarget = $(event.currentTarget), // is shelf-visual
           $target = $(event.target); // is shelf-visual or record-visual
@@ -67,16 +68,15 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
           target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
 
           // get source!
-          let source = getRecordByDimensionName(shelves.dim, dragged.field.name);
+          let source = getRecordByDimensionName(shelves.dim, fieldName);
           if (source === undefined)
-            source = getRecordByDimensionName(shelves.meas, dragged.field.name);
+            source = getRecordByDimensionName(shelves.meas, fieldName);
           if (source === undefined)
             throw RangeError("INTERNAL ERROR: could not find matching record");
 
           let overlap = inter.overlap([event.pageX, event.pageY], event.target);
 
           drop(target, source, overlap);
-
           //event.stopPropagation();
           event.preventDefault();
         }
