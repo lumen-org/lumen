@@ -798,10 +798,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           $('.pl-details').toggle()
         });
 
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $detailsHideButton, $configHideButton,  $clone, $undo,/* $save,*/ $redo, $clear, $query, $reload);
+        let $graphManagerToggleButton = $('<div class="pl-toolbar-button">Graph</div>').click( () => {
+          $('.pl-lower').toggle()
+        });
 
 
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $query, $clone, $undo,/* $save,*/ $redo, $clear, $detailsHideButton, $configHideButton, $reload);
+        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $query, $clone, $undo,/* $save,*/ $redo, $clear, $detailsHideButton, $graphManagerToggleButton, $configHideButton, $reload);
 
         if(context !== undefined)
           this.setContext(context);
