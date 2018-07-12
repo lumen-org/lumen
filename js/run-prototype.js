@@ -17,9 +17,12 @@ require.config({
   paths: {
     'd3': 'lib/d3.min',
     'd3legend': 'lib/d3-legend-amd',
-    'cytoscape': '../node_modules/cytoscape/dist/cytoscape.min',
-    'webcola': '../node_modules/webcola/WebCola/cola.min',
-    'cytoscape-cola': '../node_modules/cytoscape-cola/cytoscape-cola',
+    // 'cytoscape': '../node_modules/cytoscape/dist/cytoscape.min',
+    // 'webcola': '../node_modules/webcola/WebCola/cola.min',
+    // 'cytoscape-cola': '../node_modules/cytoscape-cola/cytoscape-cola',
+    'cytoscape': 'lib/cytoscape.min',
+    'webcola': 'lib/cola.min',
+    'cytoscape-cola': 'lib/cytoscape-cola',
   }
 });
 
