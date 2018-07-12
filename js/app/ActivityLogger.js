@@ -56,7 +56,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
   function mode(mode=undefined) {
     const validModes = new Set(["disabled", "console.error", "console.log", "remote"]);
 
-    if (mode == undefined)
+    if (mode === undefined)
       return this._mode;
 
     if (!validModes.has(mode))
@@ -72,6 +72,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
    * new one to be opened. The . If you set replaceFlag to true the contents of the new log files are overwritten, else
    * they are apended (the default).
    * @param path
+   * @param replaceFlag
    */
   function logPath(path = undefined, replaceFlag=false) {
     if (path === undefined) {
@@ -101,7 +102,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
     if (obj === undefined) {
       return _additionalFixedContent;
     } else {
-      // try to serialize it
+      // try to serialize it (it may throw)
       let tryout = JSON.stringify(obj);
 
       // store it
@@ -112,6 +113,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
   /**
    * Writes the given json-serializable object to the log file.
    * @param jsonSerializableObj
+   * @param activityType
    * @private
    */
   function log(jsonSerializableObj, activityType='NO_TYPE') {
@@ -130,9 +132,9 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
     // serialize
     let serializedObject = JSON.stringify(jsonSerializableObj);
 
-    if (this._mode == 'console.log')
+    if (this._mode === 'console.log')
       console.log(serializedObject);
-    else if (this._mode == 'console.error')
+    else if (this._mode === 'console.error')
       console.error(serializedObject);
     else
       // send to log server

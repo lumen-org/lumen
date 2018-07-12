@@ -15,70 +15,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
   function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget) {
     'use strict';
 
-    function makeDummyGraph (context) {
-
-      function makeNode(data) {
-        return {
-          group: 'nodes',
-          data: data
-        };
-      }
-
-      function makeEdge(s,t) {
-        return {
-          group: 'edges',
-          data: {
-            source: s,
-            target: t,
-            weight: Math.random(),
-          }
-        };
-      }
-
-      /**
-       * Given an iterable sequence of Fields it returns an iterable sequence of JSON formatted nodes.
-       *
-       * @param fields
-       */
-      function field2node(field) {
-        return makeNode({
-          id: field.name,
-          dataType: field.dataType,
-          field: field,
-        });
-      }
-
-      let model = context.model,
-        nodes = Array.from(model.fields.values()).map(field2node),
-        edges = [];
-
-      // add edges
-      for (let i=1; i<model.dim-1; i++) {
-        let s = nodes[i-1].data.id,
-          t = nodes[i].data.id;             
-        if (s === t)
-            continue;
-        edges.push(makeEdge(s, t))
-      }
-
-      // add some more edges
-      let connect = _.sample(nodes, Math.ceil(model.dim/2)*2);
-      for (let i=0; i<connect.length-1; i+=2) {
-        edges.push(makeEdge(connect[i].data.id, connect[i+1].data.id))
-      }
-
-      return {
-        nodes,
-        edges
-      };
-    }
-
-
-
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    //const DEFAULT_MODEL = 'mcg_iris_map';
-    const DEFAULT_MODEL = 'emp_titanic';
+    const DEFAULT_MODEL = 'mcg_iris_map';
+    // const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
     const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
@@ -137,10 +77,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       message (str, type="warning", timeout=3500) {
-        if (type != "warning" && type != "info")
+        if (type !== "warning" && type !== "info")
           throw RangeError('Invalid message type: ' + type);
-        let toAdd =  "pl-info-box_" + (type == "warning"?"warning":"information"),
-          toRemove =  "pl-info-box_" + (type == "warning"?"information":"warning");
+        let toAdd =  "pl-info-box_" + (type === "warning"?"warning":"information"),
+          toRemove =  "pl-info-box_" + (type === "warning"?"information":"warning");
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
         this.show();
         let that = this;
@@ -394,7 +334,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * Returns the visualization config according to the state of the GUI.
        */
       getVisConfig () {
-        this.$visuals.visConfig
+        return this.$visuals.visConfig
       }
 
       /**
@@ -450,9 +390,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         $removeButton.click( context.remove.bind(context) );
         let $legendDiv = $('<div class="pl-legend-pane"></div>');
 
-        let $nav = $removeButton;
         let $vis = $('<div class="pl-visualization"></div>')
-          .append($paneDiv, $nav, $legendDiv)
+          .append($paneDiv, $removeButton, $legendDiv)
           .click( () => {
             if (contextQueue.first().uuid !== context.uuid) {
               activate(context, ['visualization', 'visPane']);
@@ -539,7 +478,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * An context update is triggered if the state of the config is changed.
        *
        * @param context
-       * @return {void|*|jQuery}
        * @private
        */
       static _makeFacetWidget (context) {
@@ -710,7 +648,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           throw TypeError("context must be an instance of Context");
         this._context = context;
         this._context.on("ContextDeletedEvent", (c) => {
-          if (this._context.uuid == c.uuid)
+          if (this._context.uuid === c.uuid)
             this.$visual.hide()
         });
         this.$visual.show();
@@ -783,7 +721,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // bind to events of this context
         this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
         this._context.on("ContextDeletedEvent", c => {
-          if (this._context.uuid == c.uuid)
+          if (this._context.uuid === c.uuid)
             this.$visual.hide()
         });
       }
@@ -897,7 +835,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      *   * the graph widget is optional, in contrast to the visualization or the specification panel
      *   * I've learned and now believe this would overall be the better strategy because it decouples functionality better
      *
-     * This applies also applies a different design choice than used for the Toolbar, DetailsView etc. This is because a GraphWidget creates state beyond what is already existent in a context, and we need a construct to make that state persistent.
+     * This also applies a different design choice than used for the Toolbar, DetailsView etc. Because a GraphWidget creates state beyond what is already existent in a context, we need a construct to make that state persistent.
      */
     class GraphWidgetManager {
 
@@ -956,7 +894,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           throw RangeError("just must call setContext() before!");
 
         // hide current one
-        if (this._context != undefined)
+        if (this._context !== undefined)
           $(this._get(this._context).container()).hide();
 
         // show new one
@@ -967,8 +905,22 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       /**
+       * Register a context at compatible widget.
+       * @param widget
+       * @param context
+       * @private
+       */
+      _registerContext (widget, context) {
+        ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
+        this._contextSet.add(context);
+        // remove on context deletion
+        let that = this;
+        context.on("ContextDeletedEvent", context => that._removeContext(context));
+      }
+
+      /**
        * Sets the context that the toolbar controls.
-       * @param context A context. It does not matter whether the context have been set before or not.
+       * @param context A context. It makes no difference whether the same context have been set before or not.
        */
       setContext(context) {
         if (!(context instanceof Context))
@@ -978,30 +930,41 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           hasContext = this._contextSet.has(context),
           that = this;
 
-        if (widget === undefined || !hasContext) {
+        /* three possible cases:
+         (1) this very context has been set before: then simply activate it
+         (2) this very context has not been set before, but a context of the same model (e.g. mcg_iris_map) has been set:
+           then connect the new contexts shelves to the widget and activate the context
+         (3) its entirely new in terms of context and the underlying model: then we need to fetch the graph of the model and then activate the context
+         */
+        let promise = new Promise((resolve, reject) => {
+          if (widget === undefined && hasContext)
+            throw RangeError("context has been added before! cannot overwrite!");
+          else if (widget !== undefined && hasContext)
+            resolve();
+          else if (widget === undefined && !hasContext) {
+            // need to retrieve graph
+            return context.model.pciGraph_get().then(
+              graph => {
+                // create a new div to draw on
+                let $vis = $('<div class=pl-graph-pane></div>').hide();
+                this.$visual.append($vis);
 
-          if (widget === undefined) {
-            if (hasContext)
-              throw RangeError("context has been added before! cannot overwrite!");
+                // make new graph widget
+                widget = new GraphWidget($vis[0], graph, context);
+                this._set(context, widget);
 
-            // create a new div to draw on
-            let $vis = $('<div class=pl-graph-pane></div>').hide();
-            this.$visual.append($vis);
-
-            // create graph widget and add to map
-            widget = new GraphWidget($vis[0], makeDummyGraph(context));
-            this._set(context, widget);
+                // register the widget with the context
+                this._registerContext(widget, context);
+                resolve();
+              });
+            // need to add both
+          } else if (widget !== undefined && !hasContext) {
+            this._registerContext(widget, context);
+            resolve();
           }
-
-          ShelfGraphConnector.connect(widget, context.shelves);  // enable drag'n'drop between graph and shelves
-          this._contextSet.add(context);
-          // remove on context deletion
-          context.on("ContextDeletedEvent", context => that._removeContext(context));
-        }
-        // else: context not new at all ... nothing to do!
-
-        // now activate it
-        this.activate(context);
+        }).then(
+          () => that.activate(context)
+        );
       }
     }
 
@@ -1087,7 +1050,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       empty() {
-        return this._first == undefined;
+        return this._first === undefined;
       }
 
       /**

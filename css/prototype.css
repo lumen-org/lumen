@@ -311,6 +311,7 @@ main {
 
 textarea.pl-survey-content {
     min-height: 10rem;
+    min-width: 16rem;
 }
 
 .pl-toolbar-button.pl-survey-content {

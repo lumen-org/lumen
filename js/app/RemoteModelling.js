@@ -229,6 +229,8 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
         });
     }
 
+
+
     /**
      * Creates remotely a copy of this model with a given name.
      * @param {string} [name] - the name of the clone of this model.
@@ -236,9 +238,9 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
      * @returns {Promise} A promise to a copy of this model.
      */
     copy(name) {
-      var myClone;
-      var that = this;
-      var jsonPQL = PQL.toJSON.copy(this.name, name);
+      let myClone;
+      let that = this;
+      let jsonPQL = PQL.toJSON.copy(this.name, name);
       return executeRemotely(jsonPQL, this.url)
         .then(() => {
           myClone = new RemoteModel(name, that.url);
@@ -247,12 +249,26 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
         });
     }
 
+    pciGraph_get() {
+      let query = {
+        'FROM': this.name,
+        'PCI_GRAPH.GET': true,
+      };
+      return executeRemotely(query, this.url)
+        .then(jsonData => {
+          if (jsonData.model !== this.name)
+            throw RangeError("Received PCI Graph of wrong model: {1}  instead of  {2}".format(jsonData.model, this.name))
+          this.pciGraph = jsonData.graph;
+          return jsonData.graph;
+        });
+    }
+
     /**
      * Returns a copy of this object. This does not actually copy any model on the remote host.
      * It simply copies the local object and does not run any remote queries at all.
      */
     localCopy() {
-      var clone = new RemoteModel(this.name, this.url);
+      let clone = new RemoteModel(this.name, this.url);
       for (let [key, value] of this.fields.entries()) {
         clone.fields.set(key, value.copy());
       }

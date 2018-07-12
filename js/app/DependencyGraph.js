@@ -5,23 +5,117 @@
  *  * provides visual distinction between different data types of the dimensions
  *
  * It also provides interactivity as follows:
- *  * user may select one or multiple nodes
- *
+ *  * user may select a node by clicking on it
+ *  * user may select multiple nodes by holding ctrl and clicking on nodes
+ *  * user may deselect all node by clicking anywhere in the widget
+ *  * user may trigger auto-layout and centering of the plotted graph by double clicking anywhere
+ *  * user may reposition a node by left-click dragging
+ *  * user may drag a node over to shelves and drop it there by right-click dragging. This triggers a assignment of the dropped dimension to the target shelf, instead of moving the node with the drawing canvas.
+
  * Selection causes a classification of the nodes, as follows
  *  (i) pl-selected: selected nodes
  *  (ii) pl-adjacent: nodes adjacant to selected nodes, but not selected:
  *  (iii) pl-remaining: nodes that are neither in (i) or (ii)
  *  (iv) pl-default: if no node is selected at all
- *
- * Implements a drag and drop idiom:
- *   * node may be dragged over to shelves and dropped there. this triggers a assignment of the dropped dimension to
- *   the target shelf, instead of moving the node with the drawing canvas.
- *    * nodes may be manually moved around in the drawing cancas.
- *
  */
 define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
 
   cola(cytoscape); // register cola extension
+
+  /**
+   * Create and return random dummy graph based on provided context.
+   * @param context
+   * @returns {{nodes: any[], edges: Array}}
+   */
+  function makeDummyGraph (context) {
+
+    function makeNode(data) {
+      return {
+        group: 'nodes',
+        data: data
+      };
+    }
+
+    function makeEdge(s,t) {
+      return {
+        group: 'edges',
+        data: {
+          source: s,
+          target: t,
+          weight: Math.random(),
+        }
+      };
+    }
+
+    /**
+     * Given an iterable sequence of Fields it returns an iterable sequence of JSON formatted nodes.
+     *
+     * @param field
+     */
+    function field2node(field) {
+      return makeNode({
+        id: field.name,
+        dataType: field.dataType,
+        field: field,
+      });
+    }
+
+    let model = context.model,
+      nodes = Array.from(model.fields.values()).map(field2node),
+      edges = [];
+
+    // add edges
+    for (let i=1; i<model.dim-1; i++) {
+      let s = nodes[i-1].data.id,
+        t = nodes[i].data.id;
+      if (s === t)
+        continue;
+      edges.push(makeEdge(s, t))
+    }
+
+    // add some more edges
+    let connect = _.sample(nodes, Math.ceil(model.dim/2)*2);
+    for (let i=0; i<connect.length-1; i+=2) {
+      edges.push(makeEdge(connect[i].data.id, connect[i+1].data.id))
+    }
+
+    return {
+      nodes,
+      edges
+    };
+  }
+
+  /**
+   * Convert a 'standard' edge list to suitable format for cytoscape.
+   * @param edges
+   */
+  function convertEdgeList(edges) {
+    return edges.map(edge => {
+      for (let prop of ['source', 'target', 'weight'])
+        if (!edge.hasOwnProperty(prop))
+          throw RangeError("missing '{1}' property in edge_ {2}".format(prop, edge.toString()));
+      return {
+        group: 'edges',
+        data: edge
+      }
+    })
+  }
+
+  /**
+   * Convert a Dictionary of indexes (that bear no meaning) to node names to a suitable list of nodes for cytoscape.
+   * @param nodenames
+   * @returns {any[]}
+   */
+  function convertNodenameDict(nodenames) {
+    return Object.values(nodenames).map( name=> {
+      return {
+        group: 'nodes',
+        data: {
+          id: name
+        },
+      }
+    });
+  }
 
   // default style sheet
   let style = [
@@ -113,10 +207,10 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     constructor(domDiv, graph) {
       this._cy = cytoscape({
         container: $(domDiv),
-        elements: [...graph.nodes, ...graph.edges],
+        elements: [...convertNodenameDict(graph.nodes), ...convertEdgeList(graph.edges)],
         style: style,
       });
-      this._layout = this._cy.layout(layout)
+      this._layout = this._cy.layout(layout);
       this._layout.run();
       let cy = this._cy;
 
