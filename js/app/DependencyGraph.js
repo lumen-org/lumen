@@ -13,10 +13,10 @@
  *  * user may drag a node over to shelves and drop it there by right-click dragging. This triggers a assignment of the dropped dimension to the target shelf, instead of moving the node with the drawing canvas.
 
  * Selection causes a classification of the nodes, as follows
- *  (i) pl-selected: selected nodes
- *  (ii) pl-adjacent: nodes adjacant to selected nodes, but not selected:
- *  (iii) pl-remaining: nodes that are neither in (i) or (ii)
- *  (iv) pl-default: if no node is selected at all
+ *  (i) pl-selected-node: selected nodes
+ *  (ii) pl-adjacent-node: nodes adjacant to selected nodes, but not selected:
+ *  (iii) pl-remaining-node: nodes that are neither in (i) or (ii)
+ *  (iv) pl-default-node: if no node is selected at all
  */
 define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
 
@@ -90,13 +90,25 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
    * @param edges
    */
   function convertEdgeList(edges) {
+
+    // get min and max of weights for normalization
+    let min_=Infinity, max_=-Infinity;
+    for (let edge of edges) {
+      if (edge.weight < min_)
+        min_ = edge.weight;
+      if (edge.weight > max_)
+        max_ = edge.weight;
+    }
+    let len = max_ - min_;
+
     return edges.map(edge => {
       for (let prop of ['source', 'target', 'weight'])
         if (!edge.hasOwnProperty(prop))
           throw RangeError("missing '{1}' property in edge_ {2}".format(prop, edge.toString()));
       return {
         group: 'edges',
-        data: edge
+        // normalize weights to [0,1]
+        data: Object.assign({}, edge, {'weight': (edge.weight - min_)/len}),
       }
     })
   }
@@ -117,6 +129,12 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     });
   }
 
+  const config = {
+    defaultNodeDiameter: 30,
+    remainingNodeDiameterPrct: 25,
+    minNodeDiameter: 5
+  };
+
   // default style sheet
   let style = [
     {
@@ -127,8 +145,8 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
         'border-width': '2px',
         'border-style': 'solid',
         'border-color': "#404040",
-        'width': 30,
-        'height': 30,
+        'width': config.defaultNodeDiameter,
+        'height': config.defaultNodeDiameter,
       }
     },
 
@@ -136,7 +154,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       selector: 'edge',
       style: {
         'width': function (ele) {
-          return 4 + 10 * ele.data('weight')
+          return config.minNodeDiameter + (config.defaultNodeDiameter - config.minNodeDiameter) * ele.data('weight')
         },
         'line-color': '#ccc',
         //'curve-style': 'bezier',
@@ -144,7 +162,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     },
 
     {
-      selector: '.pl-selected',
+      selector: '.pl-selected-node',
       style: {
         'background-color': 'red',
         'border-width': '4px',
@@ -154,7 +172,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     },
 
     {
-      selector: '.pl-adjacent',
+      selector: '.pl-adjacent-node',
       style: {
         'background-color': 'green',
         'border-width': '2px',
@@ -164,30 +182,62 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     },
 
     {
-      selector: '.pl-remaining',
+      selector: '.pl-remaining-node',
       style: {
         'background-color': '#cecece',
-        'width': 20,
-        'height': 20,
+        'width': config.remainingNodeDiameterPrct,
+        'height': config.remainingNodeDiameterPrct,
         'border-width': 1,
+        'opacity': 0.7,
         // 'background-opacity': 0.4,
         // 'border-opacity': 0.4,
       }
     },
 
     {
-      selector: '.pl-default',
+      selector: '.pl-default-node',
       style: {
         'background-color': 'grey',
       }
-    }
+    },
+
+    // TODO: beachte die Edge stylings
+    {
+      selector: '.pl-adjacent-edge',
+      style: {
+        'line-color': 'red',
+        'opacity': 0.8,
+      }
+    },
+
+    {
+      selector: '.pl-remaining-edge',
+      style: {
+        'line-color': 'grey',
+        'opacity': 0.5,
+      }
+    },
+
+    {
+      selector: '.pl-default-edge',
+      style: {
+        'line-color': 'grey',
+        'opacity': 0.7,
+      }
+    },
   ];
 
   // defaults for layout
   let layout = {
-    name: 'cola',
-    nodeDimensionsIncludeLabels: true,
-    //edgeLength: edge => edge.data.weight*10,
+    'cola': {
+      name: 'cola',
+      nodeDimensionsIncludeLabels: true,
+      //edgeLength: edge => edge.data.weight*10,
+    },
+    'circle': {
+      name: 'circle',
+      nodeDimensionsIncludeLabels: true,
+    }
   };
 
   function onDoubleClick(cyOrElems, callback) {
@@ -204,13 +254,15 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
 
   class GraphWidget {
 
-    constructor(domDiv, graph) {
+    constructor(domDiv, graph, layoutmode='cola') {
       this._cy = cytoscape({
         container: $(domDiv),
         elements: [...convertNodenameDict(graph.nodes), ...convertEdgeList(graph.edges)],
         style: style,
+        selectionType: 'additive',
       });
-      this._layout = this._cy.layout(layout);
+      this._layout = this._cy.layout(layout.cola); // TODO
+      //this._layout = this._cy.layout(layout[layoutmode]);
       this._layout.run();
       let cy = this._cy;
 
@@ -220,7 +272,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       this.allNodes = cy.nodes();
 
       this.updateNodes();
-      this.allNodes.addClass('pl-default');
+      this.allNodes.addClass('pl-default-node');
       onDoubleClick(this._cy, ev => {
         this._layout.run(); // rerun layout!
       });
@@ -231,26 +283,26 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     }
 
     updateNodes() {
-      this.allNodes.removeClass('pl-adjacent pl-remaining');
+      this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
 
       if (this.selected.size() === 0) {
-        this.allNodes.addClass('pl-default');
+        this.allNodes.addClass('pl-default-node');
       } else {
         this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
-          .addClass('pl-adjacent');
+          .addClass('pl-adjacent-node');
         this.remaining = this.allNodes.subtract(this.adjacent).subtract(this.selected)
-          .addClass('pl-remaining');
+          .addClass('pl-remaining-node');
       }
     }
 
     onNodeSelect(ev) {
       //this._cy.batchStart();
       if (this.selected.size() === 0)
-        this.allNodes.removeClass('pl-default');
+        this.allNodes.removeClass('pl-default-node');
 
       let node = ev.target;
       this.selected = this.selected.union(node);
-      node.toggleClass('pl-selected');
+      node.toggleClass('pl-selected-node');
       node.data('pl_selected', true);
       this.updateNodes();
       // this._cy.batchEnd();
@@ -260,7 +312,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       // this._cy.batchStart();
       let node = ev.target;
       this.selected = this.selected.subtract(node);
-      node.toggleClass('pl-selected');
+      node.toggleClass('pl-selected-node');
       node.data('pl_selected', false);
       this.updateNodes();
       // this._cy.batchEnd();
