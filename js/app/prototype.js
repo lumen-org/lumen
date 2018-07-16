@@ -952,7 +952,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 this.$visual.append($vis);
 
                 // make new graph widget
-                widget = new GraphWidget($vis[0], graph, context);
+                widget = new GraphWidget($vis[0], graph);
                 this._set(context, widget);
 
                 // register the widget with the context

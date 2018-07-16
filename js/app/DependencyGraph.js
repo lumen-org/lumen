@@ -140,31 +140,20 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     {
       selector: 'node',
       style: {
-        'background-color': '#cecece',
+        'background-color': '#a8a8a8',
         'label': 'data(id)',
-        'border-width': '2px',
+        'border-width': '1px',
         'border-style': 'solid',
-        'border-color': "#404040",
+        'border-color': "#7f7f7f",
         'width': config.defaultNodeDiameter,
         'height': config.defaultNodeDiameter,
       }
     },
 
     {
-      selector: 'edge',
-      style: {
-        'width': function (ele) {
-          return config.minNodeDiameter + (config.defaultNodeDiameter - config.minNodeDiameter) * ele.data('weight')
-        },
-        'line-color': '#ccc',
-        //'curve-style': 'bezier',
-      }
-    },
-
-    {
       selector: '.pl-selected-node',
       style: {
-        'background-color': 'red',
+        // 'background-color': 'red',
         'border-width': '4px',
         'border-style': 'solid',
         'border-color': "#404040",
@@ -174,10 +163,10 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     {
       selector: '.pl-adjacent-node',
       style: {
-        'background-color': 'green',
-        'border-width': '2px',
+        // 'background-color': 'green',
+        'border-width': '3px',
         'border-style': 'dashed',
-        'border-color': "#404040",
+        'border-color': "#626262",
       }
     },
 
@@ -195,48 +184,49 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     },
 
     {
-      selector: '.pl-default-node',
+      selector: 'edge',
       style: {
-        'background-color': 'grey',
+        'width': function (ele) {
+          return config.minNodeDiameter + (config.defaultNodeDiameter - config.minNodeDiameter) * ele.data('weight')
+        },
+        'line-color': '#d7d7d7',
+        'opacity': 0.6,
+        //'curve-style': 'bezier',
       }
     },
 
-    // TODO: beachte die Edge stylings
     {
       selector: '.pl-adjacent-edge',
       style: {
-        'line-color': 'red',
-        'opacity': 0.8,
+        // 'line-color': '#cc7137',
+        'line-color': '#cc7137',
+        'opacity': 0.6,
       }
     },
 
     {
       selector: '.pl-remaining-edge',
       style: {
-        'line-color': 'grey',
-        'opacity': 0.5,
+        'line-color': '#d6d6d6',
+        'opacity': 0.4,
       }
     },
 
-    {
-      selector: '.pl-default-edge',
-      style: {
-        'line-color': 'grey',
-        'opacity': 0.7,
-      }
-    },
   ];
 
   // defaults for layout
   let layout = {
     'cola': {
       name: 'cola',
-      nodeDimensionsIncludeLabels: true,
+      nodeDimensionsIncludeLabels: false,
+      padding: 0,
       //edgeLength: edge => edge.data.weight*10,
     },
     'circle': {
       name: 'circle',
-      nodeDimensionsIncludeLabels: true,
+      nodeDimensionsIncludeLabels: false,
+      padding: 0,
+      animate: true,
     }
   };
 
@@ -261,8 +251,8 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
         style: style,
         selectionType: 'additive',
       });
-      this._layout = this._cy.layout(layout.cola); // TODO
-      //this._layout = this._cy.layout(layout[layoutmode]);
+      // this._layout = this._cy.layout(layout.cola); // TODO
+      this._layout = this._cy.layout(layout[layoutmode]);
       this._layout.run();
       let cy = this._cy;
 
@@ -270,10 +260,11 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       this.adjacent = cy.collection();
       this.remaining = cy.collection();
       this.allNodes = cy.nodes();
+      this.allEdges = cy.edges();
 
-      this.updateNodes();
-      this.allNodes.addClass('pl-default-node');
+      this._updateStylings();
       onDoubleClick(this._cy, ev => {
+        this._cy.fit();
         this._layout.run(); // rerun layout!
       });
 
@@ -282,29 +273,32 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
         .on('unselect', this.onNodeUnselect.bind(this));
     }
 
-    updateNodes() {
+    _updateStylings() {
       this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
+      this.allEdges.removeClass('pl-adjacent-edge pl-remaining-edge');
 
-      if (this.selected.size() === 0) {
-        this.allNodes.addClass('pl-default-node');
-      } else {
+      if (this.selected.size() !== 0) {
         this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
           .addClass('pl-adjacent-node');
         this.remaining = this.allNodes.subtract(this.adjacent).subtract(this.selected)
           .addClass('pl-remaining-node');
+
+        let selectedEdges = this.selected.connectedEdges()
+          .addClass('pl-adjacent-edge');
+        this.allEdges.subtract(selectedEdges).addClass('pl-remaining-edge');
       }
     }
 
     onNodeSelect(ev) {
       //this._cy.batchStart();
-      if (this.selected.size() === 0)
-        this.allNodes.removeClass('pl-default-node');
+      // if (this.selected.size() === 0)
+      //   this.allNodes.removeClass('pl-default-node');
 
       let node = ev.target;
       this.selected = this.selected.union(node);
       node.toggleClass('pl-selected-node');
       node.data('pl_selected', true);
-      this.updateNodes();
+      this._updateStylings();
       // this._cy.batchEnd();
     }
 
@@ -314,7 +308,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       this.selected = this.selected.subtract(node);
       node.toggleClass('pl-selected-node');
       node.data('pl_selected', false);
-      this.updateNodes();
+      this._updateStylings();
       // this._cy.batchEnd();
     }
 
