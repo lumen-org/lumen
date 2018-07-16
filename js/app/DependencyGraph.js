@@ -132,7 +132,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
   const config = {
     defaultNodeDiameter: 30,
     remainingNodeDiameterPrct: 25,
-    minNodeDiameter: 5
+    minNodeDiameter: 3
   };
 
   // default style sheet
@@ -153,7 +153,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     {
       selector: '.pl-selected-node',
       style: {
-        // 'background-color': 'red',
+        'background-color': '#cc7137',
         'border-width': '4px',
         'border-style': 'solid',
         'border-color': "#404040",
@@ -187,7 +187,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       selector: 'edge',
       style: {
         'width': function (ele) {
-          return config.minNodeDiameter + (config.defaultNodeDiameter - config.minNodeDiameter) * ele.data('weight')
+          return config.minNodeDiameter + (config.defaultNodeDiameter - config.minNodeDiameter) * 0.7 * ele.data('weight')
         },
         'line-color': '#d7d7d7',
         'opacity': 0.6,
@@ -219,7 +219,10 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     'cola': {
       name: 'cola',
       nodeDimensionsIncludeLabels: false,
+      ungrabifyWhileSimulating: true,
+      //edgeLength: 150,
       padding: 0,
+      nodeSpacing: function( node ){ return 30; }
       //edgeLength: edge => edge.data.weight*10,
     },
     'circle': {
