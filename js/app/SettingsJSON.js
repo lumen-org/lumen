@@ -527,7 +527,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         opacity: 0.7,
       },
       line: {
-        width: 2.5,
+        width: 2,
         opacity: 0.7, // line opacity
         fill: true,
         fillopacity: 0.06,

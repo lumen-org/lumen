@@ -756,6 +756,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               paneOffset[yx],
               used[xy]);
             id[xy] = idgen.main[xy]++;  // id of the current main y-axis
+
             if (used[xy]) {
               let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
               // store the mapping of yield-to-axis for later reuse
@@ -763,20 +764,23 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               // tick labels and title only for the first axis
               if (idx[yx] === 0) {
                 let axisTitleAnno = config.annotationGenerator.axis_title(
-                  getFieldUsage(idx[xy], xy, vismelColl).yields, xy, 
+                  getFieldUsage(idx[xy], xy, vismelColl).yields, xy,
                   mainOffset[xy] + 0.5 * axisLength.padding[xy],
                   axisLength.main[xy] - 0.5 * axisLength.padding[xy],
                   paneOffset[yx],);
-                  //getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
+                //getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
                 axisTitles.push(axisTitleAnno);
               } else {
                 axis[xy].showticklabels = false;
               }
             }
-            // add to plotly layout
-            layout[xy + "axis" + id[xy]] = axis[xy];
-            id[xy] = xy + id[xy];
-            mainAxes[xy].push(id[xy]);
+
+            // if (!used[xy] || idx[yx] === 0) {
+              // add to plotly layout
+              layout[xy + "axis" + id[xy]] = axis[xy];
+              id[xy] = xy + id[xy];
+              mainAxes[xy].push(id[xy]);
+            // }
           }
 
           // make bounding box - iff it is not just a marginal plot
@@ -794,6 +798,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = false;
+              // never show these labels - they are not helpful, because the absolute value does not add valuable information
               // if (xy === 'x')
               //   axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
               // else
