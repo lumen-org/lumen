@@ -763,7 +763,11 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               // tick labels and title only for the first axis
               if (idx[yx] === 0) {
                 let axisTitleAnno = config.annotationGenerator.axis_title(
-                  getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
+                  getFieldUsage(idx[xy], xy, vismelColl).yields, xy, 
+                  mainOffset[xy] + 0.5 * axisLength.padding[xy],
+                  axisLength.main[xy] - 0.5 * axisLength.padding[xy],
+                  paneOffset[yx],);
+                  //getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
                 axisTitles.push(axisTitleAnno);
               } else {
                 axis[xy].showticklabels = false;
@@ -789,10 +793,11 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
                 axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
-              if (xy === 'x')
-                axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
-              else
-                axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
+              axis.showticklabels = false;
+              // if (xy === 'x')
+              //   axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+              // else
+              //   axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
 
               if (axis.side === 'right')
                 axis.side = 'left';
@@ -814,7 +819,6 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
           let catQuantAxisIds = [];
           if (used.x && used.y && biColl[0][0] !== undefined)
             makeCategoricalQuantitativeAxis(biColl[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxes, idx, catQuantAxisIds, layout);
-
 
           // create traces for one atomic plot
           let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {
@@ -843,7 +847,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         //title: "Model: " + query.sources[0].name,
         barmode: 'group',
         bargroupgap: 0.05,
-        //margin: config.plots.layout.margin, // TODO: this creates a gap where x- and y-axis would meet otherwise
+        margin: config.plots.layout.margin,
         annotations: [...axisTitles, ...annotationsx, ...annotationsy],
         shapes: shapes,
         editable: true,

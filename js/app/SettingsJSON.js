@@ -772,10 +772,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
 
       //margin_main_sub: 0.02,
       margin: {
-        l: 70,
+        l: 90,
         //l: 120,
-        t: 15,
-        r: 15,
+        t: 30,
+        r: 30,
         b: 60,
         pad: 3, // the amount of padding (in px) between the plotting area and the axis lines
       },
