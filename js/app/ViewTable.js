@@ -76,7 +76,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
       let formatter = rt.idx2fu.map(fu => {
         if (PQL.hasDiscreteYield(fu)) {
-          return o => o.toString();  // no need for any special formatting
+          return o => o === undefined ? '-none-' : o.toString();  // no need for any special formatting
         } else if (PQL.hasNumericYield(fu)) {
           return d3.format(".3f");
         } else {

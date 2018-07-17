@@ -194,7 +194,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     tracer.aggrHeatmap = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
       if (!axisId) throw RangeError("invalid axisId");
 
-      if (rt == undefined)  // means 'disable this trace type'
+      if (rt === undefined)  // means 'disable this trace type'
         return [];
 
       let vismel = rt.vismel,
@@ -223,10 +223,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           colorTable = [];
           let colorMapper = mapper.aggrFillColor,
             len = colorFu.extent.length;
-
           let convertMap = d3c.map();
           colorFu.extent.forEach((v, idx) => {
-            let color = colorMapper(v);
+            // TODO: this handles undefined values in the result table and maps them to white. make this more generic. you need to think about how to handle them in a general case
+            let color = (v === undefined ?  '#FFFFFF' : colorMapper(v));  
             colorTable.push([idx / len, color], [(idx + 1) / len, color]);
             convertMap.set(v, idx)
           });

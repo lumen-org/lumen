@@ -1,10 +1,15 @@
 define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen) {
 
+
+  function _filterUndefined(lst) {
+    return lst.filter(e => e !== undefined);
+  }
+
   // add color legend
   function colorLegend(svgD3, colorMap, heightOffset) {
     // build scale again ...
     // TODO: reuse the ones build in atomicplots...
-    let colorScale = ScaleGen.color(colorMap, colorMap.fu.extent);
+    let colorScale = ScaleGen.color(colorMap, _filterUndefined(colorMap.fu.extent));
     let legendG = svgD3.append("g")
       .attr('class', 'pl-legend-color-g')
       .attr('transform', `translate(0,${heightOffset})`);
@@ -20,7 +25,7 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
   }
 
   function shapeLegend(svgD3, shapeMap, heightOffset) {
-    let shapeScale = ScaleGen.shape(shapeMap, shapeMap.fu.extent, 'svgPath'); // use hand-built svg paths - plotly does not naturally expoze them...
+    let shapeScale = ScaleGen.shape(shapeMap, _filterUndefined(shapeMap.fu.extent), 'svgPath'); // use hand-built svg paths - plotly does not naturally expoze them...
     let legendG = svgD3.append("g")
       .attr('class', 'pl-legend-shape-g')
       // need to move 5 to the right because of some svg issue with the shapes
@@ -36,7 +41,7 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
   }
 
   function sizeLegend(svgD3, sizeMap, heightOffset) {
-    let sizeScale = ScaleGen.size(sizeMap, sizeMap.fu.extent, [3,20]);
+    let sizeScale = ScaleGen.size(sizeMap, _filterUndefined(sizeMap.fu.extent), [3,20]);
 
     let legendG = svgD3.append("g")
       .attr('class', 'pl-legend-size-g')
