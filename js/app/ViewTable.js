@@ -753,7 +753,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             axis[xy] = config.axisGenerator.main(
               mainOffset[xy] + 0.5 * axisLength.padding[xy],
               axisLength.main[xy] - 0.5 * axisLength.padding[xy],
-              paneOffset[yx],
+              paneOffset[yx] + 0.5 * axisLength.padding[yx],
               used[xy]);
             id[xy] = idgen.main[xy]++;  // id of the current main y-axis
 
@@ -797,7 +797,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
                 axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
-              axis.showticklabels = false;
+              //axis.showticklabels = false;
               // never show these labels - they are not helpful, because the absolute value does not add valuable information
               if (xy === 'x')
                 axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col

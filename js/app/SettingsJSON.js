@@ -1082,8 +1082,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         tickformat: '.3f',
         hoverformat: '.3f',
         rangemode: 'nonnegative',
-        autorange: 'false',
-        fixedrange: false,
+        autorange: false,
+        fixedrange: true,
         tickmode: 'auto', // TODO:
         nticks: 3,
         side: xy === 'y' ? 'right' : 'top',
