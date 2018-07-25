@@ -760,7 +760,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             if (used[xy]) {
               let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
               // store the mapping of yield-to-axis for later reuse
-              axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]);
+              //PL axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]); // TODO: disabled in favor of global axis linking
+
               // tick labels and title only for the first axis
               if (idx[yx] === 0) {
                 let axisTitleAnno = config.annotationGenerator.axis_title(
@@ -877,7 +878,12 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
       // plot everything
       Plotly.purge(pane);
-      Plotly.plot(pane, traces, layout, plConfig);
+      Plotly.newPlot(pane, traces, layout, plConfig);
+
+      pane.on('plotly_relayout', (ev) => {
+          console.log("hi");
+          console.log(ev);
+        });
 
       // redraw the legend
       VisLegend(vismel, legend);

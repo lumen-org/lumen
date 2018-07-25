@@ -171,6 +171,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               .then(res => c.biDensityRT = res)
 
               .then(() => c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
+
+              .then(() => {
+                // for development
+                c.$visuals.visPane.get(0).on('plotly_relayout', (ev) => {
+                  console.log(ev);
+                })
+              })
+
               .then(() => {
                 if (commit) {
                   // TODO: commit only if something changed!
