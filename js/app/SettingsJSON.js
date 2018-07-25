@@ -604,6 +604,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
             format: "grid",
             properties: {
               "color": {type: "string", format: "color"},
+              "width": {type: "number"},
               "zerolinewidth": {type: "number"},
               "zerolinecolor": {type: "string", format: "color"},
             }
@@ -732,6 +733,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       },
       axis: {
         color: "#3D3A40",
+        width: 1,
         zerolinewidth: 1.5,
         zerolinecolor: greys(0.3),
       },
@@ -1010,8 +1012,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
           y0: yaxis.domain[0],
           y1: yaxis.domain[1],
           line: {
-            color: c.plots.main.axis.zerolinecolor,
-            width: c.plots.main.axis.zerolinewidth,
+            color: c.plots.main.axis.color,
+            width: c.plots.main.axis.width,
           }
         }
       },
@@ -1031,7 +1033,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
           return {
             showline: true,
             linecolor: c.plots.main.axis.color,
-            linewidth: 1,
+            linewidth: c.plots.main.axis.width,
             mirror: false, // 'all' mirrors to marginal axis as well. Note that this cannot work if I use position and not anchor.
             zeroline: false,  // TODO: enable back on?
             zerolinecolor: c.plots.main.axis.zerolinecolor,
