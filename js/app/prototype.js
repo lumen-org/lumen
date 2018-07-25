@@ -394,7 +394,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .append($paneDiv, $removeButton, $legendDiv)
           .click( () => {
             if (contextQueue.first().uuid !== context.uuid) {
-              activate(context, ['visualization', 'visPane']);
+              activate(context, ['visualization', 'visPane', 'legendPane']);
               ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
             }
           })
@@ -564,7 +564,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                   // TODO: remove vis and everything else ...
                 })
                 .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
-                .then(() => activate(context, ['visualization', 'visPane']))
+                .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
                 .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
                 .catch((err) => {
                   console.error(err);
@@ -774,7 +774,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
             // fetch model
             contextCopy.model.update()
-              .then(() => activate(contextCopy, ['visualization', 'visPane']))
+              .then(() => activate(contextCopy, ['visualization', 'visPane', 'legendPane']))
               .then(() => contextCopy.update())
               .catch((err) => {
                 console.error(err);
@@ -1258,7 +1258,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
-          .then(() => activate(context, ['visualization', 'visPane']))  // activate that context
+          .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
           .catch((err) => {
             console.error(err);
             infoBox.message("Could not load remote model from Server!");

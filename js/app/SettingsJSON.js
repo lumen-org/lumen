@@ -863,7 +863,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     let todayStr = today.getDate() + "-" + (today.getMonth()+1) + "-" + today.getFullYear();
 
     c.meta = {
-      activity_logging_mode: "remote", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_mode: "disabled", // one of ["disabled", "console.error", "console.log", "remote"]
       // activity_logging_filename: "user_log.json",
       activity_logging_filename: utils.todayString() + "_" + "activity.log",
       activity_logging_subdomain: '/activitylogger',
@@ -875,7 +875,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     };
 
     c.graphWidget = {
-      enable: true,  // enable or disable the graph widget
+      enable: false,  // enable or disable the graph widget
     };
 
     return c;
@@ -1083,7 +1083,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         hoverformat: '.3f',
         rangemode: 'nonnegative',
         autorange: 'false',
-        fixedrange: true,
+        fixedrange: false,
         tickmode: 'auto', // TODO:
         nticks: 3,
         side: xy === 'y' ? 'right' : 'top',

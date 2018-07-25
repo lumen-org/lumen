@@ -613,6 +613,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         ztext = zdata.map(c.map.biDensity.labelFormatter);
 
       // // TODO: should we apply some heuristic to reduce the impact of few, very large density value
+      // TODO: this cannot work, because it sets the scale on a per trace basis...
       // let sortedZData = _.sortBy(zdata),
       //   l = sortedZData.length;
       // // ignore all values smaller max*0.01
@@ -640,6 +641,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         colorscale: colorscale,
         zauto: false,
         zmin: 0,
+        // zmax: zmax,
         zmax: colorFu.extent[1],
         hoverinfo: 'text',
         text: ztext,

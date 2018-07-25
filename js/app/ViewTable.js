@@ -799,10 +799,10 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
               axis.showticklabels = false;
               // never show these labels - they are not helpful, because the absolute value does not add valuable information
-              // if (xy === 'x')
-              //   axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
-              // else
-              //   axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
+              if (xy === 'x')
+                axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+              else
+                axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
 
               if (axis.side === 'right')
                 axis.side = 'left';
