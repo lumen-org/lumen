@@ -30,8 +30,41 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
    * @param str
    */
   function parseRelayoutString(str) {
-    // TODO: implement
-    return {};
+
+    // regex magic ...
+    let m = str.match(/^([xy])axis([0-9]+)\.([a-z]+)(.*):\s*(.*)$/);
+
+    let dict = {
+      id: m[1]+'axis',
+      xy: m[1],
+      axis: m[1]+'axis'+[2],
+      attr: m[3],
+      value: (m[3] === 'range' ? +m[5] : m[5].toLocaleLowerCase() === 'true'),
+      idx: (m[3] === 'range'?m[4][1]:undefined),
+    };
+
+    return dict;
+  }
+
+
+  function _makeNode(axis) {
+    return {
+      group: 'nodes',
+      data: {
+        'id': axis
+      },
+    }
+  }
+
+
+  function _makeEdge(axis1, axis2) {
+    return {
+      group: 'edge',
+      data: {
+        'source': axis1,
+        'target': axis2,
+      }
+    }
   }
 
 
@@ -44,31 +77,10 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
       });
     }
 
-    static
-    _makeNode(axis) {
-      return {
-        group: 'nodes',
-        data: {
-          'id': axis
-        },
-      }
-    }
-
-    static
-    _makeEdge(axis1, axis2) {
-      return {
-        group: 'edge',
-        data: {
-          'source': axis1,
-          'target': axis2,
-        }
-      }
-    }
-
     /**
      * Link axis with id axis1 and axis with id axis2. Any update that is subsequently applied to either of them wie propagate is also applied to the other one.
-     * @param axis1
-     * @param axis2
+     * @param axis1 {String} id of axis1
+     * @param axis2 {String} id of axis2
      */
     linkAdd(axis1, axis2) {
       let deps = this.dependencies;
@@ -76,7 +88,7 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
       // add axes as nodes if not there already
       for (let axis of [axis1, axis2])
         if (deps.nodes(`#{axis}`).empty())
-            deps.add(AxesSyncManager._makeNode(axis));
+            deps.add(_makeNode(axis));
 
       // add link if not there already
       if (deps.edges(`#{axis1} <-> #{axis2}`).empty()) {
@@ -85,7 +97,7 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
       return this;
     }
 
-    SEARCH FOR "TODO: disabled in favor of global axis linking"
+    //SEARCH FOR "TODO: disabled in favor of global axis linking"
 
     /**
      * Propagate the list of updates to all dependent axis and return the updated layout.
@@ -94,7 +106,8 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
      */
     propagate(update, layout) {
 
-      let u = undefined; // for closure of applyUpdate
+      let u = undefined,  // for closure of applyUpdate
+        deps = this.dependencies;  // shorthand
 
       // Apply update on given node/axis
       function applyUpdate(node) {
@@ -104,19 +117,22 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
         else if (u.attr === 'range')
           axis.range[u.idx] = u.value;
         else
-          throw ValueError("invalid update: {}".format(u))
+          throw ValueError("invalid update: {}".format(u));
+        console.log(`update = {u.toString()}`);
       }
 
       for (u of updates) {
-        this.dependencies.bfs(this.nodes[u.id], applyUpdate, false);
+        deps.bfs(deps.nodes(`#{u.id}`), applyUpdate);
       }
 
       return layout;
     }
-
   }
 
 
 
-  return AxesSyncManager;
+  return {
+    AxesSyncManager,
+    parseRelayoutString
+  };
 });
