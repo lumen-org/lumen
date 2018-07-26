@@ -52,8 +52,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend'],
-  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend) {
+define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization'],
+  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -590,6 +590,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
       vismel.used = vismel.usages();
 
+      let axesSyncManager = new AxesSync.AxesSyncManager();
+
       /// one time on init:
       /// todo: is this actually "redo on canvas size change" ?
 
@@ -718,8 +720,10 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
       function getSetYield2Axis(yield_, yieldAxisId) {
         let axis = yield2axis.get(yield_);
-        if (axis === undefined)  // never overwrite existing mappings. This maybe makes it easier to debug...
+        if (axis === undefined) { // never overwrite existing mappings. This maybe makes it easier to debug...
           yield2axis.set(yield_, yieldAxisId);
+          axis = yieldAxisId; // TODO is that right?
+        }
         return axis;
       }
 
@@ -761,6 +765,11 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
               // store the mapping of yield-to-axis for later reuse
               //PL axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]); // TODO: disabled in favor of global axis linking
+//               console.log(axis[xy]);
+//               console.log(id[xy]);
+//               console.log(getSetYield2Axis(xyYield, xy + id[xy]));
+              //axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]);
+              axesSyncManager.linkAdd(xy+id[xy], getSetYield2Axis(xyYield, xy+id[xy]));
 
               // tick labels and title only for the first axis
               if (idx[yx] === 0) {
@@ -879,14 +888,27 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       // plot everything
       Plotly.purge(pane);
       Plotly.newPlot(pane, traces, layout, plConfig);
-
-      pane.on('plotly_relayout', (ev) => {
-          console.log("hi");
-          console.log(ev);
-        });
-
       // redraw the legend
       VisLegend(vismel, legend);
+
+      pane.on('plotly_relayout', (ev) => {
+          console.log(ev);
+          let update = AxesSync.parseRelayoutDict(ev);
+          console.log(update);
+          console.log(layout);
+          layout = axesSyncManager.propagate(update, layout);
+          console.log(layout);
+          //Plotly.purge(pane); // WHY is it not adjusted! it is not set in layout...? // this removes the listener because it kills the div?
+
+          window.setTimeout( () => {
+              Plotly.newPlot(pane, traces, layout, plConfig).then( () => console.log("plotted!"));
+              VisLegend(vismel, legend)
+              }, 2000);
+          //Plotly.react(pane, traces, layout, plConfig);
+          
+          // redraw the legend
+          ;
+        });      
     };
 
     return ViewTable;

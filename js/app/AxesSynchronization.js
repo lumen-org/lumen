@@ -35,15 +35,24 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
     let m = str.match(/^([xy])axis([0-9]+)\.([a-z]+)(.*):\s*(.*)$/);
 
     let dict = {
-      id: m[1]+'axis',
-      xy: m[1],
-      axis: m[1]+'axis'+[2],
+      //id: m[1]+m[2],
+      //xy: m[1],
+      //axis: m[1]+'axis'+m[2],
+      axis: m[1]+m[2],
       attr: m[3],
       value: (m[3] === 'range' ? +m[5] : m[5].toLocaleLowerCase() === 'true'),
       idx: (m[3] === 'range'?m[4][1]:undefined),
     };
 
     return dict;
+  }
+
+
+  function parseRelayoutDict(dict) {
+    let lst = [];
+    for (let k of Object.keys(dict))
+      lst.push(parseRelayoutString(k + ": " + dict[k]))
+    return lst;
   }
 
 
@@ -59,7 +68,7 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
 
   function _makeEdge(axis1, axis2) {
     return {
-      group: 'edge',
+      group: 'edges',
       data: {
         'source': axis1,
         'target': axis2,
@@ -72,7 +81,7 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
 
     constructor () {
       // dependency graph
-      let dependencies = cytoscape({
+      this.dependencies = cytoscape({
         headless: true
       });
     }
@@ -83,16 +92,21 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
      * @param axis2 {String} id of axis2
      */
     linkAdd(axis1, axis2) {
-      let deps = this.dependencies;
+      if (axis1 === axis2)
+        return;
 
+      let deps = this.dependencies;
       // add axes as nodes if not there already
       for (let axis of [axis1, axis2])
-        if (deps.nodes(`#{axis}`).empty())
+        if (deps.nodes(`#${axis}`).empty()) {
             deps.add(_makeNode(axis));
+            console.log(`#${axis}`);
+        }
 
       // add link if not there already
-      if (deps.edges(`#{axis1} <-> #{axis2}`).empty()) {
+      if (deps.edges(`#${axis1} <-> #${axis2}`).empty()) {
         deps.add(_makeEdge(axis1, axis2))
+        console.log(`#${axis1} <-> #${axis2}`);
       }
       return this;
     }
@@ -111,18 +125,20 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
 
       // Apply update on given node/axis
       function applyUpdate(node) {
-        let axis = layout[node.axis];
+        // layout xaxis has format [xy]axis[0-9]+, but ours is [xy][0-9]+ 
+        let id = node.id();
+        console.log(id);
+        let axis = layout[`${id[0]}axis${id.slice(1)}`];
         if (u.attr === 'autorange')
           axis.autorange = u.value;
         else if (u.attr === 'range')
           axis.range[u.idx] = u.value;
         else
-          throw ValueError("invalid update: {}".format(u));
-        console.log(`update = {u.toString()}`);
+          throw ValueError(`invalid update: ${u}`);
       }
 
-      for (u of updates) {
-        deps.bfs(deps.nodes(`#{u.id}`), applyUpdate);
+      for (u of update) {
+        deps.elements().bfs(deps.nodes(`#${u.axis}`), applyUpdate);
       }
 
       return layout;
@@ -133,6 +149,7 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
 
   return {
     AxesSyncManager,
-    parseRelayoutString
+    parseRelayoutString,
+    parseRelayoutDict
   };
 });
