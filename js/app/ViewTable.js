@@ -1,5 +1,5 @@
 /**
-/**
+ /**
  * Nomenclature
  *   .*D3 : a variable that is a D3 selection
  *   .*DOM : a variable that is a DOM element
@@ -28,21 +28,21 @@
  *   extents over all atomic panes for a visually uniform visualization. More specifically, we want the global
  *   extent with respect to a particular 'yield'. Here 'yield' means the dimension that a FieldUsage (or BaseMap)
  *   yields when a query is processed.
- *   
+ *
  *   We attach extents to the FieldUsages of the queries under the attribute .extent.
- *   
+ *
  *   As FieldUsages of atomic queries are
  *   inherited from templated query, extents are also available at the atomic query.
- *   
+ *
  *   Note that extents may take different forms:
  *    - single value (discrete FU)
  *    - interval (continuous FU), or
  *    - set of single values (discrete FU, where the splitting functions splits not into single values but sets of values).
- *   
+ *
  *   For discrete {@link FieldUsage}s the extent is the set of unique values / tuple of values that occurred in the results for this particular {@link FieldUsage}. Tuple are not reduced to their individual values.
- *   
+ *
  *   For continuous {@link FieldUsage}s the extent is the minimum and maximum value that occurred in the results of this particular {@link FieldUsage}, wrapped as an 2-element array. Intervals are reduced to their bounding values.
- *   
+ *
  *   Note: you cannot use the .extent or .domain of any FIELD (not field usage) of any field usage that the vismel queries consists of. The reason is two fold:
  *     (1) they have a different semantic, namely .extent stores a 'meaningful' range of values where the density function is considerably larger than 0, and .domain stores the allowed domain of the dimension of that model.
  *     (2) these values are not updated as a result of query answering. That is because the queries all refer to Fields of some model instance. And that model instance is never actually changed. Instead new models are created on both the remote and local side.
@@ -52,15 +52,15 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization'],
-  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync) {
+define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
+  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
     logger.setLevel(Logger.DEBUG);
 
     function _invXY(xy) {
-      return (xy === 'x'?'y':'x');
+      return (xy === 'x' ? 'y' : 'x');
     }
 
     /**
@@ -98,7 +98,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      *
      * TODO: actually, this is more general: we need a formatter for each data type, and there is essentially these types: string, number, array of string, interval of numbers, and in the future: data, ...
      */
-    function splitExtentToString (split) {
+    function splitExtentToString(split) {
 
       if (split.extent === undefined)
         throw RangeError("you must set the extent of a split before calling this function.");
@@ -126,9 +126,9 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @param cfg
      * @returns {{}}
      */
-    function getRangeAndTickMarks(extent, xy, cfg={linePrct:0.8, maxPrct:1.2}) {
+    function getRangeAndTickMarks(extent, xy, cfg = {linePrct: 0.8, maxPrct: 1.2}) {
       let axis = {};
-      axis.range = [0, extent[1]*cfg.maxPrct];
+      axis.range = [0, extent[1] * cfg.maxPrct];
       if (config.plots.marginal.position[_invXY(xy)] === 'bottomleft') // reverse range if necessary reversed range
         axis.range = axis.range.reverse();
       axis.tickmode = "array"; // use exactly 2 ticks as I want:
@@ -173,8 +173,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       }
 
       if (p1dRT !== undefined) {
-          let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
-          mapper.marginalColor = MapperGen.marginalColor(pvismel);
+        let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
+        mapper.marginalColor = MapperGen.marginalColor(pvismel);
       }
 
       // TODO: we will have color for p2dRT in the future - maybe.
@@ -314,7 +314,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @param globalExtent A map of field usages to their global extents.
      * @return {Map} The modified global extent maps.
      */
-    function addResultTableExtents (rt, globalExtent) {
+    function addResultTableExtents(rt, globalExtent) {
       if (rt === undefined)
         return globalExtent;
       for (let [fu, idx] of rt.fu2idx.entries()) {
@@ -332,7 +332,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @param attr The attribute of each entry in the collection where to attach the globelExtent.
      * @return {Map} The modified global extent maps.
      */
-    function addCollectionExtents (coll, globalExtent, attr=undefined) {
+    function addCollectionExtents(coll, globalExtent, attr = undefined) {
       let size = coll.size;
       for (let rIdx = 0; rIdx < size.rows; ++rIdx)
         for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
@@ -345,7 +345,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             addResultTableExtents(rt[attr], globalExtent);
           }
         }
-          
+
       return globalExtent;
     }
 
@@ -358,14 +358,14 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         fu.extent = extent;
     }
 
-    function normalizeExtents (fuExtent) {
+    function normalizeExtents(fuExtent) {
       for (let [fu, extent] of fuExtent.entries())
         if (PQL.hasNumericYield(fu))
           fuExtent.set(fu, normalizeContinuousExtent(extent));
     }
 
 
-    function getGlobalExtent (aggrColl, dataColl, testDataColl, biColl, uniColl) {
+    function getGlobalExtent(aggrColl, dataColl, testDataColl, biColl, uniColl) {
       let globalExtent = new Map();
       for (let obj of [aggrColl, dataColl, testDataColl, biColl])
         addCollectionExtents(obj, globalExtent);
@@ -380,7 +380,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @param fuExtent
      * @returns {Map<any, any>}
      */
-    function getYieldExtent (fuExtent) {
+    function getYieldExtent(fuExtent) {
       let yieldExtent = new Map();
       for (let [fu, extent] of fuExtent.entries()) {
         let name = fu.yields;
@@ -397,7 +397,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @param yieldExtent
      * @returns {*}
      */
-    function updateWithYieldExtent (fuExtent, yieldExtent) {
+    function updateWithYieldExtent(fuExtent, yieldExtent) {
       for (let fu of fuExtent.keys())
         fuExtent.set(fu, yieldExtent.get(fu.yields))
       return fuExtent;
@@ -411,12 +411,12 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @param extent
      * @param pct percentage to add/substract. See above.
      */
-    function normalizeContinuousExtent(extent, pct=0.05) {
+    function normalizeContinuousExtent(extent, pct = 0.05) {
       if (extent[0] === extent[1]) { // if singular
         let singular = extent[0];
         if (singular === 0) {
           extent[0] = -1;
-          extent[1] =  1;
+          extent[1] = 1;
         }
         else {
           extent[0] = singular - pct * singular;
@@ -475,7 +475,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         for (let r = 0; r < repeat; ++r) {
 
           let majorId = id[xy]++,
-            majorOffset = offset[xy] + majorLength*r;
+            majorOffset = offset[xy] + majorLength * r;
 
           // new major axis (i.e. x axis for xy === x)
           axes[xy + 'axis' + majorId] = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
@@ -868,23 +868,27 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
       constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
 
-        this.aggrCollection = aggrColl;
-        this.dataCollection = dataColl;
-        this.testDataCollection = testDataColl;
+        this.aggrColl = aggrColl;
+        this.dataColl = dataColl;
+        this.uniColl = uniColl;
+        this.biColl = biColl;
+        this.testDataColl = testDataColl;
+        this.vismel = vismelColl.base;
+        this.vismelColl = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
         this.size = aggrColl.size;
         this.size.x = this.size.cols;
         this.size.y = this.size.rows;
         this.plotlyPane = pane;
-        this.vismels = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
+        this.legend = legend;
+        this.plotlyTraces = undefined;
+        this.plotlyLayout = undefined;
+        this.plotlyConfig = undefined;
+        this.axesSyncManager = new AxesSync.AxesSyncManager();
 
-        let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
+        let vismel = this.vismelColl.base;  // .base is the common original base query of all queries that resulted in all these collections
         vismel.used = vismel.usages();
 
-        this.axesSyncManager = new AxesSync.AxesSyncManager();
         let axesSyncManager = this.axesSyncManager;
-
-        /// one time on init:
-        /// todo: is this actually "redo on canvas size change" ?
 
         // create global extent (i.e. across all result collections as far as it makes sense!)
         // globalExtent is a Map that maps of FieldUsages to their extents
@@ -920,51 +924,58 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, queryConfig);
 
         // plot everything
-        Plotly.newPlot(pane, traces, layout, plConfig);
-
-        pane.on('plotly_afterplot', function(){
-          // redraw the legend
-          VisLegend(vismel, legend);
-        });
-
-        pane.on('plotly_relayout', (ev) => {
-          let update = AxesSync.parseRelayoutDict(ev);
-          layout = axesSyncManager.propagate(update, layout);
-          Plotly.react(pane, traces, layout, plConfig);
-        });
-
         this.plotlyTraces = traces;
         this.plotlyLayout = layout;
         this.plotlyConfig = plConfig;
-
+        this._plot();
       };
 
-      onPaneResize (ev) {
+      _plot() {
+        let that = this;        
+        Plotly.newPlot(this.plotlyPane, this.plotlyTraces, this.plotlyLayout, this.plotlyConfig);
+
+        this.plotlyPane.on('plotly_afterplot', function () {          
+          VisLegend(that.vismel, that.legend);
+        });
+
+        this.plotlyPane.on('plotly_relayout', (event) => {          
+
+          let updateEvent = utils.assignWithFilter({}, event, /^[xy]axis[0-9]+\./); // matches anything that begins with an axis id like xaxis9000
+          if (Object.keys(updateEvent).length) {
+            that.plotlyLayout = that.axesSyncManager.propagate(
+                AxesSync.parseRelayoutDict(updateEvent), 
+                that.plotlyLayout
+            );
+            Plotly.react(that.plotlyPane, that.plotlyTraces, that.plotlyLayout, that.plotlyConfig);
+          }          
+        });
+      }
+
+
+      onPaneResize(ev) {
         /**
          * Extracts relevant state of axes
          * @param layout
          */
-        function getAxesState (layout) {
+        function getAxesState(layout) {
           let axes = {};
-          for (let key of layout) {
-            let match = key.match(/^[xy]axis[0-9]+$/);
-            if (match) { // matches axis ids
-                axes[key] = utils.assignWithFilter({}, layout[key], ['range', 'autorange']);
-            }
-          }
+          for (let key of Object.keys(layout)) 
+            if (/^[xy]axis[0-9]+$/.test(key)) 
+              axes[key] = utils.assignWithFilter({}, layout[key], ['range', 'autorange']);
           return axes;
         }
+
         // 1. save state of aces
-        let savedAxesState = getAxesState(layout);
+        let savedAxesState = getAxesState(this.plotlyLayout);
 
         // 2. recreate layout (no need to recreate traces)
-        let layout = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
+        let newLayout = makeLayout(this.vismel, this.vismelColl, this.uniColl, this.biColl, this.plotlyPane, this.size, this.axesSyncManager)[1];
 
-        // 3. apply saved ranges to recreated layout
-        Object.assign(layout, savedAxesState);
+        // 3. apply saved state recreated layout
+        this.plotlyLayout = merge(newLayout, savedAxesState);
 
         // 4. run Plotly.react
-        Plotly.react(this.plotlyPane, this.plotlyTraces, this.plotlyLayout, this.plotlyConfig);
+        this._plot()
       };
     }
 

@@ -34,6 +34,10 @@ define(['cytoscape'], function (cytoscape) {
     // regex magic ...
     let m = str.match(/^([xy])axis([0-9]+)\.([a-z]+)(.*):\s*(.*)$/);
 
+    if (m == null) {
+      throw new ValueError("");
+    }
+
     return {
       id: m[1]+m[2],
       xy: m[1],
@@ -47,8 +51,11 @@ define(['cytoscape'], function (cytoscape) {
 
   function parseRelayoutDict(dict) {
     let lst = [];
-    for (let k of Object.keys(dict))
-      lst.push(parseRelayoutString(k + ": " + dict[k]))
+    for (let k of Object.keys(dict)) {
+      let res = parseRelayoutString(k + ": " + dict[k]);
+      if (res !== undefined)
+        lst.push(res);
+    }
     return lst;
   }
 

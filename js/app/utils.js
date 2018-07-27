@@ -176,9 +176,17 @@ define([], function() {
 
 
   function assignWithFilter (target, source, filter) {
-    for (let prop of filter)
-      if (prop in source)
-        target[prop] = source[prop];
+
+    if (_.isArray(filter)) {
+      for (let prop of filter)
+        if (prop in source)
+          target[prop] = source[prop];
+    }
+    else if (filter instanceof RegExp) {
+      for (let prop of Object.keys(source))
+        if (filter.test(prop))
+          target[prop] = source[prop];
+    }
     return target;
   }
 
