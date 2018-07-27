@@ -1,17 +1,17 @@
 /**
  * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  *
- * This file provides a singelton
+ *
  */
-define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './SplitSample', './Domain', './ViewSettings', './utils'], function (cytoscape, d3chromatic, d3f, d3color, plotlyShapes, ss, Domain, viewSettings, utils) {
+
+define(['cytoscape'], function (cytoscape) {
   "use strict";
 
-
   /**
-   * Gets strings like
+   * Converts strings like
    *  a) xaxis4000.range[0]: 2.578102064155785
    *  b) yaxis4004.autorange: true
-   * and returns a parsed dict like:
+   * into dicts like:
    *  a) {
    *       'id': x4000,
    *       'xy': x,
@@ -34,17 +34,14 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
     // regex magic ...
     let m = str.match(/^([xy])axis([0-9]+)\.([a-z]+)(.*):\s*(.*)$/);
 
-    let dict = {
-      //id: m[1]+m[2],
-      //xy: m[1],
-      //axis: m[1]+'axis'+m[2],
-      axis: m[1]+m[2],
+    return {
+      id: m[1]+m[2],
+      xy: m[1],
+      axis: m[1]+'axis'+m[2],
       attr: m[3],
       value: (m[3] === 'range' ? +m[5] : m[5].toLocaleLowerCase() === 'true'),
       idx: (m[3] === 'range'?m[4][1]:undefined),
     };
-
-    return dict;
   }
 
 
@@ -105,13 +102,11 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
 
       // add link if not there already
       if (deps.edges(`#${axis1} <-> #${axis2}`).empty()) {
-        deps.add(_makeEdge(axis1, axis2))
+        deps.add(_makeEdge(axis1, axis2));
         console.log(`#${axis1} <-> #${axis2}`);
       }
       return this;
     }
-
-    //SEARCH FOR "TODO: disabled in favor of global axis linking"
 
     /**
      * Propagate the list of updates to all dependent axis and return the updated layout.
@@ -129,27 +124,32 @@ define(['cytoscape', 'd3-scale-chromatic','d3-format', 'd3-color', './plotly-sha
         let id = node.id();
         console.log(id);
         let axis = layout[`${id[0]}axis${id.slice(1)}`];
-        if (u.attr === 'autorange')
+        if (u.attr === 'autorange') {
           axis.autorange = u.value;
-        else if (u.attr === 'range')
+          if (!axis.autorange)
+            delete axis.range;
+        }
+        else if (u.attr === 'range') {
+          axis.autorange = false;
+          if (!axis.range)
+            axis.range = [undefined, undefined];
           axis.range[u.idx] = u.value;
-        else
+        } else
           throw ValueError(`invalid update: ${u}`);
       }
 
       for (u of update) {
-        deps.elements().bfs(deps.nodes(`#${u.axis}`), applyUpdate);
+        deps.elements().bfs(deps.nodes(`#${u.id}`), applyUpdate);
       }
 
       return layout;
     }
   }
 
-
-
   return {
     AxesSyncManager,
     parseRelayoutString,
     parseRelayoutDict
   };
+
 });

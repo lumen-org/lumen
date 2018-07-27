@@ -1049,6 +1049,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
             //   color: c.plots.main.text.color,
             //   size: c.plots.main.text.size*1.25,
             // },
+            autorange: true,
             domain: [offset, offset + length],
             anchor: 'free',
             position: position,
@@ -1114,6 +1115,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         showgrid: false,
         ticklen: 5,
         type: 'category',
+        autorange: false,
         range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
         tickvals: _.range(ticks.length),
         ticktext: ticks,

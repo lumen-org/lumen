@@ -764,12 +764,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             if (used[xy]) {
               let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
               // store the mapping of yield-to-axis for later reuse
-              //PL axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]); // TODO: disabled in favor of global axis linking
-//               console.log(axis[xy]);
-//               console.log(id[xy]);
-//               console.log(getSetYield2Axis(xyYield, xy + id[xy]));
-              //axis[xy].scaleanchor = getSetYield2Axis(xyYield, xy + id[xy]);
-              axesSyncManager.linkAdd(xy+id[xy], getSetYield2Axis(xyYield, xy+id[xy]));
+              let refAxis = getSetYield2Axis(xyYield, xy+id[xy]);
+              axesSyncManager.linkAdd(xy+id[xy], refAxis);
 
               // tick labels and title only for the first axis
               if (idx[yx] === 0) {
@@ -807,7 +803,9 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
                 axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
               axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
-              //axis.showticklabels = false;
+
+              //TODO find out when to show them and when not
+              // axis.showticklabels = false;
               // never show these labels - they are not helpful, because the absolute value does not add valuable information
               if (xy === 'x')
                 axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
@@ -886,29 +884,16 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       };
 
       // plot everything
-      Plotly.purge(pane);
       Plotly.newPlot(pane, traces, layout, plConfig);
       // redraw the legend
       VisLegend(vismel, legend);
 
       pane.on('plotly_relayout', (ev) => {
-          console.log(ev);
           let update = AxesSync.parseRelayoutDict(ev);
-          console.log(update);
-          console.log(layout);
           layout = axesSyncManager.propagate(update, layout);
-          console.log(layout);
-          //Plotly.purge(pane); // WHY is it not adjusted! it is not set in layout...? // this removes the listener because it kills the div?
-
-          window.setTimeout( () => {
-              Plotly.newPlot(pane, traces, layout, plConfig).then( () => console.log("plotted!"));
-              VisLegend(vismel, legend)
-              }, 2000);
-          //Plotly.react(pane, traces, layout, plConfig);
-          
-          // redraw the legend
-          ;
-        });      
+          Plotly.react(pane, traces, layout, plConfig);
+          VisLegend(vismel, legend);
+        });
     };
 
     return ViewTable;
