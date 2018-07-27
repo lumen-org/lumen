@@ -95,16 +95,12 @@ define(['cytoscape'], function (cytoscape) {
       let deps = this.dependencies;
       // add axes as nodes if not there already
       for (let axis of [axis1, axis2])
-        if (deps.nodes(`#${axis}`).empty()) {
+        if (deps.nodes(`#${axis}`).empty()) 
             deps.add(_makeNode(axis));
-            console.log(`#${axis}`);
-        }
 
       // add link if not there already
-      if (deps.edges(`#${axis1} <-> #${axis2}`).empty()) {
+      if (deps.edges(`#${axis1} <-> #${axis2}`).empty())
         deps.add(_makeEdge(axis1, axis2));
-        console.log(`#${axis1} <-> #${axis2}`);
-      }
       return this;
     }
 
@@ -122,7 +118,6 @@ define(['cytoscape'], function (cytoscape) {
       function applyUpdate(node) {
         // layout xaxis has format [xy]axis[0-9]+, but ours is [xy][0-9]+ 
         let id = node.id();
-        console.log(id);
         let axis = layout[`${id[0]}axis${id.slice(1)}`];
         if (u.attr === 'autorange') {
           axis.autorange = u.value;

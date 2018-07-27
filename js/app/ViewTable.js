@@ -885,14 +885,16 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
       // plot everything
       Plotly.newPlot(pane, traces, layout, plConfig);
-      // redraw the legend
-      VisLegend(vismel, legend);
+
+      pane.on('plotly_afterplot', function(){
+        // redraw the legend
+        VisLegend(vismel, legend);
+      });
 
       pane.on('plotly_relayout', (ev) => {
           let update = AxesSync.parseRelayoutDict(ev);
           layout = axesSyncManager.propagate(update, layout);
           Plotly.react(pane, traces, layout, plConfig);
-          VisLegend(vismel, legend);
         });
     };
 
