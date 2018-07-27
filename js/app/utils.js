@@ -174,6 +174,14 @@ define([], function() {
     return ("0" + d.getDate()).slice(-2) + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear();
   }
 
+
+  function assignWithFilter (target, source, filter) {
+    for (let prop of filter)
+      if (prop in source)
+        target[prop] = source[prop];
+    return target;
+  }
+
   return {
     selectValue,
     listify,
@@ -185,5 +193,6 @@ define([], function() {
     colorstring2hex,
     uuid,
     todayString,
+    assignWithFilter,
   };
 });

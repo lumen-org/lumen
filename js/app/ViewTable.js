@@ -613,13 +613,12 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       return marginalAxisId;
     }
 
-    function makeLayout () {
 
-      CONTINUE_HERE_EXTRACT_VARs
-        /*
-   * Shortcut to the layout attributes of a vismel query table.
-   * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
-   */
+    function makeLayout(vismel, vismelColl, uniColl, biColl, pane, size, axesSyncManager) {
+      /*
+       * Shortcut to the layout attributes of a vismel query table.
+       * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
+       */
       let getFieldUsage = (idx, xy, vismelQT) => {
         return xy === 'x' ? vismelQT.at[0][idx].layout.cols[0] : vismelQT.at[idx][0].layout.rows[0];
       };
@@ -743,9 +742,9 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
        * * draw axis as required
        * * get trace for atomic plot of each cell
        */
-      this.at = new Array(size.rows);
+      let at = new Array(size.rows);
       for (idx.y = 0; idx.y < size.y; ++idx.y) {
-        this.at[idx.y] = new Array(size.x);
+        at[idx.y] = new Array(size.x);
         marginalAxesIds.push([]);
         catQuantAxesIds.push([]);
 
@@ -779,8 +778,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             if (used[xy]) {
               let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
               // store the mapping of yield-to-axis for later reuse
-              let refAxis = getSetYield2Axis(xyYield, xy+id[xy]);
-              axesSyncManager.linkAdd(xy+id[xy], refAxis);
+              let refAxis = getSetYield2Axis(xyYield, xy + id[xy]);
+              axesSyncManager.linkAdd(xy + id[xy], refAxis);
 
               // tick labels and title only for the first axis
               if (idx[yx] === 0) {
@@ -805,7 +804,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
           }
 
           // make bounding box - iff it is not just a marginal plot
-          if (used.x && used.y ) {
+          if (used.x && used.y) {
             shapes.push(config.annotationGenerator.bounding_rect(axis.x, axis.y));
           }
 
@@ -846,6 +845,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         paper_bgcolor: "rgba(255,255,255,0.9)",
         plot_bgcolor: 'rgba(255,255,255,0)',
       });
+
+      return [at, layout, {mainAxesIds, marginalAxesIds, catQuantAxesIds}];
     }
 
     /**
@@ -864,6 +865,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      * @alias module:ViewTable
      */
     class ViewTable {
+
       constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
 
         this.aggrCollection = aggrColl;
@@ -878,7 +880,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
         vismel.used = vismel.usages();
 
-        let axesSyncManager = new AxesSync.AxesSyncManager();
+        this.axesSyncManager = new AxesSync.AxesSyncManager();
+        let axesSyncManager = this.axesSyncManager;
 
         /// one time on init:
         /// todo: is this actually "redo on canvas size change" ?
@@ -898,8 +901,6 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         // TODO: build mappers here!!
         // build mappers for visual channels: fill, size, shape, (but not positional)
 
-
-
         // and global config options.
         // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
         let plConfig = {
@@ -914,10 +915,9 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
           // modeBarButtonsToAdd: [],
         };
 
-        let layout = makeLayout(size);
+        let [at, layout, axes] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
 
-        // separate layout creating and trace creation
-        let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, queryConfig);
+        let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, queryConfig);
 
         // plot everything
         Plotly.newPlot(pane, traces, layout, plConfig);
@@ -940,13 +940,29 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       };
 
       onPaneResize (ev) {
-        // TODO
-        // would like to keep the ranges of the axis, selected points, ...
-        // 1. safe current axes ranges
+        /**
+         * Extracts relevant state of axes
+         * @param layout
+         */
+        function getAxesState (layout) {
+          let axes = {};
+          for (let key of layout) {
+            let match = key.match(/^[xy]axis[0-9]+$/);
+            if (match) { // matches axis ids
+                axes[key] = utils.assignWithFilter({}, layout[key], ['range', 'autorange']);
+            }
+          }
+          return axes;
+        }
+        // 1. save state of aces
+        let savedAxesState = getAxesState(layout);
 
         // 2. recreate layout (no need to recreate traces)
-        layout =
+        let layout = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
+
         // 3. apply saved ranges to recreated layout
+        Object.assign(layout, savedAxesState);
+
         // 4. run Plotly.react
         Plotly.react(this.plotlyPane, this.plotlyTraces, this.plotlyLayout, this.plotlyConfig);
       };
