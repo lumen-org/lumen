@@ -493,7 +493,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       return [axes, annotations];
     }
 
-    function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxes, idx, catQuantAxisIds, layout) {
+    function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout) {
       // build up helper variables needed later and to check if we are in the quant-categorical case
       let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
         catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
@@ -520,7 +520,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
           let o = mainOffset[catXY] + i * d + d / r,
             id_ = idgen.bicatquant[catXY]++,
             axis = config.axisGenerator.marginal(o, d * (r - 1) / r, mainOffset[quantXY], catXY);
-          axis.anchor = mainAxes[quantXY][idx[quantXY]];
+          axis.anchor = mainAxesIds[quantXY][idx[quantXY]];
 
           // set axis labels and tick marks
           Object.assign(axis, getRangeAndTickMarks(pExtent, catXY));
@@ -549,6 +549,23 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
       }
     }
 
+    function makeTraces(size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, queryConfig) {
+      let traces = [];
+      for (let y of _.range(size.y)) {
+        for (let x of _.range(size.x)) {
+
+          // create traces for one atomic plot
+          let atomicTraces = atomicPlotlyTraces(aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x], {
+            x: mainAxesIds.x[x],
+            y: mainAxesIds.y[y],
+          }, marginalAxesIds[y][x], catQuantAxesIds[y][x], queryConfig);
+
+          traces.push(...atomicTraces);
+        }
+      }
+      return traces;
+    }
+
     /**
      * Using annotations to title templating axis:
      *
@@ -561,59 +578,48 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      */
 
 
-    /**
-     * A ViewTable takes data collections and a query collection and turns it into an actual visual representation.
-     * This visualization is attached to the DOM within the given pane <div> object.
-     *
-     * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
-     *
-     * @param pane A <div> element. This must already have a width and height.
-     * @param aggrColl The {@link Collection} of predictions to visualize.
-     * @param dataColl The {@link Collection} of training data to visualize.
-     * @param testDataColl The {@link Collection} of test data to visualize.
-     * @param uniColl The {@link Collection} of marignal probability values to visualize.
-     * @param biColl The {@link Collection} of probability values to visualize.
-     * @constructor
-     * @alias module:ViewTable
-     */
-    var ViewTable;
-    ViewTable = function (pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
+    function makeMarginalAxes(marginal, paneOffset, axisLength, templAxisSize, mainAxesIds, idx, uniColl, idgen, layout, size) {
+      let marginalAxisId = {};
+      for (let [xy, yx] of [['x', 'y'], ['y', 'x']]) {
+        if (marginal[xy]) { // marginal activate?
 
-      this.aggrCollection = aggrColl;
-      this.dataCollection = dataColl;
-      this.testDataCollection = testDataColl;
-      this.size = aggrColl.size;
-      this.size.x = this.size.cols;
-      this.size.y = this.size.rows;
-      this.vismels = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
+          let axisOffset = paneOffset[xy] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[xy]),
+            axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
 
-      let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
-      vismel.used = vismel.usages();
+          axis.anchor = mainAxesIds[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
 
-      let axesSyncManager = new AxesSync.AxesSyncManager();
+          //TODO find out when to show them and when not
+          // axis.showticklabels = false;
+          // never show these labels - they are not helpful, because the absolute value does not add valuable information
+          if (xy === 'x')
+            axis.showticklabels = idx[yx] === size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
+          else
+            axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
 
-      /// one time on init:
-      /// todo: is this actually "redo on canvas size change" ?
+          if (axis.side === 'right')
+            axis.side = 'left';
 
-      // create global extent (i.e. across all result collections as far as it makes sense!)
-      // globalExtent is a Map that maps of FieldUsages to their extents
-      let globalExtent = getGlobalExtent(aggrColl, dataColl, testDataColl, biColl, uniColl);
-      // generate yield-based extents from it
-      let yieldExtent = getYieldExtent(globalExtent);
-      globalExtent = updateWithYieldExtent(globalExtent, yieldExtent);
-      // normalize extents
-      normalizeExtents(globalExtent);
-      // now finally attach to the field usages, i.e.:
-      // each FieldUsage gets a .extent attribute that has its global extent (wrt its yield)!
-      attachToFieldUsages(globalExtent);
+          // [xy] is x or y axis; idx[xy] is index in view table
+          let rc = (xy === 'x' ? 'cols' : 'rows');
+          let uniVismel = uniColl[idx.y][idx.x][yx].vismel,
+            xyFu = uniVismel.layout[rc][0];
+          Object.assign(axis, getRangeAndTickMarks(xyFu.extent, xy));
 
-      // TODO: build mappers here!!
-      // build mappers for visual channels: fill, size, shape, (but not positional)
+          marginalAxisId[xy] = idgen.marginal[xy]++;
+          layout[xy + "axis" + marginalAxisId[xy]] = axis;
+          marginalAxisId[xy] = xy + marginalAxisId[xy];
+        }
+      }
+      return marginalAxisId;
+    }
 
-      /*
-       * Shortcut to the layout attributes of a vismel query table.
-       * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
-       */
+    function makeLayout () {
+
+      CONTINUE_HERE_EXTRACT_VARs
+        /*
+   * Shortcut to the layout attributes of a vismel query table.
+   * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
+   */
       let getFieldUsage = (idx, xy, vismelQT) => {
         return xy === 'x' ? vismelQT.at[0][idx].layout.cols[0] : vismelQT.at[idx][0].layout.rows[0];
       };
@@ -665,8 +671,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
       // width and heights of a single view cell in normalized coordinates
       let cellSize = {
-        x: (1 - templAxisSize.x) / this.size.cols,
-        y: (1 - templAxisSize.y) / this.size.rows,
+        x: (1 - templAxisSize.x) / size.cols,
+        y: (1 - templAxisSize.y) / size.rows,
       };
 
       // part of pane width (height) used for main x (y) axis in an atomic plot
@@ -707,10 +713,15 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         marginal: {x: 6000, y: 7000},
       };
 
-      // init layout and traces of plotly plotting specification
-      let layout = {}, traces = [], shapes = [];
-      // array of main axis along view cell of view table, for both, x and y axis. The values are axis ids.
-      let mainAxes = {x: [], y: []};
+      // init layout of plotly plotting specification
+      let layout = {}, shapes = [];
+      // array of main axis along view cell of view table, for both, x and y axis. The values are axis ids. (e.g. 'x6000')
+      let mainAxesIds = {x: [], y: []};
+      // array of marginal axis for each cell of view table, for both x and y axis. The values are axis ids.
+      let marginalAxesIds = []; // each will have property .x and .y
+      // array of categorical quantitative axes ids for each cell of view table, for both x and y axis. The values are axis id
+      let catQuantAxesIds = [];
+
       // custom titles for axis
       let axisTitles = [];
       // indexing over x and y
@@ -732,23 +743,27 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
        * * draw axis as required
        * * get trace for atomic plot of each cell
        */
-      this.at = new Array(this.size.rows);
-      for (idx.y = 0; idx.y < this.size.y; ++idx.y) {
-        this.at[idx.y] = new Array(this.size.x);
+      this.at = new Array(size.rows);
+      for (idx.y = 0; idx.y < size.y; ++idx.y) {
+        this.at[idx.y] = new Array(size.x);
+        marginalAxesIds.push([]);
+        catQuantAxesIds.push([]);
 
-        // ids for x axis and y axis - for looping
+        // current ids for x axis and y axis - for looping
         let id = {x: undefined, y: undefined};
-        // x axis and y axis - for looping
+        // current x axis and y axis - for looping
         let axis = {x: undefined, y: undefined};
-        // offset to origin of a view cell
+        // current offset to origin of a view cell
         let paneOffset = {x: undefined, y: undefined};
-        // offset of main plot relative to view cell origin
+        // current offset of main plot relative to view cell origin
         let mainOffset = {x: undefined, y: undefined};
 
         paneOffset.y = templAxisSize.y + cellSize.y * idx.y;
         mainOffset.y = paneOffset.y + (config.plots.marginal.position.x === 'bottomleft' ? axisLength.marginal.y : 0);
 
-        for (idx.x = 0; idx.x < this.size.x; ++idx.x) {
+        for (idx.x = 0; idx.x < size.x; ++idx.x) {
+          marginalAxesIds[idx.y].push([]);
+          catQuantAxesIds[idx.y].push([]);
           paneOffset.x = templAxisSize.x + cellSize.x * idx.x;
           mainOffset.x = paneOffset.x + (config.plots.marginal.position.y === 'bottomleft' ? axisLength.marginal.x : 0);
 
@@ -782,10 +797,10 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
             }
 
             // if (!used[xy] || idx[yx] === 0) {
-              // add to plotly layout
-              layout[xy + "axis" + id[xy]] = axis[xy];
-              id[xy] = xy + id[xy];
-              mainAxes[xy].push(id[xy]);
+            // add to plotly layout
+            layout[xy + "axis" + id[xy]] = axis[xy];
+            id[xy] = xy + id[xy];
+            mainAxesIds[xy].push(id[xy]);
             // }
           }
 
@@ -795,51 +810,14 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
           }
 
           // create marginal axes as needed
-          let marginalAxisId = {};
-          for (let [xy, yx] of [['x', 'y'], ['y', 'x']]) {
-            if (marginal[xy]) { // marginal activate?
-
-              let axisOffset = paneOffset[xy] + (config.plots.marginal.position[yx] === 'bottomleft' ? 0 : axisLength.main[xy]),
-                axis = config.axisGenerator.marginal(axisOffset, axisLength.marginal[xy], templAxisSize[yx], xy);
-
-              axis.anchor = mainAxes[yx][idx[yx]];  // anchor marginal axis to opposite letter main axis of the same atomic plot. This will position them correctly.
-
-              //TODO find out when to show them and when not
-              // axis.showticklabels = false;
-              // never show these labels - they are not helpful, because the absolute value does not add valuable information
-              if (xy === 'x')
-                axis.showticklabels = idx[yx] === this.size[yx] - 1; // disables tick labels for all but one of the marginal axis of one row / col
-              else
-                axis.showticklabels = idx[yx] === 0; // disables tick labels for all but one of the marginal
-
-              if (axis.side === 'right')
-                axis.side = 'left';
-
-              // [xy] is x or y axis; idx[xy] is index in view table
-              let rc = (xy === 'x' ? 'cols' : 'rows');
-              let uniVismel = uniColl[idx.y][idx.x][yx].vismel,
-                xyFu = uniVismel.layout[rc][0];
-              Object.assign(axis, getRangeAndTickMarks(xyFu.extent, xy));
-
-              marginalAxisId[xy] = idgen.marginal[xy]++;
-              layout[xy + "axis" + marginalAxisId[xy]] = axis;
-              marginalAxisId[xy] = xy + marginalAxisId[xy];
-            }
-          }
+          marginalAxesIds[idx.y][idx.x] = makeMarginalAxes(marginal, paneOffset, axisLength, templAxisSize, mainAxesIds, idx, uniColl, idgen, layout, size);
 
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
           if (used.x && used.y && biColl[0][0] !== undefined)
-            makeCategoricalQuantitativeAxis(biColl[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxes, idx, catQuantAxisIds, layout);
-
-          // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[idx.y][idx.x], dataColl[idx.y][idx.x], testDataColl[idx.y][idx.x], uniColl[idx.y][idx.x], biColl[idx.y][idx.x], vismelColl.at[idx.y][idx.x], {
-            x: id.x,
-            y: id.y
-          }, marginalAxisId, catQuantAxisIds, queryConfig);
-
-          traces.push(...atomicTraces);
+            makeCategoricalQuantitativeAxis(biColl[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout);
+          catQuantAxesIds[idx.y][idx.x] = catQuantAxisIds;
         }
       }
 
@@ -868,35 +846,111 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
         paper_bgcolor: "rgba(255,255,255,0.9)",
         plot_bgcolor: 'rgba(255,255,255,0)',
       });
+    }
 
-      // and global config options.
-      // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
-      let plConfig = {
-        edits: {
-          annotationPosition: true,
-          colorbarPosition: true,
-          legendPosition: true,
-        },
-        scrollZoom: true,
-        displaylogo: false,
-        // modeBarButtonsToRemove: [],
-        // modeBarButtonsToAdd: [],
-      };
+    /**
+     * A ViewTable takes data collections and a query collection and turns it into an actual visual representation.
+     * This visualization is attached to the DOM within the given pane <div> object.
+     *
+     * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
+     *
+     * @param pane A <div> element. This must already have a width and height.
+     * @param aggrColl The {@link Collection} of predictions to visualize.
+     * @param dataColl The {@link Collection} of training data to visualize.
+     * @param testDataColl The {@link Collection} of test data to visualize.
+     * @param uniColl The {@link Collection} of marignal probability values to visualize.
+     * @param biColl The {@link Collection} of probability values to visualize.
+     * @constructor
+     * @alias module:ViewTable
+     */
+    class ViewTable {
+      constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
 
-      // plot everything
-      Plotly.newPlot(pane, traces, layout, plConfig);
+        this.aggrCollection = aggrColl;
+        this.dataCollection = dataColl;
+        this.testDataCollection = testDataColl;
+        this.size = aggrColl.size;
+        this.size.x = this.size.cols;
+        this.size.y = this.size.rows;
+        this.plotlyPane = pane;
+        this.vismels = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
 
-      pane.on('plotly_afterplot', function(){
-        // redraw the legend
-        VisLegend(vismel, legend);
-      });
+        let vismel = this.vismels.base;  // .base is the common original base query of all queries that resulted in all these collections
+        vismel.used = vismel.usages();
 
-      pane.on('plotly_relayout', (ev) => {
+        let axesSyncManager = new AxesSync.AxesSyncManager();
+
+        /// one time on init:
+        /// todo: is this actually "redo on canvas size change" ?
+
+        // create global extent (i.e. across all result collections as far as it makes sense!)
+        // globalExtent is a Map that maps of FieldUsages to their extents
+        let globalExtent = getGlobalExtent(aggrColl, dataColl, testDataColl, biColl, uniColl);
+        // generate yield-based extents from it
+        let yieldExtent = getYieldExtent(globalExtent);
+        globalExtent = updateWithYieldExtent(globalExtent, yieldExtent);
+        // normalize extents
+        normalizeExtents(globalExtent);
+        // now finally attach to the field usages, i.e.:
+        // each FieldUsage gets a .extent attribute that has its global extent (wrt its yield)!
+        attachToFieldUsages(globalExtent);
+
+        // TODO: build mappers here!!
+        // build mappers for visual channels: fill, size, shape, (but not positional)
+
+
+
+        // and global config options.
+        // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
+        let plConfig = {
+          edits: {
+            annotationPosition: true,
+            colorbarPosition: true,
+            legendPosition: true,
+          },
+          scrollZoom: true,
+          displaylogo: false,
+          // modeBarButtonsToRemove: [],
+          // modeBarButtonsToAdd: [],
+        };
+
+        let layout = makeLayout(size);
+
+        // separate layout creating and trace creation
+        let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, queryConfig);
+
+        // plot everything
+        Plotly.newPlot(pane, traces, layout, plConfig);
+
+        pane.on('plotly_afterplot', function(){
+          // redraw the legend
+          VisLegend(vismel, legend);
+        });
+
+        pane.on('plotly_relayout', (ev) => {
           let update = AxesSync.parseRelayoutDict(ev);
           layout = axesSyncManager.propagate(update, layout);
           Plotly.react(pane, traces, layout, plConfig);
         });
-    };
+
+        this.plotlyTraces = traces;
+        this.plotlyLayout = layout;
+        this.plotlyConfig = plConfig;
+
+      };
+
+      onPaneResize (ev) {
+        // TODO
+        // would like to keep the ranges of the axis, selected points, ...
+        // 1. safe current axes ranges
+
+        // 2. recreate layout (no need to recreate traces)
+        layout =
+        // 3. apply saved ranges to recreated layout
+        // 4. run Plotly.react
+        Plotly.react(this.plotlyPane, this.plotlyTraces, this.plotlyLayout, this.plotlyConfig);
+      };
+    }
 
     return ViewTable;
   });

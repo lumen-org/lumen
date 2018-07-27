@@ -409,8 +409,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             stop: (event, ui) => {
               let c = context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
+              c.viewTable.onPaneResize(event);
               // redraw
-              c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
+              // c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
         $vis.draggable(
