@@ -1041,6 +1041,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
             showgrid: false, // !!!
             gridcolor: c.plots.main.grid.color,
             ticklen: 5,
+            ticks: 'outside',
             tickfont: {
               color: c.plots.main.text.color,
               size: c.plots.main.text.size,

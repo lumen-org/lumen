@@ -781,7 +781,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               let refAxis = getSetYield2Axis(xyYield, xy + id[xy]);
               axesSyncManager.linkAdd(xy + id[xy], refAxis);
 
-              // tick labels and title only for the first axis
+              // tick labels and title only for the first axis (tickmarks are always enabled anyway)
               if (idx[yx] === 0) {
                 let axisTitleAnno = config.annotationGenerator.axis_title(
                   getFieldUsage(idx[xy], xy, vismelColl).yields, xy,
@@ -795,12 +795,12 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
               }
             }
 
-            // if (!used[xy] || idx[yx] === 0) {
             // add to plotly layout
             layout[xy + "axis" + id[xy]] = axis[xy];
             id[xy] = xy + id[xy];
-            mainAxesIds[xy].push(id[xy]);
-            // }
+            if (!used[xy] || idx[yx] === 0) {
+                mainAxesIds[xy].push(id[xy]);
+            }
           }
 
           // make bounding box - iff it is not just a marginal plot
