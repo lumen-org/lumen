@@ -113,7 +113,7 @@ img {
   vertical-align: middle; }
 
 textarea {
-  height: auto;
+  /* height: auto; */
   min-height: 50px;
   }
 
@@ -1561,7 +1561,7 @@ textarea[rows] {
 
 /* Not allow resize out of parent */
 textarea {
-  max-width: 100%;
+  /* max-width: 100%; */
   }
 
 /* Add height value for select elements to match text input height */
@@ -1604,11 +1604,12 @@ select {
 
 input[type="checkbox"] + label,
 input[type="radio"] + label {
-  display: inline-block;
-  margin-left: 0.5rem;
-  margin-right: 1rem;
-  margin-bottom: 0;
-  vertical-align: baseline; }
+  /* display: inline-block; */
+  /* margin-left: 0.5rem; */
+  /* margin-right: 1rem; */
+  /* margin-bottom: 0; */
+  vertical-align: baseline;
+  }
 
 /* Normalize file input width */
 input[type="file"] {

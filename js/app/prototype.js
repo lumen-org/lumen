@@ -993,8 +993,50 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class SurveyWidget {
 
+      static
+      _makeLikertScaleWidget (labelLow, labelHigh, stepNb, question, stepLabels=[], stepValues=[]) {
+
+        // generate labels and values, if not specified
+        if (stepLabels.length === 0)
+          if (stepValues.length === 0) {
+            stepLabels = _.range(1, 1+stepNb);
+            stepValues = _.range(1, 1+stepNb);
+          } else
+            stepLabels = stepValues;
+        else if (stepValues.length === 0)
+          stepValues = stepLabels;
+
+        // create form with radio buttons as options and a legend below
+        let $form = $('<form class="plLikert_optionsContainer"></form>');
+        for (let i=0; i<stepNb; ++i) {
+          // <input type="radio" value="${stepValues[i]}" name="plLikert" class="plLikert_option" ${(i===0?"checked":"")}>
+          $form.append(
+            `<div>                 
+                <input type="radio" value="${stepValues[i]}" name="plLikert" class="plLikert_option" ${(i===0?"":"")}>
+                <label>${stepLabels[i]}</label>
+             </div>`)
+        }
+        let $legend = $(
+          `<div class="plLikert_scaleDescriptionContainer">
+            <div class='plLikert_description'> ${labelLow} </div>
+            <div class='plLikert_description'> ${labelHigh} </div>
+           </div>`);
+
+        let $visual = $('<div class="plLikert_widgetContainer"></div>')
+          .append($(`<div class="pl-survey-title">${question}</div>`))
+          .append($form)
+          .append($legend);
+
+        // define function to retrieve current value
+        $visual.value = () => $('input[name=plLikert]:checked', $visual).val();
+
+        return $visual;
+      }
+
       /**
        * Creates and returns a widget that provides a input field for subject id, a text field to describe gained insight and a button to commit insight.
+       *
+       * callback is called when the user id changes.
        */
       static
       _makeUserIdWidget (callback) {
@@ -1013,18 +1055,31 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           .append($userIdInput);
       }
 
+
       static
       _makeInsightWidget (callback) {
         let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
+        let $likertScale = SurveyWidget._makeLikertScaleWidget('not confident at all', 'extremely confident', 7, 'How confident are you that your insight is correct?');
         let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report & clear</div>')
           .click( () => {
-            callback($insightTextarea.val());
-            $insightTextarea.val("");
+            let confidence = $likertScale.value();
+            if (confidence === undefined) {
+              infoBox.message('please specify how confident you are!');
+            } else {
+              callback($insightTextarea.val(), confidence);
+              // reset state
+              $insightTextarea.val("");
+              $('input[type="radio"]', $likertScale).each(
+                (i, elem) => {elem.checked = false}
+              );
+            }
           });
-        return $('<div></div>')
-          .append('<div class="pl-survey-title">Report Insight</div>')
-          .append($insightTextarea)
-          .append($commitButton);
+
+        return $('<div class="pl-insight-report-container"></div>').append(
+          '<div class="pl-survey-title">Report Insight</div>',
+          $insightTextarea,
+          $likertScale,
+          $commitButton);
       }
 
       /**
@@ -1034,7 +1089,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       constructor (onIdChange, onInsightReport) {
         this._$title = $('<div class="pl-column-title">User Study</div>');
         this._$content = $('<div class="pl-column-content"></div>')
-          .append([SurveyWidget._makeUserIdWidget(onIdChange), SurveyWidget._makeInsightWidget(onInsightReport)]);
+          .append([SurveyWidget._makeUserIdWidget(onIdChange),
+            SurveyWidget._makeInsightWidget(onInsightReport)]);
+
 
         this.$visual = $('<div id="pl-survey-container"></div>')
           .append(this._$title)
@@ -1230,9 +1287,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           ActivityLogger.log({'newUserId': newID}, 'userid.change');
           ActivityLogger.additionalFixedContent({'userId': newID});
         },
-        (report, context) => {
+        (report, confidence) => {
           infoBox.message("reported insight: " + report.toString(), "info");
-          ActivityLogger.log({'report': report}, 'insight');
+          ActivityLogger.log({'report': report, 'confidence': confidence}, 'insight');
         }
       );
       surveyWidget.$visual.appendTo($('#pl-survey-widget'));

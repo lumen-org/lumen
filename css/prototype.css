@@ -305,7 +305,7 @@ main {
     margin-bottom: 0.2rem;
     margin-right:0.5rem;
     font-size: small;
-    /* width:100%; */
+    width: 90%;
     /* right: 0px; */
 }
 
@@ -315,9 +315,11 @@ textarea.pl-survey-content {
 }
 
 .pl-toolbar-button.pl-survey-content {
-    width: 72%;
     text-align: center;
-    padding: 0
+    padding: 0;
+    margin-top: 1em;
+    font-style: italic;
+    font-weight: bold;
 }
 
 .pl-column-separator {
@@ -408,13 +410,12 @@ textarea.pl-survey-content {
 .axis line {
     fill: none;
     stroke: grey;
-    stroke: grey;
     shape-rendering: crispEdges;
     stroke-opacity: 0.3;
 }
 
 .axis.numeric line {
-    stroke-linecap: "round";
+    stroke-linecap: round;
     stroke-dasharray: 2,6;
 }
 
@@ -451,4 +452,42 @@ textarea.pl-survey-content {
 
 .pl-resizing {
     border: solid 2px rgba(56,172,221,0.8);
+}
+
+.plLikert_widgetContainer {
+    display: flex;
+    flex-direction: column;
+    /* width: 500px; */
+}
+
+.plLikert_optionsContainer {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.plLikert_optionsContainer input[type="radio"] + label {
+    margin: 0;
+}
+
+.plLikert_optionsContainer input[type="radio"]{
+    margin: 0;
+}
+
+.plLikert_scaleDescriptionContainer {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.plLikert_description {
+    margin-left: .2em;
+    margin-right: .2em;
+    font-size: x-small;
+}
+
+.plLikert_option {
+    margin-left: .1em;
+    margin-right: .3em;
+    font-size: small;
 }
