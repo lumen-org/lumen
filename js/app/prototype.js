@@ -170,7 +170,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.contour.active))
               .then(res => c.biDensityRT = res)
 
-              .then(() => c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config))
+              .then(() => {
+                  c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
+                  c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
+              })
 
               .then(() => {
                 // for development               
@@ -410,12 +413,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               let c = context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
               c.viewTable.onPaneResize(event);
-              // redraw
-              // c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
 
-        //$vis.on()
         $vis.draggable(
           { stop:
               (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move'),
@@ -973,6 +973,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
                 // register the widget with the context
                 this._registerContext(widget, context);
+
+                // register to events of widget for logging user actions
+                widget.on('Node.DragMoved', node => ActivityLogger.log({'context': context.getNameAndUUID(), 'dimension':node}, 'GraphWidget.Node.DragMoved'));
+                widget.on('Node.Selected', node => ActivityLogger.log({'context': context.getNameAndUUID(), 'dimension':node}, 'GraphWidget.Node.Selected'));
+                widget.on('Node.Unselected', node => ActivityLogger.log({'context': context.getNameAndUUID(), 'dimension':node}, 'GraphWidget.Node.Unselected'));
+
                 resolve();
               });
             // need to add both

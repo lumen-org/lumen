@@ -1,24 +1,4 @@
-/**
- * This module provides a widget to display a graph whos nodes represent dimensions. It:
- *  * represents the dimensions of a given remote model
- *  * represents a given weighted edge structure between all pairs of dimensions
- *  * provides visual distinction between different data types of the dimensions
- *
- * It also provides interactivity as follows:
- *  * user may select a node by clicking on it
- *  * user may select multiple nodes by holding ctrl and clicking on nodes
- *  * user may deselect all node by clicking anywhere in the widget
- *  * user may trigger auto-layout and centering of the plotted graph by double clicking anywhere
- *  * user may reposition a node by left-click dragging
- *  * user may drag a node over to shelves and drop it there by right-click dragging. This triggers a assignment of the dropped dimension to the target shelf, instead of moving the node with the drawing canvas.
-
- * Selection causes a classification of the nodes, as follows
- *  (i) pl-selected-node: selected nodes
- *  (ii) pl-adjacent-node: nodes adjacant to selected nodes, but not selected:
- *  (iii) pl-remaining-node: nodes that are neither in (i) or (ii)
- *  (iv) pl-default-node: if no node is selected at all
- */
-define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
+define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytoscape, cola) {
 
   cola(cytoscape); // register cola extension
 
@@ -248,7 +228,31 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
     });
   }
 
+  /**
+   * This widget display a graph whose nodes represent dimensions. It:
+   *  * represents the dimensions of a given remote model
+   *  * represents a given weighted edge structure between all pairs of dimensions
+   *  * provides visual distinction between different data types of the dimensions
+   *
+   * It also provides interactivity as follows:
+   *  * user may select a node by clicking on it
+   *  * user may select multiple nodes by holding ctrl and clicking on nodes
+   *  * user may deselect all node by clicking anywhere in the widget
+   *  * user may trigger auto-layout and centering of the plotted graph by double clicking anywhere
+   *  * user may reposition a node by left-click dragging
+   *  * user may drag a node over to shelves and drop it there by right-click dragging. This triggers a assignment of the dropped dimension to the target shelf, instead of moving the node with the drawing canvas.
 
+   * Selection causes a classification of the nodes, as follows
+   *  (i) pl-selected-node: selected nodes
+   *  (ii) pl-adjacent-node: nodes adjacant to selected nodes, but not selected:
+   *  (iii) pl-remaining-node: nodes that are neither in (i) or (ii)
+   *  (iv) pl-default-node: if no node is selected at all
+   *
+   * A Graph Widget also emit events.
+   *    Node.DragMoved: passes the id of the moved/dragged node to the event handler
+   *    Node.Selected: passes the id of the selected node to the event handler
+   *    Node.Unselected: passes the id of the unselected node to the event handler
+   */
   class GraphWidget {
 
     constructor(domDiv, graph, layoutmode='cola') {
@@ -278,6 +282,8 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       this.allNodes
         .on('select', this.onNodeSelect.bind(this))
         .on('unselect', this.onNodeUnselect.bind(this));
+
+      Emitter(this);
     }
 
     _updateStylings() {
@@ -307,6 +313,8 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       node.data('pl_selected', true);
       this._updateStylings();
       // this._cy.batchEnd();
+
+      this.emit('Node.Selected', node.id());
     }
 
     onNodeUnselect(ev) {
@@ -317,6 +325,7 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       node.data('pl_selected', false);
       this._updateStylings();
       // this._cy.batchEnd();
+      this.emit('Node.Unselected', node.id());
     }
 
     container () {
@@ -380,6 +389,12 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       .on('cxttapend', ev => {
         that._reset_drag();
       })
+      .on('tapend', ev => {
+        that.emit("Node.DragMoved", ev.target.id());
+      })
+      // .on('tapstart', ev => {
+      //   console.log(ev);
+      // })
 
   };
 

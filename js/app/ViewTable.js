@@ -52,8 +52,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
-  function (Logger, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
+define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
+  function (Logger, Emitter, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -855,6 +855,9 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
      *
      * A ViewTable is a table of ViewPanes. Each ViewPane represents a single cell of the table.
      *
+     * A ViewTable emits events:
+     *  "PanZoom": if the user panned/zoomed in the visualization.
+     *
      * @param pane A <div> element. This must already have a width and height.
      * @param aggrColl The {@link Collection} of predictions to visualize.
      * @param dataColl The {@link Collection} of training data to visualize.
@@ -867,6 +870,8 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
     class ViewTable {
 
       constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
+
+        Emitter(this);
 
         this.aggrColl = aggrColl;
         this.dataColl = dataColl;
@@ -942,6 +947,7 @@ define(['lib/logger', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', 
 
           let updateEvent = utils.assignWithFilter({}, event, /^[xy]axis[0-9]+\./); // matches anything that begins with an axis id like xaxis9000
           if (Object.keys(updateEvent).length) {
+            this.emit('PanZoom', updateEvent);
             that.plotlyLayout = that.axesSyncManager.propagate(
                 AxesSync.parseRelayoutDict(updateEvent), 
                 that.plotlyLayout
