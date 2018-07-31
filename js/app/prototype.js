@@ -414,9 +414,19 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               // c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
             }
           });
+
+        //$vis.on()
         $vis.draggable(
-          {stop:
-            (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move')
+          { stop:
+              (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move'),
+            handle: '.pl-visualization-pane',
+            drag: (ev, ui) => {
+              // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
+              // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
+              if (ev.toElement.className === 'dragcover'){
+                return false;
+              }
+            }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position!
         return $vis;

@@ -99,6 +99,10 @@ define(['cytoscape', 'cytoscape-cola'], function (cytoscape, cola) {
       if (edge.weight > max_)
         max_ = edge.weight;
     }
+
+    if (min_ < 0)
+      throw RangeError("edges may not have negative weights!");
+    min_ = 0;
     let len = max_ - min_;
 
     return edges.map(edge => {
