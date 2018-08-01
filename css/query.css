@@ -216,6 +216,8 @@ body {
 
 #pl-model-container {
     min-width: 7rem;
+    top: 27px;
+    position: relative;
 }
 
 #pl-mappings-container {
@@ -224,9 +226,8 @@ body {
 
 #pl-graph-manager-container {
     width: 100%;
-    height: 100%;
     padding: 0.7em;
-    /*     border: solid red 1px; */
+    height: 90%;
 }
 
 .pl-graph-pane {

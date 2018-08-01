@@ -428,7 +428,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               }
             }
           }); // yeah, that was easy. just made it draggable!
-        $vis.css( "position", "absolute" ); // we want absolute position!
+        //$vis.css( "position", "absolute" ); // we want absolute position! TODO ????
+        $vis.css( "position", "relative" ); // we want absolute position!
         return $vis;
       }
 

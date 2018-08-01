@@ -15,6 +15,7 @@ main {
 
 .pl-column {
     align-items: stretch;
+    overflow-y: auto;
 }
 
 .pl-column-title {
@@ -22,6 +23,9 @@ main {
     margin-right: 1em;
     font-size: large;
     font-weight: bolder;
+    height: 27px;
+    position: absolute;
+    z-index: 10;
 }
 
 .pl-column-content {
@@ -46,13 +50,13 @@ main {
 
 .pl-lower {
     min-width: 200px;
-    height: 28%;
+    height: 33%;
     border-top: 2px solid #f3f3f3;
     border-right: 2px solid #f3f3f3;
 }
 
 .pl-lower .pl-column-title {
-    height: 10%;
+    position: static;
     text-align: center;
 }
 
@@ -81,6 +85,7 @@ main {
     background-color: #ffffff;
     min-width: 50%;
     flex-grow: 1;
+    overflow: auto;
 }
 
 #header-bar, #footer-bar {
@@ -131,8 +136,9 @@ main {
 }
 
 #pl-visualization-container {
-    display: flex;
-    flex-wrap: wrap;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
 }
 
 #pl-mappings-container {
@@ -490,4 +496,16 @@ textarea.pl-survey-content {
     margin-left: .1em;
     margin-right: .3em;
     font-size: small;
+}
+
+
+.pl-model-container {
+    overflow-y: scroll;
+}
+
+.pl-spec-content-container {
+    /* overflow-y: hidden; */
+    /* position: relative; */
+    position: relative;
+    top: 27px;
 }
