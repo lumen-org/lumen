@@ -26,6 +26,7 @@ main {
     height: 27px;
     position: absolute;
     z-index: 10;
+    background-color: inherit;
 }
 
 .pl-column-content {
@@ -79,6 +80,7 @@ main {
     border-left: 2px solid #f3f3f3;
     border-right: 2px solid #f3f3f3;
     min-width: 200px; /* for constant minimal width*/
+    position: static;
 }
 
 .pl-dashboard {

@@ -441,6 +441,14 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       return levelSplits;
     }
 
+    function createEmptyTrace(xId, yId) {
+      let trace = {};
+      trace[xId[0] + "axis"] = xId;
+      trace[yId[0] + "axis"] = yId;
+      return trace;
+    }
+
+
     /**
      * @xy 'x' ('y') if its an x-axis (y-axis)
      * @offset: .x (.y) is the offset in normalized coordinates for the templating axes
@@ -458,6 +466,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       // available height (if xy === x) (width if xy === y) per axis level
       let levelSize = size[yx] / levelSplits.length;
       let axes = {}; // object of plotly axes objects
+      let emtpyTraces = [];
       let annotations = []; // annotations for level titles
       let repeat = 1;
 
@@ -479,6 +488,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
           // new major axis (i.e. x axis for xy === x)
           axes[xy + 'axis' + majorId] = config.axisGenerator.templating_major(majorOffset, majorLength, splitExtentToString(split), yx + minorId);
+
+          // create empty trace (axis is not shown, if it has no trace that uses it)
+          emtpyTraces.push(createEmptyTrace(xy+majorId, yx+minorId));
         }
 
         repeat *= ticks.length;
@@ -490,7 +502,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         annotations.push(annotation);
       });
 
-      return [axes, annotations];
+      return [axes, annotations, emtpyTraces];
     }
 
     function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout) {
@@ -549,7 +561,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       }
     }
 
-    function makeTraces(size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, queryConfig) {
+    function makeTraces(size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds, queryConfig) {
       let traces = [];
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
@@ -563,6 +575,12 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           traces.push(...atomicTraces);
         }
       }
+
+      // axes that are not used by traces are not shown (https://community.plot.ly/t/unused-axis-not-drawn-in-plot/12215/2). Hence, we add empty traces for these
+      for (let axis of templAxesIds) {
+          
+      }
+
       return traces;
     }
 
@@ -720,6 +738,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       let marginalAxesIds = []; // each will have property .x and .y
       // array of categorical quantitative axes ids for each cell of view table, for both x and y axis. The values are axis id
       let catQuantAxesIds = [];
+      // array of empty traces of atomic plots. This is required, as otherwise axes will not be drawn.
+      let emptyMainTraces = [];
 
       // custom titles for axis
       let axisTitles = [];
@@ -799,9 +819,14 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             layout[xy + "axis" + id[xy]] = axis[xy];
             id[xy] = xy + id[xy];
             if (!used[xy] || idx[yx] === 0) {
-                mainAxesIds[xy].push(id[xy]);
+              // we only push the first of all axis for one row/column
+              mainAxesIds[xy].push(id[xy]);
             }
           }
+
+          // add empty trace
+          // TODO: fix it? problem is that the empty trace hides the underlying plotted data ...
+          //emptyMainTraces.push(createEmptyTrace(id.x, id.y));
 
           // make bounding box - iff it is not just a marginal plot
           if (used.x && used.y) {
@@ -821,15 +846,16 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       }
 
       // add templating axis
-      let [templx, annotationsx] = createTemplatingAxis('x', {x: templAxisSize.x, y: 0}, {
+      let [templx, annotationsx, templEmptyTracesX] = createTemplatingAxis('x', {x: templAxisSize.x, y: 0}, {
         x: 1 - templAxisSize.x,
         y: templAxisSize.y
       }, qx, idgen.templating);
-      let [temply, annotationsy] = createTemplatingAxis('y', {x: 0, y: templAxisSize.y}, {
+      let [temply, annotationsy, templEmptyTracesY] = createTemplatingAxis('y', {x: 0, y: templAxisSize.y}, {
         x: templAxisSize.x,
         y: 1 - templAxisSize.y
       }, qy, idgen.templating);
       Object.assign(layout, templx, temply);
+      let templAxesIds = [...Object.keys(templx), ...Object.keys(temply)].map( k => k[0] + k.slice(5)); // it's always of shape [xy]axis[1-9]*
 
       // add 'global' layout options
       Object.assign(layout, {
@@ -846,7 +872,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         plot_bgcolor: 'rgba(255,255,255,0)',
       });
 
-      return [at, layout, {mainAxesIds, marginalAxesIds, catQuantAxesIds}];
+      return [at, layout, {mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds}, [...emptyMainTraces, ...templEmptyTracesX, ...templEmptyTracesY]];
     }
 
     /**
@@ -924,12 +950,12 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           // modeBarButtonsToAdd: [],
         };
 
-        let [at, layout, axes] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
+        let [at, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
 
-        let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, queryConfig);
+        let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, queryConfig);
 
         // plot everything
-        this.plotlyTraces = traces;
+        this.plotlyTraces = [...emptyTraces, ...traces];
         this.plotlyLayout = layout;
         this.plotlyConfig = plConfig;
         this._plot();
