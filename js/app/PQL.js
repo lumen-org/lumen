@@ -290,7 +290,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       if (field.dataType === FieldT.DataType.string)
         return new Split(field, SplitMethod.elements, []);
       else if (field.dataType === FieldT.DataType.num)
-        return new Split(field, SplitMethod.equiinterval, [split_cnt]);
+          return new Split(field, SplitMethod.equiinterval, [split_cnt]);
       else
         throw new RangeError("invalid data type");
     }

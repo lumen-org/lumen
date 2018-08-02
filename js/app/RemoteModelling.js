@@ -107,13 +107,16 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
      */
     _updateHeader(json) {
       this.fields.clear();
+      this.byIndex = [];
       for (let field of json.fields) {
-        this.fields.set(field.name, new PQL.Field(
-            field.name,
-            field.dtype,
-            (field.dtype === 'numerical' ? new Domain.Numeric(field.domain) : new Domain.Discrete(field.domain)),
-            (field.dtype === 'numerical' ? new Domain.Numeric(field.extent) : new Domain.Discrete(field.extent)),
-            this));
+        let modelField = new PQL.Field(
+          field.name,
+          field.dtype,
+          (field.dtype === 'numerical' ? new Domain.Numeric(field.domain) : new Domain.Discrete(field.domain)),
+          (field.dtype === 'numerical' ? new Domain.Numeric(field.extent) : new Domain.Discrete(field.extent)),
+          this);
+        this.fields.set(field.name, modelField);
+        this.byIndex.push(modelField);
       }
       this.name = json.name;
       return this;

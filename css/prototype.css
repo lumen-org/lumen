@@ -512,3 +512,12 @@ textarea.pl-survey-content {
     position: relative;
     top: 27px;
 }
+
+#pl-playground {
+    position: absolute;
+    width:400px;
+    height: 400px;
+    right: 100px;
+    bottom: 100px;
+    border: orangered 2px solid;
+}

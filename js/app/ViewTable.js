@@ -516,7 +516,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           catIdx = rt.fu2idx.get(catFu);
 
         // disable zooming on cat axis 
-        let catAxisId = mainAxesIds[catXY][idx[catXY]]
+        let catAxisId = mainAxesIds[catXY][idx[catXY]];
         layout[catAxisId[0] + 'axis' + catAxisId.slice(1)].fixedrange = true;
 
         // available length per category in categorical dimension along categorical axis of main plot [in norm. coord]

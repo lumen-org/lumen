@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -1336,6 +1336,24 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // fetch model
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
+          .then(() => {
+
+            let getMarginalDistribution = function (model, dimNameOrField, mode='probability') {
+               // given a model and a dimension name / field
+              let field = PQL.isField(dimNameOrField) ? dimNameOrField : model.fields.get(dimName);
+
+              // get a sampling of the marginal distribution over that field "using standard splits"
+              // TODO: add all existing filters as conditions
+              return model.predict([field.name, new PQL.Density(field, mode)], [], new PQL.Split(field, PQL.SplitMethod.equiinterval, 20) );
+            };
+
+            // DEBUG / DEVELOP
+            let m = context.model;
+            let f = m.byIndex[1];
+            let p = Promise.resolve([[1,2,3,4,5,6],[1,2,3,4,3,2]]);
+            // let w = new FilterWidget(f, () => p, $('#pl-playground'));
+            let w = new FilterWidget(f, () => getMarginalDistribution(m, f), $('#pl-playground'));
+          })
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
           .catch((err) => {
