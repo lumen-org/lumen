@@ -95,7 +95,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return desc;
     }
 
-    isDiscrete() {
+      isDiscrete() {
       return (this.dataType === FieldT.DataType.string);
     }
 

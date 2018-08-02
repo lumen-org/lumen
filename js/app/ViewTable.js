@@ -301,9 +301,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       if (extent === undefined) extent = [];
       if (data === undefined) data = [];
       if (discreteFlag === true)
-        return _.union(extent, data)
+        return _.union(extent, data);
       else if (discreteFlag === false)
-        return d3.extent([...extent, ...data])
+        return d3.extent([...extent, ...data]);
       throw RangeError("discreteFlag must be true or false, but is: " + discreteFlag.toString());
     }
 

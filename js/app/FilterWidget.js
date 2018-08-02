@@ -34,51 +34,80 @@ implements:
 no react. It is not very "html-lastig"
 */
 
-define([/*plotly*/], function ( ) {
+define([/*plotly !!*/], function ( ) {
   "use strict";
 
   class FilterWidget {
     constructor (field, densityPromise, container) {
-
-      // assert categorical dim
-      // if (field.dtype !== 'string') {
-      if (field.dataType !== 'numerical') {
-        throw "Not yet implemented!";
-      }
-
+      this.field = field;
+      this.container = container;
       this._densityPromise = densityPromise;
-
+      this._dataTrace = undefined;
+      let initialTrace, layout;
       // by default categorical histogram is drawn vertically, such that names have enough space,
       // and quantitative density plots are drawn horizontally because it is more familiar
       // TODO: do violin plots for data vs model?
-      this.field = field;
-      this.direction = 'horizontal';
-      this.container = container;
-      this._layout = {
-        xaxis: {
-          rangeslider: {},
-        },
-        yaxis: {
-          fixedrange: true,
-        }
-      };      
-      this._dataTrace = undefined;
+      //this.direction = (this.field.dataType === 'string' ? 'horizontal' : 'vertical');
+
+      if (this.field.dataType === 'string') {
+        this.direction = 'vertical';
+        layout = {
+          xaxis: {
+            fixedrange: true,
+            showticklabels: false,
+          },
+          yaxis: {
+            fixedrange: true,
+          }
+        };
+        initialTrace = {
+          type: 'bar',
+          orientation: 'h',
+        };
+      } else if (this.field.dataType === 'numerical') {
+        this.direction = 'horizontal';
+        layout = {
+          xaxis: {
+            //rangeslider: {},
+            showgrid: false,
+            zeroline: false,
+            ticklen: 3,
+            //showticklabels: false,
+          },
+          yaxis: {
+            fixedrange: true,
+            showgrid: true,
+            showticklabels: false,
+            rangemode: "tozero",
+            zeroline: true,
+          }
+        };        
+        initialTrace = {
+          type: 'scatter',
+        };
+      } else {
+        throw "invalid data type or data type not implemented!";
+      }
+
+      layout = Object.assign(layout, {
+        margin: {
+          l: 80,
+          t: 10,
+          r: 10,
+          b: 10,
+          pad: 3}
+      });
       
       // make initial plot. will be updated on request later
-      Plotly.newPlot(container[0], [{'type':'scatter'}], this._layout);
+      Plotly.newPlot(container[0], [initialTrace], layout);
 
       // trigger initial getting of data
       this.render();
     }
 
-
-    _convertDataToTrace(data) {
-      if (this.field.dataType === 'numerical')
-        if (this.direction === 'horizontal') {
-          let [x,y] = _.unzip(data);
-          return {x:[x],y:[y]}
-        }
-      throw("not implemented!");
+    _convertDataToTrace(data) {      
+      let [x,y] = _.unzip(data);
+      return (this.direction === 'horizontal' ? {x:[x],y:[y]} : {x:[y],y:[x]} );
     }
 
     render (recalc=true)  {

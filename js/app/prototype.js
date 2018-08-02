@@ -1344,12 +1344,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
               // get a sampling of the marginal distribution over that field "using standard splits"
               // TODO: add all existing filters as conditions
-              return model.predict([field.name, new PQL.Density(field, mode)], [], new PQL.Split(field, PQL.SplitMethod.equiinterval, 20) );
+              let method = field.isDiscrete() ? PQL.SplitMethod.elements : PQL.SplitMethod.equiinterval;
+              return model.predict([field.name, new PQL.Density(field, mode)], [], new PQL.Split(field, method, 20) );
             };
 
             // DEBUG / DEVELOP
             let m = context.model;
-            let f = m.byIndex[1];
+            let f = m.byIndex[0];
             let p = Promise.resolve([[1,2,3,4,5,6],[1,2,3,4,3,2]]);
             // let w = new FilterWidget(f, () => p, $('#pl-playground'));
             let w = new FilterWidget(f, () => getMarginalDistribution(m, f), $('#pl-playground'));
