@@ -53,7 +53,67 @@ define([/*plotly !!*/], function () {
     scrollZoom: true,
   };
 
+
+  /**
+   * A FilterWidget is a interactive, editable UI to a Filter FieldUsage.
+   */
   class FilterWidget {
+
+    /**
+     *
+     * @param field {PQL.Field} The field to create a FilterWidget for.
+     * @param densityPromise A function that returns a Promise to an update of density value for the field.
+     * @param container the DOM element where the plot is drawn
+     */
+    constructor(field, densityPromise, container) {
+      this.field = field;
+      this._densityPromise = densityPromise;
+      this.plot = container;
+
+      this._selectedDomain = field.; // The currently selected domain
+      this._fullDomain = field.
+
+      this.dType = this.field.dataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
+
+      // by default categorical histogram is drawn vertically, such that names have enough space,
+      // and quantitative density plots are drawn horizontally because it is more familiar
+      // TODO: do violin plots for data vs model?
+      //this.direction = (this.field.dataType === 'string' ? 'horizontal' : 'vertical');
+
+      //this._dataTrace = undefined;  // Plotly trace object for the histogram/density plot
+      let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
+        layout = { // the layout object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
+          margin: {
+            l: 10,
+            t: 10,
+            r: 10,
+            b: 10,
+            pad: 0
+          },
+          hovermode: 'closest',
+          // dragmode: 'select',
+        };
+
+      // init depending on data type
+      if (this.dType === 'string')
+        [layout, trace] = FilterWidget.initCategorical(layout, trace);
+      else if (this.dType === 'numerical')
+        [layout, trace] = FilterWidget.initQuantitative(layout, trace);
+      else
+        throw "invalid data type or data type not implemented!";
+
+      // make initial plot. will be updated on request later
+      Plotly.newPlot(container, [trace], layout, plotConfig);
+
+      // attach interactivity
+      if (this.dType === 'string')
+        this._makeInteractiveCategorical();
+      else if (this.dType === 'numerical')
+        this._makeInteractiveQuantitative();
+
+      // trigger initial getting of data
+      this.render();
+    }
 
     static initCategorical(layout, trace) {
       this.direction = 'vertical';
@@ -123,59 +183,6 @@ define([/*plotly !!*/], function () {
       });
     }
 
-    /**
-     *
-     * @param field {PQL.Field} The field to create a FilterWidget for.
-     * @param densityPromise A function that returns a Promise to an update of density value for the field.
-     * @param container the DOM element where the plot is drawn
-     */
-    constructor(field, densityPromise, container) {
-      this.field = field;
-      this._densityPromise = densityPromise;
-      this.plot = container;
-
-      this.dType = this.field.dataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
-
-      // by default categorical histogram is drawn vertically, such that names have enough space,
-      // and quantitative density plots are drawn horizontally because it is more familiar
-      // TODO: do violin plots for data vs model?
-      //this.direction = (this.field.dataType === 'string' ? 'horizontal' : 'vertical');
-
-      this._dataTrace = undefined;  // Plotly trace object for the histogram/density plot
-      let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
-        layout = { // the layout object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
-          margin: {
-            l: 10,
-            t: 10,
-            r: 10,
-            b: 10,
-            pad: 0
-          },
-          hovermode: 'closest',
-          // dragmode: 'select',
-        };
-
-      // init depending on data type
-      if (this.dType === 'string')
-        [layout, trace] = FilterWidget.initCategorical(layout, trace);
-      else if (this.dType === 'numerical')
-        [layout, trace] = FilterWidget.initQuantitative(layout, trace);
-      else
-        throw "invalid data type or data type not implemented!";
-
-      // make initial plot. will be updated on request later
-      Plotly.newPlot(container, [trace], layout, plotConfig);
-
-      // attach interactivity
-      if (this.dType === 'string')
-        this._makeInteractiveCategorical();
-      else if (this.dType === 'numerical')
-        this._makeInteractiveQuantitative();
-
-      // trigger initial getting of data
-      this.render();
-    }
-
     _convertDataToTrace(data) {
       let [x, y] = _.unzip(data);
       return (this.direction === 'horizontal' ? {x: [x], y: [y]} : {x: [y], y: [x]});
@@ -198,7 +205,7 @@ define([/*plotly !!*/], function () {
       // update plot when data is fetched
       promise.then(
         dataTrace => {
-          this._dataTrace = dataTrace;
+          //this._dataTrace = dataTrace;
           Plotly.restyle(this.plot, dataTrace);
         }
       );
