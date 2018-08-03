@@ -1350,7 +1350,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
             // DEBUG / DEVELOP
             let m = context.model;
-            let f = m.byIndex[1];
+            let f = m.byIndex[0];
             let p = Promise.resolve([[1,2,3,4,5,6],[1,2,3,4,3,2]]);
             let fi = PQL.Filter.DefaultFilter(f);
             fi.on(Emitter.ChangedEvent, (ev) => console.log(ev));

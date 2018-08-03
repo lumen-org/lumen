@@ -53,6 +53,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     scrollZoom: true,
   };
 
+  let d3 = Plotly.d3;
+
 
 
 
@@ -76,9 +78,11 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       this.filter = filter;
       this.dType = this.field.dataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
       this._densityPromise = densityPromise;
-      this.plot = container;
+      this.container = container;
+      this.plot = undefined;
 
       this.domain = (this.dType === 'string' ? new Set(filter.args.values) : filter.args.values);  // internal representation of the state of the filter.
+      this.fullDomain = this.field.extent.values;
 
       // by default categorical histogram is drawn vertically, such that names have enough space,
       // and quantitative density plots are drawn horizontally because it is more familiar
@@ -107,19 +111,24 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       else
         throw "invalid data type or data type not implemented!";
 
+      // make gui elements
+      this._appendTitle(container);
+      this._appendCategoricalButtons(container);
+      this._appendPlot(container);
+
       // make initial plot. will be updated on request later
-      Plotly.newPlot(container, [trace], layout, plotConfig);
+      Plotly.newPlot(this.plot, [trace], layout, plotConfig);
 
       // attach interactivity and render initial plot
       if (this.dType === 'string') {
         this._makeInteractiveCategorical();
-//         this.render(true, this.makeTraceUpdate4Selection());  TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...
-        this.render();        
+//         this.render(true, this.makeTraceUpdate4Selection());  TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...              
       }
       else if (this.dType === 'numerical') {
         this._makeInteractiveQuantitative();
-        this.render();
       }
+
+      this.fetchDistribution(); // will also render it!
     }
 
     initCategorical(layout, trace) {
@@ -144,10 +153,33 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     }
 
     makeTraceUpdate4Selection () {
-      if (this.dType !== 'string')
-        throw TypeError("not implemented");
+      if (this.dType === 'string')
+        return {selectedpoints: [[...this.domain.values()]]};
+      else
+        return {}
+    }
 
-      return {selectedpoints: [[...this.domain.values()]]};
+    _appendTitle (ele) {
+      d3.select(ele)
+        .append('div')
+        .attr('class', 'fw__title')
+        .text(this.field.name);
+    }
+
+    _appendCategoricalButtons (ele) {
+      let toolbar = d3.select(ele)
+        .append('div')
+        .attr('class', 'fw__toolbar');
+
+      let allButton = toolbar.append('div').attr('class', 'fw__toolbar--button').text('all').on('click', () => this.selectAll());
+      let noneButton = toolbar.append('div').attr('class', 'fw__toolbar--button').text('none').on('click', () => this.selectNone());
+      let invertButton = toolbar.append('div').attr('class', 'fw__toolbar--button').text('inv').on('click', () => this.selectInverted());
+    }
+
+    _appendPlot (ele) {
+      this.plot = d3.select(ele)
+        .append('div')
+        .attr('class', 'fw__plot')[0][0];
     }
 
     _makeInteractiveCategorical() {
@@ -164,7 +196,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         }
 
         // sync to view
-        Plotly.restyle(this.plot, this.makeTraceUpdate4Selection());
+        this.render();
         this.commit();
       })
     }
@@ -207,7 +239,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         }
         if (relayoutDict["xaxis.autorange"]) {
           // reset to original values
-          this.domain = this.field.extent.values;
+          this.selectAll();
         }
         this.commit();
       });
@@ -218,29 +250,59 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       return (this.direction === 'horizontal' ? {x: [x], y: [y]} : {x: [y], y: [x]});
     }
 
+    selectAll () {
+      if (this.dType === 'string')
+        this.domain = new Set(_.range(this.fullDomain.length)); // need the indices!
+      else if (this.dType === 'numerical')
+        this.domain = this.fullDomain.slice();
+      else
+        throw "not implemented";
+      this.render();
+    }
+
+    selectNone () {
+      if (this.dType !== 'string')
+        throw TypeError("must be string/categorical!");
+      this.domain = new Set();
+      this.render();
+    }
+
+    selectInverted () {
+      if (this.dType === 'string') {
+        let invDomain = new Set();
+        for (let i of _.range(this.fullDomain.length)) {
+          if (!this.domain.has(i))
+            invDomain.add(i);
+        }
+        this.domain = invDomain;
+      }
+      else
+        // does not make sense for quantitative
+        throw "not implemented";
+      this.render();
+    }
+
+    fetchDistribution() {
+        return this._densityPromise()
+            .then(data => this._convertDataToTrace(data))
+            .then(dataTrace => {
+                this._dataTrace = dataTrace;   
+                this.render();
+            });
+    }
+
+
+
     /**
      * Fetches new distribution data and updates the widget with the new distribution data.
      * Can also be used to redraw the widget if for example the containing div's size changed.
      * @param recalc {boolean} Defaults to true. Iff true recalculate the density values for the plot. False for not.
      */
     render(recalc = true, traceUpdate=undefined) {
-      // recalc data if necessary or requested
-      let promise;
-      if (recalc || this.density === undefined) {
-        promise = this._densityPromise().then(data => this._convertDataToTrace(data));
-      } else {
-        promise = Promise.resolve(this.densityData);
-      }
-
-      // update plot when data is fetched
-      promise.then(
-        dataTrace => {
-          //this._dataTrace = dataTrace;          
-          Plotly.restyle(
+       Plotly.restyle(
             this.plot,
-            Object.assign(dataTrace, traceUpdate));
-        }
-      );
+            Object.assign({}, this._dataTrace, this.makeTraceUpdate4Selection())
+       );
     }
 
     /**

@@ -515,9 +515,30 @@ textarea.pl-survey-content {
 
 #pl-playground {
     position: absolute;
-    width:200px;
+    width:300px;
     height: 400px;
     right: 100px;
     bottom: 100px;
     border: orangered 2px solid;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.fw__title {
+    text-align: center;
+}
+
+.fw__toolbar {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.fw__toolbar--button {
+}
+
+.fw__plot {
+    /*width: 200px;*/
+    /*height: 200px;*/
+    flex-grow: 1;
 }
