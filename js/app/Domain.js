@@ -71,6 +71,11 @@ define(['./utils'], function (utils) {
         return this;
     }
 
+    // PL: adding these lines would have no effect :-)
+    // get values() {
+    //   return this.values;
+    // }
+
     get value() {
       return (this.isSingular() ? this.values[0] : this.values);
     }

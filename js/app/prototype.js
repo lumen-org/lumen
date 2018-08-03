@@ -1350,10 +1350,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
             // DEBUG / DEVELOP
             let m = context.model;
-            let f = m.byIndex[0];
+            let f = m.byIndex[1];
             let p = Promise.resolve([[1,2,3,4,5,6],[1,2,3,4,3,2]]);
+            let fi = PQL.Filter.DefaultFilter(f);
+            fi.on(Emitter.ChangedEvent, (ev) => console.log(ev));
             // let w = new FilterWidget(f, () => p, $('#pl-playground'));
-            let w = new FilterWidget(f, () => getMarginalDistribution(m, f), $('#pl-playground')[0]);
+            let w = new FilterWidget(fi, () => getMarginalDistribution(m, f), $('#pl-playground')[0]);
           })
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
