@@ -51,6 +51,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   };
   let d3 = Plotly.d3;
 
+  let formatter = d3.format(".3f");
+
   /**
    * A FilterWidget is a interactive, editable UI to a Filter FieldUsage.
    *
@@ -155,8 +157,21 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     makeTraceUpdate4Selection () {
       if (this.dType === 'string')
         return {selectedpoints: [[...this.domain.values()]]};
-      else
-        return {}
+      else if (this.dType === 'numerical') {
+        return {};
+      } else {
+        throw "not implemented";
+      }
+    }
+
+    makeLayoutUpdate4Selection () {
+      if (this.dType === 'string')
+        return {};
+      else if (this.dType === 'numerical') {
+        return {"xaxis.range": this.domain};
+      } else {
+        throw "not implemented";
+      }
     }
 
     _appendHeader (ele) {
@@ -222,7 +237,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       //  (ii) convert given domain to text
       let pushHandler, pullHandler;
       if (this.dType === 'string') {
-        let that = this;
+
+        let that = this;  // handler is called with different 'this'. see below
         pushHandler = function(ev) {
           let newDomainStr = this.value; // this refers to the triggering DOM element
 
@@ -261,8 +277,30 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
 
           this._textInput.property('value', value);
         };
+
       } else if (this.dType === 'numerical') {
-        handler = () => {};
+
+        let that = this;  // handler is called with different 'this'. see below
+        pushHandler = function(ev) {
+          try {
+            let newDomain = this.value.split("--");  // this refers to the triggering DOM element
+            if (newDomain.length !== 2)
+              throw("ParseError");
+            newDomain = [+newDomain[0], +newDomain[1]]; // parse to number
+            if (newDomain[0] > newDomain[1])
+              throw("ParseError");
+
+            that.domain = newDomain;
+            that._textInput.classed('fw_valueForm__directInput--invalid', false);
+            that.render();
+          } catch (err) {
+            that._textInput.classed('fw_valueForm__directInput--invalid', true);
+          }
+        };
+
+        pullHandler = () => {
+          this._textInput.property('value', formatter(this.domain[0]) + " -- " + formatter(this.domain[1]));
+        };
       } else {
         throw RangeError("Not implemented!")
       }
@@ -272,7 +310,6 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           .attr('type','text')
           .attr('name','textInput')
           .attr('spellcheck', false)
-          //.attr('value', '...')
           .on('input', pushHandler);
 
       this._textInput.pullHandler = pullHandler;
@@ -320,11 +357,17 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       this.direction = 'horizontal';
       layout = Object.assign(layout, {
         xaxis: {
-          rangeslider: {},
+          rangeslider: {
+            visible: true,
+          },
+          // rangeselector: {
+          //   visible: true,
+          // },
           showgrid: false,
           zeroline: false,
           ticklen: 3,
           showticklabels: true,
+          visible: true,
         },
         yaxis: {
           fixedrange: true,
@@ -356,6 +399,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           // reset to original values
           this.selectAll();
         }
+        this.render();
         this.commit();
       });
     }
@@ -413,9 +457,10 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
      */
     render(recalc = true) {
       // render plot
-      Plotly.restyle(
-            this.plot,
-            Object.assign({}, this._dataTrace, this.makeTraceUpdate4Selection())
+      Plotly.update(
+            this.plot,  // plot DOM element
+            Object.assign({}, this._dataTrace, this.makeTraceUpdate4Selection()),  // data update
+            Object.assign({}, this._dataTrace, this.makeLayoutUpdate4Selection())  // layout update
        );
 
       // update text field
