@@ -42,7 +42,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   "use strict";
 
   let plotConfig = {
-    displayModeBar: false,
+    displayModeBar: true,
     showTips: false,
     displaylogo: false,
     //   showAxisDragHandles: false,
@@ -67,6 +67,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
    *
    * TODO / Idea:
    *   * violin plots for data vs model?
+   *   
+   * TODO: use axis.automargin !???
    */
   class FilterWidget {
 
@@ -287,7 +289,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
             if (newDomain.length !== 2)
               throw("ParseError");
             newDomain = [+newDomain[0], +newDomain[1]]; // parse to number
-            if (newDomain[0] > newDomain[1])
+            if (newDomain[0] > newDomain[1] || !_.isFinite(newDomain[0]) || !_.isFinite(newDomain[1]) )
               throw("ParseError");
 
             that.domain = newDomain;
@@ -359,6 +361,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         xaxis: {
           rangeslider: {
             visible: true,
+            //thickness: 0.5, // TODO: this seems not to work for large values
           },
           // rangeselector: {
           //   visible: true,
@@ -375,6 +378,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           showticklabels: false,
           rangemode: "tozero",
           zeroline: true,
+          visible: true,
         }
       });
       layout.margin.b = 10;
