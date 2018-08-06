@@ -36,9 +36,6 @@ events
 implements:
    PQL.Filter.prototype.makeVisual:
 
-
-
-no react. It is not very "html-lastig"
 */
 
 define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
@@ -52,11 +49,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     //   showAxisRangeEntryBoxes: false,
     scrollZoom: true,
   };
-
   let d3 = Plotly.d3;
-
-
-
 
   /**
    * A FilterWidget is a interactive, editable UI to a Filter FieldUsage.
@@ -64,6 +57,14 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
    * Internal:
    *   * I decided to decouple the state of the widget from the state of the filter, i.e. the state is duplicated in the widget. The reason is that this way I can control when to push updates to the filter, and when not.
    *   Project-specifically, I want to avoid too many events that indicate a Filter change, because that in turn would trigger many PQL queries...
+   *
+   * Design Decisions:
+   *   * categorical histogram is drawn vertically, such that names have enough space.
+   *   * quantitative density plots are drawn horizontally because it is more familiar
+   *   * don't use react, because it is not very 'html-lastig'. Looking back this was a bad decision :-P
+   *
+   * TODO / Idea:
+   *   * violin plots for data vs model?
    */
   class FilterWidget {
 
@@ -81,15 +82,11 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       this.container = container;
       this.plot = undefined;
 
-      this.domain = (this.dType === 'string' ? new Set(filter.args.values) : filter.args.values);  // internal representation of the state of the filter.
+      this.domain = (this.dType === 'string' ?
+        new Set(_.range(filter.args.length)) : // need indices
+        filter.args.values);  // internal representation of the state of the filter.
       this.fullDomain = this.field.extent.values;
 
-      // by default categorical histogram is drawn vertically, such that names have enough space,
-      // and quantitative density plots are drawn horizontally because it is more familiar
-      // TODO: do violin plots for data vs model?
-      //this.direction = (this.field.dataType === 'string' ? 'horizontal' : 'vertical');
-
-      //this._dataTrace = undefined;  // Plotly trace object for the histogram/density plot
       let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
         layout = { // the layout object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
           margin: {
@@ -112,9 +109,12 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         throw "invalid data type or data type not implemented!";
 
       // make gui elements
-      this._appendTitle(container);
-      this._appendCategoricalButtons(container);
-      this._appendPlot(container);
+      let containerD3 = d3.select(container);
+      this._appendHeader(containerD3);
+      this._appendExplicitValueForm(containerD3);
+      if (this.dType === 'string')
+        this._appendCategoricalButtons(containerD3);
+      this._appendPlot(containerD3);
 
       // make initial plot. will be updated on request later
       Plotly.newPlot(this.plot, [trace], layout, plotConfig);
@@ -122,7 +122,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       // attach interactivity and render initial plot
       if (this.dType === 'string') {
         this._makeInteractiveCategorical();
-//         this.render(true, this.makeTraceUpdate4Selection());  TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...              
+//         this.render(true, this.makeTraceUpdate4Selection());  TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...
       }
       else if (this.dType === 'numerical') {
         this._makeInteractiveQuantitative();
@@ -159,27 +159,142 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         return {}
     }
 
+    _appendHeader (ele) {
+      let header = ele.append('div')
+        .classed('fw_header fw_row', true);
+      this._appendTitle(header);
+      this._appendTaskButtons(header);
+    }
+
     _appendTitle (ele) {
-      d3.select(ele)
-        .append('div')
-        .attr('class', 'fw__title')
+      ele.append('div')
+        .attr('class', 'fw_title')
         .text(this.field.name);
     }
 
     _appendCategoricalButtons (ele) {
-      let toolbar = d3.select(ele)
-        .append('div')
-        .attr('class', 'fw__toolbar');
+      let toolbar = ele.append('div')
+        .attr('class', 'fw_toolbar');
 
-      let allButton = toolbar.append('div').attr('class', 'fw__toolbar--button').text('all').on('click', () => this.selectAll());
-      let noneButton = toolbar.append('div').attr('class', 'fw__toolbar--button').text('none').on('click', () => this.selectNone());
-      let invertButton = toolbar.append('div').attr('class', 'fw__toolbar--button').text('inv').on('click', () => this.selectInverted());
+      let allButton = toolbar.append('div').attr('class', 'fw_toolbar__button').text('all').on('click', () => this.selectAll());
+      let noneButton = toolbar.append('div').attr('class', 'fw_toolbar__button').text('none').on('click', () => this.selectNone());
+      let invertButton = toolbar.append('div').attr('class', 'fw_toolbar__button').text('inv').on('click', () => this.selectInverted());
+    }
+
+    /**
+     * Appends buttons for
+     *  * confirm: apply filter to managed Filter-Usage
+     *  * abort: abort and revert FilterWidget to current value of FilterUsage
+     *  * remove: destroy FilterWidget
+     * @param ele
+     * @private
+     */
+    _appendTaskButtons (ele) {
+      let taskbar = ele.append('div')
+        .attr('class', 'fw_taskbar');
+
+      taskbar.append('div')
+        .attr('class', 'fw_taskbar__button')
+        .text('C')
+        .on('click', () => true);
+
+      taskbar.append('div')
+        .attr('class', 'fw_taskbar__button')
+        .text('A')
+        .on('click', () => true);
+
+      taskbar.append('div')
+        .attr('class', 'fw_taskbar__button')
+        .text('R')
+        .on('click', () => true);
+    }
+
+    _appendExplicitValueForm (ele) {
+      let form = ele.append('div')
+        .classed('fw_valueForm fw_row', true);
+
+      form.append('div')
+        .classed('fw_valueForm__label', true)
+        .text(this.dType === 'string'?'any of':'in range');
+
+      // add handlers that
+      //  (i) push text changes to this.domain
+      //  (ii) convert given domain to text
+      let pushHandler, pullHandler;
+      if (this.dType === 'string') {
+        let that = this;
+        pushHandler = function(ev) {
+          let newDomainStr = this.value; // this refers to the triggering DOM element
+
+          // 1. parse to list of strings
+          let newDomainLst = newDomainStr.split(",").map(el => el.trim());
+
+          let valid = true;
+          let newDomain = new Set();
+          for (let item of newDomainLst) {
+            // 2. validate with actual domain, and ...
+            if (!that.fullDomain.includes(item)) {
+              valid = false;
+              break;
+            }
+            // 3. assign to domain
+            newDomain.add(that.fullDomain.indexOf(item));
+          }
+
+          if (newDomainLst.length === 0)
+            valid = false;
+
+         that._textInput.classed('fw_valueForm__directInput--invalid', !valid);
+
+          if (valid) {
+            that.domain = newDomain;
+            that.render();
+          }
+
+        };
+
+        pullHandler = () => {
+          // domain consists of integers ...
+          let value = [...this.domain.values()].map(i => this.fullDomain[i]).join(", ");
+          if (value.length === 0)
+            value = "<none selected>";
+
+          this._textInput.property('value', value);
+        };
+      } else if (this.dType === 'numerical') {
+        handler = () => {};
+      } else {
+        throw RangeError("Not implemented!")
+      }
+
+      this._textInput = form.append('input')
+          .classed('fw_valueForm__directInput', true)
+          .attr('type','text')
+          .attr('name','textInput')
+          .attr('spellcheck', false)
+          //.attr('value', '...')
+          .on('input', pushHandler);
+
+      this._textInput.pullHandler = pullHandler;
+
+      // let disp = form.append('div')
+      //   .classed('fw_rangeDisplay', true);
+      // if (this.dType === 'string') {
+      //   disp.append('textarea')
+      //     .classed('fw_rangeDisplay__textarea', true);
+      // } else if (this.dType === 'numerical') {
+      //   disp.append('input')
+      //     .attr('type','text')
+      //     .attr('name','textInput')
+      //     .attr('value', '...');
+      // } else {
+      //   throw RangeError("Not implemented!")
+      // }
     }
 
     _appendPlot (ele) {
-      this.plot = d3.select(ele)
-        .append('div')
-        .attr('class', 'fw__plot')[0][0];
+      this.plot = ele.append('div')
+        .classed('fw_plot fw_row', true)[0][0];
     }
 
     _makeInteractiveCategorical() {
@@ -209,7 +324,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           showgrid: false,
           zeroline: false,
           ticklen: 3,
-          showticklabels: false,
+          showticklabels: true,
         },
         yaxis: {
           fixedrange: true,
@@ -291,18 +406,20 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
             });
     }
 
-
-
     /**
      * Fetches new distribution data and updates the widget with the new distribution data.
      * Can also be used to redraw the widget if for example the containing div's size changed.
      * @param recalc {boolean} Defaults to true. Iff true recalculate the density values for the plot. False for not.
      */
-    render(recalc = true, traceUpdate=undefined) {
-       Plotly.restyle(
+    render(recalc = true) {
+      // render plot
+      Plotly.restyle(
             this.plot,
             Object.assign({}, this._dataTrace, this.makeTraceUpdate4Selection())
        );
+
+      // update text field
+      this._textInput.pullHandler();
     }
 
     /**

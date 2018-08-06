@@ -16,6 +16,8 @@ main {
 .pl-column {
     align-items: stretch;
     overflow-y: auto;
+/*     border: grey 2px solid;
+    border-radius: 10px; */
 }
 
 .pl-column-title {
@@ -525,20 +527,76 @@ textarea.pl-survey-content {
 }
 
 
-.fw__title {
-    text-align: center;
+.fw_header {
+    display: flex;
+    justify-content: space-between;
 }
 
-.fw__toolbar {
+.fw_title {
+    text-align: center;
+    font-family: Quicksand;
+    font-size: 1.0em;
+    font-weight: bold;
+}
+
+.fw_taskbar {
     display: flex;
     justify-content: space-evenly;
 }
 
-.fw__toolbar--button {
+.fw_taskbar__button {
+
 }
 
-.fw__plot {
+.fw_valueForm {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.fw_valueForm__label {font-size: small;}
+
+.fw_rangeDisplay__textarea {max-width: 100%;}
+
+.fw_toolbar {
+    display: flex;
+    justify-content: space-evenly;
+    margin-bottom: .3em;
+}
+
+.fw_toolbar__button {
+    border: 1px solid #c5c5c5;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    width:22%;
+    text-align: center;
+    font-size: small;
+}
+
+.fw_toolbar__button:hover {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.fw_plot {
     /*width: 200px;*/
     /*height: 200px;*/
     flex-grow: 1;
+}
+
+.fw_row {
+    margin-bottom: .5em;
+    margin-top: .3em;
+    margin-left: 1em;
+    margin-right: .5em;
+}
+
+.fw_valueForm__directInput {
+    border: 0;
+    box-shadow: none;
+}
+
+.fw_valueForm__directInput--invalid {
+    border: 2px red solid;
+    border-radius: 5px;
 }
