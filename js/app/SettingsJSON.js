@@ -873,7 +873,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     };
 
     c.userStudy = {
-      enabled: false && (c.meta.activity_logging_mode !== "disabled"),
+      enabled: true && (c.meta.activity_logging_mode !== "disabled"),
     };
 
     c.graphWidget = {
@@ -894,7 +894,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         active: true,
       },
       testData: {
-        possible: true,
+        possible: false,
         active: false,
       },
       marginals: {
@@ -906,11 +906,44 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         active: true,
       },
       predictionOffset: {
-        possible: true,
+        possible: false,
         active: false,
       },
       accuMarginals: {
-        possible: true
+        possible: false
+      }
+    };
+
+    c.toolbar = {
+      query: {
+        active: false,
+      },
+      clone: {
+        active: true,
+      },
+      undo: {
+        active: true,
+      },
+      redo: {
+        active: true,
+      },
+      clear: {
+        active: true,
+      },
+      details: {
+        active: false,
+      },
+      graph: {
+        active: true,
+      },
+      config: {
+        active: false,
+      },
+      reloadmodels: {
+        active: false,
+      },
+      modelselector: {
+        active: true,
       }
     };
     return c;

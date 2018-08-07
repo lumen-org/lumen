@@ -48,14 +48,18 @@ main {
 .pl-column-left {
     min-width: 200px;
     min-height: 50px;
+    /* display: flex; */
     background-color: #FFFFFF;
+    /* flex-direction: column; */
 }
 
 .pl-lower {
     min-width: 200px;
     height: 33%;
+    /* min-height: 33%; */
     border-top: 2px solid #f3f3f3;
     border-right: 2px solid #f3f3f3;
+    /* flex-grow: 1; */
 }
 
 .pl-lower .pl-column-title {
@@ -69,12 +73,12 @@ main {
 /*background-color: #ecfaff;*/
 /*}*/
 
-.pl-upper{
+.pl-upper {
     min-width: 200px;
     height: 67%;
     display: flex;
-    flex-direction: row;
-    flex-grow: 1;
+    /*flex-direction: row;*/
+    /* flex-grow: 4; */
 }
 
 .pl-spec {
@@ -95,6 +99,7 @@ main {
 #header-bar, #footer-bar {
     width: 100%;
     max-width: 100%;
+    display: none;
 }
 
 #footer-bar {
@@ -254,8 +259,8 @@ main {
     margin: 0;
     padding-top: 0;
     padding-bottom: 0;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
 }
 
 .pl-toolbar-button:hover {
@@ -322,7 +327,7 @@ main {
 
 textarea.pl-survey-content {
     min-height: 10rem;
-    min-width: 16rem;
+    min-width: 12rem;
 }
 
 .pl-toolbar-button.pl-survey-content {
@@ -468,7 +473,6 @@ textarea.pl-survey-content {
 .plLikert_widgetContainer {
     display: flex;
     flex-direction: column;
-    /* width: 500px; */
 }
 
 .plLikert_optionsContainer {

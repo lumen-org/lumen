@@ -232,6 +232,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             predictionOffset: { active: Settings.views.predictionOffset.active},
           }
         };
+        this.config  = {
+          visConfig: JSON.parse(JSON.stringify(Settings.views))
+        };
         // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
         // Object.assign(this.config.visConfig, configCopy); // set initial config
 
@@ -500,12 +503,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let title = $('<div class="shelf-title">Facets</div>');
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
+          .filter( what => context.config.visConfig[what].possible)
           .map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">' + _facetNameMap[what] + '</input>')
               .prop("checked", context.config.visConfig[what].active)
-              .prop("disabled", context.config.visConfig[what].possible)
+              .prop("disabled", !context.config.visConfig[what].possible)           
               .change( (e) => {
                 // update the config and ...
                 context.config.visConfig[what].active = e.target.checked;
@@ -750,79 +754,128 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     class Toolbar {
 
       constructor (context) {
+        let elems = [],
+          config = Settings.toolbar;
 
         this._modelSelector = new ModelSelector(context);
+        if (config.modelselector.active) {
+          elems.push(this._modelSelector.$visual);
+        }
 
-        let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
-          let c = this._context;
-          if (c.unredoer.hasUndo) {
-            ActivityLogger.log({'context': c.getNameAndUUID()}, 'undo');
-            c.loadShelves(c.unredoer.undo());
-          }
-          else
-            infoBox.message("no undo left!");
-        });
+        if (config.query.active) {
+          let $query = $('<div class="pl-toolbar-button">Query!</div>').click(
+            () => this._context.update());
+          elems.push($query);
+        }
+
+        if (config.clone.active) {
+          let $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
+            () => {
+              let c = this._context;
+              ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
+              let contextCopy = c.copy();
+              contextQueue.add(contextCopy);
+
+              // fetch model
+              contextCopy.model.update()
+                .then(() => activate(contextCopy, ['visualization', 'visPane', 'legendPane']))
+                .then(() => contextCopy.update())
+                .catch((err) => {
+                  console.error(err);
+                  infoBox.message("Could not load remote model from Server!");
+                  // TODO: remove vis and everything else ...
+                });
+            }
+          );
+          elems.push($clone);
+        }
+
+        if (config.undo.active) {
+          let $undo = $('<div class="pl-toolbar-button"> Undo </div>').click( () => {
+            let c = this._context;
+            if (c.unredoer.hasUndo) {
+              ActivityLogger.log({'context': c.getNameAndUUID()}, 'undo');
+              c.loadShelves(c.unredoer.undo());
+            }
+            else
+              infoBox.message("no undo left!");
+          });
+          elems.push($undo);
+        }
+
         /*let $save = $('<div class="pl-toolbar-button"> Save </div>').click( () => {
          let c = this._context;
          c.unredoer.commit(c.copyShelves());
          });*/
-        let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click( () => {
-          let c = this._context;
-          if (c.unredoer.hasRedo) {
-            ActivityLogger.log({'context': c.getNameAndUUID()}, 'redo');
-            c.loadShelves(c.unredoer.redo());
-          }
-          else
-            infoBox.message("no redo left!");
-        });
-        let $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
-          () => {
+        if (config.redo.active) {
+          let $redo = $('<div class="pl-toolbar-button"> Redo </div>').click(() => {
             let c = this._context;
-            ActivityLogger.log({'context': c.getNameAndUUID()}, 'clear');
-            c.clearShelves(['dim','meas']);
+            if (c.unredoer.hasRedo) {
+              ActivityLogger.log({'context': c.getNameAndUUID()}, 'redo');
+              c.loadShelves(c.unredoer.redo());
+            }
+            else
+              infoBox.message("no redo left!");
           });
-        let $clone = $('<div class="pl-toolbar-button"> Clone </div>').click(
-          () => {
-            let c = this._context;
-            ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
-            let contextCopy = c.copy();
-            contextQueue.add(contextCopy);
+          elems.push($redo);
+        }
 
-            // fetch model
-            contextCopy.model.update()
-              .then(() => activate(contextCopy, ['visualization', 'visPane', 'legendPane']))
-              .then(() => contextCopy.update())
-              .catch((err) => {
-                console.error(err);
-                infoBox.message("Could not load remote model from Server!");
-                // TODO: remove vis and everything else ...
-              });
-          }
-        );
+        if (config.clear.active) {
+          let $clear = $('<div class="pl-toolbar-button"> Clear </div>').click(
+            () => {
+              let c = this._context;
+              ActivityLogger.log({'context': c.getNameAndUUID()}, 'clear');
+              c.clearShelves(['dim', 'meas']);
+            });
+          elems.push($clear);
+        }
 
-        let $query = $('<div class="pl-toolbar-button">Query!</div>').click(
-          () => this._context.update());
+        if (config.details.active) {
+          let $detailsHideButton = $('<div class="pl-toolbar-button">Details</div>').click(() => {
+            $('.pl-details').toggle()
+          });
+          elems.push($detailsHideButton);
+        }
 
-        let $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
-          () => this._modelSelector.reloadModels());
+        if (config.graph.active) {
 
-        let $configHideButton = $('<div class="pl-toolbar-button">Config</div>').click( () => {
-          $('.pl-config').toggle()
-        });
+          let $thesholdHideButton = $('<div class="pl-toolbar-button">Threshold</div>')
+            .click( () => $('.dg_slider-container').toggle());
 
-        let $detailsHideButton = $('<div class="pl-toolbar-button">Details</div>').click( () => {
-          $('.pl-details').toggle()
-        });
+          let $graphManagerToggleButton = $('<div class="pl-toolbar-button">Graph</div>').click(() => {
+            let isVisible = $('.pl-lower').css('display') !== 'none';
+            // TODO: ugly as hell!
+            $('.pl-lower').toggle();
+            if (isVisible) {
+              $('.pl-upper ').css('height', '100%');
+            } else {
+              $('.pl-upper ').css('height', '67%');
+            }
 
-        let $graphManagerToggleButton = $('<div class="pl-toolbar-button">Graph</div>').click( () => {
-          $('.pl-lower').toggle()
-        });
+          });
 
+          //elems.push($graphManagerToggleButton);
+          elems.push($('<div></div>').css('display', 'flex').append($graphManagerToggleButton, $thesholdHideButton));
+        }
 
-        this.$visual = $('<div class="pl-toolbar">').append(this._modelSelector.$visual, $query, $clone, $undo,/* $save,*/ $redo, $clear, $detailsHideButton, $graphManagerToggleButton, $configHideButton, $reload);
+        if (config.config.active) {
+          let $configHideButton = $('<div class="pl-toolbar-button">Config</div>').click(() => {
+            $('.pl-config').toggle()
+          });
+          elems.push($configHideButton);
+        }
+
+        if (config.reloadmodels.active) {
+          let $reload = $('<div class="pl-toolbar-button">Reload Models</div>').click(
+            () => this._modelSelector.reloadModels());
+          elems.push($reload);
+        }
+
+        this.$visual = $('<div class="pl-toolbar">').append(...elems);
 
         if(context !== undefined)
           this.setContext(context);
+
       }
 
       /**
@@ -1065,7 +1118,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       static
       _makeInsightWidget (callback) {
         let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
-        let $likertScale = SurveyWidget._makeLikertScaleWidget('not confident at all', 'extremely confident', 7, 'How confident are you that your insight is correct?');
+        let $likertScale = SurveyWidget._makeLikertScaleWidget(
+          'not confident at all',
+          'extremely confident',
+          7,
+          'Confidence that your insight is correct?');
+        //let $likertScale = SurveyWidget._makeLikertScaleWidget('not confident at all', 'extremely confident', 7, 'How confident are you that your insight is correct?');
         let $commitButton = $('<div class="pl-toolbar-button pl-survey-content">report & clear</div>')
           .click( () => {
             let confidence = $likertScale.value();
