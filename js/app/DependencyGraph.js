@@ -3,69 +3,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
   cola(cytoscape); // register cola extension
 
   /**
-   * Create and return random dummy graph based on provided context.
-   * @param context
-   * @returns {{nodes: any[], edges: Array}}
-   */
-  function makeDummyGraph (context) {
-
-    function makeNode(data) {
-      return {
-        group: 'nodes',
-        data: data
-      };
-    }
-
-    function makeEdge(s,t) {
-      return {
-        group: 'edges',
-        data: {
-          source: s,
-          target: t,
-          weight: Math.random(),
-        }
-      };
-    }
-
-    /**
-     * Given an iterable sequence of Fields it returns an iterable sequence of JSON formatted nodes.
-     *
-     * @param field
-     */
-    function field2node(field) {
-      return makeNode({
-        id: field.name,
-        dataType: field.dataType,
-        field: field,
-      });
-    }
-
-    let model = context.model,
-      nodes = Array.from(model.fields.values()).map(field2node),
-      edges = [];
-
-    // add edges
-    for (let i=1; i<model.dim-1; i++) {
-      let s = nodes[i-1].data.id,
-        t = nodes[i].data.id;
-      if (s === t)
-        continue;
-      edges.push(makeEdge(s, t))
-    }
-
-    // add some more edges
-    let connect = _.sample(nodes, Math.ceil(model.dim/2)*2);
-    for (let i=0; i<connect.length-1; i+=2) {
-      edges.push(makeEdge(connect[i].data.id, connect[i+1].data.id))
-    }
-
-    return {
-      nodes,
-      edges
-    };
-  }
-
-  /**
    * Convert a 'standard' edge list to suitable format for cytoscape.
    * @param edges
    */
@@ -350,7 +287,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
           range: "min",
           value: 0,
           min: 0,
-          step: maxWeight/100,
+          step: maxWeight/200,
           max: maxWeight,
           slide: (event, ui) => {
             valueDiv.text(ui.value.toPrecision(3));
@@ -385,10 +322,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       this.emit('Node.Unselected', node.id());
     }
 
-    // container () {
-    //   return this._cy.container();
-    // }
-
     redraw () {
       this._cy.resize();
     }
@@ -403,8 +336,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
 
       // possibly include edges that are now excluded
       if (value < this._threshhold) {
-//         let toInclude = this._excludedEdges.remove(`edge[originalWeight >= ${value}]`);
-//         this._cy.add(toInclude);
            let toRestore = this._excludedEdges.filter(`edge[originalWeight >= ${value}]`);
            this._excludedEdges = this._excludedEdges.subtract(toRestore);
            toRestore.restore();
