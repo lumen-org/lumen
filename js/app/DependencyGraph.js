@@ -261,13 +261,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       this._originalNodes = convertNodenameDict(graph.nodes);
       this._originalEdges = convertEdgeList(graph.edges);      
 
-      // let graphContainer = $('<div></div>')
-      //   .addClass('dg_graphCanvas-container')
-      //   .appendTo(domDiv);
+      let graphContainer = $('<div></div>')
+        .addClass('dg_graphCanvas-container')
+        .appendTo(domDiv);
 
       this._cy = cytoscape({
-        container: $(domDiv),
-        //container: graphContainer,
+        // container: $(domDiv),
+        container: graphContainer,
         elements: [...this._originalNodes, ...this._originalEdges],
         style: style,
         selectionType: 'additive',
@@ -295,8 +295,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         .on('unselect', this.onNodeUnselect.bind(this));
 
       this._excludedEdges = cy.collection();
-      this._appendRangeSlider(domDiv, 10, (val) => {console.log(val)});
+      this._prependRangeSlider(domDiv);
 
+      this.$visual = $(domDiv);
       Emitter(this);
     }
 
@@ -320,18 +321,22 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       }
     }
 
-    _appendRangeSlider(domDiv) {
+    _prependRangeSlider(domDiv) {
       // make slider container
       let container = $('<div></div>')
         .addClass('dg_slider-container')
-        .appendTo(domDiv);
+        .prependTo(domDiv);
+
+      $('<div>threshold </div>')
+        .addClass('df_slider__label')
+        .appendTo(container);
 
       let sliderDiv = $('<div></div>')
-        .addClass('dg_slider-container__slider')
+        .addClass('dg_slider__slider')
         .appendTo(container);
 
       let valueDiv = $('<div></div>')
-        .addClass('dg_slider-container__value')
+        .addClass('dg_slider__value')
         .text(0)
         .appendTo(container);
 
@@ -380,9 +385,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       this.emit('Node.Unselected', node.id());
     }
 
-    container () {
-      return this._cy.container();
-    }
+    // container () {
+    //   return this._cy.container();
+    // }
 
     redraw () {
       this._cy.resize();
@@ -455,7 +460,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         that.draggedObject.field = node.data('field');
 
         that.dragGhost = makeDragGhostForNode(node)
-          .appendTo(that.container());
+          .appendTo(that._cy.container());
         that.dragState = "dragging";
       })
       .on('cxtdrag', (ev) => {

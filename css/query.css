@@ -1,4 +1,4 @@
-/* copyright Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright Ã‚Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
 @font-face {
     font-family: Comfortaa;
     src: url(../fonts/Comfortaa_Regular.ttf);
@@ -233,6 +233,8 @@ body {
 .pl-graph-pane {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .pl-aggr-marks .point {

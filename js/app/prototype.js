@@ -897,9 +897,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // remove from the set
         this._contextSet.delete(context);
 
-        // hide it if it is the current one
+        // hide if it's the current one
         if (context === this._context)
-          $(this._get(context).container()).hide();
+          this._get(context).$visual.hide();
       }
 
       /**
@@ -913,11 +913,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // hide current one
         if (this._context !== undefined)
-          $(this._get(this._context).container()).hide();
+          this._get(this._context).$visual.hide();
 
         // show new one
         let widget = this._get(context);
-        $(widget.container()).show();
+        widget.$visual.show();
         widget.redraw();
         this._context = context;
       }
