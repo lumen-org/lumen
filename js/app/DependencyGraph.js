@@ -92,7 +92,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       return {
         group: 'edges',
         // normalize weights to [0,1]
-        data: Object.assign({}, edge, {'weight': (edge.weight - min_)/len}),
+        data: Object.assign({}, edge, {'weight': (edge.weight - min_)/len, 'originalWeight': edge.weight}),
       }
     })
   }
@@ -112,6 +112,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       }
     });
   }
+
 
   const config = {
     defaultNodeDiameter: 30,
@@ -256,15 +257,24 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
   class GraphWidget {
 
     constructor(domDiv, graph, layoutmode='cola') {
+
+      this._originalNodes = convertNodenameDict(graph.nodes);
+      this._originalEdges = convertEdgeList(graph.edges);      
+
+      // let graphContainer = $('<div></div>')
+      //   .addClass('dg_graphCanvas-container')
+      //   .appendTo(domDiv);
+
       this._cy = cytoscape({
         container: $(domDiv),
-        elements: [...convertNodenameDict(graph.nodes), ...convertEdgeList(graph.edges)],
+        //container: graphContainer,
+        elements: [...this._originalNodes, ...this._originalEdges],
         style: style,
         selectionType: 'additive',
       });
-      // this._layout = this._cy.layout(layout.cola); // TODO
+      // this._layout = this._cy.layout(layout.cola); // TODO      
       this._layout = this._cy.layout(layout[layoutmode]);
-      this._layout.run();
+      this._layout.run();      
       let cy = this._cy;
 
       this.selected = cy.collection();
@@ -272,9 +282,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       this.remaining = cy.collection();
       this.allNodes = cy.nodes();
       this.allEdges = cy.edges();
+      this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
 
       this._updateStylings();
-      onDoubleClick(this._cy, ev => {
+      onDoubleClick(cy, ev => {
         this._cy.fit();
         this._layout.run(); // rerun layout!
       });
@@ -283,9 +294,16 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         .on('select', this.onNodeSelect.bind(this))
         .on('unselect', this.onNodeUnselect.bind(this));
 
+      this._excludedEdges = cy.collection();
+      this._appendRangeSlider(domDiv, 10, (val) => {console.log(val)});
+
       Emitter(this);
     }
 
+    /**
+     * Given the set of currently selected nodes in this.selected it recalculates and sets all stylings.
+     * @private
+     */
     _updateStylings() {
       this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
       this.allEdges.removeClass('pl-adjacent-edge pl-remaining-edge');
@@ -300,6 +318,40 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
           .addClass('pl-adjacent-edge');
         this.allEdges.subtract(selectedEdges).addClass('pl-remaining-edge');
       }
+    }
+
+    _appendRangeSlider(domDiv) {
+      // make slider container
+      let container = $('<div></div>')
+        .addClass('dg_slider-container')
+        .appendTo(domDiv);
+
+      let sliderDiv = $('<div></div>')
+        .addClass('dg_slider-container__slider')
+        .appendTo(container);
+
+      let valueDiv = $('<div></div>')
+        .addClass('dg_slider-container__value')
+        .text(0)
+        .appendTo(container);
+
+      // get maximum of graph weight
+      let maxWeight = this.allEdges.max(
+        ele => ele.data('originalWeight')
+      ).value*1.1;
+
+      // make slider
+      sliderDiv.slider({
+          range: "min",
+          value: 0,
+          min: 0,
+          step: maxWeight/100,
+          max: maxWeight,
+          slide: (event, ui) => {
+            valueDiv.text(ui.value.toPrecision(3));
+            this.edgeThreshhold(ui.value);
+          }
+        });
     }
 
     onNodeSelect(ev) {
@@ -335,6 +387,33 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
     redraw () {
       this._cy.resize();
     }
+
+    /**
+     * Sets or gets the threshold
+     * @param value
+     */
+    edgeThreshhold (value=undefined) {
+      if (value === undefined)
+        return this._threshhold;
+
+      // possibly include edges that are now excluded
+      if (value < this._threshhold) {
+//         let toInclude = this._excludedEdges.remove(`edge[originalWeight >= ${value}]`);
+//         this._cy.add(toInclude);
+           let toRestore = this._excludedEdges.filter(`edge[originalWeight >= ${value}]`);
+           this._excludedEdges = this._excludedEdges.subtract(toRestore);
+           toRestore.restore();
+      }
+      // possible exclude edges that are not included
+      else if (value > this._threshhold) {
+        let toExclude = this._cy.remove(`edge[originalWeight < ${value}]`);
+        this._excludedEdges = this._excludedEdges.union(toExclude);
+      }
+      this.allEdges = this._cy.edges();
+      this._threshhold = value;
+      this._updateStylings();
+    }
+
   }
 
 

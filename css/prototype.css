@@ -600,3 +600,29 @@ textarea.pl-survey-content {
     border: 2px red solid;
     border-radius: 5px;
 }
+
+
+.dg_graphCanvas-container {
+    /*width: 100%;*/
+    /*height: 100%;*/
+    width: 200px;
+    height: 200px;
+}
+
+.dg_slider-container {
+    /* position: absolute; */
+    /* top: 0; */
+    width: 100%;
+    height: 1rem;
+    display: flex;
+    flex-direction: row;
+    /*justify-content: ;*/
+}
+
+.dg_slider-container__slider {width: 100%;height: 100%;}
+
+.dg_slider-container__value {
+    width: 3rem;
+    margin-left: 0.2rem;
+}
+

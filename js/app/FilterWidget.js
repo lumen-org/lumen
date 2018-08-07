@@ -42,7 +42,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   "use strict";
 
   let plotConfig = {
-    displayModeBar: true,
+    displayModeBar: false,
     showTips: false,
     displaylogo: false,
     //   showAxisDragHandles: false,
