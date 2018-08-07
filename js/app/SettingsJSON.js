@@ -865,7 +865,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     let todayStr = today.getDate() + "-" + (today.getMonth()+1) + "-" + today.getFullYear();
 
     c.meta = {
-      activity_logging_mode: "console.log", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_mode: "remote", // one of ["disabled", "console.error", "console.log", "remote"]
       // activity_logging_filename: "user_log.json",
       activity_logging_filename: utils.todayString() + "_" + "activity.log",
       activity_logging_subdomain: '/activitylogger',

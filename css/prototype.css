@@ -515,14 +515,15 @@ textarea.pl-survey-content {
     top: 27px;
 }
 
-#pl-playground {
+#pl-playground {    
     position: absolute;
     width:300px;
     height: 400px;
     right: 100px;
     bottom: 100px;
     border: orangered 2px solid;
-    display: flex;
+/*     display: flex; */
+    display: none;
     flex-direction: column;
 }
 
@@ -634,3 +635,12 @@ textarea.pl-survey-content {
     font-size: small;
 }
 
+/* pl-details */
+
+.pl-details .pl-column-title {
+    position: static;
+}
+
+#pl-survey-container .pl-column-title {
+    position: static;
+}
