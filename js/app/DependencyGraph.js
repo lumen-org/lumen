@@ -54,7 +54,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
   const config = {
     defaultNodeDiameter: 30,
     remainingNodeDiameterPrct: 25,
-    minNodeDiameter: 3
+    minEdgeWidth: 1,
   };
 
   // default style sheet
@@ -109,7 +109,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       selector: 'edge',
       style: {
         'width': function (ele) {
-          return config.minNodeDiameter + (config.defaultNodeDiameter - config.minNodeDiameter) * 0.7 * ele.data('weight')
+          return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')
         },
         'line-color': '#d7d7d7',
         'opacity': 0.6,

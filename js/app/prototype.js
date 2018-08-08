@@ -569,40 +569,50 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this._context = context;
         let $modelInput = $('<input type="text" list="models"/>')
           .keydown( (event) => {
-            let modelName = event.target.value;
             if (event.keyCode === 13) {
-
-              // create new context and visualization with that model if it exists
-              let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
-              contextQueue.add(context);
-
-              // fetch model
-              context.model.update()
-                .catch((err) => {
-                  console.error(err);
-                  infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
-                  // TODO: remove vis and everything else ...
-                })
-                .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
-                .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
-                .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
-                .catch((err) => {
-                  console.error(err);
-                  infoBox.message("Internal error: " + err.toString());
-                })
+              this._loadModel(event.target.value);
             }
           });
 
         this._$modelsDatalist = $('<datalist id="models"></datalist>');
 
+        let $loadButton = $('<div class="pl-toolbar-button pl-model-selector-button">Go!</div>')
+          .click(
+            () => this._loadModel($modelInput.val())
+          );
+
         this.$visual = $('<div class="pl-model-selector"></div>')
-          .append($('<div>Load Model:</div>'))
-          .append($modelInput)
-          .append(this._$modelsDatalist);
+          .append($('<div class="pl-model-selector-label">Load Model:</div>'), $modelInput, this._$modelsDatalist, $loadButton);
 
         if(context !== undefined) {
           this.setContext(context);
         }
+      }
+
+      /**
+       * Load model with name modelname.
+       * @param modelName {String} Name of the model to load.
+       * @private
+       */
+      _loadModel (modelName) {
+        // create new context and visualization with that model if it exists
+        let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
+        contextQueue.add(context);
+
+        // fetch model
+        context.model.update()
+          .catch((err) => {
+            console.error(err);
+            infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
+            // TODO: remove vis and everything else ...
+          })
+          .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
+          .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
+          .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
+          .catch((err) => {
+            console.error(err);
+            infoBox.message("Internal error: " + err.toString());
+          })
       }
 
       _setModels(models) {
