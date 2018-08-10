@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './ModelUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, ModelUtils) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -125,7 +125,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   }
 
   function _insertVisualInShelf (record) {
-    var visual = record.$visual;
+    let visual = record.$visual;
 
     // add to visual of shelf
     // find correct position: iterate from (its own index - 1) down to 0. Append visual after the first record that is visual.
@@ -152,15 +152,18 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   s.Record.prototype.beVisual = function () {
 
     // create appropriate container for view on record content
-    var $visual = _createVisualRecordContainer(this);
-    this.$visual = $visual;
-
-    // add visual of content in that container
-    var content = this.content;
-    $visual.append(content.makeVisual(this));
+    this.$visual = _createVisualRecordContainer(this);
 
     // add visual of record to correct position in shelf
     _insertVisualInShelf(this);
+
+    // add visual of content in that container
+    // makeVisual may either :
+    //   * return its visual representation and not append to this.$visual, or
+    //   * return nothing but append its visual representation to this.$visual
+    let ret = this.content.makeVisual(this, this.$visual);
+    if (ret)
+      this.$visual.append(ret);
     return this;
   };
 
@@ -251,9 +254,9 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     return $visual;
   };
 
-  PQL.Filter.prototype.makeVisual = function (record) {
+  PQL.Filter.prototype.makeVisual = function (record, $parent) {
     function _updateVisual () {
-      $visual.html('')
+      $innerVisual.html('') // TODO: not a good idea - deletes everything else ...
         .append(methodSelector(that, Object.keys(PQL.FilterMethodT)))
         .append(singleFieldDiv([that.name], record))
         .append(argumentsEditField_Filter(that))
@@ -263,15 +266,20 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     let that = this;
     // 'small' visual
     // TODO: should only display a filter, and allow removal of it, but no other modification?
-    let $visual = $('<div class="pl-fu pl-fu-filter"> </div>');
-    _updateVisual();
+    let $visual = $('<div class=""> </div>')
+      .appendTo($parent);
+    let $innerVisual = $('<div class="pl-fu-filter__inner pl-fu pl-fu-filter"></div>').appendTo($visual);
     this.on(Emitter.InternalChangedEvent, _updateVisual);
+    _updateVisual();
 
-    //
-    let widget = new FilterWidget(record.content, )
+    // 'pop up visual for convenient modification
+    let $popUp = $('<div class="pl-fu-filter__popUp"></div>')
+      .appendTo($visual),
+      filter = record.content,
+      field = filter.field,
+      widget = new FilterWidget(filter, () => ModelUtils.getMarginalDistribution(field.model, field), $popUp[0]);
 
-
-    return $visual;
+    return undefined;
   };
 
   function methodSelector (fu, options) {

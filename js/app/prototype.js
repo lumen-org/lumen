@@ -30,6 +30,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     function initialQuerySetup(shelves) {
         drop(shelves.column, shelves.dim.at(0));
         drop(shelves.column, shelves.meas.at(1));
+        drop(shelves.filter, shelves.dim.at(0));
     }
 
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
@@ -1405,28 +1406,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => {
-
-            let getMarginalDistribution = function (model, dimNameOrField, mode='probability') {
-               // given a model and a dimension name / field
-              let field = PQL.isField(dimNameOrField) ? dimNameOrField : model.fields.get(dimName);
-
-              // get a sampling of the marginal distribution over that field "using standard splits"
-              // TODO: add all existing filters as conditions
-              let method = field.isDiscrete() ? PQL.SplitMethod.elements : PQL.SplitMethod.equiinterval;
-              return model.predict([field.name, new PQL.Density(field, mode)], [], new PQL.Split(field, method, 20) );
-            };
-
-            // DEBUG / DEVELOP
-            let m = context.model;
-            let f = m.byIndex[1];
-            let p = Promise.resolve([[1,2,3,4,5,6],[1,2,3,4,3,2]]);
-            let fi = PQL.Filter.DefaultFilter(f);
-            fi.on(Emitter.ChangedEvent, (ev) => console.log(ev));
-            // let w = new FilterWidget(f, () => p, $('#pl-playground'));
-            let w = new FilterWidget(fi, () => getMarginalDistribution(m, f), $('#pl-playground')[0]);
           })
-          .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
+          .then(() => initialQuerySetup(context.shelves)) // on initial startup only
           .catch((err) => {
             console.error(err);
             infoBox.message("Could not load remote model from Server!");

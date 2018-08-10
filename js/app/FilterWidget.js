@@ -76,7 +76,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     /**
      *
      * @param filter {PQL.Filter} The Filter FieldUsage to create a FilterWidget for.
-     * @param densityPromise A function that returns a Promise to an update of density value for the field.
+     * @param densityPromise A function that returns a Promise to a sampling over the marginal density of the field.
      * @param container the DOM element where the plot is drawn
      */
     constructor(filter, densityPromise, container) {
@@ -114,7 +114,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         throw "invalid data type or data type not implemented!";
 
       // make gui elements
-      let containerD3 = d3.select(container);
+      let containerD3 = d3.select(container)
+        .classed('fw_container', true);
       this._appendHeader(containerD3);
       this._appendExplicitValueForm(containerD3);
       if (this.dType === 'string')
@@ -127,17 +128,21 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       // attach interactivity and render initial plot
       if (this.dType === 'string') {
         this._makeInteractiveCategorical();
-//         this.render(true, this.makeTraceUpdate4Selection());  TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...
+        // this.render(true, this.makeTraceUpdate4Selection());
+        // TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...
+        this.selectAll(); // work around for consistency: select all
       }
       else if (this.dType === 'numerical') {
         this._makeInteractiveQuantitative();
       }
 
+
+
       this.fetchDistribution(); // will also render it!
     }
 
     initCategorical(layout, trace) {
-      this.labels = new Set();
+      this.labels = new Set(this.filter.args.values);
       this.direction = 'vertical';
       layout = Object.assign(layout, {
         xaxis: {
@@ -194,9 +199,18 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       let toolbar = ele.append('div')
         .attr('class', 'fw_toolbar');
 
-      let allButton = toolbar.append('div').attr('class', 'fw_toolbar__button').text('all').on('click', () => this.selectAll());
-      let noneButton = toolbar.append('div').attr('class', 'fw_toolbar__button').text('none').on('click', () => this.selectNone());
-      let invertButton = toolbar.append('div').attr('class', 'fw_toolbar__button').text('inv').on('click', () => this.selectInverted());
+      let allButton = toolbar.append('div')
+        .attr('class', 'fw_toolbar__button')
+        .text('all')
+        .on('click', () => this.selectAll());
+      let noneButton = toolbar.append('div')
+        .attr('class', 'fw_toolbar__button')
+        .text('none')
+        .on('click', () => this.selectNone());
+      let invertButton = toolbar.append('div')
+        .attr('class', 'fw_toolbar__button')
+        .text('inv')
+        .on('click', () => this.selectInverted());
     }
 
     /**
@@ -214,7 +228,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       taskbar.append('div')
         .attr('class', 'fw_taskbar__button')
         .text('C')
-        .on('click', () => true);
+        .on('click', () => this.commit());
 
       taskbar.append('div')
         .attr('class', 'fw_taskbar__button')
@@ -246,11 +260,11 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           let newDomainStr = this.value; // this refers to the triggering DOM element
 
           // 1. parse to list of strings
-          let newDomainLst = newDomainStr.split(",").map(el => el.trim());
+          let labelLst = newDomainStr.split(",").map(el => el.trim());
 
           let valid = true;
           let newDomain = new Set();
-          for (let item of newDomainLst) {
+          for (let item of labelLst) {
             // 2. validate with actual domain, and ...
             if (!that.fullDomain.includes(item)) {
               valid = false;
@@ -260,13 +274,14 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
             newDomain.add(that.fullDomain.indexOf(item));
           }
 
-          if (newDomainLst.length === 0)
+          if (labelLst.length === 0)
             valid = false;
 
          that._textInput.classed('fw_valueForm__directInput--invalid', !valid);
 
           if (valid) {
             that.domain = newDomain;
+            that.labels = labelLst;
             that.render();
           }
 
@@ -352,7 +367,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
 
         // sync to view
         this.render();
-        this.commit();
+        //this.commit();
       })
     }
 
@@ -405,7 +420,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           this.selectAll();
         }
         this.render();
-        this.commit();
+        //this.commit();
       });
     }
 
@@ -415,8 +430,10 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     }
 
     selectAll () {
-      if (this.dType === 'string')
+      if (this.dType === 'string') {
         this.domain = new Set(_.range(this.fullDomain.length)); // need the indices!
+        this.labels = new Set(this.fullDomain.values());
+      }
       else if (this.dType === 'numerical')
         this.domain = this.fullDomain.slice();
       else
@@ -428,17 +445,23 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       if (this.dType !== 'string')
         throw TypeError("must be string/categorical!");
       this.domain = new Set();
+      this.labels = new Set();
       this.render();
     }
 
     selectInverted () {
       if (this.dType === 'string') {
-        let invDomain = new Set();
+        let invDomain = new Set(),
+         invLabel = new Set(),
+         allLabels = [...this.fullDomain.values()];
         for (let i of _.range(this.fullDomain.length)) {
-          if (!this.domain.has(i))
+          if (!this.domain.has(i)) {
             invDomain.add(i);
+            invLabel.add(allLabels[i]);
+          }
         }
         this.domain = invDomain;
+        this.labels = invLabel;
       }
       else
         // does not make sense for quantitative
@@ -480,9 +503,9 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         args;
 
       if (this.dType === 'string') {
-        args = [...this.labels.values()];
+        args = new Domain.Discrete([...this.labels.values()]);
       } else {
-        args = this.domain.slice();
+        args = new Domain.Numeric(this.domain.slice());
       }
 
       // TODO: filter itself should emit this signal. also see visuals.js - there is more such emitted signals
