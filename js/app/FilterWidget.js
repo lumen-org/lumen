@@ -151,9 +151,10 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         },
         yaxis: {
           fixedrange: true,
+          automargin: true,
         }
       });
-      layout.margin.l = 80;
+      //layout.margin.l = 80;
       trace = Object.assign(trace, {
         type: 'bar',
         mode: 'markers',
