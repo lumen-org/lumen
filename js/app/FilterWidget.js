@@ -51,7 +51,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   };
   let d3 = Plotly.d3;
 
-  let formatter = d3.format(".3f");
+  let formatter = d3.format(".2f");
+
 
   /**
    * A FilterWidget is a interactive, editable UI to a Filter FieldUsage.
@@ -232,7 +233,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
 
       form.append('div')
         .classed('fw_valueForm__label', true)
-        .text(this.dType === 'string'?'any of':'in range');
+        .text(this.dType === 'string'?'any of:':'in range:');
 
       // add handlers that
       //  (i) push text changes to this.domain

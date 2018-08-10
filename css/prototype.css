@@ -389,6 +389,7 @@ textarea.pl-survey-content {
     border: solid 2px transparent;
     border-radius: 0.3em;
     position: relative;
+    margin-bottom: 0.3rem;
 }
 
 .shelf + hr {
@@ -526,8 +527,8 @@ textarea.pl-survey-content {
     right: 100px;
     bottom: 100px;
     border: orangered 2px solid;
-/*     display: flex; */
-    display: none;
+    display: flex;
+    /*display: none;*/
     flex-direction: column;
 }
 
@@ -559,14 +560,21 @@ textarea.pl-survey-content {
     justify-content: space-between;
 }
 
-.fw_valueForm__label {font-size: small;}
+.fw_valueForm__label {
+    font-size: small;
+    margin-right: .5em;
+    user-select: none;
+}
 
-.fw_rangeDisplay__textarea {max-width: 100%;}
+.fw_rangeDisplay__textarea {
+    max-width: 100%;
+}
 
 .fw_toolbar {
     display: flex;
     justify-content: space-evenly;
     margin-bottom: .3em;
+    user-select: none;
 }
 
 .fw_toolbar__button {
@@ -597,8 +605,23 @@ textarea.pl-survey-content {
 }
 
 .fw_valueForm__directInput {
-    border: 0;
+    border: 1px solid transparent;
+    border-radius: 3px;
     box-shadow: none;
+    box-sizing: border-box;
+    flex-grow: 1;
+    text-align: end;
+    margin-right: .3rem;
+}
+
+.fw_valueForm__directInput:hover {
+    background-color: #f8f8f8;
+}
+
+.fw_valueForm__directInput:focus {
+    background-color: #f8f8f8;
+    border-color: #4f4f4f;
+
 }
 
 .fw_valueForm__directInput--invalid {

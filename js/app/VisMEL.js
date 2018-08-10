@@ -254,7 +254,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      * @returns {VisMEL}
      */
     shallowCopy() {
-      var copy = new VisMEL();
+      let copy = new VisMEL();
       copy.sources = this.sources.shallowCopy();
       copy.layout = this.layout.shallowCopy();
       copy.layers = this.layers.map(layer => layer.shallowCopy());
@@ -289,8 +289,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
         excluded.has('defaults') ? undefined : layer.defaults,
         excluded.has('aesthetics') ? undefined : layer.visualMaps().map(map => map.fu)
       );
-      let fus = usedVars.filter(PQL.isFieldUsage);
-      return fus;
+      return usedVars.filter(PQL.isFieldUsage);
     }
 
     /**

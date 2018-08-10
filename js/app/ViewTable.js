@@ -969,7 +969,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         let that = this;        
         Plotly.newPlot(this.plotlyPane, this.plotlyTraces, this.plotlyLayout, this.plotlyConfig);
 
-        this.plotlyPane.on('plotly_afterplot', function () {          
+        this.plotlyPane.on('plotly_afterplot', () => {
           VisLegend(that.vismel, that.legend);
         });
 

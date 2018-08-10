@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL'], function(Logger, util, Emitter, s, VisMEL, PQL) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -259,10 +259,18 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL']
         .append(argumentsEditField_Filter(that))
         .append(removeButton(record));
     }
+
     let that = this;
+    // 'small' visual
+    // TODO: should only display a filter, and allow removal of it, but no other modification?
     let $visual = $('<div class="pl-fu pl-fu-filter"> </div>');
     _updateVisual();
     this.on(Emitter.InternalChangedEvent, _updateVisual);
+
+    //
+    let widget = new FilterWidget(record.content, )
+
+
     return $visual;
   };
 

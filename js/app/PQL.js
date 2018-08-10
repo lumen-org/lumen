@@ -68,15 +68,20 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
    * A {Field} represents a dimension in a (remote) data source.
    *
    * Note that you should not modify the attributes of a Field directly, as such modification is NOT forwarded to the remote model.
-   *
-   * @param {string|Field} nameOrField - A unique identifier of a dimension in the data source, or the {@link Field} to copy.
-   * @param {Model|null} dataSource - The data source this is a field of, or null (if a {@link Field} is provided for name).
-   * @param [args] Additional optional arguments. They will override those of a given {@link Field}.
-   * @constructor
+
    * @alias module:Field.Field
    */
   class Field {
-    constructor (name, dataType, domain, extent) {
+
+    /**
+     *
+     * @param name {String} The name of the Field
+     * @param dataType {String} The desired data type. Either 'string' or 'numerical'. For convinience use FieldT
+     * @param domain {Domain} The domain of the Field, i.e. the values it may take
+     * @param extent {Domain} A finite range/set of values, that it typical.
+     * @param model {Model} Optional. The model this field belongs to.
+     */
+    constructor (name, dataType, domain, extent, model=undefined) {
       if (!_.isString(name)) throw TypeError("name must be a string, but is: " + name.toString());
       if (!_.contains(FieldT.DataType, dataType)) throw RangeError("invalid dataType: " + dataType.toString());
       if (extent.isUnbounded()) throw RangeError("extent may not be unbounded.");
@@ -85,29 +90,31 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       this.dataType = dataType;
       this.domain = domain;
       this.extent = extent;
+      this.model = model;
       Emitter(this);
     }
 
     toString() {
-      var desc = "'" + this.name + "' (" + this.dataType + ') ';
+      let desc = "'" + this.name + "' (" + this.dataType + ') ';
       if (this.dataType === FieldT.DataType.num)
         desc += " domain = " + this.domain;
       return desc;
     }
 
-      isDiscrete() {
+    isDiscrete() {
       return (this.dataType === FieldT.DataType.string);
     }
 
     copy () {
-      return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy());
+      return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy(), this.model);
     }
 
     toJSON () {
       return {
         class: 'Field',
         name: this.name,
-        dataType: this.dataType
+        dataType: this.dataType,
+        model: this.model.name,
       }
     }
 
@@ -117,32 +124,32 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     return obj ? obj instanceof Field : false;
   }
 
-  var SplitMethod = Object.freeze({
+  let SplitMethod = Object.freeze({
     equidist: 'equidist',
     identity: 'identity',
     elements: 'elements',
     equiinterval: 'equiinterval',
     data: 'data'
   });
-  var isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
+  let isSplitMethod = (m) => utils.hasValue(SplitMethod, m);
 
-  var AggregationMethods = Object.freeze({
+  let AggregationMethods = Object.freeze({
     argmax: 'maximum',
     argavg: 'average'
   });
-  var isAggregationMethod = (m) => (m === AggregationMethods.argavg || m === AggregationMethods.argmax);
+  let isAggregationMethod = (m) => (m === AggregationMethods.argavg || m === AggregationMethods.argmax);
 
-  var DensityMethodT = Object.freeze({
+  let DensityMethodT = Object.freeze({
     density: 'density',
     probability: 'probability'
   });
-  var isDensityMethod = (m) => m === DensityMethodT.density;
+  let isDensityMethod = (m) => m === DensityMethodT.density;
 
-  var FilterMethodT = Object.freeze({
+  let FilterMethodT = Object.freeze({
     equals: 'equals',
     in: 'in'
   });
-  var isFilterMethod = (m) => m === FilterMethodT.equals || m === FilterMethodT.in;
+  let isFilterMethod = (m) => m === FilterMethodT.equals || m === FilterMethodT.in;
 
 
   class FieldUsage {
@@ -518,7 +525,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   /**
    * PQL: create JSON-formatted queries from internal-format
    */
-  var toJSON = {
+  let toJSON = {
     /**
      * @param from {String} The name of the modle to predict from.
      * @param predict  A list or a single object of ({@link Aggregation}|{@link Density}|name-of-field|{@link Field})
