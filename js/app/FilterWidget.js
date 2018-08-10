@@ -57,6 +57,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   /**
    * A FilterWidget is a interactive, editable UI to a Filter FieldUsage.
    *
+   * It provides buttons to commit, cancel and deletion
+   *
    * Internal:
    *   * I decided to decouple the state of the widget from the state of the filter, i.e. the state is duplicated in the widget. The reason is that this way I can control when to push updates to the filter, and when not.
    *   Project-specifically, I want to avoid too many events that indicate a Filter change, because that in turn would trigger many PQL queries...
@@ -77,20 +79,18 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
      *
      * @param filter {PQL.Filter} The Filter FieldUsage to create a FilterWidget for.
      * @param densityPromise A function that returns a Promise to a sampling over the marginal density of the field.
-     * @param container the DOM element where the plot is drawn
+     * @param container the DOM element where the plot is drawn.
      */
     constructor(filter, densityPromise, container) {
-      this.field = filter.field;
-      this.filter = filter;
+      this.field = filter.field;  // the field of the FilterUsage
+      this.filter = filter;  // the managed FilterUsage
       this.dType = this.field.dataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
       this._densityPromise = densityPromise;
-      this.container = container;
-      this.plot = undefined;
+      this.container = container;  // the DOM element that holds the widget
+      this.plot = undefined;  // the div that holds the marginal density plot
 
-      this.domain = (this.dType === 'string' ?
-        new Set(_.range(filter.args.length)) : // need indices
-        filter.args.values);  // internal representation of the state of the filter.
-      this.fullDomain = this.field.extent.values;
+      this.domain = undefined; // the domain to filter on, i.e. non-committed state of this widget
+      this.fullDomain = this.field.extent.values;  // the maximal domain
 
       let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
         layout = { // the layout object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
@@ -126,11 +126,11 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       Plotly.newPlot(this.plot, [trace], layout, plotConfig);
 
       // attach interactivity and render initial plot
+      this.selectAll(); // work around for consistency: select all
       if (this.dType === 'string') {
         this._makeInteractiveCategorical();
         // this.render(true, this.makeTraceUpdate4Selection());
         // TODO: do not know how to make use of the intitial selection, because I need integer indices but only have the categorical labels...
-        this.selectAll(); // work around for consistency: select all
       }
       else if (this.dType === 'numerical') {
         this._makeInteractiveQuantitative();
@@ -233,12 +233,12 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       taskbar.append('div')
         .attr('class', 'fw_taskbar__button')
         .text('A')
-        .on('click', () => true);
+        .on('click', () => {console.log("todo: reset to previous state")});
 
       taskbar.append('div')
         .attr('class', 'fw_taskbar__button')
         .text('R')
-        .on('click', () => true);
+        .on('click', () => this.emit("RemoveEvent"));
     }
 
     _appendExplicitValueForm (ele) {
@@ -331,20 +331,6 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           .on('input', pushHandler);
 
       this._textInput.pullHandler = pullHandler;
-
-      // let disp = form.append('div')
-      //   .classed('fw_rangeDisplay', true);
-      // if (this.dType === 'string') {
-      //   disp.append('textarea')
-      //     .classed('fw_rangeDisplay__textarea', true);
-      // } else if (this.dType === 'numerical') {
-      //   disp.append('input')
-      //     .attr('type','text')
-      //     .attr('name','textInput')
-      //     .attr('value', '...');
-      // } else {
-      //   throw RangeError("Not implemented!")
-      // }
     }
 
     _appendPlot (ele) {
@@ -367,7 +353,6 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
 
         // sync to view
         this.render();
-        //this.commit();
       })
     }
 
@@ -420,7 +405,6 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
           this.selectAll();
         }
         this.render();
-        //this.commit();
       });
     }
 
@@ -508,7 +492,6 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         args = new Domain.Numeric(this.domain.slice());
       }
 
-      // TODO: filter itself should emit this signal. also see visuals.js - there is more such emitted signals
       let change = {
         'type': 'fu.args.changed',
         'class': f.constructor.name,
@@ -517,6 +500,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         'value.new': args,
       };
       f.args = args;
+      // TODO: filter itself should emit this signal. also see visuals.js - there is more such emitted signals
       f.emit(Emitter.InternalChangedEvent, change);
     }
   }
