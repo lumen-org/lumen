@@ -637,7 +637,8 @@ textarea.pl-survey-content {
 .pl-fu-filter__popUp {
     width: 300px;
     height: 300px;
-    border: green 2px solid;
+    border: #9ab2a0 2px solid;
+    border-radius: 5px;
     position: fixed;
     overflow: visible;
     background-color: rgba(255,255,255,0.95);
@@ -693,3 +694,22 @@ textarea.pl-survey-content {
     position: static;
 }
 
+
+
+/* modal edit dialog */
+
+.pl-modal__background {
+    display: none;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: auto;
+    background-color: transparent;
+}
+
+.pl-modal__foreground {
+    z-index: 10001;
+}

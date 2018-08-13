@@ -41,6 +41,21 @@ implements:
 define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   "use strict";
 
+
+
+
+
+
+
+
+
+
+
+
+
+  /* /////////////////// */
+
+
   let plotConfig = {
     displayModeBar: false,
     showTips: false,
@@ -52,7 +67,6 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   let d3 = Plotly.d3;
 
   let formatter = d3.format(".2f");
-
 
   /**
    * A FilterWidget is a interactive, editable UI to a Filter FieldUsage.

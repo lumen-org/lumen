@@ -20,6 +20,36 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   logger.setLevel(Logger.WARN);
 
   /**
+   * Make DOM node modalNode pop-up in front if it is clicked on parentNode. Then, modelNode will be like a modal dialog always in front, until it is clicked anywhere outside of it.
+   * @param parentNode
+   * @param modalNode
+   */
+  function makeModal (parentNode, modalNode) {
+
+    modalNode = $(modalNode).addClass('pl-modal__foreground').hide();
+    parentNode = $(parentNode);
+
+    // register as modal dialog, i.e.:
+    // * hide by default
+    // * if parent is clicked: show dialog
+    // * if then clicked anywhere but the dialog: hide dialog
+    parentNode.on('click', e => {
+
+      let closeHandler = () => {
+        modalNode.hide();
+        modalBackground.remove();
+      };
+
+      modalNode.show();
+      // append clickable background and register close handler
+      let modalBackground = $("<div class='pl-modal__background'></div>")
+        .appendTo('body')
+        .on("click", closeHandler)
+        .show();
+    });
+  }
+
+  /**
    * Enum for possible layout types of shelves.
    * @type {{vertical: String, horizontal: String, box: String}}
    * @enum
@@ -272,13 +302,14 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     _updateVisual();
 
-    // 'pop up visual for convenient modification
+    // 'pop up visual' for convenient modification
     let $popUp = $('<div class="pl-fu-filter__popUp"></div>')
-      .appendTo($visual),
+        .appendTo($visual),
       filter = record.content,
       field = filter.field,
       widget = new FilterWidget(filter, () => ModelUtils.getMarginalDistribution(field.model, field), $popUp[0]);
 
+    makeModal($innerVisual, $popUp);
     return undefined;
   };
 
