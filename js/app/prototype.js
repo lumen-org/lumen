@@ -658,7 +658,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class ShelfSwapper {
       constructor (context) {
-        let $swapButton = $('<div class="pl-swap-button"> Swap X and Y </div>').click( () => {
+        let $swapButton = $('<div class="pl-toolbar__button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
           ActivityLogger.log({'context': this._context.getNameAndUUID()}, 'swap_x_y');
           sh.swap(shelves.row, shelves.column);

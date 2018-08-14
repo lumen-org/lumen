@@ -215,9 +215,6 @@ body {
 }
 
 #pl-model-container {
-    min-width: 7rem;
-    top: 27px;
-    position: relative;
 }
 
 #pl-mappings-container {
