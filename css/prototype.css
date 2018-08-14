@@ -1,4 +1,4 @@
-/* copyright Ã‚Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright Ãƒâ€šÃ‚Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 main {
     display: flex;
@@ -9,26 +9,31 @@ main {
 .shelf-title {
     /*text-align: center;*/
     font-size: small;
-    font-weight: bold;
+    font-weight: 400;
     /*width: 4rem;*/
 }
 
 .pl-column {
-    align-items: stretch;
+    /* align-items: stretch; */
     overflow-y: auto;
     /*     border: grey 2px solid;
         border-radius: 10px; */
+    margin: 0.3em;
+    background-color: white;
+    border-radius: 10px;
+    border: #dbdbdb 1px solid;
+    box-sizing: border-box;
 }
 
 .pl-column-title {
     margin-left: 1em;
     margin-right: 1em;
-    font-size: large;
-    font-weight: bolder;
+    margin-top: 0.2em;
+    font-size: x-large;
+    font-weight: lighter;
     height: 27px;
     position: absolute;
     z-index: 10;
-    background-color: inherit;
 }
 
 .pl-column-content {
@@ -41,30 +46,23 @@ main {
 }
 
 .pl-schema {
-    background-color: #FFFFFF;
+    /* background-color: #FFFFFF; */
     min-width: 175px;
 }
 
 .pl-column-left {
     min-width: 200px;
-    min-height: 50px;
-    /* display: flex; */
-    background-color: #FFFFFF;
-    /* flex-direction: column; */
+    display: flex;
+    flex-direction: column;
 }
 
 .pl-lower {
-    min-width: 200px;
-    height: 33%;
-    /* min-height: 33%; */
-    border-top: 2px solid #f3f3f3;
-    border-right: 2px solid #f3f3f3;
-    /* flex-grow: 1; */
 }
 
 .pl-lower .pl-column-title {
     position: static;
     text-align: center;
+    height: auto;
 }
 
 /*#pl-mid {*/
@@ -75,14 +73,13 @@ main {
 
 .pl-upper {
     min-width: 200px;
-    height: 67%;
     display: flex;
-    /*flex-direction: row;*/
-    /* flex-grow: 4; */
+    flex-direction: row;
+    flex-grow: 1;
 }
 
 .pl-spec {
-    background-color: #f8f8f8;
+    background-color: white;
     border-left: 2px solid #f3f3f3;
     border-right: 2px solid #f3f3f3;
     min-width: 200px; /* for constant minimal width*/
@@ -90,7 +87,6 @@ main {
 }
 
 .pl-dashboard {
-    background-color: #ffffff;
     min-width: 50%;
     flex-grow: 1;
     overflow: auto;
@@ -114,21 +110,19 @@ main {
 .pl-visualization {
     position: absolute;
     /*padding: 0.5rem;*/
-    margin: .5rem;
+    /* margin: .5rem; */
     width: 500px; /* initial width and height */
     height: 500px;
-    border-radius: .5em;
+    border-radius: 10px;
     border: 4px solid #fafafa;
+    padding: 5px;
     cursor: move;
+    background-color: white;
 }
 
 .pl-visualization.pl-active {
     border-color: #d2d2d2;
     transition: border-color 150ms;
-}
-
-.pl-visualization > div {
-    /* font-weight: bold; */
 }
 
 .pl-visualization > .pl-remove-button {
@@ -197,17 +191,18 @@ main {
 .pl-visualization-pane {
     width: 100%;
     height: 100%;
-    position: absolute;
+    /* position: absolute; */
 }
 
 .pl-legend-pane {
-    position: absolute;
+    position: relative;
     height: 100%;
     left: 100%;
     width: 10rem;
     padding: 1rem;
     pointer-events: none;
     /* margin-top: 4rem; */
+    top: -100%;
 }
 .pl-legend-svg {
     height: 100%;
@@ -248,13 +243,12 @@ main {
     align-items: center;
     justify-content: space-around;
     background-color: #d5d5d5;
-    padding: .2rem;
     font-size: smaller;
 }
 
-.pl-toolbar-button {
+.pl-toolbar__button {
     background-color: #f0f0f0;
-    border-radius: 5px;
+    border-radius: 1em;
     border: 1px solid #c5c5c5;
     margin: 0;
     padding-top: 0;
@@ -263,7 +257,7 @@ main {
     padding-right: 1.5rem;
 }
 
-.pl-toolbar-button:hover {
+.pl-toolbar__button:hover {
     background-color: #f9f9f9;
     cursor: pointer;
 }
@@ -290,11 +284,7 @@ main {
     cursor: pointer;
 }
 
-#pl-right-column {
-    border-left: 2px solid #f3f3f3;
-    background-color: #f8f8f8;
-    min-width: 10px;
-}
+#pl-right-column {display: flex;flex-direction: column;}
 
 #pl-details-container {
     padding: 0.5rem;
@@ -330,12 +320,12 @@ textarea.pl-survey-content {
     min-width: 12rem;
 }
 
-.pl-toolbar-button.pl-survey-content {
+.pl-toolbar__button.pl-survey-content {
     text-align: center;
     padding: 0;
     margin-top: 1em;
-    font-style: italic;
-    font-weight: bold;
+    /* font-style: italic; */
+    /* font-weight: bold; */
 }
 
 .pl-column-separator {
@@ -387,7 +377,7 @@ textarea.pl-survey-content {
 /* a (even just transparent) border is required to make highlighting possible without flickering */
 .shelf, .shelf-list-item {
     border: solid 2px transparent;
-    border-radius: 0.3em;
+    /* border-radius: 0.3em; */
     position: relative;
     margin-bottom: 0.3rem;
 }
@@ -397,6 +387,7 @@ textarea.pl-survey-content {
     margin-right: 1.5em;
     margin-top: 0;
     margin-bottom: 0;
+    display: none;
 }
 
 .overlap-center {
@@ -520,7 +511,7 @@ textarea.pl-survey-content {
     top: 27px;
 }
 
-#pl-playground {    
+#pl-playground {
     position: absolute;
     width:300px;
     height: 400px;
@@ -546,7 +537,7 @@ textarea.pl-survey-content {
 
 .fw_title {
     text-align: center;
-    font-family: Quicksand;
+    font-family: Roboto, sans-serif;
     font-size: 1.0em;
     font-weight: bold;
 }
@@ -642,7 +633,6 @@ textarea.pl-survey-content {
     position: fixed;
     overflow: visible;
     background-color: rgba(255,255,255,0.95);
-    z-index: 1000;
 }
 
 .pl-fu-filter__inner {
@@ -653,19 +643,22 @@ textarea.pl-survey-content {
 /* dependency graph */
 
 .dg_graphCanvas-container {
-    width: 100%;
-    /* height: 100%; */
-    /* width: 200px; */
     flex-grow: 1;
-    /* height: 200px; */
+    margin: 0.5em;
+    border: 2px solid transparent;
+}
+
+.dg_graphCanvas-container:hover {
+    cursor: move;
+    border-color:rgba(245,245,245,0.5);
+    background-color: rgba(250,250,250,0.5);
 }
 
 .dg_slider-container {
-    width: 100%;
-    /*height: 1.1rem;*/
     display: flex;
     flex-direction: row;
     /*justify-content: ;*/
+    margin-top: 0.3em;
 }
 
 .dg_slider__slider {

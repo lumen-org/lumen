@@ -1,13 +1,13 @@
-/* copyright Ã‚Â© 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
-@font-face {
-    font-family: Comfortaa;
-    src: url(../fonts/Comfortaa_Regular.ttf);
-}
+/* copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/*@font-face {*/
+/*font-family: Comfortaa;*/
+/*src: url(../fonts/Comfortaa_Regular.ttf);*/
+/*}*/
 
-@font-face {
-    font-family: Quicksand;
-    src: url(../fonts/Quicksand-Regular.otf);
-}
+/*@font-face {*/
+/*font-family: Quicksand;*/
+/*src: url(../fonts/Quicksand-Regular.otf);*/
+/*}*/
 
 .noselect {
     -webkit-touch-callout: none; /* iOS Safari */
@@ -19,11 +19,11 @@
 }
 
 body {
-    /*font-family: Quicksand, Verdana, Sans-serif;*/
-    font-family: Verdana, Sans-serif;
+    font-family: Roboto, sans-serif;
     font-size: 100%;
     display: flex;
     flex-direction: column;
+    line-height: 1.3;
 }
 
 .pl-fu {
@@ -39,7 +39,7 @@ body {
     /*left: 50px;*/
     padding: 0.1em;
     /*margin: 0.2em;*/
-    border-radius: 0.3em;
+    /* border-radius: 0.3em; */
     background-color: #F2E6D8;
 }
 
@@ -47,7 +47,7 @@ body {
     /*min-width: 200px;*/
     background-color: #efefef;
     border: 1px solid #bdbdbd; /* Brightness +50*/
-    border-radius: 0.3em;
+    /* border-radius: 0.3em; */
     display: flex;
     justify-content: center;
     padding: 0.1rem;
@@ -66,9 +66,9 @@ body {
 }
 
 .pl-field-name {
-    font-family: Quicksand;
+    font-family: Roboto Slab, serif;
     font-size: 1.0em;
-    font-weight: bold;
+    /*font-weight: lighter;*/
 }
 
 .pl-fields-in-fu {
@@ -90,7 +90,7 @@ body {
     text-align: center;
     font-size: 0.8em;
     font-weight: normal;
-    font-family: Verdana, Serif;
+    font-family: Roboto, sans-serif;
     line-height: 1.5;
     color: #33302E;
 }
@@ -225,16 +225,21 @@ body {
 }
 
 #pl-graph-manager-container {
-    width: 100%;
-    padding: 0.7em;
-    height: 90%;
+    box-sizing: border-box;
+    flex-grow: 1;
+    display: flex;
+}
+
+.pl-graph-column {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
 }
 
 .pl-graph-pane {
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
 }
 
 .pl-aggr-marks .point {

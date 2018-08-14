@@ -568,6 +568,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
               "family": {type: "string"},
               "size": {type: "integer"},
               "color": {type: "string", format: "color"},
+              "weight": {type: "integer"},
             }
           },
           "label_font": {
@@ -609,10 +610,12 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
               "zerolinecolor": {type: "string", format: "color"},
             }
           },
+          "label_style": {type: "string"},
           "text": {
             type: "object",
             format: "grid",
             properties: {
+              "family": {type: "string"},
               "color": {type: "string", format: "color"},
               "size": {type: "integer"},
             }
@@ -645,10 +648,12 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
               "width": {type: "number"},
             }
           },
+          "label_style": {type: "string"},
           "text": {
             type: "object",
             format: "grid",
             properties: {
+              "family": {type: "string"},
               "color": {type: "string", format: "color"},
               "size": {type: "integer"},
             }
@@ -711,18 +716,32 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
 
   let plotsInitial = {
     axis: {
-      title_style: "em",
+      // title_style: "em",
+      // title_font: {
+      //   family: "Droid Sans",
+      //   size: 16,
+      //   color: "#b3b3b3",
+      // },
+      // label_style: "",
+      // label_font: {
+      //   family: "Droid Sans",
+      //   size: 11,
+      //   color: "#232323",
+      // },
+      title_style: "",
       title_font: {
-        family: "Droid Sans",
+        family: "Roboto Slab, serif",
         size: 16,
-        color: "#b3b3b3",
+        color: greys(0.8), // 0.8 = #404040
+        weight: 100, // doesn't work
       },
-      label_style: "",
-      label_font: {
-        family: "Droid Sans",
-        size: 11,
-        color: "#232323",
-      },
+      // unused
+      // label_style: "",
+      // label_font: {
+      //   family: "Roboto, serif",
+      //   size: 11,
+      //   color: greys(0.8),
+      // },
     },
     main: {
       background: {
@@ -732,13 +751,15 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         color: greys(0.4),
       },
       axis: {
-        color: "#3D3A40",
+        color: greys(0.6), //"#a4a4a4",
         width: 1,
         zerolinewidth: 1.5,
         zerolinecolor: greys(0.3),
       },
-      text: {
-        color: greys(1.0),
+      label_style: "",
+      label: {
+        family: "Roboto, sans-serif",
+        color: greys(0.6),
         size: 13,
       }
     },
@@ -756,12 +777,14 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       //   width: 2,
       // },
       axis: {
-        color: greys(0.8),
+        color: greys(0.6),
         width: 1,
       },
-      text: {
+      test_style: "",
+      label: {
         color: greys(0.5),
-        size: 12,
+        size: 10,
+        family: "Roboto, sans-serif",
       },
       position: {
         x: 'topright', // bottomleft or topright
@@ -795,7 +818,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         // the ratio of space used for the main plot...
         marginal_unused: 0.05,  // ... if there is no marginal
         marginal_used: 0.8,  // ... if there is a marginal plot
-        axis_padding: 0.1, // padding between neighboring used main axis in relative coordinates length
+        axis_padding: 0.2, // padding between neighboring used main axis in relative coordinates length
       },
     },
 
@@ -873,7 +896,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     };
 
     c.userStudy = {
-      enabled: false && (c.meta.activity_logging_mode !== "disabled"),
+      enabled: true && (c.meta.activity_logging_mode !== "disabled"),
     };
 
     c.graphWidget = {
@@ -1075,13 +1098,11 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
             gridcolor: c.plots.main.grid.color,
             ticklen: 5,
             ticks: 'outside',
-            tickfont: {
-              color: c.plots.main.text.color,
-              size: c.plots.main.text.size,
-            },
+            tickfont: c.plots.main.label,
+            tickcolor: c.plots.main.axis.color,
             // titlefont: { unused, since we use custom axis label
-            //   color: c.plots.main.text.color,
-            //   size: c.plots.main.text.size*1.25,
+            //   color: c.plots.main.label.color,
+            //   size: c.plots.main.label.size*1.25,
             // },
             autorange: true,
             domain: [offset, offset + length],
@@ -1090,6 +1111,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
             spikemode: "across",
             showspikes: true,
             spikethickness: 2,
+            spikecolor: c.plots.main.axis.color,
           };
         else
           return {
@@ -1114,27 +1136,24 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       marginal: (offset, length, position, xy) => ({
         //zeroline: !used,
         zeroline: true,
-        zerolinecolor: c.plots.marginal.axis.color, // 'main' because visually this represent the main axis
+        zerolinecolor: c.plots.main.axis.color, // 'main' because visually this represent the main axis
         zerolinewidth: c.plots.marginal.axis.width,
         tickformat: '.3f',
         hoverformat: '.3f',
         rangemode: 'nonnegative',
         autorange: false,
         fixedrange: true,
-        tickmode: 'auto', // TODO:
-        nticks: 3,
         side: xy === 'y' ? 'right' : 'top',
-        tickfont: {
-          color: c.plots.marginal.text.color,
-          size: c.plots.marginal.text.size,
-        },
+        nticks: 3,
+        tickmode: 'auto', // TODO:
+        tickfont: c.plots.marginal.label,
         tickangle: xy === 'x' ? -90 : 0,
         spikemode: "across",
         showspikes: true,
         spikethickness: 2,
         // titlefont: {
-        //   color: c.plots.marginal.text.color,
-        //   size: c.plots.marginal.text.size,
+        //   color: c.plots.marginal.label.color,
+        //   size: c.plots.marginal.label.size,
         // },
         domain: [offset, offset + length],
         //position: position,
@@ -1147,13 +1166,17 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         visible: true,
         showline: true,
         showgrid: false,
-        ticklen: 5,
         type: 'category',
         autorange: false,
         range: [-0.5, ticks.length - 0.5], // must be numbers starting from 0
+        fixedrange: true,
+        ticklen: 5,
         tickvals: _.range(ticks.length),
         ticktext: ticks,
-        fixedrange: true,
+        tickfont: c.plots.main.label,
+        tickcolor: c.plots.main.axis.color,
+        linecolor: c.plots.main.axis.color,
+        linewidth: c.plots.main.axis.width,
       }),
 
       templating_minor: (offset, length, anchor) => ({

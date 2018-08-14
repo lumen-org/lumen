@@ -55,6 +55,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
     defaultNodeDiameter: 30,
     remainingNodeDiameterPrct: 25,
     minEdgeWidth: 1,
+    wheelSensitivity: 0.25,
   };
 
   // default style sheet
@@ -69,6 +70,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         'border-color': "#7f7f7f",
         'width': config.defaultNodeDiameter,
         'height': config.defaultNodeDiameter,
+        'font-family': 'Roboto Slab, serif',
+        'color': '#404040',
+        // min-zoomed-font-size
       }
     },
 
@@ -208,6 +212,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         elements: [...this._originalNodes, ...this._originalEdges],
         style: style,
         selectionType: 'additive',
+        wheelSensitivity: config.wheelSensitivity,
       });
       // this._layout = this._cy.layout(layout.cola); // TODO      
       this._layout = this._cy.layout(layout[layoutmode]);
@@ -320,6 +325,17 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       this._updateStylings();
       // this._cy.batchEnd();
       this.emit('Node.Unselected', node.id());
+    }
+
+    _onNodeMouseOver(ev) {
+      // highlight node
+
+      // indicate to mouse cursor that the node is draggable
+    }
+
+    _onNodeMouseOut(ev) {
+      // un-highlight node
+      // indicate to mouse cursor that the node is draggable
     }
 
     redraw () {

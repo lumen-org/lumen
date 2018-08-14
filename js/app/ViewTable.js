@@ -121,18 +121,20 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     /**
      * Utility function. Generates an object with attribtues .range, .tickmode and .tickvals, essentially being a
      * template for an plotly axis.
+     * This generated only two tick lines, one at 0% and one at linePrct of the axis.
+     * However, it only labels one, the higher tick.
      * @param extent
      * @param xy
      * @param cfg
      * @returns {{}}
      */
-    function getRangeAndTickMarks(extent, xy, cfg = {linePrct: 0.8, maxPrct: 1.2}) {
+    function getRangeAndTickMarks(extent, xy, cfg = {linePrct: 0.61, maxPrct: 1.2}) {
       let axis = {};
       axis.range = [0, extent[1] * cfg.maxPrct];
       if (config.plots.marginal.position[_invXY(xy)] === 'bottomleft') // reverse range if necessary reversed range
         axis.range = axis.range.reverse();
       axis.tickmode = "array"; // use exactly 2 ticks as I want:
-      axis.tickvals = [0, (extent[1] * cfg.linePrct).toPrecision(1)]; // draw a line at 0 and ~maxPrct%
+      axis.tickvals = ["", (extent[1] * cfg.linePrct).toPrecision(1)]; // draw a line at 0 and ~maxPrct%
       return axis
     }
 
@@ -720,10 +722,11 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       // padding is always applied on the right/up side of an axis.
       // TODO: axis padding is applied equally to both sides of an axis
       // we don't need padding if we have marginal plots, as they separate the main axis anyway...
+      // we also don't need padding if therer is only one plot anyway along that direction
       // TODO: do we rather want it in fixed pixel?
       axisLength.padding = {
-        x: axisLength.main.x * config.plots.layout.main.axis_padding * !marginal.x,
-        y: axisLength.main.y * config.plots.layout.main.axis_padding * !marginal.y,
+        x: axisLength.main.x * config.plots.layout.main.axis_padding * !marginal.x * (qx.length > 1 ? 1 : 0),
+        y: axisLength.main.y * config.plots.layout.main.axis_padding * !marginal.y * (qy.length > 1 ? 1 : 0),
       };
 
       // starting ids for the axis of different types. id determines z-order!

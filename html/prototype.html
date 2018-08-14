@@ -8,6 +8,10 @@
 
     <title>A Visual Interface for Exploring Multivariate Probability Distributions</title>
 
+    <!--Font Import -->
+    <!--<link href="https://fonts.googleapis.com/css?family=Roboto+Slab|Roboto:300" rel="stylesheet">-->
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:100,300,400,700|Roboto:300,400,400i,500,700" rel="stylesheet">
+
     <!-- Foundation -->
     <link rel="stylesheet" type="text/css" href="../css/foundation.css" />
     <!--<link rel="stylesheet" type="text/css" href="../css/foundation-icons/foundation-icons.css" />-->
@@ -75,7 +79,9 @@
 </nav>
 
 <!-- main content -->
-<div id="pl-toolbar-container"></div>
+<div id="pl-toolbar__container">
+
+</div>
 <main>
     <div class="pl-column-left">
         <div class="pl-upper">
@@ -94,8 +100,10 @@
         </div>
         <!--<div id="pl-mid"></div>-->
         <div class="pl-lower">
-            <div class="pl-column-title">Dependency Graph</div>
-            <div id="pl-graph-manager-container"></div>
+            <div class="pl-column pl-graph-column">
+                <div class="pl-column-title">Dependency Graph</div>
+                <div id="pl-graph-manager-container"></div>
+            </div>
         </div>
     </div>
 
@@ -109,10 +117,10 @@
         <div id="pl-visualization-container"></div>
     </div>
 
-    <div class="pl-column" id="pl-right-column">
-        <div id='pl-survey-widget'> </div>
-        <div class="pl-details" style="display:none;">
-            <hr class="pl-column-separator"></hr>
+    <div class="" id="pl-right-column">
+        <div class='pl-column' id='pl-survey-widget'> </div>
+            <!--<div class="pl-column-title">Survey</div>-->
+        <div class="pl-column pl-details">
             <div class="pl-column-title">Details</div>
             <div id="pl-details-container"> </div>
         </div>

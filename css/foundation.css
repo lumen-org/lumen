@@ -56,7 +56,7 @@ body {
   font-size: 100%; }
 
 body {
-  background: #fff;
+  background: #ededed;
   color: #222;
   padding: 0;
   margin: 0;
@@ -3704,7 +3704,7 @@ h6 {
   margin-bottom: 0.5rem; }
 
 hr {
-  border: solid #DDDDDD;
+  border: solid #dddddd;
   border-width: 1px 0 0;
   clear: both;
   margin: 1.25rem 0 1.1875rem;

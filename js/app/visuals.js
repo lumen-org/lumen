@@ -46,6 +46,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
         .appendTo('body')
         .on("click", closeHandler)
         .show();
+      e.stopPropagation();
     });
   }
 
