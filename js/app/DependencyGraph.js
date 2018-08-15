@@ -270,7 +270,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         .prependTo(domDiv);
 
       $('<div>threshold </div>')
-        .addClass('dg_slider__label')
+        .addClass('pl-label dg_slider__label')
         .appendTo(container);
 
       let sliderDiv = $('<div></div>')
@@ -278,7 +278,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         .appendTo(container);
 
       let valueDiv = $('<div></div>')
-        .addClass('dg_slider__value')
+        .addClass('pl-label dg_slider__value')
         .text(0)
         .appendTo(container);
 

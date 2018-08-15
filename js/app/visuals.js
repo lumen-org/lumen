@@ -93,7 +93,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
     // create label
     var label = $('<div></div>');
-    label.addClass('shelf__title')
+    label.addClass('pl-h2 shelf__title')
       .text(opt.label)
       .appendTo(visual);
 

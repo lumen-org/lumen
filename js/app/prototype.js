@@ -501,35 +501,35 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * @private
        */
       static _makeFacetWidget (context) {
-        let title = $('<div class="shelf__title">Facets</div>');
+        let title = $('<div class="pl-h2 shelf__title">Facets</div>');
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
           .filter( what => context.config.visConfig[what].possible)
           .map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
-            let $checkBox = $('<input type="checkbox">' + _facetNameMap[what] + '</input>')
-              .prop("checked", context.config.visConfig[what].active)
-              .prop("disabled", !context.config.visConfig[what].possible)           
+            let $checkBox = $('<input type="checkbox">')
+              .prop({
+                "checked": context.config.visConfig[what].active,
+                "disabled": !context.config.visConfig[what].possible,
+                "id": _facetNameMap[what]})
               .change( (e) => {
                 // update the config and ...
                 context.config.visConfig[what].active = e.target.checked;
-
                 // log user activity
                 ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': _getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
-
                 // ... trigger an update
                 context.update()
               });
-            return $('<div class="pl-facet-onoff"></div>').append($checkBox);
+            let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
+            return $('<div class="pl-facet__onOff"></div>').append($checkBox, $label);
           }
         );
-        let $visConfig = $('<div class="pl-config-visualization shelf vertical"></div>').append(
+        return $('<div class="pl-facet shelf vertical"></div>').append(
           //$('<hr>'),
           title,
           ...checkBoxes
         );
-        return $visConfig;
       }
 
       /**
@@ -568,7 +568,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       constructor (context) {
         this._context = context;
-        let $modelInput = $('<input type="text" list="models"/>')
+        let $modelInput = $('<input class="pl-input" type="text" list="models"/>')
           .keydown( (event) => {
             if (event.keyCode === 13) {
               this._loadModel(event.target.value);
@@ -577,13 +577,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         this._$modelsDatalist = $('<datalist id="models"></datalist>');
 
-        let $loadButton = $('<div class="pl-toolbar__button pl-model-selector__button">Go!</div>')
+        let $loadButton = $('<div class="pl-button pl-toolbar__button pl-model-selector__button">Go!</div>')
           .click(
             () => this._loadModel($modelInput.val())
           );
 
         this.$visual = $('<div class="pl-model-selector"></div>')
-          .append($('<div class="pl-model-selector__label">Load Model:</div>'), $modelInput, this._$modelsDatalist, $loadButton);
+          .append($('<div class="pl-label pl-model-selector__label">Load Model:</div>'), $modelInput, this._$modelsDatalist, $loadButton);
 
         if(context !== undefined) {
           this.setContext(context);
@@ -658,7 +658,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class ShelfSwapper {
       constructor (context) {
-        let $swapButton = $('<div class="pl-toolbar__button"> Swap X and Y </div>').click( () => {
+        let $swapButton = $('<div class="pl-button pl-toolbar__button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
           ActivityLogger.log({'context': this._context.getNameAndUUID()}, 'swap_x_y');
           sh.swap(shelves.row, shelves.column);
@@ -697,16 +697,16 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class DetailsView {
       constructor (context) {
-        this._$modelInfo = $('<div class="pl-details__body">'); // pl-details-model
-        this._$queryInfo = $('<div class="pl-details__body">'); // pl-details-query
-        this._$resultInfo = $('<div class="pl-details__body">'); // pl-details-result
+        this._$modelInfo = $('<div class="pl-text pl-details__body">'); // pl-details-model
+        this._$queryInfo = $('<div class="pl-text pl-details__body">'); // pl-details-query
+        this._$resultInfo = $('<div class="pl-text pl-details__body">'); // pl-details-result
 
         this.$visual = $('<div class>')
-          .append('<div class="pl-details__heading">Model</div>')
+          .append('<div class="pl-h2 pl-details__heading">Model</div>')
           .append(this._$modelInfo)
-          .append('<div class="pl-details__heading">Query</div>')
+          .append('<div class="pl-h2 pl-details__heading">Query</div>')
           .append(this._$queryInfo)
-          .append('<div class="pl-details__heading">Result</div>')
+          .append('<div class="pl-h2 pl-details__heading">Result</div>')
           .append(this._$resultInfo);
 
         if(context !== undefined) {
@@ -774,13 +774,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.query.active) {
-          let $query = $('<div class="pl-toolbar__button">Query!</div>').click(
+          let $query = $('<div class="pl-button pl-toolbar__button">Query!</div>').click(
             () => this._context.update());
           elems.push($query);
         }
 
         if (config.clone.active) {
-          let $clone = $('<div class="pl-toolbar__button"> Clone </div>').click(
+          let $clone = $('<div class="pl-button pl-toolbar__button"> Clone </div>').click(
             () => {
               let c = this._context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
@@ -802,7 +802,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.undo.active) {
-          let $undo = $('<div class="pl-toolbar__button"> Undo </div>').click( () => {
+          let $undo = $('<div class="pl-button pl-toolbar__button"> Undo </div>').click( () => {
             let c = this._context;
             if (c.unredoer.hasUndo) {
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'undo');
@@ -814,12 +814,12 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           elems.push($undo);
         }
 
-        /*let $save = $('<div class="pl-toolbar__button"> Save </div>').click( () => {
+        /*let $save = $('<div class="pl-button pl-toolbar__button"> Save </div>').click( () => {
          let c = this._context;
          c.unredoer.commit(c.copyShelves());
          });*/
         if (config.redo.active) {
-          let $redo = $('<div class="pl-toolbar__button"> Redo </div>').click(() => {
+          let $redo = $('<div class="pl-button pl-toolbar__button"> Redo </div>').click(() => {
             let c = this._context;
             if (c.unredoer.hasRedo) {
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'redo');
@@ -832,7 +832,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.clear.active) {
-          let $clear = $('<div class="pl-toolbar__button"> Clear </div>').click(
+          let $clear = $('<div class="pl-button pl-toolbar__button"> Clear </div>').click(
             () => {
               let c = this._context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'clear');
@@ -842,7 +842,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.details.active) {
-          let $detailsHideButton = $('<div class="pl-toolbar__button">Details</div>').click(() => {
+          let $detailsHideButton = $('<div class="pl-button pl-toolbar__button">Details</div>').click(() => {
             $('.pl-details').toggle()
           });
           elems.push($detailsHideButton);
@@ -850,10 +850,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         if (config.graph.active) {
 
-          let $thesholdHideButton = $('<div class="pl-toolbar__button">Threshold</div>')
+          let $thesholdHideButton = $('<div class="pl-button pl-toolbar__button">Threshold</div>')
             .click( () => $('.dg_slider-container').toggle());
 
-          let $graphManagerToggleButton = $('<div class="pl-toolbar__button">Graph</div>').click(() => {
+          let $graphManagerToggleButton = $('<div class="pl-button pl-toolbar__button">Graph</div>').click(() => {
             let isVisible = $('.pl-layout-lower-left').css('display') !== 'none';
             // TODO: ugly as hell!
             $('.pl-layout-lower-left').toggle();
@@ -870,14 +870,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.config.active) {
-          let $configHideButton = $('<div class="pl-toolbar__button">Config</div>').click(() => {
+          let $configHideButton = $('<div class="pl-button pl-toolbar__button">Config</div>').click(() => {
             $('.pl-config').toggle()
           });
           elems.push($configHideButton);
         }
 
         if (config.reloadmodels.active) {
-          let $reload = $('<div class="pl-toolbar__button">Reload Models</div>').click(
+          let $reload = $('<div class="pl-button pl-toolbar__button">Reload Models</div>').click(
             () => this._modelSelector.reloadModels());
           elems.push($reload);
         }
@@ -1083,17 +1083,17 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           $form.append(
             `<div>                 
                 <input type="radio" value="${stepValues[i]}" name="plLikert" class="pl-likert__option" ${(i===0?"":"")}>
-                <label>${stepLabels[i]}</label>
+                <label class="pl-label">${stepLabels[i]}</label>
              </div>`)
         }
         let $legend = $(
           `<div class="pl-likert__scaleLabelContainer">
-            <div class='pl-likert__scaleLabel'> ${labelLow} </div>
-            <div class='pl-likert__scaleLabel'> ${labelHigh} </div>
+            <div class='pl-label pl-likert__scaleLabel'> ${labelLow} </div>
+            <div class='pl-label pl-likert__scaleLabel'> ${labelHigh} </div>
            </div>`);
 
         let $visual = $('<div class="pl-likert"></div>')
-          .append($(`<div class="pl-survey__title">${question}</div>`))
+          .append($(`<div class="pl-h2 pl-survey__title">${question}</div>`))
           .append($form)
           .append($legend);
 
@@ -1121,7 +1121,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // compose to whole widget
         return $('<div class="pl-survey__userid"></div>')
-          .append('<div class="pl-survey__title">User Id</div>')
+          .append('<div class="pl-h2 pl-survey__title">User Id</div>')
           .append($userIdInput);
       }
 
@@ -1135,7 +1135,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           7,
           'Confidence that your insight is correct?');
         //let $likertScale = SurveyWidget._makeLikertScaleWidget('not confident at all', 'extremely confident', 7, 'How confident are you that your insight is correct?');
-        let $commitButton = $('<div class="pl-toolbar__button pl-survey__content">report & clear</div>')
+        let $commitButton = $('<div class="pl-button pl-toolbar__button pl-survey__content">report & clear</div>')
           .click( () => {
             let confidence = $likertScale.value();
             if (confidence === undefined) {
@@ -1151,7 +1151,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           });
 
         return $('<div class="pl-insight-report"></div>').append(
-          '<div class="pl-survey__title">Report Insight</div>',
+          '<div class="pl-h2 pl-survey__title">Report Insight</div>',
           $insightTextarea,
           $likertScale,
           $commitButton);
@@ -1162,7 +1162,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * @param onInsightReport Callback for reporting.
        */
       constructor (container, onIdChange, onInsightReport) {
-        // this._$title = $('<div class="pl-column__title">User Study</div>');
+        // this._$title = $('<div class="pl-h1 pl-column__title">User Study</div>');
         // this._$content = $('<div class="pl-column-content"></div>')
         //   .append([SurveyWidget._makeUserIdWidget(onIdChange),
         //     SurveyWidget._makeInsightWidget(onInsightReport)]);

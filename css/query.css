@@ -19,7 +19,6 @@ main {
 }
 
 .pl-layout-left {
-    min-width: 200px;
     display: flex;
     flex-direction: column;
 }
@@ -44,7 +43,6 @@ main {
 .pl-column {
     overflow-y: auto;
     margin: 0.3em;
-    /* padding: 0.3em; */
     background-color: white;
     border: #dbdbdb 1px solid;
     border-radius: 10px;
@@ -56,16 +54,14 @@ main {
 
 .pl-column__title {
     margin-top: 0.2em;
-    margin-bottom: 0.2em;
-    font-size: x-large;
-    font-weight: lighter;
     position: sticky;
     top: 0;
     text-align: center;
     background-color: white;
+    filter: brightness(98.5%);
 }
 
-.pl-column-content {
+.pl-column__content {
     margin: 0.5rem;
 }
 
@@ -103,9 +99,9 @@ main {
 
 
 .pl-layout {
-    /*display: flex; */
+    /*display: flex;*/
     display: block;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
 }
 
@@ -113,15 +109,16 @@ main {
     min-width: 10rem;
 }
 
-.pl-facet-onoff {
-    font-size: smaller;
+.pl-facet__label {
+    display: inline;
 }
 
-.pl-facet-onoff input {
-    margin-left: 0rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0;
-    margin-top: 0;
+.pl-facet__onOff {display: flex;}
+
+.pl-facet__onOff input {
+    margin:0 0.5rem 0 0;
+    top: .21rem;
+    position: relative;
 }
 
 .pl-graph {
@@ -173,14 +170,15 @@ main {
     overflow: auto;
     min-width: 50%;
     flex-grow: 1;
+    position: relative;
 }
 
 .pl-dashboard .pl-column__title {
     background-color: transparent;
+    display: none;
 }
 
 #pl-dashboard__container {
-    width: 100%;
     height: 100%;
     overflow: auto;
     position: relative;
@@ -289,7 +287,7 @@ main {
 .pl-survey__content.pl-toolbar__button {
     text-align: center;
     padding: 0;
-    margin-top: 1em;
+    margin-top: 0.5rem;
 }
 
 textarea.pl-survey__content {
@@ -316,6 +314,8 @@ textarea.pl-survey__content {
 
 .pl-likert__optionList input[type="radio"] + label {
     margin: 0;
+    margin-top: -0.4rem;
+    text-align: center;
 }
 
 .pl-likert__optionList input[type="radio"]{
@@ -418,12 +418,8 @@ textarea.pl-survey__content {
 }
 
 .pl-toolbar__button {
-    background-color: #f0f0f0;
-    border-radius: 1em;
-    border: 1px solid #c5c5c5;
     margin: 0;
     padding: 0 1.5rem;
-    font-size: 0.8rem;
 }
 
 .pl-toolbar__button:hover {
@@ -435,8 +431,10 @@ textarea.pl-survey__content {
     display: flex;
 }
 
-.pl-model-selector > div {
-    margin-right: 1rem;
+.pl-model-selector .pl-label {
+    margin-right: 0.3rem;
+    position: relative;
+    top: 0.11rem;
 }
 
 .fw_plot {
@@ -512,23 +510,23 @@ textarea.pl-survey__content {
     display: flex;
     flex-direction: row;
     /*justify-content: ;*/
-    margin-top: 0.3em;
+    margin: 0.3em;
 }
 
 .dg_slider__slider {
     flex-grow: 1;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    position: relative;
+    top: 0.08rem;
 }
 
 .dg_slider__value {
-    font-size: small;
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-left: 0.5rem;
 }
 
 .dg_slider__label {
-    margin-left: 1rem;
-    margin-right: 1rem;
-    font-size: small;
+    margin-right: 0.5rem;
 }
 
 /* presents details of an model */
@@ -538,7 +536,6 @@ textarea.pl-survey__content {
 }
 
 #pl-details-container .pl-details__heading {
-    font-weight: bold;
 }
 
 .pl-details__heading {
@@ -573,19 +570,69 @@ textarea.pl-survey__content {
     color: #2F4EF2;
 }
 
+/*** common element style ***/
+
+.pl-h1 {
+    font-family: Roboto sans-serif;
+    font-size: x-large;
+    font-weight: lighter;
+}
+
+.pl-h2 {
+     font-family: Roboto sans-serif;
+    font-size: smaller;
+    font-weight: 400;
+}
+
+.pl-h3 {
+    font-family: Roboto sans-serif;
+    font-size: x-small;
+    font-weight: 400;
+}
+
+/* normal text */
+.pl-text {
+    font-family: Roboto sans-serif;
+    font-weight: 400;
+}
+
+/* labels, e.g to display a sliders value or description */
+.pl-label {
+    font-family: Roboto sans-serif;
+    font-weight: 400;
+    font-size: small;
+}
+
+/* text input, text areas and the like. anything where you can type into*/
+.pl-input {
+
+}
+
+.pl-field-name {
+    font-family: Roboto Slab, serif;
+    font-size: 1.0em;
+}
+
+.pl-field-value {
+    font-family: Roboto Slab, serif;
+}
 
 /*** behaviour style ***/
 
 .pl-button {
-
+    background-color: #f0f0f0;
+    border-radius: 1em;
+    border: 1px solid #c5c5c5;
+    font-size: 0.8rem;
 }
 
-.pl-onHover--ligthen {
-
+.pl-onHover--lighten {
+    /*box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.3);*/
+    filter: brightness(105%);
 }
 
 .pl-onHover--darken {
-
+    filter: brightness(90%);
 }
 
 /* activate this class to hide elemen */

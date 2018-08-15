@@ -3,10 +3,10 @@
 /* a shelf has a title and holds items in its list */
 
 .shelf {
-    margin: 0.5rem;
-    padding-right: 0.2rem;
+    /* margin: 0.5rem; */
+    /* padding-right: 0.2rem; */
     display: flex;
-    padding-left: 0.2rem;
+    /* padding-left: 0.2rem; */
 }
 
 .shelf.horizontal {
@@ -22,22 +22,20 @@
 }
 
 .shelf__title {
-    font-size: small;
-    font-weight: 400;
 }
 
 .shelf__list {
-    min-height: 1em;
+    min-height: 0.8em;
 }
 
 .shelf, .shelf__item {
     border: solid 2px transparent;  /* a transparent border is required to make highlighting possible without flickering */
     position: relative;
-    margin-bottom: 0.3rem;
+    margin: 0.2rem;
 }
 
 .shelf + hr {
-    margin 0 1.5em 0 1.5em; /* trbl */
+    margin: 0 1.5em 0 1.5em; /* trbl */
     display: none;
     border-color: #EEEEEE;
 }
@@ -72,11 +70,6 @@
     position: absolute;
     top: 3px;
     font-size: 0.7em;
-}
-
-.pl-field-name {
-    font-family: Roboto Slab, serif;
-    font-size: 1.0em;
 }
 
 .pl-fields-in-fu {
