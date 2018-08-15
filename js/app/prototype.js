@@ -295,7 +295,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         $('#pl-model-container').append($visuals.models);
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
-        $('#pl-visualization-container').append($visuals.visualization);
+        $('#pl-dashboard__container').append($visuals.visualization);
         $('#pl-facet-container').append($visuals.visConfig);
       }
 
@@ -397,10 +397,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       static _makeVisualization(context) {
-        let $paneDiv = $('<div class="pl-visualization-pane"></div>');
+        let $paneDiv = $('<div class="pl-visualization__pane"></div>');
         let $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
         $removeButton.click( context.remove.bind(context) );
-        let $legendDiv = $('<div class="pl-legend-pane"></div>');
+        let $legendDiv = $('<div class="pl-legend"></div>');
 
         let $vis = $('<div class="pl-visualization"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
@@ -423,7 +423,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         $vis.draggable(
           { stop:
               (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move'),
-            handle: '.pl-visualization-pane',
+            handle: '.pl-visualization__pane',
             drag: (ev, ui) => {
               // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
               // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
@@ -521,7 +521,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 // ... trigger an update
                 context.update()
               });
-            return $('<div class="pl-config-onoff"></div>').append($checkBox);
+            return $('<div class="pl-facet-onoff"></div>').append($checkBox);
           }
         );
         let $visConfig = $('<div class="pl-config-visualization shelf vertical"></div>').append(
@@ -542,8 +542,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let visual = Context._makeShelvesGUI(context);
         visual.visConfig = Context._makeFacetWidget(context);
         visual.visualization = Context._makeVisualization(context);
-        visual.visPane = $('div.pl-visualization-pane', visual.visualization);
-        visual.legendPane = $('div.pl-legend-pane', visual.visualization);
+        visual.visPane = $('div.pl-visualization__pane', visual.visualization);
+        visual.legendPane = $('div.pl-legend', visual.visualization);
         return visual;
       }
 
@@ -577,13 +577,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         this._$modelsDatalist = $('<datalist id="models"></datalist>');
 
-        let $loadButton = $('<div class="pl-toolbar__button pl-model-selector-button">Go!</div>')
+        let $loadButton = $('<div class="pl-toolbar__button pl-model-selector__button">Go!</div>')
           .click(
             () => this._loadModel($modelInput.val())
           );
 
         this.$visual = $('<div class="pl-model-selector"></div>')
-          .append($('<div class="pl-model-selector-label">Load Model:</div>'), $modelInput, this._$modelsDatalist, $loadButton);
+          .append($('<div class="pl-model-selector__label">Load Model:</div>'), $modelInput, this._$modelsDatalist, $loadButton);
 
         if(context !== undefined) {
           this.setContext(context);
