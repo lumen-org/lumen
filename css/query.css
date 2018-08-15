@@ -34,7 +34,7 @@ main {
     overflow-y: auto;
     /*     border: grey 2px solid;
         border-radius: 10px; */
-    margin: 0.3em;
+    /* margin: 0.3em; */
     background-color: white;
     border-radius: 10px;
     border: #dbdbdb 1px solid;
@@ -44,7 +44,7 @@ main {
     flex-direction: column;
 }
 
-.pl-column-title {
+.pl-column__title {
     margin-top: 0.2em;
     margin-bottom: 0.2em;
     font-size: x-large;
@@ -131,13 +131,14 @@ main {
     padding: 2px;
 }
 
+/* dash board contains all visualizations */
 .pl-dashboard {
     overflow: auto;
     min-width: 50%;
     flex-grow: 1;
 }
 
-.pl-dashboard .pl-column-title {
+.pl-dashboard .pl-column__title {
     background-color: transparent;
 }
 
@@ -148,6 +149,7 @@ main {
     position: relative;
 }
 
+/* visualization of a VisMEL query */
 .pl-visualization {
     position: absolute;
     /*padding: 0.5rem;*/
@@ -185,6 +187,82 @@ main {
     /* position: absolute; */
 }
 
+/* legend of a visualization */
+.pl-legend {
+    position: relative;
+    height: 100%;
+    left: 100%;
+    top: -100%;
+    width: 10rem; /* otherwise if the vis is too small, the legend disappears*/
+    padding: 1rem;
+    pointer-events: none;
+}
+
+.pl-legend__svg {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+.pl-legend__svg .swatch {
+    /*fill: #ff7f00;*/
+    stroke: grey;
+    stroke-width: 1pt;
+    fill: #b4b4b4
+}
+
+.pl-legend__svg .label, .pl-legend__svg .legendTitle {
+    font-family: Roboto Slab, serif;
+}
+
+.pl-legend__svg .label {
+    font-size: 10pt;
+    fill: #a4a4a4;
+}
+
+.pl-legend__svg .legendTitle {
+    font-size: 13pt;
+    fill: #818181;
+}
+
+/* holds the x-y swap button */
+.pl-swapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+/* user study widget */
+.pl-survey__title {
+    margin-bottom: 0.2rem;
+    font-weight: bolder;
+    font-size: small;
+}
+
+.pl-survey-content {
+    margin-left:1rem;
+    margin-bottom: 0.2rem;
+    margin-right:0.5rem;
+    font-size: small;
+    width: 90%;
+    /* right: 0px; */
+}
+
+textarea.pl-survey-content {
+    min-height: 10rem;
+    min-width: 12rem;
+}
+
+
+/* presents details of an model */
+#pl-details-container {
+    margin: 0 0.5rem 0.5rem;
+}
+
+#pl-details-container .pl-details-heading {
+    font-weight: bold;
+}
+
 
 /* behvaviour */
 
@@ -199,6 +277,7 @@ main {
 .pl-onHover--darken {
 
 }
+
 
 
 

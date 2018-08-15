@@ -11,7 +11,7 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
     // TODO: reuse the ones build in atomicplots...
     let colorScale = ScaleGen.color(colorMap, _filterUndefined(colorMap.fu.extent));
     let legendG = svgD3.append("g")
-      .attr('class', 'pl-legend-color-g')
+      .attr('class', 'pl-legend__color-g')
       .attr('transform', `translate(0,${heightOffset})`);
 
     let legend = d3.legend.color()
@@ -27,7 +27,7 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
   function shapeLegend(svgD3, shapeMap, heightOffset) {
     let shapeScale = ScaleGen.shape(shapeMap, _filterUndefined(shapeMap.fu.extent), 'svgPath'); // use hand-built svg paths - plotly does not naturally expoze them...
     let legendG = svgD3.append("g")
-      .attr('class', 'pl-legend-shape-g')
+      .attr('class', 'pl-legend__shape-g')
       // need to move 5 to the right because of some svg issue with the shapes
       .attr('transform', `translate(5,${heightOffset + 20})`);
 
@@ -44,7 +44,7 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
     let sizeScale = ScaleGen.size(sizeMap, _filterUndefined(sizeMap.fu.extent), [3,20]);
 
     let legendG = svgD3.append("g")
-      .attr('class', 'pl-legend-size-g')
+      .attr('class', 'pl-legend__size-g')
       .attr('transform', `translate(0,${heightOffset + 40})`);
 
     let legend = d3.legend.size()
@@ -62,9 +62,9 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
    * Clears provided legendDOM and draws a svg-based legend for vismel in there.
    * @param vismel A VisMEL query.
    * @param legendDOM A DOM element to contain the visualization.
-   * @param [cssClass] Optional. Defaults to 'pl-legend-svg'. The css class to assign to the svg element that contains the legend.
+   * @param [cssClass] Optional. Defaults to 'pl-legend__svg'. The css class to assign to the svg element that contains the legend.
    */
-  function addLegend (vismel, legendDOM, cssClass='pl-legend-svg') {
+  function addLegend (vismel, legendDOM, cssClass='pl-legend__svg') {
     // clear legend
     let legendD3 = d3.select(legendDOM);
     legendD3.selectAll("*").remove();
