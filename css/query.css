@@ -1,5 +1,16 @@
+/* copyright © 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+
+
 
 /* general layout */
+
+body {
+    font-family: Roboto, sans-serif;
+    font-size: 100%;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
 
 main {
     display: flex;
@@ -32,12 +43,11 @@ main {
 
 .pl-column {
     overflow-y: auto;
-    /*     border: grey 2px solid;
-        border-radius: 10px; */
-    /* margin: 0.3em; */
+    margin: 0.3em;
+    /* padding: 0.3em; */
     background-color: white;
-    border-radius: 10px;
     border: #dbdbdb 1px solid;
+    border-radius: 10px;
     box-sizing: border-box;
     position: relative;
     display: flex;
@@ -60,7 +70,9 @@ main {
 }
 
 
-/* main widgets/elements of UI */
+/* main widgets/elements of UI
+ * roughly from left to right and top to bottom
+ */
 
 
 #header-bar, #footer-bar {
@@ -78,10 +90,17 @@ main {
     min-width: 175px;
 }
 
+.pl-model-container {
+    overflow-y: scroll;
+}
 
 .pl-spec {
     min-width: 200px; /* for constant minimal width*/
 }
+
+.pl-spec-container {
+}
+
 
 .pl-layout {
     /*display: flex; */
@@ -91,7 +110,7 @@ main {
 }
 
 #pl-mappings-container {
-
+    min-width: 10rem;
 }
 
 .pl-facet-onoff {
@@ -103,6 +122,24 @@ main {
     margin-right: 0.5rem;
     margin-bottom: 0;
     margin-top: 0;
+}
+
+.pl-graph {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+#pl-graph-container {
+    box-sizing: border-box;
+    flex-grow: 1;
+    display: flex;
+}
+
+.pl-graph-pane {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .pl-config {
@@ -237,34 +274,307 @@ main {
     margin-bottom: 0.2rem;
     font-weight: bolder;
     font-size: small;
+    width: 100%;
 }
 
-.pl-survey-content {
+.pl-survey__content {
     margin-left:1rem;
     margin-bottom: 0.2rem;
     margin-right:0.5rem;
     font-size: small;
-    width: 90%;
+    width: 88%;
     /* right: 0px; */
 }
 
-textarea.pl-survey-content {
+.pl-survey__content.pl-toolbar__button {
+    text-align: center;
+    padding: 0;
+    margin-top: 1em;
+}
+
+textarea.pl-survey__content {
     min-height: 10rem;
-    min-width: 12rem;
+}
+
+.pl-insight-report {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* a likert scale with labels and title */
+.pl-likert {
+    display: flex;
+    flex-direction: column;
+}
+
+.pl-likert__optionList {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.pl-likert__optionList input[type="radio"] + label {
+    margin: 0;
+}
+
+.pl-likert__optionList input[type="radio"]{
+    margin: 0;
+}
+
+.pl-likert__scaleLabelContainer {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.pl-likert__scaleLabel {
+    margin-left: .2em;
+    margin-right: .2em;
+    font-size: x-small;
+}
+
+.pl-likert__option {
+    margin-left: .1em;
+    margin-right: .3em;
+    font-size: small;
 }
 
 
+/* Filter Widget */
+
+.fw_container {
+    display: flex;
+    flex-direction: column;
+}
+
+.fw_header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.fw_title {
+    text-align: center;
+    font-family: Roboto, sans-serif;
+    font-size: 1.0em;
+    font-weight: bold;
+}
+
+.fw_taskbar {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.fw_taskbar__button {
+    cursor: pointer;
+    user-select: none;
+}
+
+.fw_valueForm {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.fw_valueForm__label {
+    font-size: small;
+    margin-right: .5em;
+    user-select: none;
+}
+
+.fw_rangeDisplay__textarea {
+    max-width: 100%;
+}
+
+.fw_toolbar {
+    display: flex;
+    justify-content: space-evenly;
+    margin-bottom: .3em;
+    user-select: none;
+}
+
+.fw_toolbar__button {
+    border: 1px solid #c5c5c5;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    width:22%;
+    text-align: center;
+    font-size: small;
+}
+
+.fw_toolbar__button:hover {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+/* toolbar on top */
+
+.pl-toolbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    background-color: #d5d5d5;
+}
+
+.pl-toolbar__button {
+    background-color: #f0f0f0;
+    border-radius: 1em;
+    border: 1px solid #c5c5c5;
+    margin: 0;
+    padding: 0 1.5rem;
+    font-size: 0.8rem;
+}
+
+.pl-toolbar__button:hover {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.pl-model-selector {
+    display: flex;
+}
+
+.pl-model-selector > div {
+    margin-right: 1rem;
+}
+
+.fw_plot {
+    flex-grow: 1;
+}
+
+.fw_row {
+    margin-bottom: .5em;
+    margin-top: .3em;
+    margin-left: 1em;
+    margin-right: .5em;
+}
+
+.fw_valueForm__directInput {
+    border: 1px solid transparent;
+    border-radius: 3px;
+    box-shadow: none;
+    box-sizing: border-box;
+    flex-grow: 1;
+    text-align: end;
+    margin-right: .3rem;
+}
+
+.fw_valueForm__directInput:hover {
+    background-color: #f8f8f8;
+}
+
+.fw_valueForm__directInput:focus {
+    background-color: #f8f8f8;
+    border-color: #4f4f4f;
+
+}
+
+.fw_valueForm__directInput--invalid {
+    border: 2px red solid;
+    border-radius: 5px;
+}
+
+/* modal edit dialog */
+
+.pl-modal__background {
+    display: none;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: auto;
+    background-color: transparent;
+}
+
+.pl-modal__foreground {
+    z-index: 10001;
+}
+
+/* dependency graph */
+
+.dg_graphCanvas-container {
+    flex-grow: 1;
+    margin: 0.5em;
+    border: 2px solid transparent;
+    border-radius: 10px;
+}
+
+.dg_graphCanvas-container:hover {
+    cursor: move;
+    border-color:rgba(245,245,245,0.5);
+    background-color: rgba(250,250,250,0.5);
+}
+
+.dg_slider-container {
+    display: flex;
+    flex-direction: row;
+    /*justify-content: ;*/
+    margin-top: 0.3em;
+}
+
+.dg_slider__slider {
+    flex-grow: 1;
+}
+
+.dg_slider__value {
+    font-size: small;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.dg_slider__label {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    font-size: small;
+}
+
 /* presents details of an model */
+
 #pl-details-container {
     margin: 0 0.5rem 0.5rem;
 }
 
-#pl-details-container .pl-details-heading {
+#pl-details-container .pl-details__heading {
     font-weight: bold;
 }
 
+.pl-details__heading {
 
-/* behvaviour */
+}
+
+.pl-details__body {
+
+}
+
+/* an info box displays messages */
+.pl-info-box {
+    position: fixed;
+    bottom: 1rem;
+    width: 90%;
+    min-height: 1rem;
+    margin: .5rem 5%;
+    padding: 0.3rem;
+    border-radius: 0.3rem;
+    font-weight: bold;
+    display: none;
+    background-color: rgba(255,255,255,0.7);
+}
+
+.pl-info-box.pl-info-box_warning {
+    border: solid 1.5px #CF5D44;
+    color: #CF5D44;
+}
+
+.pl-info-box.pl-info-box_information {
+    border: solid 1.5px #2F4EF2;
+    color: #2F4EF2;
+}
+
+
+/*** behaviour style ***/
 
 .pl-button {
 
@@ -278,6 +588,47 @@ textarea.pl-survey-content {
 
 }
 
+/* activate this class to hide elemen */
+.pl-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 150ms, opacity 150ms;
+}
 
+/* helper that is shown when resizing an element*/
+.pl-resizing {
+    border: solid 2px rgba(56,172,221,0.8);
+}
+
+/* disables selectable */
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently not supported by any browser */
+}
+
+/* overlap on drag overlap */
+.overlap-center {
+    /*background-color: #4c55dd;*/
+    border-color: #38acdd
+}
+
+.overlap-left {
+    border-left-color: #38ACDD
+}
+
+.overlap-right {
+    border-right-color: #38ACDD
+}
+
+.overlap-top {
+    border-top-color: #38ACDD
+}
+
+.overlap-bottom {
+    border-bottom-color: #38ACDD
+}
 
 

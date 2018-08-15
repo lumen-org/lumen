@@ -83,8 +83,8 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
     if ($curTarget.hasClass('shelf')) {
       logger.debug('dropping on'); logger.debug($curTarget); logger.debug($target);
       let targetShelf = $curTarget.data(vis.AttachStringT.shelf);
-      // find closest ancestor that is a shelf-list-item
-      let target = $target.parentsUntil('.shelf','.shelf-list-item');
+      // find closest ancestor that is a shelf__item
+      let target = $target.parentsUntil('.shelf','.shelf__item');
       target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
       logger.debug("dropping on target: ");
       logger.debug(target);
@@ -95,8 +95,8 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
       _fallBackDropTarget = null;
       event.stopPropagation();
       event.preventDefault();
-    } else if ($curTarget.hasClass('shelf-list-item')) {
-      logger.debug('processing drop on shelf-list-item - no immediate effect');
+    } else if ($curTarget.hasClass('shelf__item')) {
+      logger.debug('processing drop on shelf__item - no immediate effect');
     } else {
       logger.warn('processing drop somewhere weird:');
       logger.warn(event.$currentTarget);

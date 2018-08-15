@@ -501,7 +501,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * @private
        */
       static _makeFacetWidget (context) {
-        let title = $('<div class="shelf-title">Facets</div>');
+        let title = $('<div class="shelf__title">Facets</div>');
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
           .filter( what => context.config.visConfig[what].possible)
@@ -697,16 +697,16 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class DetailsView {
       constructor (context) {
-        this._$modelInfo = $('<div>'); // pl-details-model
-        this._$queryInfo = $('<div>'); // pl-details-query
-        this._$resultInfo = $('<div>'); // pl-details-result
+        this._$modelInfo = $('<div class="pl-details__body">'); // pl-details-model
+        this._$queryInfo = $('<div class="pl-details__body">'); // pl-details-query
+        this._$resultInfo = $('<div class="pl-details__body">'); // pl-details-result
 
         this.$visual = $('<div class>')
-          .append('<div class="pl-details-heading">Model</div>')
+          .append('<div class="pl-details__heading">Model</div>')
           .append(this._$modelInfo)
-          .append('<div class="pl-details-heading">Query</div>')
+          .append('<div class="pl-details__heading">Query</div>')
           .append(this._$queryInfo)
-          .append('<div class="pl-details-heading">Result</div>')
+          .append('<div class="pl-details__heading">Result</div>')
           .append(this._$resultInfo);
 
         if(context !== undefined) {
@@ -1112,7 +1112,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       _makeUserIdWidget (onUserIdChanged) {
 
         // make input field for user id
-        let $userIdInput = $('<input class="pl-survey-content" type="text" name="UserID" value="UNSET">');
+        let $userIdInput = $('<input class="pl-survey__content" type="text" name="UserID" value="UNSET">');
 
         // listen to changes
         $userIdInput.change(()=>{
@@ -1128,14 +1128,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       static
       _makeInsightWidget (callback) {
-        let $insightTextarea = $('<textarea class="pl-survey-content" name="insight">your insight here...</textarea>');
+        let $insightTextarea = $('<textarea class="pl-survey__content" name="insight">your insight here...</textarea>');
         let $likertScale = SurveyWidget._makeLikertScaleWidget(
           'not confident at all',
           'extremely confident',
           7,
           'Confidence that your insight is correct?');
         //let $likertScale = SurveyWidget._makeLikertScaleWidget('not confident at all', 'extremely confident', 7, 'How confident are you that your insight is correct?');
-        let $commitButton = $('<div class="pl-toolbar__button pl-survey-content">report & clear</div>')
+        let $commitButton = $('<div class="pl-toolbar__button pl-survey__content">report & clear</div>')
           .click( () => {
             let confidence = $likertScale.value();
             if (confidence === undefined) {
@@ -1376,7 +1376,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     }
 
     // dependency graph widget
-    let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-manager-container'));
+    let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-container'));
     if (!Settings.graphWidget.enable) {
       $('.pl-layout-lower-left').hide();
       $('.pl-layout-upper-left').css('height', '95%');

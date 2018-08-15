@@ -93,13 +93,13 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
     // create label
     var label = $('<div></div>');
-    label.addClass('shelf-title')
+    label.addClass('shelf__title')
       .text(opt.label)
       .appendTo(visual);
 
     // create element container
     var container = $('<div></div>');
-    container.addClass('shelf-list')
+    container.addClass('shelf__list')
       .appendTo(visual);
 
     // attach shelf to visual
@@ -147,7 +147,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
         $visual = $('<div style="display:inline-block">');
         break;
     }
-    $visual.addClass('shelf-list-item');
+    $visual.addClass('shelf__item');
 
     // attach record to visual
     $visual.data(AttachStringT.record, record);

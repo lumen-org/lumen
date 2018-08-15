@@ -62,8 +62,8 @@ define(['lib/logger', './interaction', './PQL', './shelves', './visuals', './Vis
           logger.debug($target);
 
           let targetShelf = $curTarget.data(vis.AttachStringT.shelf),
-            // find closest ancestor that is a shelf-list-item
-            target = $target.parentsUntil('.shelf', '.shelf-list-item');
+            // find closest ancestor that is a shelf__item
+            target = $target.parentsUntil('.shelf', '.shelf__item');
 
           target = (target.length === 0 ? targetShelf : target.data(vis.AttachStringT.record));
 
