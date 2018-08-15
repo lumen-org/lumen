@@ -247,7 +247,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
         .append(removeButton(record));
     }
     let that = this;
-    let $visual = $('<div class="pl-fu pl-fu-aggregation"> </div>');
+    let $visual = $('<div class="pl-fu pl-fu--aggregation"> </div>');
     _updateVisual();
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
@@ -262,7 +262,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
         .append(removeButton(record));
     }
     let that = this;
-    let $visual = $('<div class="pl-fu pl-fu-density"> </div>');
+    let $visual = $('<div class="pl-fu pl-fu--density"> </div>');
     _updateVisual();
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
@@ -279,7 +279,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
         .append(removeButton(record));
     }
     let that = this;
-    let $visual = $('<div class="pl-fu pl-fu-split"> </div>');
+    let $visual = $('<div class="pl-fu pl-fu--split"> </div>');
     _updateVisual();
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     return $visual;
@@ -299,12 +299,12 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     // TODO: should only display a filter, and allow removal of it, but no other modification?
     let $visual = $('<div class=""> </div>')
       .appendTo($parent);
-    let $innerVisual = $('<div class="pl-fu-filter__inner pl-fu pl-fu-filter"></div>').appendTo($visual);
+    let $innerVisual = $('<div class="pl-fu--filter__inner pl-fu pl-fu--filter"></div>').appendTo($visual);
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     _updateVisual();
 
     // 'pop up visual' for convenient modification
-    let $popUp = $('<div class="pl-fu-filter__popUp"></div>')
+    let $popUp = $('<div class="pl-fu--filter__popUp"></div>')
         .appendTo($visual),
       filter = record.content,
       field = filter.field,

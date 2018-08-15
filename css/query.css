@@ -160,7 +160,7 @@ body {
     transition: top 200ms;
 }
 
-.pl-fu-split {
+.pl-fu--split {
     /*background-color: #9DBBB7;*/
     /*background-color: #91BCCC;*/
     /*background-color: #A9CCDA;*/
@@ -168,7 +168,7 @@ body {
     border-color: #93a0a8; /* Brightness +50*/
 }
 
-.pl-fu-aggregation {
+.pl-fu--aggregation {
     /*background-color: #F2B950;*/
     /*background-color: #FAD6AF;*/
     /*background-color: #FFE2C3;*/
@@ -176,7 +176,7 @@ body {
     border-color: #cdbcae; /* Brightness +50*/
 }
 
-.pl-fu-density {
+.pl-fu--density {
     /*background-color: #F25D50;*/
     /*background-color: #FABCAF;*/
     /*background-color: #FFCDC3;*/
@@ -184,7 +184,7 @@ body {
     border-color: #CDBDB5;
 }
 
-.pl-fu-filter {
+.pl-fu--filter {
     /*background-color: #F2E6D8;*/
     /*background-color: #97D8AF;*/
     /*background-color: #AEE4C2;*/
@@ -200,9 +200,9 @@ body {
     text-decoration: underline;
 }
 
-.pl-fu-density .pl-density-button,
-.pl-fu-aggregation .pl-aggregation-button,
-.pl-fu-split .pl-split-button {
+.pl-fu--density .pl-density-button,
+.pl-fu--aggregation .pl-aggregation-button,
+.pl-fu--split .pl-split-button {
     font-weight: bold;
     color: black;
 }
@@ -227,7 +227,7 @@ body {
     display: flex;
 }
 
-.pl-graph-column {
+.pl-pci-graph {
     min-height: 300px;
     display: flex;
     flex-direction: column;

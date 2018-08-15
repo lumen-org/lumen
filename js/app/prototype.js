@@ -296,7 +296,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
         $('#pl-visualization-container').append($visuals.visualization);
-        $('#pl-config-container').append($visuals.visConfig);
+        $('#pl-facet-container').append($visuals.visConfig);
       }
 
       /**
@@ -854,13 +854,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             .click( () => $('.dg_slider-container').toggle());
 
           let $graphManagerToggleButton = $('<div class="pl-toolbar__button">Graph</div>').click(() => {
-            let isVisible = $('.pl-lower').css('display') !== 'none';
+            let isVisible = $('.pl-layout-lower-left').css('display') !== 'none';
             // TODO: ugly as hell!
-            $('.pl-lower').toggle();
+            $('.pl-layout-lower-left').toggle();
             if (isVisible) {
-              $('.pl-upper ').css('height', '100%');
+              $('.pl-layout-upper-left ').css('height', '100%');
             } else {
-              $('.pl-upper ').css('height', '67%');
+              $('.pl-layout-upper-left ').css('height', '67%');
             }
 
           });
@@ -1367,14 +1367,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           ActivityLogger.log({'report': report, 'confidence': confidence}, 'insight');
         }
       );
-      surveyWidget.$visual.appendTo($('#pl-survey-widget'));
+      surveyWidget.$visual.appendTo($('#pl-survey'));
     }
 
     // dependency graph widget
     let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-manager-container'));
     if (!Settings.graphWidget.enable) {
-      $('.pl-lower').hide();
-      $('.pl-upper').css('height', '95%');
+      $('.pl-layout-lower-left').hide();
+      $('.pl-layout-upper-left').css('height', '95%');
     }
 
     // context queue
@@ -1384,7 +1384,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     });
 
     // setup editor for settings
-    SettingsEditor.setEditor(document.getElementById('pl-config-editor-container'));
+    SettingsEditor.setEditor(document.getElementById('pl-config-container'));
     // NOTE: SettingsEditor represents a singelton! The returned editor by setEditor() is an instance of jsoneditor (something different, which is encapsulated)
 
     // watch for changes
