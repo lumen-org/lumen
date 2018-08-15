@@ -645,6 +645,7 @@ textarea.pl-survey-content {
     flex-grow: 1;
     margin: 0.5em;
     border: 2px solid transparent;
+    border-radius: 10px;
 }
 
 .dg_graphCanvas-container:hover {
