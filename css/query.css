@@ -67,7 +67,7 @@
 }
 
 .pl-button:hover {
-    filter: brightness(100%);
+    filter: brightness(105%);
     transition: filter 200ms;
 }
 
@@ -78,14 +78,14 @@
 }
 
 .pl-onHover--darken:hover {
-    filter: brightness(90%);
+    filter: brightness(95%);
     transition: filter 200ms;
 }
 
 /* if something is draggable */
 .pl-draggable:hover {
     cursor: grab;
-    filter: brightness(100%);
+    filter: brightness(105%);
     transition: filter 200ms;
 }
 
@@ -423,11 +423,15 @@ main {
     justify-content: space-around;
 }
 
+.pl-swapper .pl-button {
+    width: 90%;
+    text-align: center;
+}
+
+
 /* user study widget */
 .pl-survey__title {
     margin-bottom: 0.2rem;
-    font-weight: bolder;
-    font-size: small;
     width: 100%;
 }
 
@@ -440,7 +444,7 @@ main {
     /* right: 0px; */
 }
 
-.pl-survey__content.pl-toolbar__button {
+.pl-survey__content.pl-button {
     text-align: center;
     padding: 0;
     margin-top: 0.5rem;
@@ -574,13 +578,7 @@ textarea.pl-survey__content {
 }
 
 .pl-toolbar__button {
-    margin: 0;
     padding: 0 1.5rem;
-}
-
-.pl-toolbar__button:hover {
-    background-color: #f9f9f9;
-    cursor: pointer;
 }
 
 .pl-model-selector {
@@ -590,7 +588,14 @@ textarea.pl-survey__content {
 .pl-model-selector .pl-label {
     margin-right: 0.3rem;
     position: relative;
-    top: 0.11rem;
+    align-self: center;
+}
+
+.pl-model-selector__button {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    margin-left:0.1rem;
+    padding-left: 0.5rem;
 }
 
 .fw_plot {

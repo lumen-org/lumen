@@ -658,7 +658,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class ShelfSwapper {
       constructor (context) {
-        let $swapButton = $('<div class="pl-button pl-toolbar__button"> Swap X and Y </div>').click( () => {
+        let $swapButton = $('<div class="pl-button"> Swap X and Y </div>').click( () => {
           let shelves = this._context.shelves;
           ActivityLogger.log({'context': this._context.getNameAndUUID()}, 'swap_x_y');
           sh.swap(shelves.row, shelves.column);
@@ -1135,7 +1135,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           7,
           'Confidence that your insight is correct?');
         //let $likertScale = SurveyWidget._makeLikertScaleWidget('not confident at all', 'extremely confident', 7, 'How confident are you that your insight is correct?');
-        let $commitButton = $('<div class="pl-button pl-toolbar__button pl-survey__content">report & clear</div>')
+        let $commitButton = $('<div class="pl-button pl-survey__content">report & clear</div>')
           .click( () => {
             let confidence = $likertScale.value();
             if (confidence === undefined) {
