@@ -378,17 +378,18 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emi
   }
 
 
-  function makeDragGhostForNode(node) {
+  GraphWidget.prototype.makeDragGhostForNode = function (node) {
+    let boundingRect = this._cy.container().getBoundingClientRect();    
     return $('<div class="dg-drag-ghost"></div>').css({
       position: 'fixed',
-      left: node.renderedPosition('x'),
-      top: node.renderedPosition('y'),
+      left: boundingRect.x + node.renderedPosition('x'),
+      top: boundingRect.y + node.renderedPosition('y'),
       width: "34px",
       height: "34px",
       'border-radius': "17px",
       border: "2px solid #404040",
       'background-color': 'grey',
-      // 'z-index': 100000,
+      'z-index': 100000, // this is a bit hacky...
     })
   }
 
@@ -416,15 +417,16 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emi
         this.draggedObject.node = node;
         this.draggedObject.field = node.data('field');
 
-        this.dragGhost = makeDragGhostForNode(node)
+        this.dragGhost = this.makeDragGhostForNode(node)
           .appendTo(this._cy.container());
         this.dragState = "dragging";
       })
       .on('cxtdrag', (ev) => {
+        let boundingRect = this._cy.container().getBoundingClientRect();
         this.dragGhost.css({
           // this prevents the mouse from being directly above this div and hence blocking event triggerings
-          left: ev.renderedPosition.x+2,
-          top: ev.renderedPosition.y+2,
+          left: boundingRect.x + ev.renderedPosition.x+2,
+          top: boundingRect.y + ev.renderedPosition.y+2,
         });
       })
       .on('cxttapend', ev => this._reset_drag())
