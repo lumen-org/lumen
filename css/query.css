@@ -1,5 +1,164 @@
 /* copyright © 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
+/*** common element style ***/
+
+.pl-h1 {
+    font-family: Roboto sans-serif;
+    font-size: x-large;
+    font-weight: lighter;
+}
+
+.pl-h2 {
+    font-family: Roboto sans-serif;
+    font-size: smaller;
+    font-weight: 400;
+}
+
+.pl-h3 {
+    font-family: Roboto sans-serif;
+    font-size: x-small;
+    font-weight: 400;
+}
+
+/* normal text */
+.pl-text {
+    font-family: Roboto sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #6d6d6d;
+}
+
+/* labels, e.g to display a sliders value or description */
+.pl-label {
+    font-family: Roboto sans-serif;
+    font-weight: 400;
+    font-size: small;
+    color: #515151;
+}
+
+/* text input, text areas and the like. anything where you can type into*/
+.pl-input {
+
+}
+
+.pl-input:hover {
+    filter: brightness(98%);
+    transition: filter 200ms;
+}
+
+.pl-field-name {
+    font-family: Roboto Slab, serif;
+    font-size: 1.0em;
+}
+
+.pl-field-value {
+    font-family: Roboto Slab, serif;
+}
+
+/*** behaviour style ***/
+
+.pl-button {
+    background-color: #f0f0f0;
+    border-radius: 1em;
+    border: 1px solid #c5c5c5;
+    font-size: 0.8rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pl-button:hover {
+    filter: brightness(100%);
+    transition: filter 200ms;
+}
+
+.pl-onHover--lighten:hover {
+    /*box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.3);*/
+    filter: brightness(105%);
+    transition: filter 200ms;
+}
+
+.pl-onHover--darken:hover {
+    filter: brightness(90%);
+    transition: filter 200ms;
+}
+
+/* if something is draggable */
+.pl-draggable:hover {
+    cursor: grab;
+    filter: brightness(100%);
+    transition: filter 200ms;
+}
+
+/* activate this class to hide elemen */
+.pl-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 150ms, opacity 150ms;
+}
+
+
+
+/* disables user selection */
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently not supported by any browser */
+}
+
+/* overlap on drag overlap */
+.overlap-center {
+    /*background-color: #4c55dd;*/
+    border-color: #38acdd
+}
+
+.overlap-left {
+    border-left-color: #38ACDD
+}
+
+.overlap-right {
+    border-right-color: #38ACDD
+}
+
+.overlap-top {
+    border-top-color: #38ACDD
+}
+
+.overlap-bottom {
+    border-bottom-color: #38ACDD
+}
+
+
+/* modification of jquery ui resizable */
+.ui-resizable-e {
+    width: 12px;
+}
+
+.ui-resizable-w {
+    width: 12px;
+}
+
+.ui-resizable-s {
+    height: 12px;
+}
+
+.ui-resizable-n {
+    height: 12px;
+}
+
+.ui-resizable-handle:hover {
+    border-width: 2px;
+    border-radius: 5px;
+    border-color: rgba(228, 228, 228, 0.5);
+    background-color: rgba(219, 219, 219, 0.5);
+    transition: background-color 200ms, border-color 200ms;
+}
+
+/* helper that is shown when resizing an element*/
+.pl-resizing {
+    border: solid 2px rgba(56,172,221,0.8);
+}
 
 
 /* general layout */
@@ -59,6 +218,7 @@ main {
     text-align: center;
     background-color: white;
     filter: brightness(98.5%);
+    user-select:  none;
 }
 
 .pl-column__content {
@@ -187,15 +347,12 @@ main {
 /* visualization of a VisMEL query */
 .pl-visualization {
     position: absolute;
-    /*padding: 0.5rem;*/
-    /* margin: .5rem; */
     width: 500px; /* initial width and height */
     height: 500px;
     border-radius: 10px;
-    border: 4px solid #fafafa;
-    padding: 5px;
-    cursor: move;
-    background-color: white;
+    border: 2px solid #fafafa;
+    padding:2px;
+    cursor: move;    
 }
 
 .pl-visualization.pl-active {
@@ -219,7 +376,6 @@ main {
 .pl-visualization__pane {
     width: 100%;
     height: 100%;
-    /* position: absolute; */
 }
 
 /* legend of a visualization */
@@ -569,113 +725,4 @@ textarea.pl-survey__content {
     border: solid 1.5px #2F4EF2;
     color: #2F4EF2;
 }
-
-/*** common element style ***/
-
-.pl-h1 {
-    font-family: Roboto sans-serif;
-    font-size: x-large;
-    font-weight: lighter;
-}
-
-.pl-h2 {
-     font-family: Roboto sans-serif;
-    font-size: smaller;
-    font-weight: 400;
-}
-
-.pl-h3 {
-    font-family: Roboto sans-serif;
-    font-size: x-small;
-    font-weight: 400;
-}
-
-/* normal text */
-.pl-text {
-    font-family: Roboto sans-serif;
-    font-weight: 400;
-}
-
-/* labels, e.g to display a sliders value or description */
-.pl-label {
-    font-family: Roboto sans-serif;
-    font-weight: 400;
-    font-size: small;
-}
-
-/* text input, text areas and the like. anything where you can type into*/
-.pl-input {
-
-}
-
-.pl-field-name {
-    font-family: Roboto Slab, serif;
-    font-size: 1.0em;
-}
-
-.pl-field-value {
-    font-family: Roboto Slab, serif;
-}
-
-/*** behaviour style ***/
-
-.pl-button {
-    background-color: #f0f0f0;
-    border-radius: 1em;
-    border: 1px solid #c5c5c5;
-    font-size: 0.8rem;
-}
-
-.pl-onHover--lighten {
-    /*box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.3);*/
-    filter: brightness(105%);
-}
-
-.pl-onHover--darken {
-    filter: brightness(90%);
-}
-
-/* activate this class to hide elemen */
-.pl-hidden {
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 150ms, opacity 150ms;
-}
-
-/* helper that is shown when resizing an element*/
-.pl-resizing {
-    border: solid 2px rgba(56,172,221,0.8);
-}
-
-/* disables selectable */
-.noselect {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Chrome/Safari/Opera */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently not supported by any browser */
-}
-
-/* overlap on drag overlap */
-.overlap-center {
-    /*background-color: #4c55dd;*/
-    border-color: #38acdd
-}
-
-.overlap-left {
-    border-left-color: #38ACDD
-}
-
-.overlap-right {
-    border-right-color: #38ACDD
-}
-
-.overlap-top {
-    border-top-color: #38ACDD
-}
-
-.overlap-bottom {
-    border-bottom-color: #38ACDD
-}
-
 

@@ -1082,8 +1082,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           // <input type="radio" value="${stepValues[i]}" name="plLikert" class="pl-likert__option" ${(i===0?"checked":"")}>
           $form.append(
             `<div>                 
-                <input type="radio" value="${stepValues[i]}" name="plLikert" class="pl-likert__option" ${(i===0?"":"")}>
-                <label class="pl-label">${stepLabels[i]}</label>
+                <input type="radio" value="${stepValues[i]}" id="${stepValues[i]}" name="plLikert" class="pl-likert__option" ${(i===0?"":"")}>
+                <label for="${stepValues[i]}" class="pl-label">${stepLabels[i]}</label>
              </div>`)
         }
         let $legend = $(
@@ -1112,7 +1112,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       _makeUserIdWidget (onUserIdChanged) {
 
         // make input field for user id
-        let $userIdInput = $('<input class="pl-survey__content" type="text" name="UserID" value="UNSET">');
+        let $userIdInput = $('<input class="pl-input pl-survey__content" type="text" name="UserID" value="UNSET">');
 
         // listen to changes
         $userIdInput.change(()=>{
@@ -1128,7 +1128,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       static
       _makeInsightWidget (callback) {
-        let $insightTextarea = $('<textarea class="pl-survey__content" name="insight">your insight here...</textarea>');
+        let $insightTextarea = $('<textarea class="pl-input pl-survey__content" name="insight">your insight here...</textarea>');
         let $likertScale = SurveyWidget._makeLikertScaleWidget(
           'not confident at all',
           'extremely confident',

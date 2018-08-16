@@ -147,7 +147,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
         $visual = $('<div style="display:inline-block">');
         break;
     }
-    $visual.addClass('shelf__item');
+    $visual.addClass('shelf__item pl-draggable');
 
     // attach record to visual
     $visual.data(AttachStringT.record, record);

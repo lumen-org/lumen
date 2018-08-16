@@ -21,8 +21,7 @@
     min-width: 130px;
 }
 
-.shelf__title {
-}
+.shelf__title {user-select: none;}
 
 .shelf__list {
     min-height: 0.8em;
@@ -164,6 +163,14 @@
     border-color: #CDBDB5;
 }
 
+.pl-fu--filter:hover {
+    border-style: dashed;
+}
+
+.pl-fu--filter:focus {
+    border-color: red;
+}
+
 .pl-fu--filter {
     background-color: #C4E4D0;
     border-color: #9ab2a0; /* Brightness +50*/
@@ -184,7 +191,6 @@
 }
 
 .pl-density-button, .pl-aggregation-button, .pl-split-button {
-    cursor: pointer;
 }
 
 .pl-yield-field {
