@@ -1,4 +1,4 @@
-define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytoscape, cola) {
+define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emitter, cytoscape, cola, d3color) {
 
   cola(cytoscape); // register cola extension
 
@@ -72,7 +72,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         'height': config.defaultNodeDiameter,
         'font-family': 'Roboto Slab, serif',
         'color': '#404040',
-        // min-zoomed-font-size
+        //TODO: use min-zoomed-font-size ?
       }
     },
 
@@ -89,7 +89,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
     {
       selector: '.pl-adjacent-node',
       style: {
-        // 'background-color': 'green',
         'border-width': '3px',
         'border-style': 'dashed',
         'border-color': "#626262",
@@ -112,9 +111,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
     {
       selector: 'edge',
       style: {
-        'width': function (ele) {
-          return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')
-        },
+        'width': ele => {return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')},
         'line-color': '#d7d7d7',
         'opacity': 0.6,
         //'curve-style': 'bezier',
@@ -124,7 +121,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
     {
       selector: '.pl-adjacent-edge',
       style: {
-        // 'line-color': '#cc7137',
         'line-color': '#cc7137',
         'opacity': 0.6,
       }
@@ -138,6 +134,21 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       }
     },
 
+    {
+      selector: '.pl-node--hover',
+      style: {
+        // 'background-color': '#d8d8d8',
+        'background-color': node => {          
+          let stuff = node.scratch('_dg');
+          // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
+          if ( !stuff['hover'] ) {
+            stuff.hover = true;
+            return d3color.color(node.css('background-color')).brighter(0.4).toString();
+          }
+          return node.css('background-color');
+        }
+      }
+    }
   ];
 
   // defaults for layout
@@ -207,14 +218,12 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
         .appendTo(domDiv);
 
       this._cy = cytoscape({
-        // container: $(domDiv),
         container: graphContainer,
         elements: [...this._originalNodes, ...this._originalEdges],
         style: style,
         selectionType: 'additive',
         wheelSensitivity: config.wheelSensitivity,
       });
-      // this._layout = this._cy.layout(layout.cola); // TODO      
       this._layout = this._cy.layout(layout[layoutmode]);
       this._layout.run();      
       let cy = this._cy;
@@ -234,7 +243,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
 
       this.allNodes
         .on('select', this.onNodeSelect.bind(this))
-        .on('unselect', this.onNodeUnselect.bind(this));
+        .on('unselect', this.onNodeUnselect.bind(this))
+        .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
 
       this._excludedEdges = cy.collection();
       this._prependRangeSlider(domDiv);
@@ -327,15 +337,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       this.emit('Node.Unselected', node.id());
     }
 
-    _onNodeMouseOver(ev) {
-      // highlight node
-
-      // indicate to mouse cursor that the node is draggable
-    }
-
-    _onNodeMouseOut(ev) {
-      // un-highlight node
-      // indicate to mouse cursor that the node is draggable
+    _onNodeMouseInOut(ev, inOut) {
+      let node = ev.target;
+      if (inOut === 'out')
+        node.scratch('_dg').hover = false;
+      // (un)highlight node
+      node.toggleClass('pl-node--hover');
+      // indicate with mouse cursor that the node is draggable 'drag' or return to default cursor
+      $(this._cy.container()).toggleClass('dg_graphCanvas-container--hover-on-node');
     }
 
     redraw () {
@@ -370,8 +379,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
 
 
   function makeDragGhostForNode(node) {
-    return $('<div></div>').css({
-      position: 'absolute',
+    return $('<div class="dg-drag-ghost"></div>').css({
+      position: 'fixed',
       left: node.renderedPosition('x'),
       top: node.renderedPosition('y'),
       width: "34px",
@@ -379,6 +388,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
       'border-radius': "17px",
       border: "2px solid #404040",
       'background-color': 'grey',
+      // 'z-index': 100000,
     })
   }
 
@@ -396,37 +406,29 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola'], function (Emitter, cytosc
     this._reset_drag();
     this._isDraggable = true;
     this._dropTargets = new Set();
-    let that = this;
-
     //see http://js.cytoscape.org/#events
     this.allNodes
+      .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
+      .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
       .on('cxttapstart', ev => {
         let node = ev.target;
 
-        that.draggedObject.node = node;
-        that.draggedObject.field = node.data('field');
+        this.draggedObject.node = node;
+        this.draggedObject.field = node.data('field');
 
-        that.dragGhost = makeDragGhostForNode(node)
-          .appendTo(that._cy.container());
-        that.dragState = "dragging";
+        this.dragGhost = makeDragGhostForNode(node)
+          .appendTo(this._cy.container());
+        this.dragState = "dragging";
       })
       .on('cxtdrag', (ev) => {
-        that.dragGhost.css({
+        this.dragGhost.css({
           // this prevents the mouse from being directly above this div and hence blocking event triggerings
           left: ev.renderedPosition.x+2,
           top: ev.renderedPosition.y+2,
         });
       })
-      .on('cxttapend', ev => {
-        that._reset_drag();
-      })
-      .on('tapend', ev => {
-        that.emit("Node.DragMoved", ev.target.id());
-      })
-      // .on('tapstart', ev => {
-      //   console.log(ev);
-      // })
-
+      .on('cxttapend', ev => this._reset_drag())
+      .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
   };
 
   /**

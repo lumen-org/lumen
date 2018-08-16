@@ -1112,7 +1112,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       _makeUserIdWidget (onUserIdChanged) {
 
         // make input field for user id
-        let $userIdInput = $('<input class="pl-input pl-survey__content" type="text" name="UserID" value="UNSET">');
+        let $userIdInput = $('<input class="pl-input pl-survey__content pl-survey__userId" type="text" name="UserID" value="UNSET">');
 
         // listen to changes
         $userIdInput.change(()=>{

@@ -38,7 +38,7 @@
 
 /* text input, text areas and the like. anything where you can type into*/
 .pl-input {
-
+    border: #aeaeae solid 1px;
 }
 
 .pl-input:hover {
@@ -450,6 +450,10 @@ main {
     margin-top: 0.5rem;
 }
 
+.pl-survey__userId {
+
+}
+
 textarea.pl-survey__content {
     min-height: 10rem;
 }
@@ -688,6 +692,15 @@ textarea.pl-survey__content {
 
 .dg_slider__label {
     margin-right: 0.5rem;
+}
+
+.dg-drag-ghost {
+    border-style: dotted;
+}
+
+.dg_graphCanvas-container--hover-on-node:hover {
+    /* :hover is needed to take precedence over .dg_graphCanvas-container:hover which is otherwise more specific */
+    cursor: grab;
 }
 
 /* presents details of an model */
