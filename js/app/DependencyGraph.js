@@ -409,8 +409,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emi
     this._dropTargets = new Set();
     //see http://js.cytoscape.org/#events
     this.allNodes
-      .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
-      .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
+
       .on('cxttapstart', ev => {
         let node = ev.target;
 
@@ -431,6 +430,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emi
       })
       .on('cxttapend', ev => this._reset_drag())
       .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
+      .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
+      .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
   };
 
   /**

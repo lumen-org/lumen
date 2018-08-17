@@ -299,7 +299,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     // TODO: should only display a filter, and allow removal of it, but no other modification?
     let $visual = $('<div class=""> </div>')
       .appendTo($parent);
-    let $innerVisual = $('<div class="pl-fu--filter__inner pl-fu pl-fu--filter"></div>').appendTo($visual);
+    let $innerVisual = $('<div class="pl-fu--filter__inner pl-fu pl-fu--filter pl-active-able"></div>').appendTo($visual);
     this.on(Emitter.InternalChangedEvent, _updateVisual);
     _updateVisual();
 

@@ -89,6 +89,14 @@
     transition: filter 200ms;
 }
 
+.pl-active-able:hover {
+    border-style: dotted;
+}
+
+.pl-active:hover {
+    border-style: solid;
+}
+
 /* activate this class to hide elemen */
 .pl-hidden {
     visibility: hidden;
@@ -342,6 +350,7 @@ main {
     height: 100%;
     overflow: auto;
     position: relative;
+    cursor: move;
 }
 
 /* visualization of a VisMEL query */
@@ -352,7 +361,7 @@ main {
     border-radius: 10px;
     border: 2px solid #fafafa;
     padding:2px;
-    cursor: move;    
+    cursor: grab;
 }
 
 .pl-visualization.pl-active {
@@ -717,7 +726,7 @@ textarea.pl-survey__content {
 }
 
 .pl-details__body {
-
+    margin: 0.3rem;
 }
 
 /* an info box displays messages */
@@ -744,3 +753,12 @@ textarea.pl-survey__content {
     color: #2F4EF2;
 }
 
+
+/* styling of plot background on hover*/
+.main-svg .draglayer g .drag {
+    fill: transparent;
+}
+
+.main-svg .draglayer g .drag:hover {
+    fill: rgba(0, 0, 0, 0.01);
+}

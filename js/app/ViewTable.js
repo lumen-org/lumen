@@ -988,6 +988,21 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             Plotly.react(that.plotlyPane, that.plotlyTraces, that.plotlyLayout, that.plotlyConfig);
           }          
         });
+
+        this.plotlyPane.on('plotly_afterplot', event => {
+          const styleToRemove = 'fill: transparent;';
+          // this is hacky, but at least it won't do any damage if it doesn't work
+          let draglayersPlotly = $('.main-svg .draglayer g .drag.nsewdrag', this.plotPane);
+          draglayersPlotly.each( (idx, layer) => {
+              layer = $(layer);
+              let style = layer.attr('style');
+              // check that the expected styling is in the style. often this is not the case because we have removed it before
+              if (style.includes(styleToRemove)) {
+                style = style.replace(styleToRemove, "").trim();          
+                layer.attr('style', style);
+              }
+          });
+        });
       }
 
 

@@ -402,7 +402,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         $removeButton.click( context.remove.bind(context) );
         let $legendDiv = $('<div class="pl-legend"></div>');
 
-        let $vis = $('<div class="pl-visualization"></div>')
+        let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
           .click( () => {
             if (contextQueue.first().uuid !== context.uuid) {
