@@ -389,9 +389,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emi
       'border-radius': "17px",
       border: "2px solid #404040",
       'background-color': 'grey',
-      'z-index': 100000, // this is a bit hacky...
+      'z-index': 1000, // this is a bit hacky...
     })
-  }
+  };
 
   /**
    * Mixin to make a GraphWidget draggable on calling.

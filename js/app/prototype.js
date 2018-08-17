@@ -405,7 +405,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
-          .click( () => {
+          .mousedown( () => {
             if (contextQueue.first().uuid !== context.uuid) {
               activate(context, ['visualization', 'visPane', 'legendPane']);
               ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
@@ -1306,7 +1306,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       $c.on('mousedown', (ev, foo, bar) => {          
           panning = (ev.target === ev.currentTarget);
           if (!panning)
-            return
+            return;
           console.log("drag start");
           console.log(ev);
           $draggedElements = $(cssSelector, $c);
@@ -1471,7 +1471,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             console.error(err);
             infoBox.message("Could not load remote model from Server!");
           });
-
       }
     };
 

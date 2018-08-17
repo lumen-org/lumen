@@ -1,4 +1,4 @@
-/* copyright © 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 /*** common element style ***/
 
@@ -191,13 +191,16 @@ main {
 }
 
 .pl-layout-lower-left {
+    /*flex-grow: 1;*/
+    /*display: flex;*/
+    /*flex-direction: column;*/
 }
 
 .pl-layout-upper-left {
     min-width: 200px;
     display: flex;
     flex-direction: row;
-    flex-grow: 1;
+    flex-grow: 4;
 }
 
 .pl-layout-right {
@@ -281,7 +284,9 @@ main {
     display: inline;
 }
 
-.pl-facet__onOff {display: flex;}
+.pl-facet__onOff {
+    display: flex;
+}
 
 .pl-facet__onOff input {
     margin:0 0.5rem 0 0;
@@ -291,6 +296,7 @@ main {
 
 .pl-graph {
     min-height: 300px;
+    /*flex-grow: 1;*/
     display: flex;
     flex-direction: column;
 }
@@ -653,16 +659,17 @@ textarea.pl-survey__content {
     display: none;
     width: 100%;
     height: 100%;
-    z-index: 10000;
+    z-index: 9998;
     position: fixed;
     top: 0;
     left: 0;
     overflow: auto;
     background-color: transparent;
+    pointer-events: all;
 }
 
 .pl-modal__foreground {
-    z-index: 10001;
+    z-index: 9999;
 }
 
 /* dependency graph */
@@ -757,8 +764,10 @@ textarea.pl-survey__content {
 /* styling of plot background on hover*/
 .main-svg .draglayer g .drag {
     fill: transparent;
+    /*fill: rgba(0, 0, 0, 0.02);*/
 }
 
 .main-svg .draglayer g .drag:hover {
-    fill: rgba(0, 0, 0, 0.02);
+    fill: rgba(0, 0, 0, 0.03);
+    /*fill: transparent;*/
 }

@@ -41,21 +41,6 @@ implements:
 define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
   "use strict";
 
-
-
-
-
-
-
-
-
-
-
-
-
-  /* /////////////////// */
-
-
   let plotConfig = {
     displayModeBar: false,
     showTips: false,
