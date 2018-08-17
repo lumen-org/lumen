@@ -236,8 +236,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this.config  = {
           visConfig: JSON.parse(JSON.stringify(Settings.views))
         };
-        // let configCopy = JSON.parse(JSON.stringify(Config.views)); // whaaat? this seems the standard solution to deep cloning ... lol
-        // Object.assign(this.config.visConfig, configCopy); // set initial config
+
+        // make pl-dashboard__container pannable
+
 
         // the stages of the pipeline: query -> ... -> visualization
         this.query = {};
@@ -1286,6 +1287,55 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     }
 
     /**
+     * Make the given container pannable, i.e. by dragging the container its elements that match given cssFilter are moved accordingly.
+     *
+     * Note that all elements matching cssSelection must be positioned absolutely or fixed!
+     *
+     * @param container The container to make pannable.
+     * @param cssSelector A CSS selector that matches the element to pane.
+     */
+
+    function makePannable(container, cssSelector) {
+      const dataKey = '__pl-pannable.initialPos';
+      let $c = $(container);
+
+      let $draggedElements = undefined,
+        initialMousePos = undefined,
+        panning = false;
+
+      $c.on('mousedown', (ev, foo, bar) => {          
+          panning = (ev.target === ev.currentTarget);
+          if (!panning)
+            return
+          console.log("drag start");
+          console.log(ev);
+          $draggedElements = $(cssSelector, $c);
+          initialMousePos = [ev.pageX, ev.pageY];
+          $draggedElements.each(
+            (idx, elem) => {
+              elem[dataKey] = $(elem).position(); //{top: +elem.style.top, left: +elem.style.left};              
+            });
+          return;
+        })
+        .on('mousemove', (ev) => {
+          if (!panning)
+            return;
+          console.log("drag move");
+          console.log(ev);
+          let deltaX = initialMousePos[0] - ev.pageX,
+            deltaY = initialMousePos[1] - ev.pageY;
+          $draggedElements.each( (idx, elem) => {
+            let initialPos = elem[dataKey];
+            elem.style.top = initialPos.top - deltaY + "px";
+            elem.style.left = initialPos.left - deltaX + "px";
+          });
+        })
+        .on('mouseup', (ev) => {
+          panning = false;
+        });
+    }
+
+    /**
      * Activates a context and enables interactive editing of a query on/for it.
      * It hides the visuals of the current context, and show those of the new context. It also sets the new context
      * in those widgets that are singeltons and require a set context.
@@ -1397,6 +1447,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     SettingsEditor.watch('root', () => {
         contextQueue.first().update();
     });
+
+    // make dash board pannable
+    makePannable('#pl-dashboard__container', '.pl-visualization');
 
     return {
       /**

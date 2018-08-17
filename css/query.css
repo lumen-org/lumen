@@ -760,5 +760,5 @@ textarea.pl-survey__content {
 }
 
 .main-svg .draglayer g .drag:hover {
-    fill: rgba(0, 0, 0, 0.01);
+    fill: rgba(0, 0, 0, 0.02);
 }
