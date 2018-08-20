@@ -19,7 +19,8 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
       .shapePadding(7)
       .title(colorMap.fu.yields)
       //.classPrefix('pl-')
-      .scale(colorScale);
+      .scale(colorScale)
+      .cells(7);
 
     return legendG.call(legend);
   }
@@ -52,7 +53,8 @@ define(['d3', 'd3legend', './ScaleGenerator'], function (d3, d3legend, ScaleGen)
       .shapePadding(7)
       //.labelOffset(5)
       .title(sizeMap.fu.yields)
-      .scale(sizeScale);
+      .scale(sizeScale)
+      .cells(7);
 
     return legendG.call(legend);
   }

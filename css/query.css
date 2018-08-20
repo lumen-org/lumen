@@ -295,7 +295,7 @@ main {
 }
 
 .pl-graph {
-    min-height: 300px;
+    min-height: 400px;
     /*flex-grow: 1;*/
     display: flex;
     flex-direction: column;

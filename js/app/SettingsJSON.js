@@ -187,7 +187,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
   let colorsInitial = {
     // abstract scales for certain data characteristics
     semanticScales: {
-      diverging_Enum: "rdBu",  // rdYlBu ?  // mit Nulldurchgang
+      diverging_Enum: "rdYlBu",  // rdYlBu ?  // mit Nulldurchgang
       sequential_Enum: "ylOrBr", // ohne Nulldurchgang / bis 0
       discrete9_Enum: "set1",
       discrete12_Enum: "paired12",
