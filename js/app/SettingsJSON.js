@@ -114,7 +114,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
     hideAccuMarginals: true,
     resolution_1d: 15,
     resolution_2d: 15,
-    opacity: 0.7,
+    opacity: 0.5,
     levels: 16,
     splitCnts: {
       layout: 5,
@@ -417,6 +417,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
               "opacity": {type: "number"},   // line opacity
               "fill": {type: "boolean"},
               "fillopacity": {type: "number"},
+              "shape": {type: "string"}, // spline, linear, hv, vh, hvh, or vhv
             }
           },
           "resolution": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"}
@@ -457,7 +458,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         //def: "#377eb8",
         def: colorsInitial.aggregation.single, // TODO: watches!
         //def: greys(0.05), // prepaper
-        opacity: 1 * !tweaksInitial.hideAggregations, // TODO: watches!
+        opacity: 0.9 * !tweaksInitial.hideAggregations, // TODO: watches!
       },
       stroke: {
         color: greys(0.95),
@@ -492,12 +493,12 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         def: 10,
       },
       stroke: {
-        color: greys(0.0),
+        color: greys(0.5),// #929292
         width: 1,
       },
       fill: {
         def: colorsInitial.data.single, // TODO: watched!
-        opacity: 0.9, // TODO: watch tweaks->opacity
+        opacity: 0.5, // TODO: watch tweaks->opacity
       },
       maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
     },
@@ -509,7 +510,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       },
       fill: {
         def: colorsInitial.testData.single,// TODO: watched!
-        opacity: 0.9,
+        opacity: 0.6,
       },
     },
 
@@ -531,6 +532,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         opacity: 0.7, // line opacity
         fill: true,
         fillopacity: 0.06,
+        shape: 'spline',
       },
       resolution: tweaksInitial.resolution_1d,  // TODO: watched!
     },

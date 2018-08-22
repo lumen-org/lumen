@@ -408,6 +408,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
               color: color,
               width: c.map.uniDensity.line.width,
               opacity: c.map.uniDensity.line.opacity,
+              shape: c.map.uniDensity.line.shape,
+              smoothing: 0.75,
             },
             fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
             fillcolor: makeOpaque(color, c.map.uniDensity.line.fillopacity)
@@ -805,12 +807,13 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         y: selectColumn(rt, yIdx),
         xaxis: axisId.x,
         yaxis: axisId.y,
-        opacity: cfg.fill.opacity,
+        // opacity: cfg.fill.opacity,
         hoverinfo: "text",
         text: rt.formatter(rt),
       };
       trace.marker = {
         color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
+        opacity: cfg.fill.opacity,
         size: applyMap(rt, mapper.size, aest.size.fu, fu2idx),
         sizemode: 'diameter', // 'area' or 'diameter'
         symbol: applyMap(rt, mapper.shape, aest.shape.fu, fu2idx),
