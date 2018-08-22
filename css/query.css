@@ -1,4 +1,4 @@
-/* copyright Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright © 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 /*** common element style ***/
 
@@ -85,7 +85,7 @@
 /* if something is draggable */
 .pl-draggable:hover {
     cursor: grab;
-    /* enabling this causes strange flickering... mabye related to this: https://hk.saowen.com/a/6fec0362e79758226488f8bd646c937f47c939beeb2ed465cf424444eff56f3a
+    /* enabling this causes strange flickering... mabye related to this bug: https://hk.saowen.com/a/6fec0362e79758226488f8bd646c937f47c939beeb2ed465cf424444eff56f3a
     */
     /*filter: brightness(105%);*/
     /*transition: filter 200ms;*/
@@ -317,6 +317,7 @@ main {
 
 .pl-config {
     width: 400px;
+    height: 100%;
 }
 
 #pl-config-container {

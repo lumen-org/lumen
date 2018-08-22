@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL) {
+define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
 
     // the default model to be loaded on startup
@@ -448,8 +448,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
         //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
-        shelves.meas.beVisual({label: 'Quantitative'}).beInteractable();
-        shelves.dim.beVisual({label: 'Categorical'}).beInteractable();
+        shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
+        shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
