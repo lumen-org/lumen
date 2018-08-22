@@ -42,8 +42,8 @@
 }
 
 .pl-input:hover {
-    filter: brightness(98%);
-    transition: filter 200ms;
+    /*filter: brightness(98%);*/
+    /*transition: filter 200ms;*/
 }
 
 .pl-field-name {
@@ -85,8 +85,10 @@
 /* if something is draggable */
 .pl-draggable:hover {
     cursor: grab;
-    filter: brightness(105%);
-    transition: filter 200ms;
+    /* enabling this causes strange flickering... mabye related to this: https://hk.saowen.com/a/6fec0362e79758226488f8bd646c937f47c939beeb2ed465cf424444eff56f3a
+    */
+    /*filter: brightness(105%);*/
+    /*transition: filter 200ms;*/
 }
 
 .pl-active-able:hover {
@@ -228,7 +230,7 @@ main {
     top: 0;
     text-align: center;
     background-color: white;
-    filter: brightness(98.5%);
+    /*filter: brightness(98.5%);*/
     user-select:  none;
 }
 

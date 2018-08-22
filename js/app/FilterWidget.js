@@ -94,7 +94,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
         layout = { // the layout object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
           margin: {
-            l: 10,
+            l: 60,
             t: 10,
             r: 10,
             b: 10,
