@@ -48,7 +48,7 @@
 
 .pl-field-name {
     font-family: Roboto Slab, serif;
-    font-size: 1.0em;
+    font-size: 0.9em;
 }
 
 .pl-field-value {
@@ -61,7 +61,7 @@
     background-color: #f0f0f0;
     border-radius: 1em;
     border: 1px solid #c5c5c5;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     cursor: pointer;
     user-select: none;
 }

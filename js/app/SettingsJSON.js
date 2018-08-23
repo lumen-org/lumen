@@ -112,10 +112,10 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
-    resolution_1d: 15,
-    resolution_2d: 15,
+    resolution_1d: 20,
+    resolution_2d: 20,
     opacity: 0.5,
-    levels: 16,
+    levels: 12,
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches

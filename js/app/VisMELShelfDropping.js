@@ -14,6 +14,11 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   let logger = Logger.get('pl-vismelShelfDropping');
   logger.setLevel(Logger.WARN);
 
+  let config = {
+    allowMultipleFieldsInFieldUsage : false,
+    replaceWithCenterOverlap : false,
+  };
+
   const _OverlapEnum = Object.freeze({
     left: 'left',
     top: 'top',
@@ -133,7 +138,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       throw new TypeError('source must be a Record');
     }
 
-    if (! _OverlapEnumValueSet.has(overlap) || overlap == _OverlapEnumValueSet.none) {
+    if (! _OverlapEnumValueSet.has(overlap) || overlap == _OverlapEnum.none) {
       logger.warn("invalid overlap value: " + overlap.toString());
       overlap = _OverlapEnum.center
     }
@@ -142,7 +147,7 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     if (target instanceof sh.Record) {
       // TODO: what if record is no field usage but just a field!?
       let fu = _getFieldUsage(target);
-      if (PQL.isAggregationOrDensity(fu) && overlap === _OverlapEnum.center) {
+      if (config.allowMultipleFieldsInFieldUsage && PQL.isAggregationOrDensity(fu) && overlap === _OverlapEnum.center) {
         let sourceField = _getField(source),
          targetFields = fu.fields;
         if (!targetFields.names().includes(sourceField.name)) {
@@ -160,6 +165,8 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
       throw new TypeError('target must be a Record or a Shelf');
   }
 
+  drop.config = config;
+
 
   var onDrop = {};
   onDrop[sh.ShelfTypeT.dimension] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
@@ -173,7 +180,10 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   onDrop[sh.ShelfTypeT.measure] = onDrop[sh.ShelfTypeT.dimension];
 
   onDrop[sh.ShelfTypeT.row] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
-    var content = _fieldUsageFromRecord(sRecord);
+    let content = _fieldUsageFromRecord(sRecord);
+
+    if (!config.replaceWithCenterOverlap && overlap === 'center')
+      overlap = 'bottom';
 
     // maps the "drop of shelf"-case to the "drop on record"-case
     if (tRecord === undefined) {

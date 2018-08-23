@@ -1308,8 +1308,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           panning = (ev.target === ev.currentTarget);
           if (!panning)
             return;
-          console.log("drag start");
-          console.log(ev);
           $draggedElements = $(cssSelector, $c);
           initialMousePos = [ev.pageX, ev.pageY];
           $draggedElements.each(
@@ -1321,8 +1319,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         .on('mousemove', (ev) => {
           if (!panning)
             return;
-          console.log("drag move");
-          console.log(ev);
           let deltaX = initialMousePos[0] - ev.pageX,
             deltaY = initialMousePos[1] - ev.pageY;
           $draggedElements.each( (idx, elem) => {
