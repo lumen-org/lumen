@@ -265,6 +265,7 @@ main {
 
 .pl-spec {
     min-width: 200px; /* for constant minimal width*/
+    /*overflow-y: scroll; /* always on scroll back to reduce flickering */
 }
 
 .pl-spec-container {
@@ -768,6 +769,8 @@ textarea.pl-survey__content {
 }
 
 
+/*** improvements to Plolty internals ***/
+
 /* styling of plot background on hover*/
 .main-svg .draglayer g .drag {
     fill: transparent;
@@ -777,4 +780,12 @@ textarea.pl-survey__content {
 .main-svg .draglayer g .drag:hover {
     fill: rgba(0, 0, 0, 0.03);
     /*fill: transparent;*/
+}
+
+.fw_plot .rangeslider-grabarea-max:hover {
+    cursor: e-resize;
+}
+
+.fw_plot .rangeslider-grabarea-min:hover {
+    cursor: w-resize;
 }

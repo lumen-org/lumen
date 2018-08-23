@@ -4,6 +4,13 @@
  *
  * drop(target, source, overlap=_OverlapEnum.center): drop source (a Record of another shelf)
  *
+ * Exports:
+ *   A single function (drop).
+ *
+ * Configuration:
+ *   the exported function has a property `config` that lets you configure some behaviour. See the code.
+ *
+ *
  * @module interaction
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
@@ -14,9 +21,10 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
   let logger = Logger.get('pl-vismelShelfDropping');
   logger.setLevel(Logger.WARN);
 
+  // Configuration dictionary
   let config = {
-    allowMultipleFieldsInFieldUsage : false,
-    replaceWithCenterOverlap : false,
+    allowMultipleFieldsInFieldUsage : false,  // Aggregations may in principle take multiple Fields into account. This enables/disables the user to add a field to a an existing FieldUsage by dropping it centrally on it.
+    replaceWithCenterOverlap : false,  // A centrally overlapping drop may replace an existing record or append after it.
   };
 
   const _OverlapEnum = Object.freeze({
