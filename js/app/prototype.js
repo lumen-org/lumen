@@ -1003,7 +1003,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
       /**
        * Sets the context that the toolbar controls.
-       * @param context A context. It makes no difference whether the same context have been set before or not.
+       * @param context A context. The same context may or may not have been set before.
        */
       setContext(context) {
         if (!(context instanceof Context))
@@ -1015,10 +1015,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         /* three possible cases:
          (1) this very context has been set before: then simply activate it
-         (2) this very context has not been set before, but a context of the same model (e.g. mcg_iris_map) has been set:
-           then connect the new contexts shelves to the widget and activate pl-graph-panethe context
+         (2) this very context has not been set before but a context of the same model (e.g. mcg_iris_map) has been set:
+           then connect the new context's shelves to the widget and activate pl-graph-pane
          (3) its entirely new in terms of context and the underlying model: then we need to fetch the graph of the model and then activate the context
          */
+
         let promise = new Promise((resolve, reject) => {
           if (widget === undefined && hasContext)
             throw RangeError("context has been added before! cannot overwrite!");

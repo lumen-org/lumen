@@ -404,34 +404,35 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emi
   };
 
   GraphWidget.prototype.draggable = function () {
-    this._reset_drag();
-    this._isDraggable = true;
-    this._dropTargets = new Set();
-    //see http://js.cytoscape.org/#events
-    this.allNodes
+    if (!this._isDraggable) {
+      this._reset_drag();
+      this._isDraggable = true;
+      this._dropTargets = new Set();
+      //see http://js.cytoscape.org/#events
+      this.allNodes
+        .on('cxttapstart', ev => {
+          let node = ev.target;
 
-      .on('cxttapstart', ev => {
-        let node = ev.target;
+          this.draggedObject.node = node;
+          this.draggedObject.field = node.data('field');
 
-        this.draggedObject.node = node;
-        this.draggedObject.field = node.data('field');
-
-        this.dragGhost = this.makeDragGhostForNode(node)
-          .appendTo(this._cy.container());
-        this.dragState = "dragging";
-      })
-      .on('cxtdrag', (ev) => {
-        let boundingRect = this._cy.container().getBoundingClientRect();
-        this.dragGhost.css({
-          // this prevents the mouse from being directly above this div and hence blocking event triggerings
-          left: boundingRect.x + ev.renderedPosition.x+2,
-          top: boundingRect.y + ev.renderedPosition.y+2,
-        });
-      })
-      .on('cxttapend', ev => this._reset_drag())
-      .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
-      .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
-      .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
+          this.dragGhost = this.makeDragGhostForNode(node)
+            .appendTo(this._cy.container());
+          this.dragState = "dragging";
+        })
+        .on('cxtdrag', (ev) => {
+          let boundingRect = this._cy.container().getBoundingClientRect();
+          this.dragGhost.css({
+            // this prevents the mouse from being directly above this div and hence blocking event triggerings
+            left: boundingRect.x + ev.renderedPosition.x+2,
+            top: boundingRect.y + ev.renderedPosition.y+2,
+          });
+        })
+        .on('cxttapend', ev => this._reset_drag())
+        .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
+        .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
+        .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
+    }
   };
 
   /**

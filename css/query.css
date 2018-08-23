@@ -724,6 +724,10 @@ textarea.pl-survey__content {
 
 /* presents details of an model */
 
+.pl-details {
+    /* display: none;  hide initially */
+}
+
 #pl-details-container {
     margin: 0 0.5rem 0.5rem;
 }
