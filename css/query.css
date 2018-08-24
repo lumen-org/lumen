@@ -668,7 +668,7 @@ textarea.pl-survey__content {
     top: 0;
     left: 0;
     overflow: auto;
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0.08);
     pointer-events: all;
 }
 

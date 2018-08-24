@@ -2,6 +2,54 @@ define([], function () {
 
   'use strict';
 
+  /**
+   * Make DOM node `modalNode` pop-up in front if it is clicked on parentNode. This is, modelNode will be like a modal dialog always in front, until it is clicked anywhere outside of it or the close handler is called. The close handler is returned.
+   *
+   * Modal node is hidden automatically when makeModel is called.
+   *
+   * @param parentNode
+   * @param modalNode
+   * @return {Function} The close handler.
+   */
+
+  function makeModal (parentNode, modalNode) {
+
+    let modelIsOpen = false; // prevent multiple modal overlays
+    let modalBackground = undefined; // is created when the parent is clicked
+
+    modalNode = $(modalNode).addClass('pl-modal__foreground').hide();
+    parentNode = $(parentNode);
+
+    let closeHandler = () => {
+      console.log("modal closed");
+      if (modelIsOpen) {
+        console.log("modal closed2");
+        modalNode.hide();
+        modalBackground.remove();
+        modelIsOpen = false;
+      }
+    };
+
+    // register as modal dialog, i.e.:
+    // * hide by default
+    // * if parent is clicked: show dialog
+    // * if then clicked anywhere but the dialog: hide dialog
+    parentNode.on('click', e => {
+      if (!modelIsOpen) {
+        modelIsOpen = true;
+        // append clickable background and register close handler
+        modalBackground = $("<div class='pl-modal__background'></div>")
+          .appendTo('body')
+          .on("click", closeHandler)
+          .show();
+        modalNode.show();
+        e.stopPropagation();
+      }
+    });
+
+    return closeHandler;
+  }
+
   function moreOnClick (onClickHandler) {
     return $('<div class="pl-button pl-fu__click4more">></div>')
       .on('click.pl-field', onClickHandler);
@@ -33,19 +81,24 @@ define([], function () {
   function controlButtons (confirmHandler, resetHandler, closeHandler) {
     let $buttons = $('<div class="pl-fu__control-buttons"></div>');
 
+    let handleWithStopPropagation = handler => {return ev => {handler(); ev.stopPropagation();}};
+
     if (confirmHandler) {
-      $buttons.append($('<div class="pl-button pl-fu__control-button">Confirm</div>'))
-        .on('click', confirmHandler);
+      $('<div class="pl-button pl-fu__control-button">Confirm</div>')
+        .on('click', handleWithStopPropagation(confirmHandler))
+        .appendTo($buttons);
     }
 
     if (resetHandler) {
-      $buttons.append($('<div class="pl-button pl-fu__control-button">Cancel</div>'))
-        .on('click', resetHandler);
+      $('<div class="pl-button pl-fu__control-button">Reset</div>')
+        .on('click', handleWithStopPropagation(resetHandler))
+        .appendTo($buttons);
     }
 
     if (closeHandler) {
-      $buttons.append($('<div class="pl-button pl-fu__control-button">Close</div>'))
-        .on('click', closeHandler);
+      $('<div class="pl-button pl-fu__control-button">Close</div>')
+        .on('click', handleWithStopPropagation(closeHandler))
+        .appendTo($buttons);
     }
 
     return $buttons;
@@ -55,6 +108,7 @@ define([], function () {
     head,
     moreOnClick,
     controlButtons,
+    makeModal,
   };
 
 });

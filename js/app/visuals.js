@@ -19,36 +19,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   var logger = Logger.get('pl-visuals');
   logger.setLevel(Logger.WARN);
 
-  /**
-   * Make DOM node modalNode pop-up in front if it is clicked on parentNode. Then, modelNode will be like a modal dialog always in front, until it is clicked anywhere outside of it.
-   * @param parentNode
-   * @param modalNode
-   */
-  function makeModal (parentNode, modalNode) {
 
-    modalNode = $(modalNode).addClass('pl-modal__foreground').hide();
-    parentNode = $(parentNode);
-
-    // register as modal dialog, i.e.:
-    // * hide by default
-    // * if parent is clicked: show dialog
-    // * if then clicked anywhere but the dialog: hide dialog
-    parentNode.on('click', e => {
-
-      let closeHandler = () => {
-        modalNode.hide();
-        modalBackground.remove();
-      };
-
-      modalNode.show();
-      // append clickable background and register close handler
-      let modalBackground = $("<div class='pl-modal__background'></div>")
-        .appendTo('body')
-        .on("click", closeHandler)
-        .show();
-      e.stopPropagation();
-    });
-  }
 
   /**
    * Enum for possible layout types of shelves.
@@ -292,20 +263,15 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
        $widget is pop-up that allows modification of it
      */
 
+    let removeHandler = () => record.remove();
+
     let $visual = $('<div class="pl-filter-usage"> </div>')
       .appendTo($parent);
 
-    let $head = VisUtils.head(this, record)
+    let $head = VisUtils.head(this, removeHandler)
       .append(VisUtils.moreOnClick(() => {}));
-
     $visual.append($head);
 
-    //
-    //
-    // //
-    // let $innerVisual = $('<div class="pl-fu--filter__inner pl-fu pl-fu--filter pl-active-able"></div>').appendTo($visual);
-    // this.on(Emitter.InternalChangedEvent, _render);
-    // _render();
 
     // 'pop up visual' for convenient modification
     let $popUp = $('<div class="pl-fu--filter__popUp"></div>')
@@ -313,8 +279,11 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       filter = record.content,
       field = filter.field,
       widget = new FilterWidget(filter, () => ModelUtils.getMarginalDistribution(field.model, field), $popUp[0]);
+    let modalCloseHandler = VisUtils.makeModal($visual, $popUp);
 
-    makeModal($visual, $popUp);
+    widget.on('pl.FilterRemove', removeHandler);
+    widget.on('pl.FilterClose', modalCloseHandler);
+
     return undefined;
   };
 
