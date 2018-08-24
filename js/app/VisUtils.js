@@ -1,3 +1,5 @@
+/* copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+
 define([], function () {
 
   'use strict';
@@ -20,10 +22,8 @@ define([], function () {
     modalNode = $(modalNode).addClass('pl-modal__foreground').hide();
     parentNode = $(parentNode);
 
-    let closeHandler = () => {
-      console.log("modal closed");
+    let closeHandler = () => {     
       if (modelIsOpen) {
-        console.log("modal closed2");
         modalNode.hide();
         modalBackground.remove();
         modelIsOpen = false;

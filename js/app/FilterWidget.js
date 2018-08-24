@@ -69,11 +69,11 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
    *
    * Signals:
    *   It emits these signals:
-   *   * pl.FilterCommit: if the user committed changes (i.e. pushes it to the actual FieldUsage). Note, that the Filter also emits a change signal!
-   *   * pl.FilterReset: if the user resets the filter widget state to the filter state
+   *   * pl.Filter.Commit: if the user committed changes (i.e. pushes it to the actual FieldUsage). Note, that the Filter also emits a change signal!
+   *   * pl.Filter.Reset: if the user resets the filter widget state to the filter state
    *   * pl.FilterChange: if the user changed the state of the filter widget (i.e. it is not yet pushed to the FilterUsage)
-   *   * pl.FilterClose: if the user requested to close the widget
-   *   * pl.FilterRemove: if the user requested to delete the filter
+   *   * pl.Filter.Close: if the user requested to close the widget
+   *   * pl.Filter.Remove: if the user requested to delete the filter
    *
    * TODO / Idea:
    *   * violin plots for data vs model?
@@ -130,7 +130,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       let containerD3 = d3.select(container)
         .classed('fw_container', true);
 
-      let $container = $(containerD3[0][0]); // I know its not good, but I mix d3 and jquery...
+      let $container = $(container);
       $container.append(VisUtils.head(filter, ()=>this.remove()));
 
       this._appendExplicitValueForm(containerD3);
@@ -348,7 +348,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
           .attr('spellcheck', false)
           .on('input', pushHandler);
 
-      this._textInput.pullHandler = pullHandler;
+      this._textInput.pull = pullHandler;
     }
 
     _appendPlot (ele) {
@@ -483,7 +483,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
     /**
      * Redraws the widget.
      */
-    render(recalc = true) {
+    render() {
       // render plot
       Plotly.update(
             this.plot,  // plot DOM element
@@ -492,9 +492,9 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
        );
 
       // update text field
-      this._textInput.pullHandler();
+      this._textInput.pull();
 
-      this.emit('pl.FilterChanged');
+      this.emit('pl.Filter.Changed');
     }
 
     /**
@@ -520,7 +520,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       f.args = args;
       // TODO: filter itself should emit this signal. also see visuals.js - there is more such emitted signals
       f.emit(Emitter.InternalChangedEvent, change);
-      this.emit('pl.FilterCommit', change);
+      this.emit('pl.Filter.Commit', change);
     }
 
     /**
@@ -528,22 +528,23 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
      */
     reset () {
       console.log("not implemented!");
-      this.emit('pl.FilterReset');
+      this.emit('pl.Filter.Reset');
     }
 
     /**
-     * Call this to request to close the widget. It just emits a pl.FilterClose signal which should be listened to by the widget owning parent, and the closing should happend there.
+     * Call this to request to close the widget. It just emits a pl.Filter.Close signal which should be listened to by the widget owning parent, and the closing should happend there.
      */
     close () {
-      this.emit('pl.FilterClose');
+      this.emit('pl.Filter.Close');
     }
 
     /**
-     * Call this to request to delete/remove the managed filter. It emits a pl.FilterDelete signal which should be listened to by the widget owning parent, and the actual removal of the managed filter must happend there.
+     * Call this to request to delete/remove the managed filter. It emits a ok.Filter.Close and pl.FilterDelete signal which should be listened to by the widget owning parent, and the actual removal of the managed filter must happend there.
      */
     remove () {
       // TODO: do we need to deconstruct this widget?
-      this.emit('pl.FilterRemove');
+      this.emit('pl.Filter.Close');
+      this.emit('pl.Filter.Remove');
     }
 
 

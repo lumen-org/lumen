@@ -281,8 +281,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       widget = new FilterWidget(filter, () => ModelUtils.getMarginalDistribution(field.model, field), $popUp[0]);
     let modalCloseHandler = VisUtils.makeModal($visual, $popUp);
 
-    widget.on('pl.FilterRemove', removeHandler);
-    widget.on('pl.FilterClose', modalCloseHandler);
+    widget.on('pl.Filter.Remove', removeHandler);
+    widget.on('pl.Filter.Close', modalCloseHandler);
 
     return undefined;
   };
