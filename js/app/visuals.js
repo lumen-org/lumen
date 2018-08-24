@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, ModelUtils, VisUtils) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './SplitWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, ModelUtils, VisUtils) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -239,42 +239,40 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     return $visual;
   };
 
-  PQL.Split.prototype.makeVisual = function (record) {
-    function _updateVisual () {
-      $visual.html('')
-      // .append(methodSelector(that, Object.keys(PQL.SplitMethod)))  // TODO: this should be the way
-        .append(methodSelector(that, ['equiinterval', 'data', 'elements']))
-        .append(singleFieldDiv([that.name], record))
-        .append(conversionButtons(record))
-        .append(argumentsEditField(that))
-        .append(removeButton(record));
-    }
-    let that = this;
-    let $visual = $('<div class="pl-fu pl-fu--split"> </div>');
-    _updateVisual();
-    this.on(Emitter.InternalChangedEvent, _updateVisual);
-    return $visual;
-  };
-
-  PQL.Filter.prototype.makeVisual = function (record, $parent) {
-
-    /* $visual is the whole UI for it,
-       $head is only the summary that is shown by default, and
-       $widget is pop-up that allows modification of it
-     */
-
+  PQL.Split.prototype.makeVisual = function (record, $parent) {
     let removeHandler = () => record.remove();
 
-    let $visual = $('<div class="pl-filter-usage"> </div>')
+    let $visual = $('<div class="pl-fu--split"> </div>')
       .appendTo($parent);
 
     let $head = VisUtils.head(this, removeHandler)
-      .append(VisUtils.moreOnClick(() => {}));
-    $visual.append($head);
-
+      .append(VisUtils.moreOnClick(() => {}))
+      .appendTo($visual);
 
     // 'pop up visual' for convenient modification
-    let $popUp = $('<div class="pl-fu--filter__popUp"></div>')
+    let $popUp = $('<div class="pl-fu__popUp pl-fu--split__popUp"></div>')
+        .appendTo($visual),
+      widget = new SplitWidget(record.content, $popUp[0]),
+      modalCloseHandler = VisUtils.makeModal($visual, $popUp);
+
+    widget.on('pl.Split.Remove', removeHandler);
+    widget.on('pl.Split.Close', modalCloseHandler);
+
+    return undefined;
+  };
+
+  PQL.Filter.prototype.makeVisual = function (record, $parent) {
+    let removeHandler = () => record.remove();
+
+    let $visual = $('<div class="pl-fu--filter"> </div>')
+      .appendTo($parent);
+
+    let $head = VisUtils.head(this, removeHandler)
+      .append(VisUtils.moreOnClick(() => {}))
+      .appendTo($visual);;
+
+    // 'pop up visual' for convenient modification
+    let $popUp = $('<div class="pl-fu__popUp pl-fu--filter__popUp"></div>')
         .appendTo($visual),
       filter = record.content,
       field = filter.field,

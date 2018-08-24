@@ -1,6 +1,6 @@
 /* copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
-define(['./VisUtils'], function (VisUtils) {
+define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
 
   'use strict';
 
@@ -22,19 +22,20 @@ define(['./VisUtils'], function (VisUtils) {
   class SplitWidget {
 
     /**
+     * @param split {PQL.Split} The SplitUsage to manage.
      * @param container The DOM node to contain the widget. The widget owns the container.
      */
     constructor (split, container) {
       Emitter(this);
 
-      this.field = filter.field;  // the field of the FilterUsage
+      //this.field = split.field;  // the field of the FilterUsage
       this.split = split;  // the managed FilterUsage
       this.dType = this.split.yieldDataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
       this.container = container;  // the DOM element that holds the widget
 
       let $container = $(container)
         .addClass('sw_container')
-        .append(VisUtils.head(filter, ()=>this.remove()))
+        .append(VisUtils.head(split, ()=>this.remove()))
         .append('<div class="pl-text">split into</div>')
         .append('<div class="sw_method-config"></div>')
         .append('<div class="sw_method-selector"></div>')
