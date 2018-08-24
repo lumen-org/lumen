@@ -242,5 +242,6 @@
 }
 
 .pl-fu__control-button {
-
+    width: 20%;
+    margin: 0 0.5rem;
 }
