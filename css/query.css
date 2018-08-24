@@ -55,123 +55,6 @@
     font-family: Roboto Slab, serif;
 }
 
-/*** behaviour style ***/
-
-.pl-button {
-    background-color: #f0f0f0;
-    border-radius: 1em;
-    border: 1px solid #c5c5c5;
-    font-size: 0.7rem;
-    cursor: pointer;
-    user-select: none;
-    text-align: center;
-}
-
-.pl-button:hover {
-    filter: brightness(105%);
-    transition: filter 200ms;
-}
-
-.pl-onHover--lighten:hover {
-    /*box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.3);*/
-    filter: brightness(105%);
-    transition: filter 200ms;
-}
-
-.pl-onHover--darken:hover {
-    filter: brightness(95%);
-    transition: filter 200ms;
-}
-
-/* if something is draggable */
-.pl-draggable:hover {
-    cursor: grab;
-    /* enabling this causes strange flickering... mabye related to this bug: https://hk.saowen.com/a/6fec0362e79758226488f8bd646c937f47c939beeb2ed465cf424444eff56f3a
-    */
-    /*filter: brightness(105%);*/
-    /*transition: filter 200ms;*/
-}
-
-.pl-active-able:hover {
-    border-style: dotted;
-}
-
-.pl-active:hover {
-    border-style: solid;
-}
-
-/* activate this class to hide elemen */
-.pl-hidden {
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 150ms, opacity 150ms;
-}
-
-
-
-/* disables user selection */
-.noselect {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Chrome/Safari/Opera */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently not supported by any browser */
-}
-
-/* overlap on drag overlap */
-.overlap-center {
-    /*background-color: #4c55dd;*/
-    border-color: #38acdd
-}
-
-.overlap-left {
-    border-left-color: #38ACDD
-}
-
-.overlap-right {
-    border-right-color: #38ACDD
-}
-
-.overlap-top {
-    border-top-color: #38ACDD
-}
-
-.overlap-bottom {
-    border-bottom-color: #38ACDD
-}
-
-
-/* modification of jquery ui resizable */
-.ui-resizable-e {
-    width: 12px;
-}
-
-.ui-resizable-w {
-    width: 12px;
-}
-
-.ui-resizable-s {
-    height: 12px;
-}
-
-.ui-resizable-n {
-    height: 12px;
-}
-
-.ui-resizable-handle:hover {
-    border-width: 2px;
-    border-radius: 5px;
-    border-color: rgba(228, 228, 228, 0.5);
-    background-color: rgba(219, 219, 219, 0.5);
-    transition: background-color 200ms, border-color 200ms;
-}
-
-/* helper that is shown when resizing an element*/
-.pl-resizing {
-    border: solid 2px rgba(56,172,221,0.8);
-}
-
-
 /* general layout */
 
 body {
@@ -327,13 +210,13 @@ main {
 
 .pl-fu {
     border: 1px solid;
-    min-width: 9em;
+    /* min-width: 9em; */
     height: 28px;
-    transition: height 200ms;
-    display: flex;
-    justify-content: center;
-    position: relative;
-    padding: 0.1em;
+    /* transition: height 200ms; */
+    /* display: flex; */
+    /* justify-content: center; */
+    /* position: relative; */
+    /* padding: 0.1em; */
     background-color: #F2E6D8;
 }
 
@@ -1034,7 +917,7 @@ textarea.pl-survey__content {
     /*margin: 0.5rem;*/
 }
 
-.pl-fu--filter .pl-fu__head {
+.pl-fu--filter, pl-fu--filter .pl-fu__head {
     background-color: #C4E4D0;
     border-color: #9ab2a0; /* Brightness +50*/
     position: relative;
@@ -1065,6 +948,7 @@ textarea.pl-survey__content {
     flex-direction: column;
     justify-content:space-between;
     height: 1.5rem;
+    position: relative;
 }
 
 .pl-fu__head .pl-fu__remove-button {
@@ -1106,4 +990,117 @@ textarea.pl-survey__content {
 .pl-fu__control-button {
     width: 20%;
     margin: 0 0.5rem;
+}
+
+/*** behaviour style ***/
+
+.pl-button {
+    background-color: #f0f0f0;
+    border-radius: 1em;
+    border: 1px solid #c5c5c5;
+    font-size: 0.7rem;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+}
+
+.pl-button:hover {
+    filter: brightness(105%);
+    transition: filter 200ms;
+}
+
+.pl-onHover--lighten:hover {
+    /*box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.3);*/
+    filter: brightness(105%);
+    transition: filter 200ms;
+}
+
+.pl-onHover--darken:hover {
+    filter: brightness(95%);
+    transition: filter 200ms;
+}
+
+/* if something is draggable */
+.pl-draggable:hover {
+    cursor: grab;
+    /* enabling this causes strange flickering... mabye related to this bug: https://hk.saowen.com/a/6fec0362e79758226488f8bd646c937f47c939beeb2ed465cf424444eff56f3a
+    */
+    /*filter: brightness(105%);*/
+    /*transition: filter 200ms;*/
+}
+
+.pl-active-able:hover {
+    border-style: dotted;
+}
+
+.pl-active:hover {
+    border-style: solid;
+}
+
+/* activate this class to hide an element*/
+.pl-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 150ms, opacity 150ms;
+}
+
+/* disables user selection */
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently not supported by any browser */
+}
+
+/* overlap on drag overlap */
+.overlap-center {
+    /*background-color: #4c55dd;*/
+    border-color: #38acdd
+}
+
+.overlap-left {
+    border-left-color: #38ACDD
+}
+
+.overlap-right {
+    border-right-color: #38ACDD
+}
+
+.overlap-top {
+    border-top-color: #38ACDD
+}
+
+.overlap-bottom {
+    border-bottom-color: #38ACDD
+}
+
+/* modification of jquery ui resizable */
+.ui-resizable-e {
+    width: 12px;
+}
+
+.ui-resizable-w {
+    width: 12px;
+}
+
+.ui-resizable-s {
+    height: 12px;
+}
+
+.ui-resizable-n {
+    height: 12px;
+}
+
+.ui-resizable-handle:hover {
+    border-width: 2px;
+    border-radius: 5px;
+    border-color: rgba(228, 228, 228, 0.5);
+    background-color: rgba(219, 219, 219, 0.5);
+    transition: background-color 200ms, border-color 200ms;
+}
+
+/* helper that is shown when resizing an element*/
+.pl-resizing {
+    border: solid 2px rgba(56,172,221,0.8);
 }

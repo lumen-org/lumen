@@ -242,7 +242,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   PQL.Split.prototype.makeVisual = function (record, $parent) {
     let removeHandler = () => record.remove();
 
-    let $visual = $('<div class="pl-fu--split"> </div>')
+    let $visual = $('<div class="pl-fu pl-fu--split"> </div>')
       .appendTo($parent);
 
     let $head = VisUtils.head(this, removeHandler)
@@ -264,12 +264,12 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   PQL.Filter.prototype.makeVisual = function (record, $parent) {
     let removeHandler = () => record.remove();
 
-    let $visual = $('<div class="pl-fu--filter"> </div>')
+    let $visual = $('<div class="pl-fu pl-fu--filter"> </div>')
       .appendTo($parent);
 
     let $head = VisUtils.head(this, removeHandler)
       .append(VisUtils.moreOnClick(() => {}))
-      .appendTo($visual);;
+      .appendTo($visual);
 
     // 'pop up visual' for convenient modification
     let $popUp = $('<div class="pl-fu__popUp pl-fu--filter__popUp"></div>')

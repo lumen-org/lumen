@@ -8,6 +8,9 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
   /**
    * A SplitWidget is an editable UI to a `SplitUsage`.
    *
+   * Draw Management:
+   *    Initially we create all containers that we always need. This is done by the make.* methods. Then, whenever anything is changed by the user, we render the whole widget again.
+   *
    * State Management:
    *    The state of the widget and the state of
    *
@@ -30,10 +33,9 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
 
       //this.field = split.field;  // the field of the FilterUsage
       this.split = split;  // the managed FilterUsage
+      this._modifiedSplit = split.copy();
       this.dType = this.split.yieldDataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
-      this.container = container;  // the DOM element that holds the widget
-
-      let $container = $(container)
+      this.$container = $(container)  // the DOM element that holds the widget
         .addClass('sw_container')
         .append(VisUtils.head(split, ()=>this.remove()))
         .append('<div class="pl-text">split into</div>')
@@ -44,7 +46,7 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
         );
 
       this._makeMethodSelector();
-      this._makeSplitCountSlider();
+      this._makeMethodConfigurator();
       this.render();
     }
 
@@ -56,6 +58,7 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
     _makeMethodSelector () {
 
       // build data list of valid options
+      // note that the dtype of the split may not change!
       let $methodList = $('<datalist id="split-methods"></datalist>'),
         methodOpts = [];
       if (this.dType === 'string') {
@@ -66,103 +69,105 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
         throw "unsupported yield type of split: " + this.dType;
       $methodList.append(methodOpts.map( val => $("<option>").attr('value',val).text(val)));
 
-      this._methodSelector = $('.sw_method-selector', this.container)
+      // create model select input
+      this._methodSelector = $('.sw_method-selector', this.$container)
         .append('<div class="pl-label sw_method-selector__label">method:</div>')
         .append('<input class="pl-fu__direct-input pl-input" type="text" list="split-methods"/>')
         .append($methodList);
 
+      let $directTextInput = $('.pl-fu__direct-input', this._methodSelector);
+
+      // when user made a valid input, adopt widget accordingly
+      $directTextInput.on('input',
+        (ev) => {
+          let validInput = true; // TODO: implement.
+          if (validInput) {
+            this._modifiedSplit.method = $directTextInput.val();
+          }
+      });
+
       // update/render the selector, i.e. pull from widget state
       this._methodSelector.render = () => {
-
+        $directTextInput.val(this._modifiedSplit.method);
       };
+    }
 
+    _makeMethodConfigurator () {
+      this._methodConfigurator = $('.sw_method-config', this.$container);
+
+      // update/render the selector, i.e. pull from widget state
+      this._methodConfigurator.render = () => {
+        this._methodConfigurator.html('');
+        if (this.dType === 'numerical') {
+          this._makeSplitCountSlider();
+        } else {
+          // ...
+        }
+      }
     }
 
 
     _makeSplitCountSlider () {
 
       let $splitSlider = $('<div class="sw_split-slider"></div>')
-        .appendTo($('.sw_method-config'), this.container);
+        .appendTo(this._methodConfigurator);
 
       let $handle = $('<div class="ui-slider-handle sw_split-slider__handle pl-label"></div>')
         .appendTo($splitSlider);
 
       $splitSlider.slider({
         range: "min",
-        value: this.split.args[0],
+        value: this._modifiedSplit.args[0],
         min: 1,
         step: 1,
         max: 50,
         create: () => $handle.text($splitSlider.slider("value")),
         slide: (event, ui) => {
           $handle.text(ui.value);
-          //this.render();
-          //this.emit('pl.Split.Changed')
+          this._modifiedSplit.args = [ui.value];
         },
       });
 
+      return $splitSlider;
     }
 
     /**
      * Redraws the widget.
      */
     render() {
-
-      // redraw method config
-
-      // redraw method selector
-
-
-      // old:
-
-      // render plot
-      // TODO.
-      // Plotly.update(
-      //   this.plot,  // plot DOM element
-      //   Object.assign({}, this._dataTrace, this.makeTraceUpdate4Selection()),  // data update
-      //   Object.assign({}, this._dataTrace, this.makeLayoutUpdate4Selection())  // layout update
-      // );
-
-      // update text field
-      // this._textInput.pullHandler();
-
+      this._methodSelector.render();
+      this._methodConfigurator.render();
       this.emit('pl.Split.Changed');
     }
 
     /**
-     * Commit the current state of the widget to the managed Filter.
+     * Commit the current state of the widget to the managed Split.
      */
     commit() {
-      let f = this.filter,
-        args;
+      this.split.method = this._modifiedSplit.method;
+      this.split.args = this._modifiedSplit.args.slice();
+      this.render();
 
-      if (this.dType === 'string') {
-        args = new Domain.Discrete([...this.labels.values()]);
-      } else {
-        args = new Domain.Numeric(this.domain.slice());
-      }
+      // TODO: add this?
+      // let change = {
+      //   'type': 'fu.args.changed',
+      //   'class': f.constructor.name,
+      //   'name': f.name,
+      //   'value.old': f.args,
+      //   'value.new': args,
+      // };
 
-      let change = {
-        'type': 'fu.args.changed',
-        'class': f.constructor.name,
-        'name': f.name,
-        'value.old': f.args,
-        'value.new': args,
-      };
-      f.args = args;
-      // TODO: filter itself should emit this signal. also see visuals.js - there is more such emitted signals
-      f.emit(Emitter.InternalChangedEvent, change);
-      this.emit('pl.Split.Commit', change);
+      // TODO: split itself should emit this signal. also see visuals.js - there is more such emitted signals
+      this.split.emit(Emitter.InternalChangedEvent /*, change*/);
+      this.emit('pl.Split.Commit'/*, change*/);
+
     }
 
     /**
      * Reset the current changes to Filter and reload the last commited state to the widget.
      */
     reset () {
-      console.log("not implemented!");
-      // get state from this.split
-      // ...
-      // finally render
+      this._modifiedSplit = this.split.copy();
       this.render();
       this.emit('pl.Split.Reset');
     }
