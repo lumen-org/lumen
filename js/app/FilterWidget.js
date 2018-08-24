@@ -38,7 +38,7 @@ implements:
 
 */
 
-define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
+define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain, Emitter, VisUtils) {
   "use strict";
 
   let plotConfig = {
@@ -59,18 +59,28 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
    * It provides buttons to commit, cancel and deletion
    *
    * Internal:
-   *   * I decided to decouple the state of the widget from the state of the filter, i.e. the state is duplicated in the widget. The reason is that this way I can control when to push updates to the filter, and when not.
-   *   Project-specifically, I want to avoid too many events that indicate a Filter change, because that in turn would trigger many PQL queries...
+   *   * The state of the widget is decoupled from the state of the filter, i.e. the state is duplicated in the widget. This way the widget can control when to push updates to the filter, and when not (i.e. cancel its changes).
+   *   Moreover, and project-specifically, I want to avoid too many events that indicate a Filter change, because that would trigger many PQL queries...
    *
    * Design Decisions:
    *   * categorical histogram is drawn vertically, such that names have enough space.
    *   * quantitative density plots are drawn horizontally because it is more familiar
    *   * don't use react, because it is not very 'html-lastig'. Looking back this was a bad decision :-P
    *
+   * Signals:
+   *   It emits these signals:
+   *   * pl.FilterCommit: if the user committed changes (i.e. pushes it to the actual FieldUsage). Note, that the Filter also emits a change signal!
+   *   * pl.FilterReset: if the user resets the filter widget state to the filter state
+   *   * pl.FilterChange: if the user changed the state of the filter widget (i.e. it is not yet pushed to the FilterUsage)
+   *   * pl.FilterClose: if the user requested to close the widget
+   *   * pl.FilterRemove: if the user requested to delete the filter
+   *
    * TODO / Idea:
    *   * violin plots for data vs model?
-   *   
+   *
    * TODO: use axis.automargin !???
+   *
+   *
    */
   class FilterWidget {
 
@@ -81,6 +91,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
      * @param container the DOM element where the plot is drawn.
      */
     constructor(filter, densityPromise, container) {
+      Emitter(this);
+
       this.field = filter.field;  // the field of the FilterUsage
       this.filter = filter;  // the managed FilterUsage
       this.dType = this.field.dataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
@@ -94,7 +106,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
         layout = { // the layout object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
           margin: {
-            l: 60,
+            l: 10,
             t: 10,
             r: 10,
             b: 10,
@@ -105,8 +117,10 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         };
 
       // init depending on data type
-      if (this.dType === 'string')
+      if (this.dType === 'string') {
+        layout.margin.l = 60;
         [layout, trace] = this.initCategorical(layout, trace);
+      }
       else if (this.dType === 'numerical')
         [layout, trace] = this.initQuantitative(layout, trace);
       else
@@ -115,11 +129,17 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       // make gui elements
       let containerD3 = d3.select(container)
         .classed('fw_container', true);
-      this._appendHeader(containerD3);
+
+      let $container = $(containerD3[0][0]); // I know its not good, but I mix d3 and jquery...
+      $container.append(VisUtils.head(filter, ()=>this.remove()));
+
       this._appendExplicitValueForm(containerD3);
       if (this.dType === 'string')
         this._appendCategoricalButtons(containerD3);
       this._appendPlot(containerD3);
+
+      $container.append(VisUtils.controlButtons(
+        () => this.commit(), () => this.reset(), () => this.close()));
 
       // make initial plot. will be updated on request later
       Plotly.newPlot(this.plot, [trace], layout, plotConfig);
@@ -135,9 +155,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         this._makeInteractiveQuantitative();
       }
 
-
-
-      this.fetchDistribution(); // will also render it!
+      this.fetchDistribution();  // will also render it!
     }
 
     initCategorical(layout, trace) {
@@ -200,15 +218,15 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
         .attr('class', 'fw_toolbar');
 
       let allButton = toolbar.append('div')
-        .attr('class', 'fw_toolbar__button')
+        .attr('class', 'pl-button fw_toolbar__button')
         .text('all')
         .on('click', () => this.selectAll());
       let noneButton = toolbar.append('div')
-        .attr('class', 'fw_toolbar__button')
+        .attr('class', 'pl-button fw_toolbar__button')
         .text('none')
         .on('click', () => this.selectNone());
       let invertButton = toolbar.append('div')
-        .attr('class', 'fw_toolbar__button')
+        .attr('class', 'pl-button fw_toolbar__button')
         .text('inv')
         .on('click', () => this.selectInverted());
     }
@@ -463,9 +481,7 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
     }
 
     /**
-     * Fetches new distribution data and updates the widget with the new distribution data.
-     * Can also be used to redraw the widget if for example the containing div's size changed.
-     * @param recalc {boolean} Defaults to true. Iff true recalculate the density values for the plot. False for not.
+     * Redraws the widget.
      */
     render(recalc = true) {
       // render plot
@@ -477,6 +493,8 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
 
       // update text field
       this._textInput.pullHandler();
+
+      this.emit('pl.FilterChanged');
     }
 
     /**
@@ -502,7 +520,33 @@ define(['./Domain', 'lib/emitter' /*plotly !!*/], function (Domain, Emitter) {
       f.args = args;
       // TODO: filter itself should emit this signal. also see visuals.js - there is more such emitted signals
       f.emit(Emitter.InternalChangedEvent, change);
+      this.emit('pl.FilterCommit', change);
     }
+
+    /**
+     * Reset the current changes to Filter and reload the last commited state to the widget.
+     */
+    reset () {
+      console.log("not implemented!");
+      this.emit('pl.FilterReset');
+    }
+
+    /**
+     * Call this to request to close the widget. It just emits a pl.FilterClose signal which should be listened to by the widget owning parent, and the closing should happend there.
+     */
+    close () {
+      this.emit('pl.FilterClose');
+    }
+
+    /**
+     * Call this to request to delete/remove the managed filter. It emits a pl.FilterDelete signal which should be listened to by the widget owning parent, and the actual removal of the managed filter must happend there.
+     */
+    remove () {
+      // TODO: do we need to deconstruct this widget?
+      this.emit('pl.FilterRemove');
+    }
+
+
   }
 
   return FilterWidget;

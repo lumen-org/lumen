@@ -118,24 +118,24 @@
     padding: 0;
 }
 
-.pl-field-name:hover > .pl-hidden,
-.pl-fu:hover > .pl-hidden {
-    visibility: visible;
-    opacity: 1;
-    transition: visibility 150ms, opacity 150ms;
-}
-
 /* resizing / rearranging on hover */
 
-.pl-fu:hover {
-    height: 67px;
-    transition: height 200ms;
-}
+/*.pl-field-name:hover > .pl-hidden,*/
+/*.pl-fu:hover > .pl-hidden {*/
+    /*visibility: visible;*/
+    /*opacity: 1;*/
+    /*transition: visibility 150ms, opacity 150ms;*/
+/*}*/
 
-.pl-fu:hover > .pl-fields-in-fu {
-    top: 0.8rem;
-    transition: top 200ms;
-}
+/*.pl-fu:hover {*/
+    /*height: 67px;*/
+    /*transition: height 200ms;*/
+/*}*/
+
+/*.pl-fu:hover > .pl-fields-in-fu {*/
+    /*top: 0.8rem;*/
+    /*transition: top 200ms;*/
+/*}*/
 
 .pl-fu > .pl-field {
     top: 15px;
@@ -188,4 +188,59 @@
 .pl-fu--split .pl-split-button {
     font-weight: bold;
     color: black;
+}
+
+
+/* new stuff */
+
+.pl-filter-usage .pl-fu__head {
+    background-color: #C4E4D0;
+    border-color: #9ab2a0; /* Brightness +50*/
+    position: relative;
+}
+
+.pl-fu__head {
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between;
+    height: 1.5rem;
+}
+.pl-fu__head .pl-fu__remove-button {
+    left: 0.2rem;
+    margin: 0.2rem;
+    padding: 0.2rem; /* TODO: replace with button later */
+    position: absolute;
+    height: 80%;
+}
+
+.pl-fu__head .pl-fu__click4more {
+    right: 0.3rem;
+    margin: 0.2rem;
+    padding: 0.2rem;
+    position: absolute;
+    height: 80%;
+}
+
+.pl-click4more {
+    position: absolute;
+    right: 1rem;
+    font-size: 20pt;
+}
+
+.pl-fu__field-names {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align:  center;
+    height: inherit;
+}
+
+.pl-fu__control-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.pl-fu__control-button {
+
 }

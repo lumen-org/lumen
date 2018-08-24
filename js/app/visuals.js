@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './ModelUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, ModelUtils) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, ModelUtils, VisUtils) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -286,22 +286,26 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   };
 
   PQL.Filter.prototype.makeVisual = function (record, $parent) {
-    function _updateVisual () {
-      $innerVisual.html('') // TODO: not a good idea - deletes everything else ...
-        .append(methodSelector(that, Object.keys(PQL.FilterMethodT)))
-        .append(singleFieldDiv([that.name], record))
-        .append(argumentsEditField_Filter(that))
-        .append(removeButton(record));
-    }
 
-    let that = this;
-    // 'small' visual
-    // TODO: should only display a filter, and allow removal of it, but no other modification?
-    let $visual = $('<div class=""> </div>')
+    /* $visual is the whole UI for it,
+       $head is only the summary that is shown by default, and
+       $widget is pop-up that allows modification of it
+     */
+
+    let $visual = $('<div class="pl-filter-usage"> </div>')
       .appendTo($parent);
-    let $innerVisual = $('<div class="pl-fu--filter__inner pl-fu pl-fu--filter pl-active-able"></div>').appendTo($visual);
-    this.on(Emitter.InternalChangedEvent, _updateVisual);
-    _updateVisual();
+
+    let $head = VisUtils.head(this, record)
+      .append(VisUtils.moreOnClick(() => {}));
+
+    $visual.append($head);
+
+    //
+    //
+    // //
+    // let $innerVisual = $('<div class="pl-fu--filter__inner pl-fu pl-fu--filter pl-active-able"></div>').appendTo($visual);
+    // this.on(Emitter.InternalChangedEvent, _render);
+    // _render();
 
     // 'pop up visual' for convenient modification
     let $popUp = $('<div class="pl-fu--filter__popUp"></div>')
@@ -310,7 +314,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       field = filter.field,
       widget = new FilterWidget(filter, () => ModelUtils.getMarginalDistribution(field.model, field), $popUp[0]);
 
-    makeModal($innerVisual, $popUp);
+    makeModal($visual, $popUp);
     return undefined;
   };
 
@@ -338,7 +342,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   }
 
   function removeButton (record) {
-    var removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
+    let removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
     removeButton.click(() => record.remove());
     return removeButton;
   }
@@ -377,7 +381,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       record.replaceBy(newContent);
     }
 
-    var button = $(/*jshint multistr: true */
+    let button = $(/*jshint multistr: true */
             '<div class="pl-button-container pl-hidden">\
              <span class="pl-aggregation-button">P</span>\
              <span class="pl-split-button pl-active">S</span>\
@@ -397,7 +401,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
   function argumentsEditField (fu) {
     function submitOnEnter(elem) {
-      if (event.keyCode == 13) {
+      if (event.keyCode === 13) {
         try{
           let args = JSON.parse(elem.target.value);
           let change = {
@@ -425,7 +429,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   // almost same as above, but still different
   function argumentsEditField_Filter (fu) {
     function submitOnEnter(elem) {
-      if (event.keyCode == 13) {
+      if (event.keyCode === 13) {
         try{
           // create domain of same type as in fu
           let input = JSON.parse(elem.target.value),
@@ -453,7 +457,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   }
 
   function singleFieldDiv (fieldName, record, removable = true) {
-    var $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
+    let $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
     let $fieldDiv = $('<div class="pl-field-name"></div>');
     if (removable) {
       let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
@@ -469,7 +473,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   }
 
   function multiFieldDiv (fu, record, removable = true) {
-    var $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
+    let $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
     for (let name of fu.names) {
 
       let $fieldDiv = $('<div class="pl-field-name"></div>');
@@ -504,8 +508,9 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     return $fieldNames;
   }
 
+
   return {
     AttachStringT: AttachStringT,
-    DirectionTypeT: DirectionTypeT
+    DirectionTypeT: DirectionTypeT,
   };
 });
