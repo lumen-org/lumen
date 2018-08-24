@@ -342,7 +342,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       }
 
       this._textInput = form.append('input')
-          .classed('fw_valueForm__directInput', true)
+          .classed('pl-fu__direct-input fw_valueForm__directInput', true)
           .attr('type','text')
           .attr('name','textInput')
           .attr('spellcheck', false)

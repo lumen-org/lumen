@@ -99,13 +99,13 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
       this._methodConfigurator.render = () => {
         this._methodConfigurator.html('');
         if (this.dType === 'numerical') {
+          this._methodConfigurator.show();
           this._makeSplitCountSlider();
         } else {
-          // ...
+          this._methodConfigurator.hide();
         }
       }
     }
-
 
     _makeSplitCountSlider () {
 
