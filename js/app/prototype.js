@@ -866,7 +866,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
           });
 
-          //elems.push($graphManagerToggleButton);
           elems.push($('<div></div>').css('display', 'flex').append($graphManagerToggleButton, $thesholdHideButton));
         }
 

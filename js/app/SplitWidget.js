@@ -68,7 +68,7 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
 
       this._methodSelector = $('.sw_method-selector', this.container)
         .append('<div class="pl-label sw_method-selector__label">method:</div>')
-        .append('<input class="pl-input" type="text" list="split-methods"/>')
+        .append('<input class="pl-fu__direct-input pl-input" type="text" list="split-methods"/>')
         .append($methodList);
 
       // update/render the selector, i.e. pull from widget state
@@ -82,9 +82,9 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
     _makeSplitCountSlider () {
 
       let $splitSlider = $('<div class="sw_split-slider"></div>')
-        .appendTo($('.sw_method-selector'), this.container);
+        .appendTo($('.sw_method-config'), this.container);
 
-      let $handle = $('<div class="sw_split-slider__handle"></div>')
+      let $handle = $('<div class="ui-slider-handle sw_split-slider__handle pl-label"></div>')
         .appendTo($splitSlider);
 
       $splitSlider.slider({
