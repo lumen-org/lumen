@@ -574,7 +574,15 @@ textarea.pl-survey__content {
 }
 
 .pl-fu__popUp > div {
-    /*margin: 0.5rem;*/
+    margin-top: 0;
+    margin-bottom: 0.3rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem
+}
+
+.pl-fu__popUp > .pl-fu__head {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .pl-fu__head {
@@ -619,8 +627,6 @@ textarea.pl-survey__content {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    margin-bottom: 0.3rem;
-    margin-top: 0.1rem;
 }
 
 .pl-fu__control-button {
@@ -667,7 +673,6 @@ textarea.pl-survey__content {
 }
 
 .fu_method-config, .fu_method-selector, .pl-fu__popUp > .pl-text {
-    margin: 0rem 1rem 0.2rem;
 }
 
 /* Filter Widget */
@@ -684,13 +689,6 @@ textarea.pl-survey__content {
 
 .fw_plot {
     flex-grow: 1;
-}
-
-.fw_row {
-    margin-bottom: .5em;
-    /* margin-top: .3em; */
-    margin-left: 1em;
-    margin-right: .5em;
 }
 
 .fw_valueForm__directInput {

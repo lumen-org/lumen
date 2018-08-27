@@ -202,7 +202,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
 
     _appendHeader (ele) {
       let header = ele.append('div')
-        .classed('fw_header fw_row', true);
+        .classed('fw_header', true);
       this._appendTitle(header);
       this._appendTaskButtons(header);
     }
@@ -260,7 +260,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
 
     _appendExplicitValueForm (ele) {
       let form = ele.append('div')
-        .classed('fw_valueForm fw_row', true);
+        .classed('fw_valueForm', true);
 
       form.append('div')
         .classed('pl-label fw_valueForm__label', true)
@@ -352,7 +352,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
 
     _appendPlot (ele) {
       this.plot = ele.append('div')
-        .classed('fw_plot fw_row', true)[0][0];
+        .classed('fw_plot', true)[0][0];
     }
 
     _makeInteractiveCategorical() {
