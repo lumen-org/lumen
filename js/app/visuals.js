@@ -306,53 +306,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
 
 
-  /**
-   * Creates and returns GUI elements to convert the given record to another usage.
-   * The records content must either be a BaseMap or a FieldUsage. The buttons allow to change the
-   * FieldUsage to another 'type', i.e. switching between aggregation, split and density.
-   *
-   * This is self-contained. Using the buttons
-   */
-  function conversionButtons (record) {
 
-    function translate (record, TargetType) {
-      let content = record.content,
-        isBaseMap = content instanceof VisMEL.BaseMap,
-        fu = isBaseMap ? content.fu : content,
-        // construct new FU
-        newFU = TargetType.FromFieldUsage(fu),
-        // construct new Mapping if necessary
-        newContent = isBaseMap ? content.constructor.DefaultMap(newFU) : newFU;
-
-      let change = {
-        'type': 'fu.translate',
-        'name': fu.yields,
-        'class.from': TargetType.name,
-        'class.to': fu.constructor.name,
-      };
-      fu.emit(Emitter.InternalChangedEvent, change);
-
-      // and replace the old one
-      record.replaceBy(newContent);
-    }
-
-    let button = $(/*jshint multistr: true */
-            '<div class="pl-button-container pl-hidden">\
-             <span class="pl-aggregation-button">P</span>\
-             <span class="pl-split-button pl-active">S</span>\
-             </div>');
-             // <span class="pl-density-button">D</span>
-    button.find('.pl-aggregation-button').click(()=>{
-      translate(record, PQL.Aggregation);
-    });
-    button.find('.pl-density-button').click(()=>{
-      translate(record, PQL.Density);
-    });
-    button.find('.pl-split-button').click(()=>{
-      translate(record, PQL.Split);
-    });
-    return button;
-  }
 
   function argumentsEditField (fu) {
     function submitOnEnter(elem) {

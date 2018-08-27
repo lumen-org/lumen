@@ -809,6 +809,7 @@ textarea.pl-survey__content {
 
 .pl-model-selector {
     display: flex;
+    align-items: center;
 }
 
 .pl-model-selector .pl-label {

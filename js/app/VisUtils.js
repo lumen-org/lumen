@@ -1,6 +1,6 @@
 /* copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
-define([], function () {
+define(['./PQL'], function (PQL) {
 
   'use strict';
 
@@ -102,6 +102,91 @@ define([], function () {
     }
 
     return $buttons;
+  }
+
+  /**
+   * Creates and returns a widget to convert the given record to another FieldUsage.
+   *
+   * If the button is pushed the record is converted as follows:
+   * * a Split to an Aggregation
+   * * an Aggregation to a Split
+   * * a BaseMap to the same basemap but with its FieldUsage translated as above.
+   * FieldUsages other then Aggregation and Split are not allows.
+   *
+   * @param record {Record} The record to create a conversion button for. Its content must either be a BaseMap or a FieldUsage.
+   *
+   */
+  function conversionButton (record) {
+
+    function translate (record, TargetType) {
+      let content = record.content,
+        isBaseMap = content instanceof VisMEL.BaseMap,
+        fu = isBaseMap ? content.fu : content,
+        // construct new FU
+        newFU = TargetType.FromFieldUsage(fu),
+        // construct new Mapping if necessary
+        newContent = isBaseMap ? content.constructor.DefaultMap(newFU) : newFU;
+
+      let change = {
+        'type': 'fu.translate',
+        'name': fu.yields,
+        'class.from': TargetType.name,
+        'class.to': fu.constructor.name,
+      };
+      fu.emit(Emitter.InternalChangedEvent, change);
+
+      // and replace the old one
+      record.replaceBy(newContent);
+    }
+
+    // on click: convert and invert target type of this widget
+    let $widget = $('<div class="pl-conversion-widget"></div>'),
+      $conversionButton = $('<div class="pl-button pl-conversion-widget__button"></div>')
+        .appendTo($widget);
+
+    $widget.render = () => {
+      // determine target type
+      let content = record.content,
+        isBaseMap = content instanceof VisMEL.BaseMap,
+        fu = isBaseMap ? content.fu : content;
+      let text, handler;
+      if (PQL.isSplit(fu)) {
+        text = 'Aggr';
+        handler = () => translate(record, PQL.Aggregation);
+      } else if (PQL.isAggregation(fu)) {
+        text = 'Sp';
+        handler = () => translate(record, PQL.Split);
+      }
+      $conversionButton('.pl-conversion-widget__button')
+        .off('click.pl-conversion')
+        .on('click.pl-conversion',
+          () => {handler(); $widget.render()} )
+        .text(text);
+      return $widget;
+    };
+
+    return $widget.render();
+    //
+    //
+    // let button = $(/*jshint multistr: true */
+    //   '<div class="pl-button-container pl-hidden">\
+    //    <span class="pl-aggregation-button">P</span>\
+    //    <span class="pl-split-button pl-active">S</span>\
+    //    </div>');
+    // // <span class="pl-density-button">D</span>
+    // button.find('.pl-aggregation-button').click(()=>{
+    //   translate(record, PQL.Aggregation);
+    // });
+    // button.find('.pl-density-button').click(()=>{
+    //   translate(record, PQL.Density);
+    // });
+    // button.find('.pl-split-button').click(()=>{
+    //   translate(record, PQL.Split);
+    // });
+    // return button;
+    //
+    //
+
   }
 
   return {
