@@ -186,23 +186,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     return this.fu.makeVisual(record, $visual);
   };
 
-  /**
-   * Creates a visual representation of this record, i.e. specialized for ColorMaps
-   */
-  // VisMEL.ColorMap.prototype.makeVisual = function () {
-    // return this.fu.makeVisual();
-    // function _updateVisual () {
-    //   $visual.html('')
-    //     .append('<img src="http://www.w3schools.com/tags/colormap.gif" height="25px" width="25px">')
-    //     .append($('<span>'+ that.fu.yields +'</span>'));
-    // }
-    // let that = this;
-    // let $visual = $('<div></div>');
-    // _updateVisual();
-    // this.on(Emitter.InternalChangedEvent, _updateVisual);
-    // return $visual;
-  // };
-
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
@@ -224,8 +207,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       widget = new AggregationWidget(this, $popUp[0]),
       modalCloseHandler = VisUtils.makeModal($visual, $popUp);
 
-    widget.on('pl.Split.Remove', removeHandler);
-    widget.on('pl.Split.Close', modalCloseHandler);
+    widget.on('pl.Aggregation.Remove', removeHandler);
+    widget.on('pl.Aggregation.Close', modalCloseHandler);
 
     return undefined;
   };

@@ -38,9 +38,9 @@ define(['lib/emitter', './PQL', './VisUtils'], function (Emitter, PQL, VisUtils)
       this.$container = $(container)  // the DOM element that holds the widget
         .addClass('sw_container')
         .append(VisUtils.head(aggregation, ()=>this.remove()))
-        .append('<div class="pl-text">aggregation into</div>')
-        .append('<div class="sw_method-config"></div>')
-        .append('<div class="sw_method-selector"></div>')
+        .append('<div class="pl-text">aggregate to</div>')
+        .append('<div class="fu_method-config"></div>')
+        .append('<div class="fu_method-selector"></div>')
         .append(VisUtils.controlButtons(
           () => this.commit(), () => this.reset(), () => this.close())
         );
@@ -68,21 +68,28 @@ define(['lib/emitter', './PQL', './VisUtils'], function (Emitter, PQL, VisUtils)
       $methodList.append(methodOpts.map( val => $("<option>").attr('value',val).text(val)));
 
       // create model select input
-      this._methodSelector = $('.sw_method-selector', this.$container)
-        .append('<div class="pl-label sw_method-selector__label">method:</div>')
+      this._methodSelector = $('.fu_method-selector', this.$container)
+        .append('<div class="pl-label fu_method-selector__label">method:</div>')
         .append('<input class="pl-fu__direct-input pl-input" type="text" list="aggregation-methods"/>')
         .append($methodList);
 
       let $directTextInput = $('.pl-fu__direct-input', this._methodSelector);
 
+      function setValid(flag) {
+        $directTextInput.toggleClass('pl-fu__direct-input--invalid', !flag);
+      }
+
       // when user made a valid input, adopt widget accordingly
       $directTextInput.on('input',
         (ev) => {
-          let validInput = true; // TODO: implement.
-          if (validInput) {
-            this._modifiedAggregation.method = $directTextInput.val();
+          let val = $directTextInput.val();
+          if (methodOpts.includes(val)) {
+            this._modifiedAggregation.method = val;
+            setValid(true);
+          } else {
+            setValid(false);
           }
-        });
+      });
 
       // update/render the selector, i.e. pull from widget state
       this._methodSelector.render = () => {
@@ -91,7 +98,7 @@ define(['lib/emitter', './PQL', './VisUtils'], function (Emitter, PQL, VisUtils)
     }
 
     _makeMethodConfigurator () {
-      this._methodConfigurator = $('.sw_method-config', this.$container);
+      this._methodConfigurator = $('.fu_method-config', this.$container);
 
       // update/render the selector, i.e. pull from widget state
       this._methodConfigurator.render = () => {

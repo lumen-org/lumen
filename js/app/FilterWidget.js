@@ -208,9 +208,8 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
     }
 
     _appendTitle (ele) {
-      ele.append('div')
-        .attr('class', 'fw_title')
-        .text(this.field.name);
+      let $head = VisUtils.head(this.filter);
+      ele[0][0].appendChild($head[0]);
     }
 
     _appendCategoricalButtons (ele) {
@@ -264,7 +263,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
         .classed('fw_valueForm fw_row', true);
 
       form.append('div')
-        .classed('fw_valueForm__label', true)
+        .classed('pl-label fw_valueForm__label', true)
         .text(this.dType === 'string'?'any of:':'in range:');
 
       // add handlers that

@@ -280,8 +280,6 @@ main {
     padding: 0;
 }
 
-/* resizing / rearranging on hover */
-
 .pl-fu--filter {
     background-color: #C4E4D0;
     border-color: #9ab2a0; /* Brightness +50*/
@@ -556,8 +554,141 @@ textarea.pl-survey__content {
     font-size: small;
 }
 
+/* common for all FieldUsage widgets */
+
+.pl-fu__popUp {
+    width: 300px;
+    height: 300px;
+    position: fixed;
+    overflow: visible;
+    border: #9ab2a0 2px solid;
+    background-color: rgba(255,255,255,0.95);
+    border-radius: 5px;
+    display:flex;
+    flex-direction: column;
+    justify-content: start;
+}
+
+.pl-fu__popUp > div {
+    /*margin: 0.5rem;*/
+}
+
+.pl-fu__head {
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between;
+    height: 1.5rem;
+    position: relative;
+}
+
+.pl-fu__head .pl-fu__remove-button {
+    left: 0.2rem;
+    margin: 0.2rem;
+    padding: 0.2rem; /* TODO: replace with button later */
+    position: absolute;
+    height: 80%;
+}
+
+.pl-fu__head .pl-fu__click4more {
+    right: 0.3rem;
+    margin: 0.2rem;
+    padding: 0.2rem;
+    position: absolute;
+    height: 80%;
+}
+
+.pl-click4more {
+    position: absolute;
+    right: 1rem;
+    font-size: 20pt;
+}
+
+.pl-fu__field-names {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align:  center;
+    height: inherit;
+}
+
+.pl-fu__control-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-bottom: 0.3rem;
+    margin-top: 0.1rem;
+}
+
+.pl-fu__control-button {
+    width: 20%;
+    margin: 0 0.5rem;
+}
+
+.pl-fu__popUp .pl-text {
+    text-align: center;
+}
+
+.pl-fu__direct-input {
+    border: 1px solid transparent;
+    border-radius: 3px;
+    box-shadow: none;
+    box-sizing: border-box;
+    flex-grow: 1;
+    text-align: end;
+}
+
+.fu_method-selector, .fu_method-config {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.fu_method-selector__label {
+    display: none;
+}
+
+.fu_method-selector .pl-fu__direct-input {
+    text-align: center;
+    margin-left:1rem;
+    width: 90%;
+    position: relative;
+}
+
+.fu_method-selector .pl-fu__direct-input--invalid {
+    text-decoration: underline wavy red;
+}
+
+.fu_method-config, .fu_method-selector, .pl-fu__popUp > .pl-text {
+    margin: 0.2rem 1rem;
+}
 
 /* Filter Widget */
+
+.pl-fu--filter .pl-fu__head {
+    background-color: #C4E4D0;
+    border-color: #9ab2a0; /* Brightness +50*/
+    position: relative;
+}
+
+.pl-fu--filter__popUp {
+    border-color: #9ab2a0;
+}
+
+.fw_plot {
+    flex-grow: 1;
+}
+
+.fw_row {
+    margin-bottom: .5em;
+    margin-top: .3em;
+    margin-left: 1em;
+    margin-right: .5em;
+}
+
+.fw_valueForm__directInput {
+    text-align: center;
+    width: 90%;
+}
 
 .fw_container {
     display: flex;
@@ -567,13 +698,6 @@ textarea.pl-survey__content {
 .fw_header {
     display: flex;
     justify-content: space-between;
-}
-
-.fw_title {
-    text-align: center;
-    font-family: Roboto, sans-serif;
-    font-size: 1.0em;
-    font-weight: bold;
 }
 
 .fw_taskbar {
@@ -588,13 +712,12 @@ textarea.pl-survey__content {
 
 .fw_valueForm {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: space-between;
     align-items: center;
 }
 
 .fw_valueForm__label {
-    font-size: small;
     margin-right: .5em;
     user-select: none;
 }
@@ -620,26 +743,19 @@ textarea.pl-survey__content {
 }
 
 /* split widget */
-.sw_method-selector, .sw_method-config {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+
+.pl-fu--split .pl-fu__head {
+    background-color: #BDD2DA;
+    border-color: #93a0a8; /* Brightness +50*/
+    position: relative;
 }
 
-.sw_method-selector__label {
-    display: none;
+.pl-fu--split__popUp {
+    border-color: #93a0a8; /* Brightness +50*/
+    height: auto;
 }
 
-.sw_method-selector .pl-fu__direct-input {
-    text-align: center;
-    margin-left:1rem;
-}
-
-.sw_method-config, .sw_method-selector, .pl-fu--split__popUp > .pl-text {
-    margin: 0.2rem 1rem;
-}
-
-.sw_method-config .sw_split-slider {
+.fu_method-config .sw_split-slider {
     width: 80%;
 }
 
@@ -650,8 +766,17 @@ textarea.pl-survey__content {
     height: 1.2rem;
 }
 
-.pl-fu--split__popUp > .pl-text {
-    text-align: center;
+/* Aggregation widget */
+
+.pl-fu--aggregation .pl-fu__head {
+    background-color: #FFEEDB;
+    border-color: #cdbcae; /* Brightness +50*/
+    position: relative;
+}
+
+.pl-fu--aggregation__popUp {
+    border-color: #cdbcae; /* Brightness +50*/
+    height: auto;
 }
 
 /* toolbar on top */
@@ -684,28 +809,6 @@ textarea.pl-survey__content {
     margin-left:0.1rem;
     padding-left: 0.5rem;
 }
-
-.fw_plot {
-    flex-grow: 1;
-}
-
-.fw_row {
-    margin-bottom: .5em;
-    margin-top: .3em;
-    margin-left: 1em;
-    margin-right: .5em;
-}
-
-.fw_valueForm__directInput {
-    border: 1px solid transparent;
-    border-radius: 3px;
-    box-shadow: none;
-    box-sizing: border-box;
-    flex-grow: 1;
-    text-align: end;
-    margin-right: .3rem;
-}
-
 
 /* modal edit dialog */
 
@@ -851,15 +954,6 @@ textarea.pl-survey__content {
 
 
 /* new stuff */
-.pl-fu__direct-input {
-    border: 1px solid transparent;
-    border-radius: 3px;
-    box-shadow: none;
-    box-sizing: border-box;
-    flex-grow: 1;
-    text-align: end;
-    margin-right: .3rem;
-}
 
 .pl-fu__direct-input:hover {
     background-color: #f8f8f8;
@@ -873,108 +967,6 @@ textarea.pl-survey__content {
 .pl-fu__direct-input--invalid {
     border: 2px red solid;
     border-radius: 5px;
-}
-
-.pl-fu__popUp {
-    width: 300px;
-    height: 300px;
-    position: fixed;
-    overflow: visible;
-    border: #9ab2a0 2px solid;
-    background-color: rgba(255,255,255,0.95);
-    border-radius: 5px;
-    display:flex;
-    flex-direction: column;
-    justify-content: start;
-}
-
-.pl-fu__popUp > div {
-    /*margin: 0.5rem;*/
-}
-
-.pl-fu--filter .pl-fu__head {
-    background-color: #C4E4D0;
-    border-color: #9ab2a0; /* Brightness +50*/
-    position: relative;
-}
-
-.pl-fu--split .pl-fu__head {
-    background-color: #BDD2DA;
-    border-color: #93a0a8; /* Brightness +50*/
-    position: relative;
-}
-
-.pl-fu--aggregation .pl-fu__head {
-    background-color: #FFEEDB;
-    border-color: #cdbcae; /* Brightness +50*/
-    position: relative;
-}
-
-.pl-fu--filter__popUp {
-    border-color: #9ab2a0;
-}
-
-.pl-fu--split__popUp {
-    border-color: #93a0a8; /* Brightness +50*/
-    height: auto;
-}
-
-.pl-fu--aggregation__popUp {
-    border-color: #cdbcae; /* Brightness +50*/
-    height: auto;
-}
-
-.pl-fu--filter__inner {
-    width: 100%;
-}
-
-.pl-fu__head {
-    display: flex;
-    flex-direction: column;
-    justify-content:space-between;
-    height: 1.5rem;
-    position: relative;
-}
-
-.pl-fu__head .pl-fu__remove-button {
-    left: 0.2rem;
-    margin: 0.2rem;
-    padding: 0.2rem; /* TODO: replace with button later */
-    position: absolute;
-    height: 80%;
-}
-
-.pl-fu__head .pl-fu__click4more {
-    right: 0.3rem;
-    margin: 0.2rem;
-    padding: 0.2rem;
-    position: absolute;
-    height: 80%;
-}
-
-.pl-click4more {
-    position: absolute;
-    right: 1rem;
-    font-size: 20pt;
-}
-
-.pl-fu__field-names {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align:  center;
-    height: inherit;
-}
-
-.pl-fu__control-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-.pl-fu__control-button {
-    width: 20%;
-    margin: 0 0.5rem;
 }
 
 /*** behaviour style ***/

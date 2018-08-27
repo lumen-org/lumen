@@ -39,8 +39,8 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
         .addClass('sw_container')
         .append(VisUtils.head(split, ()=>this.remove()))
         .append('<div class="pl-text">split into</div>')
-        .append('<div class="sw_method-config"></div>')
-        .append('<div class="sw_method-selector"></div>')
+        .append('<div class="fu_method-config"></div>')
+        .append('<div class="fu_method-selector"></div>')
         .append(VisUtils.controlButtons(
           () => this.commit(), () => this.reset(), () => this.close())
         );
@@ -70,21 +70,28 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
       $methodList.append(methodOpts.map( val => $("<option>").attr('value',val).text(val)));
 
       // create model select input
-      this._methodSelector = $('.sw_method-selector', this.$container)
-        .append('<div class="pl-label sw_method-selector__label">method:</div>')
+      this._methodSelector = $('.fu_method-selector', this.$container)
+        .append('<div class="pl-label fu_method-selector__label">method:</div>')
         .append('<input class="pl-fu__direct-input pl-input" type="text" list="split-methods"/>')
         .append($methodList);
 
       let $directTextInput = $('.pl-fu__direct-input', this._methodSelector);
 
+      function setValid(flag) {
+        $directTextInput.toggleClass('pl-fu__direct-input--invalid', !flag);
+      }
+
       // when user made a valid input, adopt widget accordingly
       $directTextInput.on('input',
         (ev) => {
-          let validInput = true; // TODO: implement.
-          if (validInput) {
-            this._modifiedSplit.method = $directTextInput.val();
+          let val = $directTextInput.val();
+          if (methodOpts.includes(val)) {
+            this._modifiedSplit.method = val;
+            setValid(true);
+          } else {
+            setValid(false);
           }
-      });
+        });
 
       // update/render the selector, i.e. pull from widget state
       this._methodSelector.render = () => {
@@ -93,7 +100,7 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
     }
 
     _makeMethodConfigurator () {
-      this._methodConfigurator = $('.sw_method-config', this.$container);
+      this._methodConfigurator = $('.fu_method-config', this.$container);
 
       // update/render the selector, i.e. pull from widget state
       this._methodConfigurator.render = () => {
