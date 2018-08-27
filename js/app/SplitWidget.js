@@ -30,14 +30,16 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
      */
     constructor (split, container) {
       Emitter(this);
-
-      //this.field = split.field;  // the field of the FilterUsage
+      let headOpts = {
+        withRemoveButtion: true,
+        removeHandler: ()=>this.remove()
+      };
       this.split = split;  // the managed FilterUsage
       this._modifiedSplit = split.copy();
       this.dType = this.split.yieldDataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
       this.$container = $(container)  // the DOM element that holds the widget
         .addClass('sw_container')
-        .append(VisUtils.head(split, ()=>this.remove()))
+        .append(VisUtils.head(split, headOpts))
         .append('<div class="pl-text">split into</div>')
         .append('<div class="fu_method-config"></div>')
         .append('<div class="fu_method-selector"></div>')

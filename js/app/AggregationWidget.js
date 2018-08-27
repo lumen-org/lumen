@@ -30,14 +30,17 @@ define(['lib/emitter', './PQL', './VisUtils'], function (Emitter, PQL, VisUtils)
      */
     constructor (aggregation, container) {
       Emitter(this);
-
+      let headOpts = {
+        withRemoveButtion: true,
+        removeHandler: ()=>this.remove()
+      };
       //this.field = aggregation.field;  // the field of the FilterUsage
       this.aggregation = aggregation;  // the managed FilterUsage
       this._modifiedAggregation = aggregation.copy();
       this.dType = this.aggregation.yieldDataType;  // {String} Either "string" for categorical or "numerical" for quantitative data
       this.$container = $(container)  // the DOM element that holds the widget
         .addClass('sw_container')
-        .append(VisUtils.head(aggregation, ()=>this.remove()))
+        .append(VisUtils.head(aggregation, headOpts))
         .append('<div class="pl-text">aggregate to</div>')
         .append('<div class="fu_method-config"></div>')
         .append('<div class="fu_method-selector"></div>')

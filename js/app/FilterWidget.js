@@ -130,8 +130,12 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       let containerD3 = d3.select(container)
         .classed('fw_container', true);
 
-      let $container = $(container);
-      $container.append(VisUtils.head(filter, ()=>this.remove()));
+      let $container = $(container),
+        headOpts = {
+          withRemoveButtion: true,
+          removeHandler: ()=>this.remove()
+        };
+      $container.append(VisUtils.head(filter, headOpts));
 
       this._appendExplicitValueForm(containerD3);
       if (this.dType === 'string')

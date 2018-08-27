@@ -36,6 +36,16 @@
     color: #515151;
 }
 
+.pl-button {
+    background-color: #f0f0f0;
+    border-radius: 1em;
+    border: 1px solid #c5c5c5;
+    font-size: 0.7rem;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+}
+
 /* text input, text areas and the like. anything where you can type into*/
 .pl-input {
     border: #aeaeae solid 1px;
@@ -615,8 +625,18 @@ textarea.pl-survey__content {
     padding: 0.2rem;
     position: absolute;
     height: 80%;
-
 }
+
+.pl-conversion-widget__button--aggregation {
+    background-color: #FFEEDB;
+    border-color: #cdbcae; /* Brightness +50*/
+}
+
+.pl-conversion-widget__button--split {
+    background-color: #BDD2DA;
+    border-color: #93a0a8; /* Brightness +50*/
+}
+
 .pl-click4more {
     position: absolute;
     right: 1rem;
@@ -973,16 +993,6 @@ textarea.pl-survey__content {
 }
 
 /*** behaviour style ***/
-
-.pl-button {
-    background-color: #f0f0f0;
-    border-radius: 1em;
-    border: 1px solid #c5c5c5;
-    font-size: 0.7rem;
-    cursor: pointer;
-    user-select: none;
-    text-align: center;
-}
 
 .pl-button:hover {
     filter: brightness(105%);

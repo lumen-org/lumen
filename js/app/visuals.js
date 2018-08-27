@@ -193,7 +193,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record, $parent) {
-    let headOpts = _makeHeadOpts(record);
+    let headOpts = VisUtils.defaultHeadOpts(record);
 
     let $visual = $('<div class="pl-fu pl-fu--aggregation"> </div>')
       .appendTo($parent);
@@ -229,7 +229,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   };
 
   PQL.Split.prototype.makeVisual = function (record, $parent) {
-    let headOpts = _makeHeadOpts(record);
+    let headOpts = VisUtils.defaultHeadOpts(record);
 
     let $visual = $('<div class="pl-fu pl-fu--split"> </div>')
       .appendTo($parent);
@@ -249,7 +249,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   };
 
   PQL.Filter.prototype.makeVisual = function (record, $parent) {
-    let headOpts = _makeHeadOpts(record);
+    let headOpts = VisUtils.defaultHeadOpts(record);
+    headOpts.withConversionButton = false;
 
     let $visual = $('<div class="pl-fu pl-fu--filter"> </div>')
       .appendTo($parent);
@@ -302,125 +303,116 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
   //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
 
-  function _makeHeadOpts (record) {
-    return {
-      withRemoveButton: true,
-      removeHandler: () => record.remove(),
-      withConversionButton: true,
-      record: record,
-      withClick4more: true,
-      click4moreHandler: () => {}, // handled anyway by click on fu
-    };
-  }
 
-  function argumentsEditField (fu) {
-    function submitOnEnter(elem) {
-      if (event.keyCode === 13) {
-        try{
-          let args = JSON.parse(elem.target.value);
-          let change = {
-            'type': 'fu.args.changed',
-            'class': fu.constructor.name,
-            'name': fu.yields,
-            'value.old': fu.args,
-            'value.new': args,
-          };
-          fu.args = args;
-          fu.emit(Emitter.InternalChangedEvent, change);
-        } catch (e) { 
-          console.error(e);
-        }
-      }
-    }
-
-    let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
-      " value='" + JSON.stringify(fu.args) + "'" +
-      ">");
-    textEdit.keydown(submitOnEnter);
-    return textEdit;
-  }
-
-  // almost same as above, but still different
-  function argumentsEditField_Filter (fu) {
-    function submitOnEnter(elem) {
-      if (event.keyCode === 13) {
-        try{
-          // create domain of same type as in fu
-          let input = JSON.parse(elem.target.value),
-            newDomain = new fu.args.constructor(input);
-          let change = {
-            'type': 'filter.changed',
-            'class': fu.constructor.name,
-            'name': fu.name,
-            'value.old': fu.args,
-            'value.new': newDomain,
-          };
-          fu.setDomain(newDomain);
-          fu.emit(Emitter.InternalChangedEvent, change);
-        } catch (e) {
-          console.error("invalid arguments for FU");
-        }
-      }
-    }
-
-    let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
-      " value='" + JSON.stringify(fu.args.value) + "'" +
-      ">");
-    textEdit.keydown(submitOnEnter);
-    return textEdit;
-  }
-
-  function singleFieldDiv (fieldName, record, removable = true) {
-    let $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
-    let $fieldDiv = $('<div class="pl-field-name"></div>');
-    if (removable) {
-      let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
-      $removeButton.click(()=>{
-        record.remove();
-      });
-      $fieldDiv.append($removeButton)
-        .append($('<span>' + fieldName + '</span>'));
-    }
-
-    $fieldNames.append($fieldDiv);
-    return $fieldNames;
-  }
-
-  function multiFieldDiv (fu, record, removable = true) {
-    let $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
-    for (let name of fu.names) {
-
-      let $fieldDiv = $('<div class="pl-field-name"></div>');
-
-      // add remove button: i.e. a botton that allows to remove a field from a multi-field-usage
-      if (removable) {
-        let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
-        $removeButton.click(()=>{
-          if (fu.names.length === 1)
-            return record.remove();
-          fu.fields = fu.fields.filter( elem => elem.name !== name );
-          if (fu.yields === name)
-            fu.yields = fu.fields[0].name;
-          fu.emit(Emitter.InternalChangedEvent);
-        });
-        $fieldDiv.append($removeButton);
-      }
-
-      // add name of field and make it clickable to select the yield type
-      let $clickableName = $('<span>' + name + '</span>')
-        .toggleClass('pl-yield-field', fu.yields === name)
-        .click(() => {
-          if (fu.yields !== name) {
-            fu.yields = name;
-            fu.emit(Emitter.InternalChangedEvent);
-          }
-        });
-      $fieldDiv.append($clickableName);
-
-      $fieldNames.append($fieldDiv);
-    }
-    return $fieldNames;
-  }
+  //
+  // function argumentsEditField (fu) {
+  //   function submitOnEnter(elem) {
+  //     if (event.keyCode === 13) {
+  //       try{
+  //         let args = JSON.parse(elem.target.value);
+  //         let change = {
+  //           'type': 'fu.args.changed',
+  //           'class': fu.constructor.name,
+  //           'name': fu.yields,
+  //           'value.old': fu.args,
+  //           'value.new': args,
+  //         };
+  //         fu.args = args;
+  //         fu.emit(Emitter.InternalChangedEvent, change);
+  //       } catch (e) {
+  //         console.error(e);
+  //       }
+  //     }
+  //   }
+  //
+  //   let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
+  //     " value='" + JSON.stringify(fu.args) + "'" +
+  //     ">");
+  //   textEdit.keydown(submitOnEnter);
+  //   return textEdit;
+  // }
+  //
+  // // almost same as above, but still different
+  // function argumentsEditField_Filter (fu) {
+  //   function submitOnEnter(elem) {
+  //     if (event.keyCode === 13) {
+  //       try{
+  //         // create domain of same type as in fu
+  //         let input = JSON.parse(elem.target.value),
+  //           newDomain = new fu.args.constructor(input);
+  //         let change = {
+  //           'type': 'filter.changed',
+  //           'class': fu.constructor.name,
+  //           'name': fu.name,
+  //           'value.old': fu.args,
+  //           'value.new': newDomain,
+  //         };
+  //         fu.setDomain(newDomain);
+  //         fu.emit(Emitter.InternalChangedEvent, change);
+  //       } catch (e) {
+  //         console.error("invalid arguments for FU");
+  //       }
+  //     }
+  //   }
+  //
+  //   let textEdit = $('<input type="text" class="pl-arg-text pl-hidden"' +
+  //     " value='" + JSON.stringify(fu.args.value) + "'" +
+  //     ">");
+  //   textEdit.keydown(submitOnEnter);
+  //   return textEdit;
+  // }
+  //
+  // function singleFieldDiv (fieldName, record, removable = true) {
+  //   let $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
+  //   let $fieldDiv = $('<div class="pl-field-name"></div>');
+  //   if (removable) {
+  //     let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
+  //     $removeButton.click(()=>{
+  //       record.remove();
+  //     });
+  //     $fieldDiv.append($removeButton)
+  //       .append($('<span>' + fieldName + '</span>'));
+  //   }
+  //
+  //   $fieldNames.append($fieldDiv);
+  //   return $fieldNames;
+  // }
+  //
+  // function multiFieldDiv (fu, record, removable = true) {
+  //   let $fieldNames = $('<div class="pl-fields-in-fu noselect"></div>');
+  //   for (let name of fu.names) {
+  //
+  //     let $fieldDiv = $('<div class="pl-field-name"></div>');
+  //
+  //     // add remove button: i.e. a botton that allows to remove a field from a multi-field-usage
+  //     if (removable) {
+  //       let $removeButton = $('<span class="pl-remove-button pl-hidden">x</span>');
+  //       $removeButton.click(()=>{
+  //         if (fu.names.length === 1)
+  //           return record.remove();
+  //         fu.fields = fu.fields.filter( elem => elem.name !== name );
+  //         if (fu.yields === name)
+  //           fu.yields = fu.fields[0].name;
+  //         fu.emit(Emitter.InternalChangedEvent);
+  //       });
+  //       $fieldDiv.append($removeButton);
+  //     }
+  //
+  //     // add name of field and make it clickable to select the yield type
+  //     let $clickableName = $('<span>' + name + '</span>')
+  //       .toggleClass('pl-yield-field', fu.yields === name)
+  //       .click(() => {
+  //         if (fu.yields !== name) {
+  //           fu.yields = name;
+  //           fu.emit(Emitter.InternalChangedEvent);
+  //         }
+  //       });
+  //     $fieldDiv.append($clickableName);
+  //
+  //     $fieldNames.append($fieldDiv);
+  //   }
+  //   return $fieldNames;
+  // }
 
 
   return {

@@ -1,6 +1,6 @@
 /* copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
-define(['./PQL', './VisMEL'], function (PQL, VisMEL) {
+define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
 
   'use strict';
 
@@ -53,6 +53,17 @@ define(['./PQL', './VisMEL'], function (PQL, VisMEL) {
   function moreOnClick (onClickHandler) {
     return $('<div class="pl-button pl-fu__click4more">></div>')
       .on('click.pl-field', onClickHandler);
+  }
+
+  function defaultHeadOpts (record) {
+    return {
+      withRemoveButton: true,
+      removeHandler: () => record.remove(),
+      withConversionButton: true,
+      record: record,
+      withClick4more: false,
+      click4moreHandler: () => {}, // handled anyway by click on fu
+    };
   }
 
   function head (fu, opts={}) {
@@ -163,15 +174,21 @@ define(['./PQL', './VisMEL'], function (PQL, VisMEL) {
       let content = record.content,
         isBaseMap = content instanceof VisMEL.BaseMap,
         fu = isBaseMap ? content.fu : content;
-      let text, handler;
+      let text, handler, oldCssClass, newCssClass;
       if (PQL.isSplit(fu)) {
         text = 'Aggr';
         handler = () => translate(record, PQL.Aggregation);
+        oldCssClass = 'pl-conversion-widget__button--split';
+        newCssClass = 'pl-conversion-widget__button--aggregation';
       } else if (PQL.isAggregation(fu)) {
         text = 'Sp';
         handler = () => translate(record, PQL.Split);
+        oldCssClass = 'pl-conversion-widget__button--aggregation';
+        newCssClass = 'pl-conversion-widget__button--split';
       }
       $conversionButton
+        .removeClass(oldCssClass)
+        .addClass(newCssClass)
         .off('click.pl-conversion')
         .on('click.pl-conversion',
           (ev) => {
@@ -209,6 +226,7 @@ define(['./PQL', './VisMEL'], function (PQL, VisMEL) {
 
   return {
     head,
+    defaultHeadOpts,
     moreOnClick,
     makeModal,
     controlButtons,
