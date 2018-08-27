@@ -733,7 +733,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       title_style: "",
       title_font: {
         family: "Roboto Slab, serif",
-        size: 16,
+        size: 14,
         color: greys(0.8), // 0.8 = #404040
         weight: 100, // doesn't work
       },

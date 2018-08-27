@@ -628,6 +628,10 @@ textarea.pl-survey__content {
     text-align: center;
 }
 
+.pl-fu__popUp .pl-fu__head {
+    margin-bottom: 0.4rem;
+}
+
 .pl-fu__direct-input {
     border: 1px solid transparent;
     border-radius: 3px;
@@ -659,7 +663,7 @@ textarea.pl-survey__content {
 }
 
 .fu_method-config, .fu_method-selector, .pl-fu__popUp > .pl-text {
-    margin: 0.2rem 1rem;
+    margin: 0rem 1rem 0.2rem;
 }
 
 /* Filter Widget */
@@ -680,7 +684,7 @@ textarea.pl-survey__content {
 
 .fw_row {
     margin-bottom: .5em;
-    margin-top: .3em;
+    /* margin-top: .3em; */
     margin-left: 1em;
     margin-right: .5em;
 }
@@ -688,6 +692,14 @@ textarea.pl-survey__content {
 .fw_valueForm__directInput {
     text-align: center;
     width: 90%;
+}
+
+.pl-fu__direct-input:hover, .pl-fu__direct-input:focus {
+    background-color: #f8f8f8;
+}
+
+.pl-fu__direct-input--invalid {
+    border-color: red;
 }
 
 .fw_container {
@@ -947,26 +959,6 @@ textarea.pl-survey__content {
 /* improvements for jquery ui slider */
 .ui-slider-handle {
     text-align: center;
-}
-
-/* copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de) */
-
-
-
-/* new stuff */
-
-.pl-fu__direct-input:hover {
-    background-color: #f8f8f8;
-}
-
-.pl-fu__direct-input:focus {
-    background-color: #f8f8f8;
-    border-color: #4f4f4f;
-}
-
-.pl-fu__direct-input--invalid {
-    border: 2px red solid;
-    border-radius: 5px;
 }
 
 /*** behaviour style ***/
