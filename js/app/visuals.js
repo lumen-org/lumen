@@ -193,13 +193,12 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record, $parent) {
-    let removeHandler = () => record.remove();
+    let headOpts = _makeHeadOpts(record);
 
     let $visual = $('<div class="pl-fu pl-fu--aggregation"> </div>')
       .appendTo($parent);
 
-    let $head = VisUtils.head(this, removeHandler)
-      .append(VisUtils.moreOnClick(() => {}))
+    let $head = VisUtils.head(this, headOpts)
       .appendTo($visual);
 
     let $popUp = $('<div class="pl-fu__popUp pl-fu--aggregation__popUp"></div>')
@@ -207,13 +206,13 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       widget = new AggregationWidget(this, $popUp[0]),
       modalCloseHandler = VisUtils.makeModal($visual, $popUp);
 
-    widget.on('pl.Aggregation.Remove', removeHandler);
+    widget.on('pl.Aggregation.Remove', headOpts.removeHandler);
     widget.on('pl.Aggregation.Close', modalCloseHandler);
 
     return undefined;
   };
 
-  PQL.Density.prototype.makeVisual = function (record) {
+  PQL.Density.prototype.makeVisual = function (record, $parent) {
    // function _updateVisual () {
    //    $visual.html('')
    //      .append(methodSelector(that, Object.keys(PQL.DensityMethod)))
@@ -230,13 +229,12 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   };
 
   PQL.Split.prototype.makeVisual = function (record, $parent) {
-    let removeHandler = () => record.remove();
+    let headOpts = _makeHeadOpts(record);
 
     let $visual = $('<div class="pl-fu pl-fu--split"> </div>')
       .appendTo($parent);
 
-    let $head = VisUtils.head(this, removeHandler)
-      .append(VisUtils.moreOnClick(() => {}))
+    let $head = VisUtils.head(this, headOpts)
       .appendTo($visual);
 
     let $popUp = $('<div class="pl-fu__popUp pl-fu--split__popUp"></div>')
@@ -244,20 +242,19 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       widget = new SplitWidget(this, $popUp[0]),
       modalCloseHandler = VisUtils.makeModal($visual, $popUp);
 
-    widget.on('pl.Split.Remove', removeHandler);
+    widget.on('pl.Split.Remove', headOpts.removeHandler);
     widget.on('pl.Split.Close', modalCloseHandler);
 
     return undefined;
   };
 
   PQL.Filter.prototype.makeVisual = function (record, $parent) {
-    let removeHandler = () => record.remove();
+    let headOpts = _makeHeadOpts(record);
 
     let $visual = $('<div class="pl-fu pl-fu--filter"> </div>')
       .appendTo($parent);
 
-    let $head = VisUtils.head(this, removeHandler)
-      .append(VisUtils.moreOnClick(() => {}))
+    let $head = VisUtils.head(this, headOpts)
       .appendTo($visual);
 
     let $popUp = $('<div class="pl-fu__popUp pl-fu--filter__popUp"></div>')
@@ -267,7 +264,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       widget = new FilterWidget(filter, () => ModelUtils.getMarginalDistribution(field.model, field), $popUp[0]);
     let modalCloseHandler = VisUtils.makeModal($visual, $popUp);
 
-    widget.on('pl.Filter.Remove', removeHandler);
+    widget.on('pl.Filter.Remove', headOpts.removeHandler);
     widget.on('pl.Filter.Close', modalCloseHandler);
 
     return undefined;
@@ -305,8 +302,16 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
   //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
 
-
-
+  function _makeHeadOpts (record) {
+    return {
+      withRemoveButton: true,
+      removeHandler: () => record.remove(),
+      withConversionButton: true,
+      record: record,
+      withClick4more: true,
+      click4moreHandler: () => {}, // handled anyway by click on fu
+    };
+  }
 
   function argumentsEditField (fu) {
     function submitOnEnter(elem) {

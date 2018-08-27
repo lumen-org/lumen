@@ -609,6 +609,14 @@ textarea.pl-survey__content {
     height: 80%;
 }
 
+.pl-conversion-widget {
+    right: 0.3rem;
+    margin: 0.2rem;
+    padding: 0.2rem;
+    position: absolute;
+    height: 80%;
+
+}
 .pl-click4more {
     position: absolute;
     right: 1rem;

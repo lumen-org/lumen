@@ -1,6 +1,6 @@
 /* copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
-define(['./PQL'], function (PQL) {
+define(['./PQL', './VisMEL'], function (PQL, VisMEL) {
 
   'use strict';
 
@@ -55,10 +55,14 @@ define(['./PQL'], function (PQL) {
       .on('click.pl-field', onClickHandler);
   }
 
-  function head (fu, removeHandler=undefined) {
-    // add remove button
-    let $removeButton =  $('<div class="pl-button pl-fu__remove-button">x</div>')
-      .on('click.pl-remove-button', removeHandler);
+  function head (fu, opts={}) {
+    let $head = $('<div class="pl-fu__head"></div>');
+
+    // remove button
+    if (opts.withRemoveButton)
+      $('<div class="pl-button pl-fu__remove-button">x</div>')
+        .on('click.pl-remove-button', opts.removeHandler)
+        .appendTo($head);
 
     // field name(s)
     let $fieldNames = $('<div class="pl-fu__field-names"></div>'),
@@ -66,9 +70,19 @@ define(['./PQL'], function (PQL) {
     for (let name of names) {
       $(`<div class="pl-field-name pl-fu__field-name">${name}</div>`).appendTo($fieldNames);
     }
+    $head.append($fieldNames);
 
-    return $('<div class="pl-fu__head"></div>')
-      .append(removeHandler ? $removeButton : "", $fieldNames);
+    // conversion button
+    if (opts.withConversionButton)
+      conversionButton(opts.record)
+        .appendTo($head);
+
+    // click4more
+    if (opts.withClick4more)
+      moreOnClick(opts.click4moreHandler)
+        .appendTo($head);
+
+   return $head;
   }
 
   /**
@@ -157,10 +171,14 @@ define(['./PQL'], function (PQL) {
         text = 'Sp';
         handler = () => translate(record, PQL.Split);
       }
-      $conversionButton('.pl-conversion-widget__button')
+      $conversionButton
         .off('click.pl-conversion')
         .on('click.pl-conversion',
-          () => {handler(); $widget.render()} )
+          (ev) => {
+            handler();
+            $widget.render();
+            ev.stopPropagation();
+        })
         .text(text);
       return $widget;
     };
@@ -192,8 +210,9 @@ define(['./PQL'], function (PQL) {
   return {
     head,
     moreOnClick,
-    controlButtons,
     makeModal,
+    controlButtons,
+    conversionButton,
   };
 
 });
