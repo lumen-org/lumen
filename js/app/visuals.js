@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './SplitWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, ModelUtils, VisUtils) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './SplitWidget', './AggregationWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, AggregationWidget, ModelUtils, VisUtils) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -209,35 +209,41 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     return $('<div class="pl-field pl-field-name">'+this.name+'</div>');
   };
 
-  PQL.Aggregation.prototype.makeVisual = function (record) {
-    function _updateVisual () {
-      $visual.html('')
-        .append(methodSelector(that, Object.keys(PQL.AggrMethod)))
-        .append(multiFieldDiv(that, record))
-        .append(conversionButtons(record))
-        .append(argumentsEditField(that))
-        .append(removeButton(record));
-    }
-    let that = this;
-    let $visual = $('<div class="pl-fu pl-fu--aggregation"> </div>');
-    _updateVisual();
-    this.on(Emitter.InternalChangedEvent, _updateVisual);
-    return $visual;
+  PQL.Aggregation.prototype.makeVisual = function (record, $parent) {
+    let removeHandler = () => record.remove();
+
+    let $visual = $('<div class="pl-fu pl-fu--aggregation"> </div>')
+      .appendTo($parent);
+
+    let $head = VisUtils.head(this, removeHandler)
+      .append(VisUtils.moreOnClick(() => {}))
+      .appendTo($visual);
+
+    let $popUp = $('<div class="pl-fu__popUp pl-fu--aggregation__popUp"></div>')
+        .appendTo($visual),
+      widget = new AggregationWidget(this, $popUp[0]),
+      modalCloseHandler = VisUtils.makeModal($visual, $popUp);
+
+    widget.on('pl.Split.Remove', removeHandler);
+    widget.on('pl.Split.Close', modalCloseHandler);
+
+    return undefined;
   };
 
   PQL.Density.prototype.makeVisual = function (record) {
-   function _updateVisual () {
-      $visual.html('')
-        .append(methodSelector(that, Object.keys(PQL.DensityMethod)))
-        .append(multiFieldDiv(that, record))
-        .append(conversionButtons(record))
-        .append(removeButton(record));
-    }
-    let that = this;
-    let $visual = $('<div class="pl-fu pl-fu--density"> </div>');
-    _updateVisual();
-    this.on(Emitter.InternalChangedEvent, _updateVisual);
-    return $visual;
+   // function _updateVisual () {
+   //    $visual.html('')
+   //      .append(methodSelector(that, Object.keys(PQL.DensityMethod)))
+   //      .append(multiFieldDiv(that, record))
+   //      .append(conversionButtons(record))
+   //      .append(removeButton(record));
+   //  }
+   //  let that = this;
+   //  let $visual = $('<div class="pl-fu pl-fu--density"> </div>');
+   //  _updateVisual();
+   //  this.on(Emitter.InternalChangedEvent, _updateVisual);
+   //  return $visual;
+    throw "not implemented!";
   };
 
   PQL.Split.prototype.makeVisual = function (record, $parent) {
@@ -250,7 +256,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       .append(VisUtils.moreOnClick(() => {}))
       .appendTo($visual);
 
-    // 'pop up visual' for convenient modification
     let $popUp = $('<div class="pl-fu__popUp pl-fu--split__popUp"></div>')
         .appendTo($visual),
       widget = new SplitWidget(this, $popUp[0]),
@@ -272,7 +277,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
       .append(VisUtils.moreOnClick(() => {}))
       .appendTo($visual);
 
-    // 'pop up visual' for convenient modification
     let $popUp = $('<div class="pl-fu__popUp pl-fu--filter__popUp"></div>')
         .appendTo($visual),
       filter = record.content,

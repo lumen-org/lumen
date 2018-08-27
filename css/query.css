@@ -210,13 +210,6 @@ main {
 
 .pl-fu {
     border: 1px solid;
-    /* min-width: 9em; */
-    height: 28px;
-    /* transition: height 200ms; */
-    /* display: flex; */
-    /* justify-content: center; */
-    /* position: relative; */
-    /* padding: 0.1em; */
     background-color: #F2E6D8;
 }
 
@@ -289,26 +282,9 @@ main {
 
 /* resizing / rearranging on hover */
 
-/*.pl-field-name:hover > .pl-hidden,*/
-/*.pl-fu:hover > .pl-hidden {*/
-/*visibility: visible;*/
-/*opacity: 1;*/
-/*transition: visibility 150ms, opacity 150ms;*/
-/*}*/
-
-/*.pl-fu:hover {*/
-/*height: 67px;*/
-/*transition: height 200ms;*/
-/*}*/
-
-/*.pl-fu:hover > .pl-fields-in-fu {*/
-/*top: 0.8rem;*/
-/*transition: top 200ms;*/
-/*}*/
-
-.pl-fu > .pl-field {
-    top: 15px;
-    transition: top 200ms;
+.pl-fu--filter {
+    background-color: #C4E4D0;
+    border-color: #9ab2a0; /* Brightness +50*/
 }
 
 .pl-fu--split {
@@ -326,7 +302,6 @@ main {
     border-color: #CDBDB5;
 }
 
-
 .pl-density-button, .pl-aggregation-button, .pl-split-button {
 }
 
@@ -340,7 +315,6 @@ main {
     font-weight: bold;
     color: black;
 }
-
 
 .pl-facet__label {
     display: inline;
@@ -616,6 +590,7 @@ textarea.pl-survey__content {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
 }
 
 .fw_valueForm__label {
@@ -917,7 +892,7 @@ textarea.pl-survey__content {
     /*margin: 0.5rem;*/
 }
 
-.pl-fu--filter, pl-fu--filter .pl-fu__head {
+.pl-fu--filter .pl-fu__head {
     background-color: #C4E4D0;
     border-color: #9ab2a0; /* Brightness +50*/
     position: relative;
@@ -929,6 +904,11 @@ textarea.pl-survey__content {
     position: relative;
 }
 
+.pl-fu--aggregation .pl-fu__head {
+    background-color: #FFEEDB;
+    border-color: #cdbcae; /* Brightness +50*/
+    position: relative;
+}
 
 .pl-fu--filter__popUp {
     border-color: #9ab2a0;
@@ -936,6 +916,11 @@ textarea.pl-survey__content {
 
 .pl-fu--split__popUp {
     border-color: #93a0a8; /* Brightness +50*/
+    height: auto;
+}
+
+.pl-fu--aggregation__popUp {
+    border-color: #cdbcae; /* Brightness +50*/
     height: auto;
 }
 
