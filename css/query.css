@@ -221,6 +221,8 @@ main {
     padding: 0.1rem;
 }
 
+/* START to-be-removed ... */
+
 .pl-method {
     position: absolute;
     top: 3px;
@@ -279,6 +281,8 @@ main {
     margin: 0;
     padding: 0;
 }
+
+/* ... END to-be-removed */
 
 .pl-fu--filter {
     background-color: #C4E4D0;
