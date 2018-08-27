@@ -31,7 +31,7 @@ define(['lib/emitter', './PQL', './VisUtils'], function (Emitter, PQL, VisUtils)
     constructor (aggregation, container) {
       Emitter(this);
       let headOpts = {
-        withRemoveButtion: true,
+        withRemoveButton: true,
         removeHandler: ()=>this.remove()
       };
       //this.field = aggregation.field;  // the field of the FilterUsage

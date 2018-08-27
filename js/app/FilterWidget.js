@@ -99,8 +99,10 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       this._densityPromise = densityPromise;
       this.container = container;  // the DOM element that holds the widget
       this.plot = undefined;  // the div that holds the marginal density plot
+      this._valid = false; // true iff domain / the state of the UI represents a valid filter
 
       this.domain = undefined; // the domain to filter on, i.e. non-committed state of this widget
+      this.labels = undefined; // the labels of the values to keep. only for categorical filters.
       this.fullDomain = this.field.extent.values;  // the maximal domain
 
       let trace = {}, // the trace object that is used plot the initial plot. Later it is only updated, not entirely redrawn.
@@ -132,7 +134,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
 
       let $container = $(container),
         headOpts = {
-          withRemoveButtion: true,
+          withRemoveButton: true,
           removeHandler: ()=>this.remove()
         };
       $container.append(VisUtils.head(filter, headOpts));
@@ -277,7 +279,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       if (this.dType === 'string') {
 
         let that = this;  // handler is called with different 'this'. see below
-        pushHandler = function(ev) {
+        pushHandler = function (ev) {
           let newDomainStr = this.value; // this refers to the triggering DOM element
 
           // 1. parse to list of strings
@@ -298,11 +300,12 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
           if (labelLst.length === 0)
             valid = false;
 
-         that._textInput.classed('fw_valueForm__directInput--invalid', !valid);
+         that._textInput.classed('pl-fu__direct-input--invalid', !valid);
 
           if (valid) {
             that.domain = newDomain;
-            that.labels = labelLst;
+            that.labels = new Set(labelLst);
+            this._valid = true;
             that.render();
           }
 
@@ -311,10 +314,13 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
         pullHandler = () => {
           // domain consists of integers ...
           let value = [...this.domain.values()].map(i => this.fullDomain[i]).join(", ");
-          if (value.length === 0)
+          if (value.length === 0) {
             value = "<none selected>";
-
+            this._valid = false;
+          }
           this._textInput.property('value', value);
+
+          that._textInput.classed('pl-fu__direct-input--invalid', !this._valid);
         };
 
       } else if (this.dType === 'numerical') {
@@ -330,10 +336,10 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
               throw("ParseError");
 
             that.domain = newDomain;
-            that._textInput.classed('fw_valueForm__directInput--invalid', false);
+            that._textInput.classed('pl-fu__direct-input--invalid', false);
             that.render();
           } catch (err) {
-            that._textInput.classed('fw_valueForm__directInput--invalid', true);
+            that._textInput.classed('pl-fu__direct-input--invalid', true);
           }
         };
 
@@ -371,6 +377,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
           this.domain.add(val);
           this.labels.add(label);
         }
+        this._valid = true;
 
         // sync to view
         this.render();
@@ -425,6 +432,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
           // reset to original values
           this.selectAll();
         }
+        this._valid = true;
         this.render();
       });
     }
@@ -443,6 +451,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
         this.domain = this.fullDomain.slice();
       else
         throw "not implemented";
+      this._valid = true;
       this.render();
     }
 
@@ -451,6 +460,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
         throw TypeError("must be string/categorical!");
       this.domain = new Set();
       this.labels = new Set();
+      this._valid = false;
       this.render();
     }
 
@@ -467,6 +477,7 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
         }
         this.domain = invDomain;
         this.labels = invLabel;
+        this._valid = invDomain.size > 0;
       }
       else
         // does not make sense for quantitative

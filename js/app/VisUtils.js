@@ -176,12 +176,12 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
         fu = isBaseMap ? content.fu : content;
       let text, handler, oldCssClass, newCssClass;
       if (PQL.isSplit(fu)) {
-        text = 'Aggr';
+        text = ' A ';
         handler = () => translate(record, PQL.Aggregation);
         oldCssClass = 'pl-conversion-widget__button--split';
         newCssClass = 'pl-conversion-widget__button--aggregation';
       } else if (PQL.isAggregation(fu)) {
-        text = 'Sp';
+        text = ' S ';
         handler = () => translate(record, PQL.Split);
         oldCssClass = 'pl-conversion-widget__button--aggregation';
         newCssClass = 'pl-conversion-widget__button--split';
@@ -201,27 +201,6 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     };
 
     return $widget.render();
-    //
-    //
-    // let button = $(/*jshint multistr: true */
-    //   '<div class="pl-button-container pl-hidden">\
-    //    <span class="pl-aggregation-button">P</span>\
-    //    <span class="pl-split-button pl-active">S</span>\
-    //    </div>');
-    // // <span class="pl-density-button">D</span>
-    // button.find('.pl-aggregation-button').click(()=>{
-    //   translate(record, PQL.Aggregation);
-    // });
-    // button.find('.pl-density-button').click(()=>{
-    //   translate(record, PQL.Density);
-    // });
-    // button.find('.pl-split-button').click(()=>{
-    //   translate(record, PQL.Split);
-    // });
-    // return button;
-    //
-    //
-
   }
 
   return {

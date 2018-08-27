@@ -31,7 +31,7 @@ define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
     constructor (split, container) {
       Emitter(this);
       let headOpts = {
-        withRemoveButtion: true,
+        withRemoveButton: true,
         removeHandler: ()=>this.remove()
       };
       this.split = split;  // the managed FilterUsage
