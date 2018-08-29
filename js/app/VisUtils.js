@@ -175,7 +175,6 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
 
     // on click: convert and invert target type of this widget
     let $widget = $('<div class="pl-conversion-widget"></div>'),
-      // $conversionButton = $('<div class="pl-button pl-conversion-widget__button"></div>')
       $conversionButton = $('<img class="pl-button pl-conversion-widget__button pl-icon pl-icon__close">')
         .appendTo($widget);
 

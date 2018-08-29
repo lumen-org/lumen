@@ -854,7 +854,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           let $thesholdHideButton = $('<div class="pl-button pl-toolbar__button">Threshold</div>')
             .click( () => $('.dg_slider-container').toggle());
 
-          let $graphManagerToggleButton = $('<div class="pl-button pl-toolbar__button">Graph</div>').click(() => {
+          // let $graphManagerToggleButton = $('<div class="pl-button pl-toolbar__button">Graph</div>').click(() => {
+          let $graphManagerToggleButton = $('<div class="pl-button pl-toolbar__button"></div>')
+            .append('<img class="pl-icon pl-icon__graph" src="../icons/graph.svg">')
+            .append('<span>Graph</span>')
+            .click(() => {
             let isVisible = $('.pl-layout-lower-left').css('display') !== 'none';
             // TODO: ugly as hell!
             $('.pl-layout-lower-left').toggle();

@@ -37,7 +37,7 @@
     font-family: Roboto sans-serif;
     font-weight: 400;
     font-size: 0.75rem;
-    color: #6d6d6d;
+    /* color: #6d6d6d; */
 }
 
 /* labels, e.g to display a sliders value or description */
@@ -868,6 +868,12 @@ textarea.pl-survey__content {
 
 .pl-toolbar__button {
     padding: 0 1.5rem;
+}
+
+.pl-toolbar__button .pl-icon {
+    height: 1.5rem;
+    width: auto;
+    margin-right: 0.3rem;
 }
 
 .pl-model-selector {
