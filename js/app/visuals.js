@@ -295,7 +295,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   }
 
   function removeButton (record) {
-    let removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
+    let removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <img src="icons/close.svg"> </div>');
+    // let removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
     removeButton.click(() => record.remove());
     return removeButton;
   }

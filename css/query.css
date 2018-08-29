@@ -1,5 +1,17 @@
 /* copyright © 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
+
+/*** DEBUG STUFF ***/
+
+#pl-playground {
+    display: none;
+    width: 100px;
+    height: 100px;
+    position: fixed;
+    top: 300px;
+    left: 300px;
+}
+
 /*** common element style ***/
 
 .pl-h1 {
@@ -36,6 +48,15 @@
     color: #515151;
 }
 
+.pl-icon {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent
+}
+
 .pl-button {
     background-color: #f0f0f0;
     border-radius: 1em;
@@ -44,6 +65,10 @@
     cursor: pointer;
     user-select: none;
     text-align: center;
+}
+
+.pl-button.pl-icon {
+;
 }
 
 /* text input, text areas and the like. anything where you can type into*/
@@ -597,7 +622,7 @@ textarea.pl-survey__content {
 
 .pl-fu__head {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content:space-between;
     height: 1.5rem;
     position: relative;
@@ -605,10 +630,12 @@ textarea.pl-survey__content {
 
 .pl-fu__head .pl-fu__remove-button {
     left: 0.2rem;
-    margin: 0.2rem;
-    padding: 0.2rem; /* TODO: replace with button later */
+    
+     /* TODO: replace with button later */
     position: absolute;
-    height: 80%;
+    top: 20%;
+    height: 1rem;
+    width: auto;
 }
 
 .pl-fu__head .pl-fu__click4more {
@@ -622,14 +649,16 @@ textarea.pl-survey__content {
 .pl-conversion-widget {
     right: 0.3rem;
     position: absolute;
-    height: 80%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
 }
 
 .pl-conversion-widget__button {
-    margin: 0.2rem 0;
-    border-radius: 3px;
-    width: 100%;
-    height: 100%;
+    width: auto;
+    height: 1.2rem;
+    max-height: 2rem;
 }
 
 .pl-conversion-widget__button--aggregation {
@@ -654,6 +683,7 @@ textarea.pl-survey__content {
     justify-content: center;
     text-align:  center;
     height: inherit;
+    margin: 0 auto;
 }
 
 .pl-fu__control-buttons {
