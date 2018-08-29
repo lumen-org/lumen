@@ -765,6 +765,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      */
     class Toolbar {
 
+      static
+      _makeToolbarButton (iconName, label) {
+        return $('<div class="pl-button pl-toolbar__button"></div>')
+          .append(`<img class="pl-icon pl-icon--${iconName}" src="../icons/${iconName}.svg">`)
+          .append(`<span>${label}</span>`);
+      }
+
       constructor (context) {
         let elems = [],
           config = Settings.toolbar;
@@ -775,13 +782,14 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.query.active) {
-          let $query = $('<div class="pl-button pl-toolbar__button">Query!</div>').click(
-            () => this._context.update());
+          let $query = Toolbar._makeToolbarButton("clone", "Query")
+            .click(() => this._context.update());
           elems.push($query);
         }
 
         if (config.clone.active) {
-          let $clone = $('<div class="pl-button pl-toolbar__button"> Clone </div>').click(
+          let $clone = Toolbar._makeToolbarButton("clone", "Clone")
+            .click(
             () => {
               let c = this._context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
@@ -803,7 +811,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.undo.active) {
-          let $undo = $('<div class="pl-button pl-toolbar__button"> Undo </div>').click( () => {
+          let $undo = Toolbar._makeToolbarButton("undo", "Undo").click( () => {
             let c = this._context;
             if (c.unredoer.hasUndo) {
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'undo');
@@ -820,7 +828,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
          c.unredoer.commit(c.copyShelves());
          });*/
         if (config.redo.active) {
-          let $redo = $('<div class="pl-button pl-toolbar__button"> Redo </div>').click(() => {
+          let $redo = Toolbar._makeToolbarButton("redo", "Redo").click(() => {
             let c = this._context;
             if (c.unredoer.hasRedo) {
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'redo');
@@ -833,7 +841,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.clear.active) {
-          let $clear = $('<div class="pl-button pl-toolbar__button"> Clear </div>').click(
+          let $clear = Toolbar._makeToolbarButton("clear", "Clear").click(
             () => {
               let c = this._context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'clear');
@@ -843,45 +851,48 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.details.active) {
-          let $detailsHideButton = $('<div class="pl-button pl-toolbar__button">Details</div>').click(() => {
+          let $detailsHideButton = Toolbar._makeToolbarButton("details", "Details").click(() => {
             $('.pl-details').toggle()
           });
           elems.push($detailsHideButton);
         }
 
         if (config.graph.active) {
+          let $graphButtons = $('<div class="pl-toolbar_multiButtonList"></div>');
 
-          let $thesholdHideButton = $('<div class="pl-button pl-toolbar__button">Threshold</div>')
-            .click( () => $('.dg_slider-container').toggle());
+          if (config.graph.graph.active) {
+            let $graphManagerToggleButton = Toolbar._makeToolbarButton("graph", "Graph")
+              .click(() => {
+                let isVisible = $('.pl-layout-lower-left').css('display') !== 'none';
+                // TODO: ugly as hell!
+                $('.pl-layout-lower-left').toggle();
+                if (isVisible) {
+                  $('.pl-layout-upper-left ').css('height', '100%');
+                } else {
+                  $('.pl-layout-upper-left ').css('height', '67%');
+                }
+              });
+            $graphButtons.append($graphManagerToggleButton);
+          }
 
-          // let $graphManagerToggleButton = $('<div class="pl-button pl-toolbar__button">Graph</div>').click(() => {
-          let $graphManagerToggleButton = $('<div class="pl-button pl-toolbar__button"></div>')
-            .append('<img class="pl-icon pl-icon__graph" src="../icons/graph.svg">')
-            .append('<span>Graph</span>')
-            .click(() => {
-            let isVisible = $('.pl-layout-lower-left').css('display') !== 'none';
-            // TODO: ugly as hell!
-            $('.pl-layout-lower-left').toggle();
-            if (isVisible) {
-              $('.pl-layout-upper-left ').css('height', '100%');
-            } else {
-              $('.pl-layout-upper-left ').css('height', '67%');
-            }
+          if (config.graph.threshold.active) {
+            let $thesholdHideButton = $('<div class="pl-button pl-toolbar__button">Threshold</div>')
+              .click(() => $('.dg_slider-container').toggle());
+            $graphButtons.append($thesholdHideButton);
+          }
 
-          });
-
-          elems.push($('<div></div>').css('display', 'flex').append($graphManagerToggleButton, $thesholdHideButton));
+          elems.push($graphButtons);
         }
 
         if (config.config.active) {
-          let $configHideButton = $('<div class="pl-button pl-toolbar__button">Config</div>').click(() => {
+          let $configHideButton = Toolbar._makeToolbarButton("config", "Config").click(() => {
             $('.pl-config').toggle()
           });
           elems.push($configHideButton);
         }
 
         if (config.reloadmodels.active) {
-          let $reload = $('<div class="pl-button pl-toolbar__button">Reload Models</div>').click(
+          let $reload = Toolbar._makeToolbarButton("update", "Sync Models").click(
             () => this._modelSelector.reloadModels());
           elems.push($reload);
         }

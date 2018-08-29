@@ -960,6 +960,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       },
       graph: {
         active: true,
+        graph: {active: true},
+        threshold: {active: false},
       },
       config: {
         active: true,

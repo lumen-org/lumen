@@ -629,13 +629,13 @@ textarea.pl-survey__content {
 }
 
 .pl-fu__head .pl-fu__remove-button {
-    left: 0.2rem;
-    
+    left: 0.2rem;  
      /* TODO: replace with button later */
     position: absolute;
     top: 20%;
     height: 1rem;
     width: auto;
+    border: none;
 }
 
 .pl-fu__head .pl-fu__click4more {
@@ -657,8 +657,10 @@ textarea.pl-survey__content {
 
 .pl-conversion-widget__button {
     width: auto;
-    height: 1.2rem;
+    height: 1.3rem;
     max-height: 2rem;
+    border-radius: 2px;
+    padding: 1px;
 }
 
 .pl-conversion-widget__button--aggregation {
@@ -866,8 +868,12 @@ textarea.pl-survey__content {
     background-color: #d5d5d5;
 }
 
+.pl-toolbar_multiButtonList {
+    display: flex;
+}
+
 .pl-toolbar__button {
-    padding: 0 1.5rem;
+    padding: 0 1rem 0 0.7rem;
 }
 
 .pl-toolbar__button .pl-icon {
