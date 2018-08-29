@@ -1,4 +1,4 @@
-/* copyright © 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 
 /*** DEBUG STUFF ***/
@@ -246,6 +246,7 @@ main {
 .pl-fu {
     border: 1px solid;
     background-color: #F2E6D8;
+    max-width: 10rem;
 }
 
 .pl-field {
@@ -624,18 +625,16 @@ textarea.pl-survey__content {
     display: flex;
     flex-direction: row;
     justify-content:space-between;
-    height: 1.5rem;
     position: relative;
 }
 
 .pl-fu__head .pl-fu__remove-button {
-    left: 0.2rem;  
-     /* TODO: replace with button later */
-    position: absolute;
-    top: 20%;
+    
+    /* TODO: replace with button later */
     height: 1rem;
     width: auto;
     border: none;
+    margin: auto 0.1rem;
 }
 
 .pl-fu__head .pl-fu__click4more {
@@ -647,12 +646,10 @@ textarea.pl-survey__content {
 }
 
 .pl-conversion-widget {
-    right: 0.3rem;
-    position: absolute;
+    margin: 0 0.1rem;
     display: flex;
-    flex-direction: row;
     align-items: center;
-    height: 100%;
+    height: inherit;
 }
 
 .pl-conversion-widget__button {
@@ -684,7 +681,7 @@ textarea.pl-survey__content {
     flex-direction: column;
     justify-content: center;
     text-align:  center;
-    height: inherit;
+    /* height: inherit; */
     margin: 0 auto;
 }
 
