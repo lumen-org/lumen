@@ -1,4 +1,4 @@
-/* copyright Ãƒâ€šÃ‚Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 
 /*** DEBUG STUFF ***/
@@ -68,7 +68,7 @@
 }
 
 .pl-button .pl-label {
-     font-size: smaller;
+    font-size: smaller;
 }
 
 /* text input, text areas and the like. anything where you can type into*/
@@ -386,10 +386,11 @@ main {
 }
 
 .pl-visualization > .pl-remove-button {
-    top: .4rem;
-    left: .8rem;
+    top: 0.5rem;
+    left: 0.5rem;
     position: absolute;
-    font-weight: bold;
+    width: 1rem;
+    height: 1rem;
 }
 
 .pl-visualization:hover > .pl-hidden {
@@ -530,8 +531,9 @@ textarea.pl-survey__content {
 
 /* common for all FieldUsage widgets */
 
-.pl-fu__remove-button {
+.pl-remove-button {
     filter: opacity(80%);
+    border: none;
 }
 
 .pl-fu__popUp {
@@ -563,7 +565,7 @@ textarea.pl-survey__content {
     position: relative;
 }
 
-.pl-fu__head .pl-fu__remove-button {
+.pl-fu__head .pl-remove-button {
     height: 1rem;
     width: 1rem;
     border: none;
@@ -571,10 +573,10 @@ textarea.pl-survey__content {
 }
 
 .pl-fu__head .pl-button {
-    visibility: hidden;  
+    /* visibility: hidden; */
 }
 
-.pl-fu__head:hover .pl-button {
+.pl-fu__head:hover > .pl-hidden {
     visibility: visible;
 }
 
@@ -1039,8 +1041,8 @@ textarea.pl-survey__content {
 /* activate this class to hide an element*/
 .pl-hidden {
     visibility: hidden;
-    opacity: 0;
-    transition: visibility 150ms, opacity 150ms;
+    /* opacity: 0; */
+    /* transition: visibility 150ms, opacity 150ms; */
 }
 
 /* disables user selection */

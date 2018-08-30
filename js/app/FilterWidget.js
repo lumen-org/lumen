@@ -462,7 +462,7 @@ define(['./Domain', 'lib/emitter', './VisUtils'], function (Domain, Emitter, Vis
      * Reset the current changes to Filter and reload the last commited state to the widget.
      */
     reset () {
-      console.log("not implemented!");
+      console.error("not implemented!");
       this.emit('pl.Filter.Reset');
     }
 

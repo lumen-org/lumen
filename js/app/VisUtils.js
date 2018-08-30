@@ -83,8 +83,12 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
    */
   function button (label, iconName) {
     return $('<div class="pl-button"></div>')
-      .append(`<img class="pl-icon pl-icon--${iconName}" src="../icons/${iconName}.svg">`)
+      .append(`<img class="pl-icon pl-icon--${iconName}" alt="${iconName}" src="../icons/${iconName}.svg">`)
       .append(`<span class="pl-label">${label}</span>`);
+  }
+
+  function removeButton () {
+    return $('<img class="pl-button pl-remove-button pl-icon pl-icon__close pl-hidden" alt="close" src="../icons/close.svg">');
   }
 
   function head (fu, opts={}) {
@@ -92,7 +96,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
 
     // remove button
     if (opts.withRemoveButton)
-      $('<img class="pl-button pl-fu__remove-button pl-icon pl-icon__close" src="../icons/close.svg">')
+      removeButton()
         .on('click.pl-remove-button', opts.removeHandler)
         .appendTo($head);
 
@@ -189,7 +193,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     }
 
     // on click: convert and invert target type of this widget
-    let $widget = $('<div class="pl-conversion-widget"></div>'),
+    let $widget = $('<div class="pl-conversion-widget pl-hidden"></div>'),
       $conversionButton = $('<img class="pl-button pl-conversion-widget__button pl-icon pl-icon__close">')
         .appendTo($widget);
 
@@ -239,6 +243,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     conversionButton,
     getIcon,
     button,
+    removeButton,
   };
 
 });

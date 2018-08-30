@@ -398,10 +398,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       static _makeVisualization(context) {
-        let $paneDiv = $('<div class="pl-visualization__pane"></div>');
-        let $removeButton = $('<div class="pl-remove-button noselect pl-hidden"> x </div>');
-        $removeButton.click( context.remove.bind(context) );
-        let $legendDiv = $('<div class="pl-legend"></div>');
+        let $paneDiv = $('<div class="pl-visualization__pane"></div>'),
+          $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
+          $legendDiv = $('<div class="pl-legend"></div>');
 
         let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
@@ -780,7 +779,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.query.active) {
-          let $query = Toolbar._makeToolbarButton("geo-position", "Query")
+          let $query = Toolbar._makeToolbarButton("geo-position2", "Query")
             .click(() => this._context.update());
           elems.push($query);
         }

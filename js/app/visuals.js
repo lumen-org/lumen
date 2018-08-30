@@ -294,13 +294,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     return($methodDiv);
   }
 
-  function removeButton (record) {
-    let removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <img src="icons/close.svg"> </div>');
-    // let removeButton = $('<div class="pl-remove-button noselect pl-hidden"> <span>x</span> </div>');
-    removeButton.click(() => record.remove());
-    return removeButton;
-  }
-
 
   //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
 
