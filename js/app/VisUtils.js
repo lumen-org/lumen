@@ -72,7 +72,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
    * @return {string}
    */
   function getIcon (name) {
-    return `<img class="pl-icon pl-icon__${name}$" src="../icons/${name}.svg">`
+    return `<img class="pl-icon pl-icon__${name}$" alt="${name}" src="../icons/${name}.svg">`
   }
 
   function head (fu, opts={}) {
@@ -183,20 +183,23 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
       let content = record.content,
         isBaseMap = content instanceof VisMEL.BaseMap,
         fu = isBaseMap ? content.fu : content;
-      let src, handler, oldCssClass, newCssClass;
+      let src, altText, handler, oldCssClass, newCssClass;
       if (PQL.isSplit(fu)) {
         src = '../icons/split.svg';
+        altText = 'Sp';
         handler = () => translate(record, PQL.Aggregation);
         oldCssClass = 'pl-conversion-widget__button--split';
         newCssClass = 'pl-conversion-widget__button--aggregation';
       } else if (PQL.isAggregation(fu)) {
         src = '../icons/aggregate.svg';
+        altText = 'Aggr';
         handler = () => translate(record, PQL.Split);
         oldCssClass = 'pl-conversion-widget__button--aggregation';
         newCssClass = 'pl-conversion-widget__button--split';
       }
       $conversionButton
         .attr('src', src)
+        .attr('alt', altText)
         .removeClass(oldCssClass)
         .addClass(newCssClass)
         .off('click.pl-conversion')
