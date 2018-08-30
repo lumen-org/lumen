@@ -1,44 +1,4 @@
-/*
-
-API :
-
-in:
-   field
-      name
-      extent
-      domain
-      dtype
-
-   model?
-   density over field?
-   maybe just a function that provides a promise to histogram data? !
-
-   div that is used to draw it on
-
-out:
-   selected domain via: selection()
-
-
-state:
-  selected domain
-    for categorical dims: selected bars
-    for quantitative dims: selected range, max zoom range
-
-
-methods:
-   render(): (re)draw with current state (i.e. update dist data)
-
-events
-   triggers Emitter.InternalChangedEvent on the Field if it changes a Fields domain?
-      I think this one. it separates the concerns better?
-   triggers its own changed event that I can then connect to the Fields changed event?
-
-implements:
-   PQL.Filter.prototype.makeVisual:
-
-*/
-
-define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain, Emitter, VisUtils) {
+define(['./Domain', 'lib/emitter', './VisUtils'], function (Domain, Emitter, VisUtils) {
   "use strict";
 
   let plotConfig = {
@@ -77,10 +37,6 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
    *
    * TODO / Idea:
    *   * violin plots for data vs model?
-   *
-   * TODO: use axis.automargin !???
-   *
-   *
    */
   class FilterWidget {
 
@@ -206,13 +162,6 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
       }
     }
 
-    _appendHeader (ele) {
-      let header = ele.append('div')
-        .classed('fw_header', true);
-      this._appendTitle(header);
-      this._appendTaskButtons(header);
-    }
-
     _appendTitle (ele) {
       let $head = VisUtils.head(this.filter);
       ele[0][0].appendChild($head[0]);
@@ -234,34 +183,6 @@ define(['./Domain', 'lib/emitter', './VisUtils' /*plotly !!*/], function (Domain
         .attr('class', 'pl-button fw_toolbar__button')
         .text('inv')
         .on('click', () => this.selectInverted());
-    }
-
-    /**
-     * Appends buttons for
-     *  * confirm: apply filter to managed Filter-Usage
-     *  * abort: abort and revert FilterWidget to current value of FilterUsage
-     *  * remove: destroy FilterWidget
-     * @param ele
-     * @private
-     */
-    _appendTaskButtons (ele) {
-      let taskbar = ele.append('div')
-        .attr('class', 'fw_taskbar');
-
-      taskbar.append('div')
-        .attr('class', 'fw_taskbar__button')
-        .text('C')
-        .on('click', () => this.commit());
-
-      taskbar.append('div')
-        .attr('class', 'fw_taskbar__button')
-        .text('A')
-        .on('click', () => {console.log("todo: reset to previous state")});
-
-      taskbar.append('div')
-        .attr('class', 'fw_taskbar__button')
-        .text('R')
-        .on('click', () => this.emit("RemoveEvent"));
     }
 
     _appendExplicitValueForm (ele) {

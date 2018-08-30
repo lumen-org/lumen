@@ -75,6 +75,18 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     return `<img class="pl-icon pl-icon__${name}$" alt="${name}" src="../icons/${name}.svg">`
   }
 
+  /**
+   * Return a new button as a jQuery selection.
+   * @param label The label of the button.
+   * @param iconName The name of the icon to use for the button. Must be available as <iconName>.svg under '../icons'.
+   * @return {jQuery}
+   */
+  function button (label, iconName) {
+    return $('<div class="pl-button"></div>')
+      .append(`<img class="pl-icon pl-icon--${iconName}" src="../icons/${iconName}.svg">`)
+      .append(`<span class="pl-label">${label}</span>`);
+  }
+
   function head (fu, opts={}) {
     let $head = $('<div class="pl-fu__head"></div>');
 
@@ -118,19 +130,22 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     let handleWithStopPropagation = handler => {return ev => {handler(); ev.stopPropagation();}};
 
     if (confirmHandler) {
-      $('<div class="pl-button pl-fu__control-button">Confirm</div>')
+      button('Confirm', 'undo')
+        .addClass('pl-fu__control-button')
         .on('click', handleWithStopPropagation(confirmHandler))
         .appendTo($buttons);
     }
 
     if (resetHandler) {
-      $('<div class="pl-button pl-fu__control-button">Reset</div>')
+      button('Reset', 'clear')
+        .addClass('pl-fu__control-button')
         .on('click', handleWithStopPropagation(resetHandler))
         .appendTo($buttons);
     }
 
     if (closeHandler) {
-      $('<div class="pl-button pl-fu__control-button">Close</div>')
+      button('Close', 'new')
+        .addClass('pl-fu__control-button')
         .on('click', handleWithStopPropagation(closeHandler))
         .appendTo($buttons);
     }
@@ -223,6 +238,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     controlButtons,
     conversionButton,
     getIcon,
+    button,
   };
 
 });

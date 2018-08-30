@@ -67,8 +67,8 @@
     text-align: center;
 }
 
-.pl-button.pl-icon {
-;
+.pl-button .pl-label {
+     font-size: smaller;
 }
 
 /* text input, text areas and the like. anything where you can type into*/
@@ -637,8 +637,14 @@ textarea.pl-survey__content {
     justify-content: center;
 }
 
+.pl-fu__control-button .pl-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.2rem;
+}
+
 .pl-fu__control-button {
-    width: 20%;
+    width: 25%;
     margin: 0 0.5rem;
 }
 
