@@ -780,7 +780,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (config.query.active) {
-          let $query = Toolbar._makeToolbarButton("clone", "Query")
+          let $query = Toolbar._makeToolbarButton("geo-position", "Query")
             .click(() => this._context.update());
           elems.push($query);
         }

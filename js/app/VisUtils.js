@@ -129,24 +129,24 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
 
     let handleWithStopPropagation = handler => {return ev => {handler(); ev.stopPropagation();}};
 
+    if (closeHandler) {
+      button('Close', 'back')
+        .addClass('pl-fu__control-button')
+        .on('click', handleWithStopPropagation(closeHandler))
+        .appendTo($buttons);
+    }
+
     if (confirmHandler) {
-      button('Confirm', 'undo')
+      button('Confirm', 'confirm')
         .addClass('pl-fu__control-button')
         .on('click', handleWithStopPropagation(confirmHandler))
         .appendTo($buttons);
     }
 
     if (resetHandler) {
-      button('Reset', 'clear')
+      button('Reset', 'revert')
         .addClass('pl-fu__control-button')
         .on('click', handleWithStopPropagation(resetHandler))
-        .appendTo($buttons);
-    }
-
-    if (closeHandler) {
-      button('Close', 'new')
-        .addClass('pl-fu__control-button')
-        .on('click', handleWithStopPropagation(closeHandler))
         .appendTo($buttons);
     }
 
