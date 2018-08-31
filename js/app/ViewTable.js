@@ -139,7 +139,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function atomicPlotlyTraces(aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
+    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt !== undefined)
@@ -255,7 +255,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis, geometry));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           }
         }
@@ -567,13 +567,13 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       }
     }
 
-    function makeTraces(size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds, queryConfig) {
+    function makeTraces(size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds, queryConfig) {
       let traces = [];
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
 
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x], {
+          let atomicTraces = atomicPlotlyTraces(geometry, aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x], {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],
           }, marginalAxesIds[y][x], catQuantAxesIds[y][x], queryConfig);
@@ -879,7 +879,19 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         plot_bgcolor: 'rgba(255,255,255,0)',
       });
 
-      return [at, layout, {mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds}, [...emptyMainTraces, ...templEmptyTracesX, ...templEmptyTracesY]];
+      let geometry = {
+        paneSizePx,
+        cellSize,
+        cellSizePx : {
+          x : cellSize.x * paneSizePx.x,
+          y : cellSize.y * paneSizePx.y,
+        },
+        axisLength,
+        mainPlotRatio,
+        templAxisSize,
+      };
+
+      return [at, geometry, layout, {mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds}, [...emptyMainTraces, ...templEmptyTracesX, ...templEmptyTracesY]];
     }
 
     /**
@@ -957,9 +969,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           // modeBarButtonsToAdd: [],
         };
 
-        let [at, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
+        let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
 
-        let traces = makeTraces(this.size, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, queryConfig);
+        let traces = makeTraces(this.size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, queryConfig);
 
         // plot everything
         this.plotlyTraces = [...emptyTraces, ...traces];
@@ -1023,7 +1035,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         let savedAxesState = getAxesState(this.plotlyLayout);
 
         // 2. recreate layout (no need to recreate traces)
-        let newLayout = makeLayout(this.vismel, this.vismelColl, this.uniColl, this.biColl, this.plotlyPane, this.size, this.axesSyncManager)[1];
+        let newLayout = makeLayout(this.vismel, this.vismelColl, this.uniColl, this.biColl, this.plotlyPane, this.size, this.axesSyncManager)[2];
 
         // 3. apply saved state recreated layout
         this.plotlyLayout = merge(newLayout, savedAxesState);

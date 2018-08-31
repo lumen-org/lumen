@@ -25,6 +25,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
     let logger = Logger.get('pl-ViewTable');
     logger.setLevel(Logger.DEBUG);
 
+
+    const numFormatter3f = d3.format(".3f");
+    const numFormatter2f = d3.format(".2f");
+    const numFormatter1f = d3.format(".1f");
+
     function makeOpaque(hexColorString, opacity) {
       let clr = d3.rgb(hexColorString);
       return "rgba(" + clr.r + "," + clr.g + "," + clr.b + "," + opacity + ")"
@@ -367,6 +372,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
        * @return Object: A trace.
        */
       function getUniTrace(data, xy, fu2idx) {
+
         let xIdx = fu2idx.get(vismel.layout.cols[0]),
           yIdx = fu2idx.get(vismel.layout.rows[0]);
 
@@ -375,6 +381,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
+
 
         let trace = {
           name: traceName[xy],
@@ -424,6 +431,11 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             type: 'bar',
             orientation: xy === 'x' ? 'v' : 'h',
             opacity: c.map.uniDensity.bar.opacity,
+            text: (xy === 'x' ? trace.y : trace.x).map(numFormatter2f),
+            textposition: 'inside',
+            insidetextfont: {
+              color: 'white',
+            },
             marker: {
               color: color,
             },
@@ -592,10 +604,10 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param vismel TODO: remove this param!
      * @return {Array}
      */
-    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}, geometry ) {
       if (!axisId) throw RangeError("invalid axisId");
 
-      if (rt == undefined)  // means 'disable this trace type'
+      if (rt === undefined)  // means 'disable this trace type'
         return [];
 
       let vismel = rt.vismel;
@@ -614,7 +626,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
 
-      // // TODO: should we apply some heuristic to reduce the impact of few, very large density value
+      // TODO: should we apply some heuristic to reduce the impact of few, very large density value
       // TODO: this cannot work, because it sets the scale on a per trace basis...
       // let sortedZData = _.sortBy(zdata),
       //   l = sortedZData.length;
@@ -628,40 +640,74 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
 
       // merge color split data into one
       let trace = {
-        name: PQL.toString(rt.pql),
-        // name: '2d density',
-        showlegend: false,
-        showscale: false,
-        x: selectColumn(rt, xIdx),
-        y: selectColumn(rt, yIdx),
-        z: zdata,
-        xaxis: axisId.x,
-        yaxis: axisId.y,
-        //opacity: c.map.biDensity.opacity,
-        opacity: 1,
-        autocolorscale: false,
-        colorscale: colorscale,
-        zauto: false,
-        zmin: 0,
-        // zmax: zmax,
-        zmax: colorFu.extent[1],
-        hoverinfo: 'text',
-        text: ztext,
-      };
+            name: PQL.toString(rt.pql),
+            // name: '2d density',
+            showlegend: false,
+            showscale: false,
+            x: selectColumn(rt, xIdx),
+            y: selectColumn(rt, yIdx),            
+            xaxis: axisId.x,
+            yaxis: axisId.y,
+            //opacity: c.map.biDensity.opacity,
+            opacity: 1,
+            hoverinfo: 'text',
+            text: ztext,
+            
+      }, traceUpdate;
 
       if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {
-        trace.type = 'contour';
-        // trace.contours = {
-        //   coloring: 'heatmap',
-        // };
-        trace.autocontour = false;
-        trace.ncontours = c.map.biDensity.levels;
+        traceUpdate = {
+            autocolorscale: false,            
+            z: zdata,
+            zauto: false,
+            zmin: 0,
+            // zmax: zmax,
+            zmax: colorFu.extent[1],
+            type : 'contour',
+            autocontour : false,
+            ncontours : c.map.biDensity.levels,
+            colorscale: colorscale,
+          };
+        
       }
       else if (PQL.hasDiscreteYield(xFu) && PQL.hasDiscreteYield(yFu)) {
-        trace.type = 'heatmap';
-        trace.xgap = c.map.heatmap.xgap;
-        trace.ygap = c.map.heatmap.ygap;
+      //   trace.type = 'heatmap';
+      //   trace.xgap = c.map.heatmap.xgap;
+      //   trace.ygap = c.map.heatmap.ygap;
+      // }
+      //
+      // if (false) {
+
+        // compute maximum shape diameter:
+        let cellSize = geometry.cellSizePx,
+          maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length)*0.5;
+
+        traceUpdate = {           
+            type : 'scatter',
+            visible : true,
+//             mode : 'markers+text',
+            mode : 'markers',
+            marker : {
+               symbol: "circle",
+               sizemin: 0,
+               sizemode: 'area',
+               size: zdata,
+               color: zdata,
+               colorscale: colorscale,
+               cmin: 0,
+               cmax: colorFu.extent[1],
+               cauto: false,
+               line: {                           
+                color: c.map.sampleMarker.stroke.color,
+                width: c.map.sampleMarker.stroke.width,        
+               },
+            },
+        };   
+        traceUpdate.marker.sizeref = Math.pow(colorFu.extent[1]/maxShapeDiameter/0.5, (traceUpdate.marker.sizemode === 'area' ? 2 : 1));    
       }
+
+      Object.assign(trace, traceUpdate);
+
       return [trace]
     };
 
@@ -679,7 +725,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      */
     tracer.biQC = function (rt, mapper, axisId, cqAxisIds) {
 
-      if (rt == undefined)  // means 'disable this trace type'
+      if (rt === undefined)  // means 'disable this trace type'
         return [];
 
       let vismel = rt.vismel;

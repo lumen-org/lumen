@@ -17,8 +17,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'mcg_iris_map';
-    // const DEFAULT_MODEL = 'emp_titanic';
+    // const DEFAULT_MODEL = 'mcg_iris_map';
+    const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
     const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';

@@ -1057,23 +1057,23 @@ textarea.pl-survey__content {
 /* overlap on drag overlap */
 .overlap-center {
     /*background-color: #4c55dd;*/
-    border-color: #38acdd
+    border-color: #38acdd;
 }
 
 .overlap-left {
-    border-left-color: #38ACDD
+    border-left-color: #38ACDD;
 }
 
 .overlap-right {
-    border-right-color: #38ACDD
+    border-right-color: #38ACDD;
 }
 
 .overlap-top {
-    border-top-color: #38ACDD
+    border-top-color: #38ACDD;
 }
 
 .overlap-bottom {
-    border-bottom-color: #38ACDD
+    border-bottom-color: #38ACDD;
 }
 
 /* modification of jquery ui resizable */
