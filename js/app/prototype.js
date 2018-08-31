@@ -154,30 +154,30 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             c.baseModelTable.model()
               .then(() => infoBox.hide())
 
-              .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.aggregations.active))
+              .then(() => RT.aggrCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.facets.aggregations.active))
               .then(res => c.aggrRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.data.active, {data_category:'training data', data_point_limit:Settings.tweaks.data_point_limit}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.facets.data.active, {data_category:'training data', data_point_limit:Settings.tweaks.data_point_limit}))
               .then(res => c.dataRT = res)
 
-              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.testData.active, {data_category:'test data', data_point_limit:Settings.tweaks.data_point_limit}))
+              .then(() => RT.samplesCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.facets.testData.active, {data_category:'test data', data_point_limit:Settings.tweaks.data_point_limit}))
               .then(res => c.testDataRT = res)
 
               .then(() => RT.uniDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap,
-                c.config.visConfig.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
+                c.facets.marginals.active) //  || (TODO: if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal.
               )
               .then(res => c.uniDensityRT = res)
 
-              .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.config.visConfig.contour.active))
+              .then(() => RT.biDensityCollection(c.baseQueryTable, c.baseModelTable, fieldUsageCacheMap, c.facets.contour.active))
               .then(res => c.biDensityRT = res)
 
               .then(() => {
-                  c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.config);
+                  c.viewTable = new ViewTable(c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.aggrRT, c.dataRT, c.testDataRT, c.uniDensityRT, c.biDensityRT, c.baseQueryTable, c.facets);
                   c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
               })
 
               .then(() => {
-                // for development               
+                // for development
               })
 
               .then(() => {
@@ -222,23 +222,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         else
           this.shelves = sh.construct();
 
-        // other configuration
-        this.config = {
-          visConfig: {
-            aggregations: { active: Settings.views.aggregations.active },
-            data: { active: Settings.views.data.active, },
-            testData: { active: Settings.views.testData.active, },
-            marginals: { active: Settings.views.marginals.active },
-            contour: { active: Settings.views.contour.active },
-            predictionOffset: { active: Settings.views.predictionOffset.active},
-          }
-        };
-        this.config  = {
-          visConfig: JSON.parse(JSON.stringify(Settings.views))
-        };
-
-        // make pl-dashboard__container pannable
-
+        // facet states and config
+        this.facets = JSON.parse(JSON.stringify(Settings.views));
 
         // the stages of the pipeline: query -> ... -> visualization
         this.query = {};
@@ -297,7 +282,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
         $('#pl-dashboard__container').append($visuals.visualization);
-        $('#pl-facet-container').append($visuals.visConfig);
+        $('#pl-facet-container').append($visuals.facets);
       }
 
       /**
@@ -347,7 +332,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * Returns the visualization config according to the state of the GUI.
        */
       getVisConfig () {
-        return this.$visuals.visConfig
+        return this.$visuals.facets
       }
 
       /**
@@ -504,18 +489,18 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         let title = $('<div class="pl-h2 shelf__title">Facets</div>');
         // create checkboxes
         let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
-          .filter( what => context.config.visConfig[what].possible)
+          .filter( what => context.facets[what].possible)
           .map(
           what => {
             // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
             let $checkBox = $('<input type="checkbox">')
               .prop({
-                "checked": context.config.visConfig[what].active,
-                "disabled": !context.config.visConfig[what].possible,
+                "checked": context.facets[what].active,
+                "disabled": !context.facets[what].possible,
                 "id": _facetNameMap[what]})
               .change( (e) => {
                 // update the config and ...
-                context.config.visConfig[what].active = e.target.checked;
+                context.facets[what].active = e.target.checked;
                 // log user activity
                 ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': _getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
                 // ... trigger an update
@@ -540,7 +525,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       static _makeGUI(context) {
         let visual = Context._makeShelvesGUI(context);
-        visual.visConfig = Context._makeFacetWidget(context);
+        visual.facets = Context._makeFacetWidget(context);
         visual.visualization = Context._makeVisualization(context);
         visual.visPane = $('div.pl-visualization__pane', visual.visualization);
         visual.legendPane = $('div.pl-legend', visual.visualization);

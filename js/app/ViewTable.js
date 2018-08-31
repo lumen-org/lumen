@@ -139,7 +139,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, queryConfig) {
+    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
       for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt !== undefined)
@@ -218,7 +218,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
               traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
               traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
-              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+              traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -229,7 +229,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           else {
             traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
             traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
-            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+            traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -264,7 +264,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         else {
           traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
           traces.push(...TraceGen.biQC(p2dRT, mapper, mainAxis, catQuantAxisIds));
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
           traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -281,7 +281,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         }
         // the one in use is numeric
         else if (PQL.hasNumericYield(axisFu)) {
-          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, queryConfig));
+          traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
         } else
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
         traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
@@ -567,7 +567,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       }
     }
 
-    function makeTraces(size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds, queryConfig) {
+    function makeTraces(size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds, facets) {
       let traces = [];
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
@@ -576,7 +576,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           let atomicTraces = atomicPlotlyTraces(geometry, aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x], {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],
-          }, marginalAxesIds[y][x], catQuantAxesIds[y][x], queryConfig);
+          }, marginalAxesIds[y][x], catQuantAxesIds[y][x], facets);
 
           traces.push(...atomicTraces);
         }
@@ -914,7 +914,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
      */
     class ViewTable {
 
-      constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, queryConfig) {
+      constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, facets) {
 
         Emitter(this);
 
@@ -971,7 +971,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
         let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
 
-        let traces = makeTraces(this.size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, queryConfig);
+        let traces = makeTraces(this.size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, facets);
 
         // plot everything
         this.plotlyTraces = [...emptyTraces, ...traces];

@@ -716,7 +716,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
             cmax: colorFu.extent[1],
             cauto: false,
             line: {
-              color: c.map.sampleMarker.stroke.color,
+              color: c.map.sampleMarker.stroke.color, // todo: zdata.map(d => d * 1.1), // slightly darker
               width: c.map.sampleMarker.stroke.width,
             },
           },
@@ -739,7 +739,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * Creates a density line plot for each categorical value of the categorical dimension.
      *
      * @param rt
-     * @param vismel
      * @param mapper
      * @param axisId
      * @param cqAxisIds
@@ -904,9 +903,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param axisId
      * @return {*}
      */
-    tracer.predictionOffset = function (predRT, testDataRT, mapper, axisId, queryConfig) {
+    tracer.predictionOffset = function (predRT, testDataRT, mapper, axisId, facets) {
 
-      if (!queryConfig.visConfig.predictionOffset.active || testDataRT == undefined || predRT == undefined)
+      if (!facets.predictionOffset.active || testDataRT === undefined || predRT === undefined)
         return [];
 
       // let aest = query.layers[0].aesthetics;

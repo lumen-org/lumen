@@ -19,7 +19,10 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     let modelIsOpen = false; // prevent multiple modal overlays
     let modalBackground = undefined; // is created when the parent is clicked
 
-    modalNode = $(modalNode).addClass('pl-modal__foreground').hide();
+    modalNode = $(modalNode)
+      .addClass('pl-modal__foreground')
+      .hide()
+      .on('dragstart', ev => {ev.preventDefault(); ev.stopPropagation();}); // modal dialogs are not draggable
     parentNode = $(parentNode);
 
     let closeHandler = () => {     

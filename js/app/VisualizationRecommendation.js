@@ -37,7 +37,7 @@ define(['./PQL', './VisMEL', './shelves', './VisMELShelfDropping',], function (P
   function _setRecommendable (record, shelves, onOffFlag=true){
     if (onOffFlag) {
       record.$visual.on('dblclick.pl-recommendation', function (ev) {
-        console.log(ev);
+//         console.log(ev);
         recommend(shelves, record);
       });
     }
