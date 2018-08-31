@@ -446,7 +446,8 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
           // "colorscale_Enum": { TODO: link to colors.density. ... },
           "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
           "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
-          "labelFormatterString": {type: "string"}
+          "labelFormatterString": {type: "string"},
+          "backgroundHeatMap": {type: "boolean"},
         }
       }
     }
@@ -550,6 +551,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       levels: tweaksInitial.levels, // TODO: watches!
       resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
+      backgroundHeatMap: true, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
     },
   };
 

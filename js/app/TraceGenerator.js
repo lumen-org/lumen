@@ -604,7 +604,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      * @param vismel TODO: remove this param!
      * @return {Array}
      */
-    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}, geometry ) {
+    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}, geometry) {
       if (!axisId) throw RangeError("invalid axisId");
 
       if (rt === undefined)  // means 'disable this trace type'
@@ -626,6 +626,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
 
+      let traces = [];
+
       // TODO: should we apply some heuristic to reduce the impact of few, very large density value
       // TODO: this cannot work, because it sets the scale on a per trace basis...
       // let sortedZData = _.sortBy(zdata),
@@ -636,79 +638,99 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
       // let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
 
       let cd = c.colors.density,
-       colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
+        colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
 
       // merge color split data into one
-      let trace = {
-            name: PQL.toString(rt.pql),
-            // name: '2d density',
-            showlegend: false,
-            showscale: false,
-            x: selectColumn(rt, xIdx),
-            y: selectColumn(rt, yIdx),            
-            xaxis: axisId.x,
-            yaxis: axisId.y,
-            //opacity: c.map.biDensity.opacity,
-            opacity: 1,
-            hoverinfo: 'text',
-            text: ztext,
-            
-      }, traceUpdate;
+      let commonTrace = {
+          name: PQL.toString(rt.pql),
+          // name: '2d density',
+          showlegend: false,
+          showscale: false,
+          x: selectColumn(rt, xIdx),
+          y: selectColumn(rt, yIdx),
+          xaxis: axisId.x,
+          yaxis: axisId.y,
+          hoverinfo: 'text',
+          text: ztext,
+        },
+
+        commonHeatmapContour = {
+          autocolorscale: false,
+          colorscale: colorscale,
+          z: zdata,
+          zauto: false,
+          zmin: 0,
+          // zmax: zmax,
+          zmax: colorFu.extent[1],
+        };
 
       if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {
-        traceUpdate = {
-            autocolorscale: false,            
-            z: zdata,
-            zauto: false,
-            zmin: 0,
-            // zmax: zmax,
-            zmax: colorFu.extent[1],
-            type : 'contour',
-            autocontour : false,
-            ncontours : c.map.biDensity.levels,
-            colorscale: colorscale,
-          };
-        
+        traces.push(
+          Object.assign(
+            // contour plot trace
+            {
+              type: 'contour',
+              autocontour: false,
+              ncontours: c.map.biDensity.levels,
+              opacity: c.map.biDensity.opacity,
+            },
+            commonTrace,
+            commonHeatmapContour
+          ));
       }
       else if (PQL.hasDiscreteYield(xFu) && PQL.hasDiscreteYield(yFu)) {
-      //   trace.type = 'heatmap';
-      //   trace.xgap = c.map.heatmap.xgap;
-      //   trace.ygap = c.map.heatmap.ygap;
-      // }
-      //
-      // if (false) {
 
-        // compute maximum shape diameter:
+        // additional heatmap background trace
+        if (c.map.biDensity.backgroundHeatMap) {
+          traces.push(
+            Object.assign(
+              {
+                type: 'heatmap',
+                xgap: c.map.heatmap.xgap,
+                ygap: c.map.heatmap.ygap,
+                opacity: 0.7,
+              },
+              commonTrace,
+              commonHeatmapContour
+            ));
+        }
+
+        // compute maximum shape diameter
         let cellSize = geometry.cellSizePx,
-          maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length)*0.5;
+          maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length)*0.45;
 
-        traceUpdate = {           
-            type : 'scatter',
-            visible : true,
-//             mode : 'markers+text',
-            mode : 'markers',
-            marker : {
-               symbol: "circle",
-               sizemin: 0,
-               sizemode: 'area',
-               size: zdata,
-               color: zdata,
-               colorscale: colorscale,
-               cmin: 0,
-               cmax: colorFu.extent[1],
-               cauto: false,
-               line: {                           
-                color: c.map.sampleMarker.stroke.color,
-                width: c.map.sampleMarker.stroke.width,        
-               },
+        let scatterTrace = {
+          type: 'scatter',
+          visible: true,
+          // mode: 'markers+text',
+          mode: 'markers',
+          opacity: 1,
+          marker: {
+            symbol: "circle",
+            sizemin: 0,
+            sizemode: 'area',
+            size: zdata,
+            color: zdata,
+            colorscale: colorscale,
+            cmin: 0,
+            cmax: colorFu.extent[1],
+            cauto: false,
+            line: {
+              color: c.map.sampleMarker.stroke.color,
+              width: c.map.sampleMarker.stroke.width,
             },
-        };   
-        traceUpdate.marker.sizeref = Math.pow(colorFu.extent[1]/maxShapeDiameter/0.5, (traceUpdate.marker.sizemode === 'area' ? 2 : 1));    
+          },
+        };
+        scatterTrace.marker.sizeref = Math.pow(
+          colorFu.extent[1] / maxShapeDiameter / 0.5,
+          (scatterTrace.marker.sizemode === 'area' ? 2 : 1));
+
+        traces.push(
+          Object.assign(scatterTrace, commonTrace)
+        );
       }
 
-      Object.assign(trace, traceUpdate);
-
-      return [trace]
+      return traces;
     };
 
     /**
