@@ -271,5 +271,6 @@ define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4
     samplesCollection,
     uniDensityCollection,
     biDensityCollection,
+    getEmptyCollection,
   };
 });

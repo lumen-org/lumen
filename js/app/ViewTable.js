@@ -638,7 +638,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function makeLayout(vismel, vismelColl, uniColl, biColl, pane, size, axesSyncManager) {
+    function makeLayout(vismel, vismelColl, uniColl, biColl, pane, size, axesSyncManager, facets) {
       /*
        * Shortcut to the layout attributes of a vismel query table.
        * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
@@ -661,8 +661,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       //  * but only if it is generally enabled in the config
       //  * and if there was any data passed in for marginals
       let marginal = {
-        x: config.views.marginals.possible && used.y && uniColl[0][0] && uniColl[0][0].y,
-        y: config.views.marginals.possible && used.x && uniColl[0][0] && uniColl[0][0].x
+        // x: config.views.marginals.possible && used.y && uniColl[0][0] && uniColl[0][0].y,
+        // y: config.views.marginals.possible && used.x && uniColl[0][0] && uniColl[0][0].x
+        x: facets.marginals.active && used.y && uniColl[0][0] && uniColl[0][0].y,
+        y: facets.marginals.active && used.x && uniColl[0][0] && uniColl[0][0].x
       };
 
       // get absolute pane size [in px]
@@ -969,7 +971,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           // modeBarButtonsToAdd: [],
         };
 
-        let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager);
+        let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager, facets);
 
         let traces = makeTraces(this.size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, facets);
 
