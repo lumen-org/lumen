@@ -186,6 +186,20 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       /**
+       * Sets a visual indicator to show how the context is busy, if it is.
+       * @param status Status to indicate. Pass `false` to indicate that the context is not busy, or a string to indicate with what it is busy.
+       * @private
+       */
+      _setBusyStatus (status = false) {
+        if (!status) {
+        this._busyIndicator.fadeOut(150);
+        } else {
+          $('.pl-label', this._busyIndicator).text(status);
+          this._busyIndicator.fadeIn(150);
+        }
+      }
+
+      /**
        * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is commited, if any of the calls to `update` has truthy commit flag.
        *
        * Note that this function accesses the file scope, as it uses the infoBox variable.
@@ -201,12 +215,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         actions['update.facets'] = (actions['new.query'] || changes['facets.changed']);
         actions['redraw'] = (actions['update.facets'] || changes['config.changed']);
         actions['finalize'] = true;
-        this._resetChanges();
+        c._resetChanges();
 
         // stages are promises to the completion of actions
         let stages = {};
 
         if (actions['new.query']) {
+          c._setBusyStatus('getting base query');
           try {
             let mode = $('input[name=datavsmodel]:checked', '#pl-datavsmodel-form').val();
 
@@ -248,9 +263,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
           // this is crucial to link corresponding axis and results in the visualization
           // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
-          let fieldUsageCacheMap = this._fieldUsageCacheMap;
+          let fieldUsageCacheMap = c._fieldUsageCacheMap;
           stages['update.facets'] = stages['new_query']
-          //.then(() => infoBox.hide())
+            .then(() => c._setBusyStatus('fetching facets'))
+            .then(() => infoBox.hide())
             .then(() => c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap))
             .then(() => c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
               data_category: 'training data',
@@ -268,6 +284,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         if (actions['redraw']) {
           stages['redraw'] = stages['update.facets']
+            .then(() => c._setBusyStatus('redrawing'))
             .then(() => {
               c.viewTable = new ViewTable( c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.baseQueryTable, c.facets);
               c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
@@ -277,7 +294,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
 
         if (actions['finalize']) {
-          stages['redraw'].then(() => {
+          stages['redraw']
+            //.then(() => c._setBusyStatus('finalizing'))
+            .then(() => {
             // for development/debug
           })
           .then(() => {
@@ -290,7 +309,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             console.log(c);
           })
           .then(() => {
-            c.emit("ContextQueryFinishSuccessEvent", this);
+            c._setBusyStatus();
+            c.emit("ContextQueryFinishSuccessEvent", c);
           })
           .catch((reason) => {
             console.error(reason);
@@ -634,19 +654,25 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        * Note: this is GUI stuff that is instantiated for each context. "Singleton" GUI elements
        * are not managed like this.
        */
-      static _makeGUI(context) {
-        let visual = Context._makeShelvesGUI(context);
-        visual.facets = Context._makeFacetWidget(context);
-        visual.visualization = Context._makeVisualization(context);
-        visual.visPane = $('div.pl-visualization__pane', visual.visualization);
-        visual.legendPane = $('div.pl-legend', visual.visualization);
-        return visual;
+      static _makeVisuals(context) {
+        let visuals = Context._makeShelvesGUI(context);
+        visuals.facets = Context._makeFacetWidget(context);
+        visuals.visualization = Context._makeVisualization(context);
+        visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
+        visuals.legendPane = $('div.pl-legend', visuals.visualization);
+
+        context._busyIndicator = $('<div class="pl-busy-indicator"></div>')
+          .append('<div class="pl-label"></div>')
+          .append(VisUtils.icon('update'))
+          .appendTo(visuals.visualization);
+
+        return visuals;
       }
 
       /* Creates, hides and attaches GUI elements for this context to the DOM
       **/
       makeGUI() {
-        this.$visuals = Context._makeGUI(this);
+        this.$visuals = Context._makeVisuals(this);
         this.displayVisuals(false);
         this.attachVisuals();
         return this;
