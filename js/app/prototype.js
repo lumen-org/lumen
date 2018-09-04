@@ -120,17 +120,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           this.shelves = sh.construct();
 
         // facet states and config
-        let facets = JSON.parse(JSON.stringify(Settings.views));
-        for (let facet of Object.keys(_facetNameMap)) {
-          facets[facet].fetchState = 'not fetched'; // current fetching state of facet. One of ['not fetched', 'pending', 'fetched']
-          facets[facet].data = undefined; // the last fetched data collection
-        }
-        this.facets = facets;
+        this.facets = JSON.parse(JSON.stringify(Settings.views));
+        this._discardFetchedFacets();
+
         // the stages of the pipeline in terms of queries
         this.query = {};
         this.baseQueryTable = {};
         this.baseModelTable = {};
         this.viewTable = {};
+
         this._changes = { // keeps track what of the context changed
           'all': false,
           'shelves.changed': false, // triggers complete requiring, i.e. is currently identical to 'all'
@@ -138,8 +136,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           'config.changed': false, // triggers a redraw only
         };
         this._commitFlag = false;
-        this._resetChanged();
-        this.boundNormalizedUpdate = _.debounce(this._update.bind(this), 150);
+        this._resetChanges();
+
+        this._boundNormalizedUpdate = _.debounce(this._update.bind(this), 150);
         this.unredoer = new UnRedo(20);
 
         Emitter(this);
@@ -150,10 +149,18 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        *
        * @private
        */
-      _resetChanged () {
+      _resetChanges () {
         for (let key of Object.keys(this._changes))
           this._changes[key] = false;
         this._commitFlag = false;
+      }
+
+      _discardFetchedFacets () {
+        let facets = this.facets;
+        for (let facet of Object.keys(_facetNameMap)) {
+          facets[facet].fetchState = 'not fetched'; // current fetching state of facet. One of ['not fetched', 'pending', 'fetched']
+          facets[facet].data = undefined; // the last fetched data collection
+        }
       }
 
       /**
@@ -164,10 +171,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        *
        */
       update (what='all', commit = true) {
-        let changes = this._changes;
+        let changes = this._changes,
+          keys = Object.keys(changes);
+        if (!keys.includes(what))
+          throw RangeError("invalid 'what': " + what.toString());
         changes[what] = true;
         if (what === 'all')
-          for (let key of Object.keys(changes))
+          for (let key of keys)
             changes[key] = true;
         this._commitFlag = this._commitFlag || commit;
         this._boundNormalizedUpdate();
@@ -221,8 +231,11 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
         // this is crucial to link corresponding axis and results in the visualization
         // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
-        if (actions['new.query'])
-          this._fieldUsageCacheMap = new Map();
+        if (actions['new.query']) {
+          c._fieldUsageCacheMap = new Map();
+          c._discardFetchedFacets();
+        }
+
         let fieldUsageCacheMap = this._fieldUsageCacheMap;
 
         if (actions['update.facets']) {
@@ -268,6 +281,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         if (actions['redraw'])
           console.log('todo');
+
+        this._resetChanges();
       }
 
 
@@ -377,7 +392,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       /**
-       * Returns the visualization facets according to the state of the GUI.
+       * Returns the root DOM element of the facets GUI.
        */
       getFacetConfig () {
         return this.$visuals.facets
@@ -446,10 +461,6 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         // note: disabling a facet will never invalidate the fetched result collection. this is only done when the query changes.
         facet.active = enable;
-      }
-
-      getQueryFromShelves () {
-        // TODO: refetch all facets...
       }
 
       /**
@@ -540,7 +551,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // Enables user querying for shelves
         // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves)) {
-          shelves[key].on(Emitter.ChangedEvent, () => context.update('shelves.changed'));
+          shelves[key].on(Emitter.ChangedEvent,
+            () => context.update('shelves.changed'));
           shelves[key].on(Emitter.ChangedEvent, event => {
              // heuristic to detect ChangedEvents that are not already covered with the Shelf.Event.* events below
              if (event && event.hasOwnProperty('type')) {
@@ -1513,7 +1525,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // watch for changes
     // TODO: implement smart reload (i.e. only redraw, for example)
     SettingsEditor.watch('root', () => {
-        contextQueue.first().update('config.changes', false);
+        contextQueue.first().update('config.changed', false);
     });
 
     // make dash board pannable
