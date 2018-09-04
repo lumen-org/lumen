@@ -925,6 +925,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         this.uniColl = uniColl;
         this.biColl = biColl;
         this.testDataColl = testDataColl;
+        this.facets = facets;
         this.vismel = vismelColl.base;
         this.vismelColl = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
         this.size = aggrColl.size;
@@ -1037,7 +1038,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         let savedAxesState = getAxesState(this.plotlyLayout);
 
         // 2. recreate layout (no need to recreate traces)
-        let newLayout = makeLayout(this.vismel, this.vismelColl, this.uniColl, this.biColl, this.plotlyPane, this.size, this.axesSyncManager)[2];
+        let newLayout = makeLayout(this.vismel, this.vismelColl, this.uniColl, this.biColl, this.plotlyPane, this.size, this.axesSyncManager, this.facets)[2];
 
         // 3. apply saved state recreated layout
         this.plotlyLayout = merge(newLayout, savedAxesState);

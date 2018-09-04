@@ -191,13 +191,18 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       _update () {
         let c = this,
-          changes = this._changes,
-          actions = {};
+          changes = this._changes;
 
         // derive actions from changes
+        let actions = {};
         actions['new.query'] = changes['shelves.changed'];
         actions['update.facets'] = (actions['new.query'] || changes['facets.changed']);
         actions['redraw'] = (actions['update.facets'] || changes['config.changed']);
+        actions['finalize'] = true;
+        this._resetChanges();
+
+        // stages are promises to the completion of actions
+        let stages = {};
 
         if (actions['new.query']) {
           try {
@@ -226,65 +231,80 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             console.error(error);
             infoBox.message(error);
           }
-        }
 
-        // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
-        // this is crucial to link corresponding axis and results in the visualization
-        // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
-        if (actions['new.query']) {
+          // reset field cache and fetched
           c._fieldUsageCacheMap = new Map();
           c._discardFetchedFacets();
+
+          // get promise to base model
+          stages['new_query'] = c.baseModelTable.model();
+        } else {
+          stages['new_query'] = Promise.resolve(); // because it is already there
         }
 
-        let fieldUsageCacheMap = this._fieldUsageCacheMap;
-
         if (actions['update.facets']) {
-          c.baseModelTable.model()
-            .then(() => infoBox.hide())
-            .then( () => c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap))
-            .then( () => c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {data_category:'training data', data_point_limit:Settings.tweaks.data_point_limit}))
-            .then( () => c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {data_category:'test data', data_point_limit:Settings.tweaks.data_point_limit}))
-            .then( () => c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap)) // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-            .then( () => c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap))
+          // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
+          // this is crucial to link corresponding axis and results in the visualization
+          // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
+          let fieldUsageCacheMap = this._fieldUsageCacheMap;
+          stages['update.facets'] = stages['new_query']
+          //.then(() => infoBox.hide())
+            .then(() => c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap))
+            .then(() => c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
+              data_category: 'training data',
+              data_point_limit: Settings.tweaks.data_point_limit
+            }))
+            .then(() => c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {
+              data_category: 'test data',
+              data_point_limit: Settings.tweaks.data_point_limit
+            }))
+            .then(() => c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap)) // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
+            .then(() => c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap));
+        } else {
+          stages['update.facets'] = Promise.resolve();
+        }
 
+        if (actions['redraw']) {
+          stages['redraw'] = stages['update.facets']
             .then(() => {
-              c.viewTable = new ViewTable(
-                c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0),
+              c.viewTable = new ViewTable( c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0),
                 c.facets.aggregations.data, c.facets.data.data, c.facets.testData.data, c.facets.marginals.data, c.facets.contour.data,
                 c.baseQueryTable, c.facets);
               c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
-            })
-            .then(() => {
-              // for development/debug
-            })
-            .then(() => {
-              if (c._commitFlag) {
-                // TODO: commit only if something changed!
-                c.unredoer.commit(c.copyShelves());
-              }
-            })
-            .then(() => {
-              console.log(c);
-            })
-            .then(() => {
-              c.emit("ContextQueryFinishSuccessEvent", this);
-            })
-            .catch((reason) => {
-              console.error(reason);
-              if (reason instanceof XMLHttpRequest) {
-                infoBox.message(reason.responseText);
-              } else if (reason instanceof Error) {
-                infoBox.message(reason.toString());
-              }
             });
+        } else {
+          stages['redraw'] = Promise.resolve();
         }
 
-        if (actions['redraw'])
-          console.log('todo');
+        if (actions['finalize']) {
+          stages['redraw'].then(() => {
+            // for development/debug
+          })
+          .then(() => {
+            if (c._commitFlag) {
+              // TODO: commit only if something changed!
+              c.unredoer.commit(c.copyShelves());
+            }
+          })
+          .then(() => {
+            console.log(c);
+          })
+          .then(() => {
+            c.emit("ContextQueryFinishSuccessEvent", this);
+          })
+          .catch((reason) => {
+            console.error(reason);
+            if (reason instanceof XMLHttpRequest) {
+              infoBox.message(reason.responseText);
+            } else if (reason instanceof Error) {
+              infoBox.message(reason.toString());
+            }
+          });
+        } else {
+          throw "cannot skip final stage of query processing";
+        }
 
-        this._resetChanges();
       }
-
 
       updateFacetCollection (facetName, collectionFactory, fieldUsageCacheMap, opts=undefined) {
         if (opts === undefined)
