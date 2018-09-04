@@ -131,8 +131,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         this.baseQueryTable = {};
         this.baseModelTable = {};
         this.viewTable = {};
-
-        this.boundNormalizedUpdate = _.debounce(this.update.bind(this), 150);
+        this._changes = { // keeps track what of the context changed
+          'all': false,
+          'shelves.changed': false, // triggers complete requiring, i.e. is currently identical to 'all'
+          'facets.changed': false, // triggers fetching of required facets
+          'config.changed': false, // triggers a redraw only
+        };
+        this._commitFlag = false;
+        this._resetChanged();
+        this.boundNormalizedUpdate = _.debounce(this._update.bind(this), 150);
         this.unredoer = new UnRedo(20);
 
         Emitter(this);
@@ -140,83 +147,127 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       /**
-       * @param commit
+       *
+       * @private
+       */
+      _resetChanged () {
+        for (let key of Object.keys(this._changes))
+          this._changes[key] = false;
+        this._commitFlag = false;
+      }
+
+      /**
+       * Update this context with respect to `what` at the next possible time.
+       *
+       * @param what {String} Any of ['all', 'shelves.change', 'facet.change', 'config.change']
+       * @param commit {boolean}
+       *
+       */
+      update (what='all', commit = true) {
+        let changes = this._changes;
+        changes[what] = true;
+        if (what === 'all')
+          for (let key of Object.keys(changes))
+            changes[key] = true;
+        this._commitFlag = this._commitFlag || commit;
+        this._boundNormalizedUpdate();
+      }
+
+      /**
+       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is commited, if any of the calls to `update` has truthy commit flag.
        *
        * Note that this function accesses the file scope, as it uses the infoBox variable.
+       * @private
        */
-      update (commit = true) {
-        let c = this;
+      _update () {
+        let c = this,
+          changes = this._changes,
+          actions = {};
 
-        CONTINUE_HERE_need_to_know_whether_more_than_just_facets_changed
+        // derive actions from changes
+        actions['new.query'] = changes['shelves.changed'];
+        actions['update.facets'] = (actions['new.query'] || changes['facets.changed']);
+        actions['redraw'] = (actions['update.facets'] || changes['config.changed']);
 
-        try {
-          let mode = $('input[name=datavsmodel]:checked','#pl-datavsmodel-form').val();
+        if (actions['new.query']) {
+          try {
+            let mode = $('input[name=datavsmodel]:checked', '#pl-datavsmodel-form').val();
 
-          c.basemodel = c.model.localCopy();
+            c.basemodel = c.model.localCopy();
 
-          // get user query
-          c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel, mode);
-          c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
+            // get user query
+            c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel, mode);
+            c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
-          // log this activity
-          ActivityLogger.log({'VISMEL': c.query, 'facets': c._getFacetActiveState(), 'context': c.getNameAndUUID()}, 'vismel_query');
+            // log this activity
+            ActivityLogger.log({
+              'VISMEL': c.query,
+              'facets': c._getFacetActiveState(),
+              'context': c.getNameAndUUID()
+            }, 'vismel_query');
 
-          // TODO: apply global filters and remove them from query. i.e. change basemodel, and basequery
-          c.basequery = c.query;
+            // TODO: apply global filters and remove them from query. i.e. change basemodel, and basequery
+            c.basequery = c.query;
 
-          c.baseQueryTable = new QueryTable(c.basequery);
-          c.baseModelTable = new ModelTable(c.baseQueryTable);
-        }
-        catch (error) {
-          console.error(error);
-          infoBox.message(error);
+            c.baseQueryTable = new QueryTable(c.basequery);
+            c.baseModelTable = new ModelTable(c.baseQueryTable);
+          }
+          catch (error) {
+            console.error(error);
+            infoBox.message(error);
+          }
         }
 
         // used to replace value-identical FieldUsages and BaseMaps of vismel queries with reference-identical ones
         // this is crucial to link corresponding axis and results in the visualization
         // (TODO: in fact, we could even use this to link them across multiple visualizations, maybe!?)
-        let fieldUsageCacheMap = new Map();
+        if (actions['new.query'])
+          this._fieldUsageCacheMap = new Map();
+        let fieldUsageCacheMap = this._fieldUsageCacheMap;
 
-        c.baseModelTable.model()
-          .then(() => infoBox.hide())
-          .then( () => c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap))
-          .then( () => c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {data_category:'training data', data_point_limit:Settings.tweaks.data_point_limit}))
-          .then( () => c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {data_category:'test data', data_point_limit:Settings.tweaks.data_point_limit}))
-          .then( () => c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap)) // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-          .then( () => c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap))
+        if (actions['update.facets']) {
+          c.baseModelTable.model()
+            .then(() => infoBox.hide())
+            .then( () => c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap))
+            .then( () => c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {data_category:'training data', data_point_limit:Settings.tweaks.data_point_limit}))
+            .then( () => c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {data_category:'test data', data_point_limit:Settings.tweaks.data_point_limit}))
+            .then( () => c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap)) // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
+            .then( () => c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap))
 
-          .then(() => {
-            c.viewTable = new ViewTable(
-              c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0),
-              c.facets.aggregations.data, c.facets.data.data, c.facets.testData.data, c.facets.marginals.data, c.facets.contour.data,
-              c.baseQueryTable, c.facets);
-            c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
-          })
+            .then(() => {
+              c.viewTable = new ViewTable(
+                c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0),
+                c.facets.aggregations.data, c.facets.data.data, c.facets.testData.data, c.facets.marginals.data, c.facets.contour.data,
+                c.baseQueryTable, c.facets);
+              c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
+            })
+            .then(() => {
+              // for development/debug
+            })
+            .then(() => {
+              if (c._commitFlag) {
+                // TODO: commit only if something changed!
+                c.unredoer.commit(c.copyShelves());
+              }
+            })
+            .then(() => {
+              console.log(c);
+            })
+            .then(() => {
+              c.emit("ContextQueryFinishSuccessEvent", this);
+            })
+            .catch((reason) => {
+              console.error(reason);
+              if (reason instanceof XMLHttpRequest) {
+                infoBox.message(reason.responseText);
+              } else if (reason instanceof Error) {
+                infoBox.message(reason.toString());
+              }
+            });
+        }
 
-          .then(() => {
-            // for development/debug
-          })
-
-          .then(() => {
-            if (commit) {
-              // TODO: commit only if something changed!
-              c.unredoer.commit(c.copyShelves());
-            }
-          })
-          .then(() => {
-            console.log(c);
-          })
-          .then(() => {
-            c.emit("ContextQueryFinishSuccessEvent", this);
-          })
-          .catch((reason) => {
-            console.error(reason);
-            if (reason instanceof XMLHttpRequest) {
-              infoBox.message(reason.responseText);
-            } else if (reason instanceof Error) {
-              infoBox.message(reason.toString());
-            }
-          });
+        if (actions['redraw'])
+          console.log('todo');
       }
 
 
@@ -312,7 +363,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           $oldVis[key] = $newVis[key];
         }
 
-        this.boundNormalizedUpdate(false);
+        this.update('all', false);
       }
 
       /**
@@ -489,7 +540,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // Enables user querying for shelves
         // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves)) {
-          shelves[key].on(Emitter.ChangedEvent, context.boundNormalizedUpdate);
+          shelves[key].on(Emitter.ChangedEvent, () => context.update('shelves.changed'));
           shelves[key].on(Emitter.ChangedEvent, event => {
              // heuristic to detect ChangedEvents that are not already covered with the Shelf.Event.* events below
              if (event && event.hasOwnProperty('type')) {
@@ -531,7 +582,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                 // log user activity
                 ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
                 // ... trigger an update
-                context.boundNormalizedUpdate();
+                context.update('facets.changed');
               });
             let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
             return $('<div class="pl-facet__onOff"></div>').append($checkBox, $label);
@@ -562,9 +613,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       /* Creates, hides and attaches GUI elements for this context to the DOM
       **/
       makeGUI() {
-        // this creates all GUI elements
         this.$visuals = Context._makeGUI(this);
-
         this.displayVisuals(false);
         this.attachVisuals();
         return this;
@@ -792,14 +841,13 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
         if (config.query.active) {
           let $query = Toolbar._makeToolbarButton("geo-position2", "Query")
-            .click(() => this._context.boundNormalizedUpdate());
+            .click(() => this._context.update('all', true));
           elems.push($query);
         }
 
         if (config.clone.active) {
           let $clone = Toolbar._makeToolbarButton("clone", "Clone")
-            .click(
-            () => {
+            .click( () => {
               let c = this._context;
               ActivityLogger.log({'context': c.getNameAndUUID()}, 'clone');
               let contextCopy = c.copy();
@@ -808,7 +856,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
               // fetch model
               contextCopy.model.update()
                 .then(() => activate(contextCopy, ['visualization', 'visPane', 'legendPane']))
-                .then(() => contextCopy.boundNormalizedUpdate())
+                .then(() => contextCopy.update('all', true))
                 .catch((err) => {
                   console.error(err);
                   infoBox.message("Could not load remote model from Server!");
@@ -1465,7 +1513,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // watch for changes
     // TODO: implement smart reload (i.e. only redraw, for example)
     SettingsEditor.watch('root', () => {
-        contextQueue.first().boundNormalizedUpdate();
+        contextQueue.first().update('config.changes', false);
     });
 
     // make dash board pannable
