@@ -35,13 +35,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
     // but i guess cleanup requires deeper adaptions...
+
+    // careful: you cannot just change the keys! they are reused in multiple places!
     const _facetNameMap = {
       'aggregations': 'prediction',
       'marginals': 'marginal',
       'contour': 'density',
       'data': 'data',
       'testData': 'test data',
-      'predictionOffset': 'prediction offset',
+//      'predictionOffset': 'prediction offset',
     };
     const _facetNames = [...Object.keys(_facetNameMap)];
 
@@ -267,9 +269,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         if (actions['redraw']) {
           stages['redraw'] = stages['update.facets']
             .then(() => {
-              c.viewTable = new ViewTable( c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0),
-                c.facets.aggregations.data, c.facets.data.data, c.facets.testData.data, c.facets.marginals.data, c.facets.contour.data,
-                c.baseQueryTable, c.facets);
+              c.viewTable = new ViewTable( c.$visuals.visPane.get(0), c.$visuals.legendPane.get(0), c.baseQueryTable, c.facets);
               c.viewTable.on('PanZoom', (ev) => ActivityLogger.log({'context': c.getNameAndUUID(), 'changedAxis':ev}, 'PanZoom'));
             });
         } else {
@@ -598,7 +598,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       static _makeFacetWidget (context) {
         let title = $('<div class="pl-h2 shelf__title">Facets</div>');
         // create checkboxes
-        let checkBoxes = ['contour', 'marginals', 'aggregations', 'data', 'testData', 'predictionOffset']
+        let checkBoxes = //['contour', 'marginals', 'aggregations', 'data', 'testData'] //, 'predictionOffset']
+          Object.keys(context.facets)
           .filter( what => context.facets[what].possible)
           .map(
           what => {

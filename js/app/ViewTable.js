@@ -367,12 +367,17 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function getGlobalExtent(aggrColl, dataColl, testDataColl, biColl, uniColl) {
+    function getGlobalExtent(facets) {
       let globalExtent = new Map();
-      for (let obj of [aggrColl, dataColl, testDataColl, biColl])
-        addCollectionExtents(obj, globalExtent);
-      for (let xy of ['x', 'y'])
-        addCollectionExtents(uniColl, globalExtent, xy);
+      for (let facetName in facets) {
+          let facet = facets[facetName].data;
+          if (facetName === 'marginals') {
+              for (let xy of ['x', 'y'])
+                addCollectionExtents(facet, globalExtent, xy);
+          } else {
+               addCollectionExtents(facet, globalExtent);
+          }
+      }
       return globalExtent;
     }
 
@@ -567,13 +572,14 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       }
     }
 
-    function makeTraces(size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds, facets) {
+    function makeTraces(size, geometry, facets, vismelColl, mainAxesIds, marginalAxesIds, catQuantAxesIds, templAxesIds) {
       let traces = [];
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
-
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(geometry, aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x], {
+          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
+          // let atomicTraces = atomicPlotlyTraces(geometry, aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x],
+            {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],
           }, marginalAxesIds[y][x], catQuantAxesIds[y][x], facets);
@@ -638,7 +644,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function makeLayout(vismel, vismelColl, uniColl, biColl, pane, size, axesSyncManager, facets) {
+    function makeLayout(vismel, vismelColl, facets, pane, size, axesSyncManager) {
       /*
        * Shortcut to the layout attributes of a vismel query table.
        * I.e. it is accessor to the layout fields usage for a certain row(y)/col(x) in the view table.
@@ -661,10 +667,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       //  * but only if it is generally enabled in the config
       //  * and if there was any data passed in for marginals
       let marginal = {
-        // x: config.views.marginals.possible && used.y && uniColl[0][0] && uniColl[0][0].y,
-        // y: config.views.marginals.possible && used.x && uniColl[0][0] && uniColl[0][0].x
-        x: facets.marginals.active && used.y && uniColl[0][0] && uniColl[0][0].y,
-        y: facets.marginals.active && used.x && uniColl[0][0] && uniColl[0][0].x
+        x: facets.marginals.active && used.y, // && uniColl[0][0] && uniColl[0][0].y,
+        y: facets.marginals.active && used.x, // && uniColl[0][0] && uniColl[0][0].x
       };
 
       // get absolute pane size [in px]
@@ -816,8 +820,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
                   getFieldUsage(idx[xy], xy, vismelColl).yields, xy,
                   mainOffset[xy] + 0.5 * axisLength.padding[xy],
                   axisLength.main[xy] - 0.5 * axisLength.padding[xy],
-                  paneOffset[yx],);
-                //getFieldUsage(idx[xy], xy, vismelColl).yields, xy, mainOffset[xy], axisLength.main[xy], templAxisSize[yx]);
+                  paneOffset[yx]);
                 axisTitles.push(axisTitleAnno);
               } else {
                 axis[xy].showticklabels = false;
@@ -843,13 +846,13 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           }
 
           // create marginal axes as needed
-          marginalAxesIds[idx.y][idx.x] = makeMarginalAxes(marginal, paneOffset, axisLength, templAxisSize, mainAxesIds, idx, uniColl, idgen, layout, size);
+          marginalAxesIds[idx.y][idx.x] = makeMarginalAxes(marginal, paneOffset, axisLength, templAxisSize, mainAxesIds, idx, facets.marginals.data, idgen, layout, size);
 
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
-          if (used.x && used.y && biColl[0][0] !== undefined)
-            makeCategoricalQuantitativeAxis(biColl[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout);
+          if (used.x && used.y && facets.contour.active /*biColl[0][0] !== undefined*/)
+            makeCategoricalQuantitativeAxis(facets.contour.data[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout);
           catQuantAxesIds[idx.y][idx.x] = catQuantAxisIds;
         }
       }
@@ -916,19 +919,19 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
      */
     class ViewTable {
 
-      constructor(pane, legend, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, facets) {
+      constructor(pane, legend, vismelColl, facets) {
 
         Emitter(this);
 
-        this.aggrColl = aggrColl;
-        this.dataColl = dataColl;
-        this.uniColl = uniColl;
-        this.biColl = biColl;
-        this.testDataColl = testDataColl;
+        // this.aggrColl = aggrColl;
+        // this.dataColl = dataColl;
+        // this.uniColl = uniColl;
+        // this.biColl = biColl;
+        // this.testDataColl = testDataColl;
         this.facets = facets;
         this.vismel = vismelColl.base;
         this.vismelColl = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
-        this.size = aggrColl.size;
+        this.size = vismelColl.size;
         this.size.x = this.size.cols;
         this.size.y = this.size.rows;
         this.plotlyPane = pane;
@@ -945,7 +948,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
         // create global extent (i.e. across all result collections as far as it makes sense!)
         // globalExtent is a Map that maps of FieldUsages to their extents
-        let globalExtent = getGlobalExtent(aggrColl, dataColl, testDataColl, biColl, uniColl);
+        let globalExtent = getGlobalExtent(facets);
         // generate yield-based extents from it
         let yieldExtent = getYieldExtent(globalExtent);
         globalExtent = updateWithYieldExtent(globalExtent, yieldExtent);
@@ -972,9 +975,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           // modeBarButtonsToAdd: [],
         };
 
-        let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, uniColl, biColl, pane, this.size, axesSyncManager, facets);
+        let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, facets, pane, this.size, axesSyncManager);
 
-        let traces = makeTraces(this.size, geometry, aggrColl, dataColl, testDataColl, uniColl, biColl, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds, facets);
+        let traces = makeTraces(this.size, geometry, facets, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds);
 
         // plot everything
         this.plotlyTraces = [...emptyTraces, ...traces];
@@ -1038,7 +1041,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         let savedAxesState = getAxesState(this.plotlyLayout);
 
         // 2. recreate layout (no need to recreate traces)
-        let newLayout = makeLayout(this.vismel, this.vismelColl, this.uniColl, this.biColl, this.plotlyPane, this.size, this.axesSyncManager, this.facets)[2];
+        let newLayout = makeLayout(this.vismel, this.vismelColl, this.facets, this.plotlyPane, this.size, this.axesSyncManager)[2];
 
         // 3. apply saved state recreated layout
         this.plotlyLayout = merge(newLayout, savedAxesState);

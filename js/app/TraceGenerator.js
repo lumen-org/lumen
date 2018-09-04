@@ -905,6 +905,9 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
      */
     tracer.predictionOffset = function (predRT, testDataRT, mapper, axisId, facets) {
 
+      // TODO / ATTENTION: THIS FACET IS NOT FUNCTIONAL!
+      return [];
+      
       if (!facets.predictionOffset.active || testDataRT === undefined || predRT === undefined)
         return [];
 

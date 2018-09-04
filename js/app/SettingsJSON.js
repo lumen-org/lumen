@@ -271,19 +271,19 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
           active: {type: "boolean"},
         }
       },
-      "predictionOffset": {
+      /*"predictionOffset": {
         type: "object",
         properties: {
           possible: {type: "boolean"},
           active: {type: "boolean"},
         }
-      },
-      "accuMarginals": {
+      },*/
+      /*"accuMarginals": {
         type: "object",
         properties: {
           possible: {type: "boolean"},
         }
-      },
+      },*/
 
     }
   };
@@ -932,13 +932,13 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         possible: true,
         active: true,
       },
-      predictionOffset: {
+      /*predictionOffset: {
         possible: false,
         active: false,
-      },
-      accuMarginals: {
+      },*/
+      /*accuMarginals: {
         possible: false
-      }
+      }*/
     };
 
     c.toolbar = {
