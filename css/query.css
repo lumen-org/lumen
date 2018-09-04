@@ -404,6 +404,40 @@ main {
     height: 100%;
 }
 
+/* busy indicator */
+.pl-busy-indicator {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.025);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pl-busy-indicator .pl-label {
+    font: x-large bold;
+    color: rgba(0,0,0,0.3);
+}
+
+.pl-busy-indicator .pl-icon {
+    -webkit-animation: rotation 1.5s infinite cubic-bezier(0.38, 0.15, 0.63, 0.85);
+    width: 6rem;
+    height: 6rem;
+    filter: opacity(25%);
+}
+
+@-webkit-keyframes rotation {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(179deg);
+    }
+}
+
 /* legend of a visualization */
 .pl-legend {
     position: relative;
@@ -453,7 +487,6 @@ main {
     width: 90%;
     text-align: center;
 }
-
 
 /* user study widget */
 .pl-survey__title {

@@ -71,11 +71,11 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
 
   /**
    * Return a string of an img element that contains the requested icon and has classes 'pl-icon' and 'pl-icon--${name}'.
-   * @param name Icon name to load
+   * @param iconName Icon name to load
    * @return {string}
    */
-  function getIcon (name) {
-    return `<img class="pl-icon pl-icon__${name}$" alt="${name}" src="../icons/${name}.svg">`
+  function icon (iconName) {
+    return `<img class="pl-icon pl-icon--${iconName}$" alt="${iconName}" src="../icons/${iconName}.svg">`
   }
 
   /**
@@ -86,7 +86,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
    */
   function button (label, iconName) {
     return $('<div class="pl-button"></div>')
-      .append(`<img class="pl-icon pl-icon--${iconName}" alt="${iconName}" src="../icons/${iconName}.svg">`)
+      .append(icon(iconName))
       .append(`<span class="pl-label">${label}</span>`);
   }
 
@@ -244,7 +244,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     makeModal,
     controlButtons,
     conversionButton,
-    getIcon,
+    icon,
     button,
     removeButton,
   };
