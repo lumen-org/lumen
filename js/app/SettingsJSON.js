@@ -436,7 +436,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
           line: {
             type: "object", format: "grid",
             properties: {
-              "width": {type: "number", default: 99},
+              "width": {type: "number"},
               // "color": { TODO: link to colors.density. ... },
               "fill": {type: "boolean"},
               "fillopacity": {type: "number"}
@@ -544,6 +544,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       },
       line: {
         width: 2,
+        shape: 'spline', // only used for biqc plots at the moment
         fill: true,
         fillopacity: 0.06,
       },
@@ -551,7 +552,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
       levels: tweaksInitial.levels, // TODO: watches!
       resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
-      backgroundHeatMap: true, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
+      backgroundHeatMap: false, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
     },
   };
 

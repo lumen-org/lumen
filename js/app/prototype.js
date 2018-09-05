@@ -192,10 +192,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       _setBusyStatus (status = false) {
         if (!status) {
-        this._busyIndicator.fadeOut(150);
+        this._busyIndicator.stop().fadeOut(150);
         } else {
           $('.pl-label', this._busyIndicator).text(status);
-          this._busyIndicator.fadeIn(150);
+          this._busyIndicator.stop().fadeIn(150);
         }
       }
 

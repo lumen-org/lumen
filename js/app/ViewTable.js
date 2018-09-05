@@ -360,22 +360,31 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         fu.extent = extent;
     }
 
+    /**
+     * Normalize the extents, i.e.
+     *  * categorical extents: remove undefined if present (undefined may occur if no result could be generated for a particular query.
+     *  * quantitative extents: make the range bit lager.
+     *  *
+     * @param fuExtent
+     */
     function normalizeExtents(fuExtent) {
       for (let [fu, extent] of fuExtent.entries())
         if (PQL.hasNumericYield(fu))
           fuExtent.set(fu, normalizeContinuousExtent(extent));
+        else if (PQL.hasDiscreteYield(fu))
+          fuExtent.set(fu, _.without(extent, undefined));
     }
 
 
     function getGlobalExtent(facets) {
       let globalExtent = new Map();
       for (let facetName in facets) {
-          let facet = facets[facetName].data;
+          let facetColl = facets[facetName].data;
           if (facetName === 'marginals') {
               for (let xy of ['x', 'y'])
-                addCollectionExtents(facet, globalExtent, xy);
+                addCollectionExtents(facetColl, globalExtent, xy);
           } else {
-               addCollectionExtents(facet, globalExtent);
+               addCollectionExtents(facetColl, globalExtent);
           }
       }
       return globalExtent;

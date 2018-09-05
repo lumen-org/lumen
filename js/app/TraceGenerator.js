@@ -382,7 +382,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
         let xAxis = (xy === 'x' ? mainAxisId.x : marginalAxisId.x),
           yAxis = (xy === 'x' ? marginalAxisId.y : mainAxisId.y);
 
-
         let trace = {
           name: traceName[xy],
           showlegend: false,
@@ -390,6 +389,8 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           y: selectColumn(data, yIdx),
           xaxis: xAxis,
           yaxis: yAxis,
+          hoverinfo: "text",
+          hovertext: p1dRT[xy].formatter(data),
         };
 
         let color = mapper.marginalColor;
@@ -788,7 +789,6 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           color = color(data[0][colorIdx]);  // data[0] because we simply need any data point of the trace, so the first one is good enough
         }
 
-
         let trace = {
           name: PQL.toString(rt.pql),
           type: 'scatter',
@@ -801,6 +801,7 @@ define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', 
           //opacity: c.map.biDensity.mark.opacity,
           line: {
             width: c.map.biDensity.line.width,
+            shape: c.map.biDensity.line.shape,
             color: color,
           },
           fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
