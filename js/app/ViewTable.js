@@ -980,7 +980,13 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           },
           scrollZoom: true,
           displaylogo: false,
-          // modeBarButtonsToRemove: [],
+          // modeBarButtons: [
+          //   // can add custom functionality!
+          //   // see: https://github.com/plotly/plotly.js/blob/v1.3.0/src/components/modebar/buttons.js
+          //   // and: https://codepen.io/etpinard/pen/QyLbqY
+          //   ['pan2d','zoom2d','resetScale2d','sendDataToCloud',],
+          // ],
+          modeBarButtonsToRemove: ['toImage', 'zoomIn2d', 'zoomOut2d', 'boxSelect', 'lassoSelect', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
           // modeBarButtonsToAdd: [],
         };
 
