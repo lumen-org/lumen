@@ -36,10 +36,10 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
     // but i guess cleanup requires deeper adaptions...
 
-    // careful: you cannot just change the keys! they are reused in multiple places!
+    // careful: you cannot just change the _keys_! they are reused in multiple places!
     const _facetNameMap = {
       'aggregations': 'prediction',
-      'marginals': 'marginal',
+      'marginals': 'marginals',
       'contour': 'density',
       'data': 'data',
       'testData': 'test data',
@@ -618,29 +618,37 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       static _makeFacetWidget (context) {
         let title = $('<div class="pl-h2 shelf__title">Facets</div>');
         // create checkboxes
+        const name2iconMap = {
+            'aggregations': 'prediction',
+            'marginals': 'uniDensity',
+            'contour': 'contour',
+            'data': 'dataPoints',
+            'testData': 'dataPoints',
+          };
         let checkBoxes = //['contour', 'marginals', 'aggregations', 'data', 'testData'] //, 'predictionOffset']
           Object.keys(context.facets)
           .filter( what => context.facets[what].possible)
           .map(
-          what => {
-            // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
-            let $checkBox = $('<input type="checkbox">')
-              .prop({
-                "checked": context.facets[what].active,
-                "disabled": !context.facets[what].possible,
-                "id": _facetNameMap[what]})
-              .change( (e) => {
-                // update the config and ...
-                context.facets[what].active = e.target.checked;
-                // log user activity
-                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
-                // ... trigger an update
-                context.update('facets.changed');
-              });
-            let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
-            return $('<div class="pl-facet__onOff"></div>').append($checkBox, $label);
-          }
-        );
+            (what, idx) => {
+              // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
+              let $checkBox = $('<input type="checkbox">')
+                .prop({
+                  "checked": context.facets[what].active,
+                  "disabled": !context.facets[what].possible,
+                  "id": _facetNameMap[what]})
+                .change( (e) => {
+                  // update the config and ...
+                  context.facets[what].active = e.target.checked;
+                  // log user activity
+                  ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
+                  // ... trigger an update
+                  context.update('facets.changed');
+                });
+              let $icon = VisUtils.icon(name2iconMap[what]);
+              let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
+              return $('<div class="pl-facet__onOff"></div>').append($icon, $label, $checkBox);
+            }
+          );
         return $('<div class="pl-facet shelf vertical"></div>').append(
           //$('<hr>'),
           title,

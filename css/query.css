@@ -54,7 +54,7 @@
     margin: 0;
     padding: 0;
     border: none;
-    background-color: transparent
+    background-color: transparent;
 }
 
 .pl-button {
@@ -294,13 +294,19 @@ main {
 }
 
 .pl-facet__onOff {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.8rem auto 1rem;
 }
 
 .pl-facet__onOff input {
     margin:0 0.5rem 0 0;
     top: .21rem;
     position: relative;
+}
+
+.pl-facet__onOff .pl-icon {
+    width: 1.3rem;
+    height: 1.3rem;
 }
 
 .pl-graph {
