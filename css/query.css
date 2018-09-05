@@ -571,7 +571,7 @@ textarea.pl-survey__content {
 /* common for all FieldUsage widgets */
 
 .pl-remove-button {
-    filter: opacity(80%);
+    filter: opacity(60%);
     border: none;
 }
 
@@ -605,10 +605,10 @@ textarea.pl-survey__content {
 }
 
 .pl-fu__head .pl-remove-button {
-    height: 1rem;
-    width: 1rem;
+    height: 0.7rem;
+    width: 0.7rem;
     border: none;
-    margin: auto 0.1rem;
+    margin: auto 0 auto 0.3rem;
 }
 
 .pl-fu__head .pl-button {
