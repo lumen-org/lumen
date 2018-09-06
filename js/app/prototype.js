@@ -456,14 +456,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // TODO: undo/redo states are lost on copy
         let copiedContext = new Context(this.server, this.model.name, this.copyShelves());
 
-        // additional stuff to copy
-        copiedContext.config = JSON.parse(JSON.stringify(this.config));
-
-        // all the following objects are entirely recreated on a shelves change
-        // hence we do not need to deep-copy, but can simply link to them!
-        // TODO: i get the feeling that I should implement some sort of state machine at the same time, that manages that only required parts of the pipeline are updated
-        // for (let name of ['query', 'baseQueryTable', 'baseModelTable', 'aggrRT', 'dataRT', 'testDataRT', 'uniDensityRT', 'biDensityRT', 'viewTable'])
-        //   copiedContext[name] = this[name]
+        copiedContext.facets = JSON.parse(JSON.stringify(this.facets));
+        // TODO: facet data is copied but functions etc are missing. Hence i actually cannot reuse it ... I'd need a copy constructor for the facet collections
+        // TODO: also copy value of this._changes and this._commitFlag
 
         // now make it visual
         copiedContext.makeGUI();
