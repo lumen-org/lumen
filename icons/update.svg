@@ -26,8 +26,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="16"
-     inkscape:cx="-2.157339"
-     inkscape:cy="15.008549"
+     inkscape:cx="-15.469839"
+     inkscape:cy="14.883549"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -145,7 +145,7 @@
        xlink:href="#background_icon_fill"
        id="linearGradient284"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(2.2857141,0,0,2.2857143,-34.491901,-152.31861)"
+       gradientTransform="matrix(2.2857141,0,0,2.2857143,-66.491899,-152.31861)"
        x1="14.890208"
        y1="73.639397"
        x2="29.290209"
@@ -155,7 +155,7 @@
        xlink:href="#background_icon_fill"
        id="linearGradient286"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(2.2857141,0,0,2.2857143,-34.491901,-152.31861)"
+       gradientTransform="matrix(2.2857141,0,0,2.2857143,-66.491899,-152.31861)"
        x1="14.890208"
        y1="73.639397"
        x2="29.290209"
@@ -182,11 +182,12 @@
        id="rect21881"
        width="31.999998"
        height="32"
-       x="1.7763568e-15"
-       y="0" />
+       x="-31.999998"
+       y="0"
+       transform="scale(-1,1)" />
     <g
        style="display:inline;stroke-width:0.40000001;stroke-miterlimit:4;stroke-dasharray:none"
-       transform="matrix(2.2078303,-0.59158637,0.59158633,2.2078304,-151.55784,-484.34726)"
+       transform="matrix(-2.2078303,-0.59158637,-0.59158633,2.2078304,183.55784,-484.34726)"
        id="g22083">
       <path
          transform="scale(-1,1)"

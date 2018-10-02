@@ -912,7 +912,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
   }
 
   function _addRefactorJSON(c) {
-    c.views = {
+    c.views = { // TODO: rename to facets!
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
         active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
@@ -922,7 +922,7 @@ define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './Spli
         active: true,
       },
       testData: {
-        possible: true,
+        possible: false,
         active: false,
       },
       marginals: {

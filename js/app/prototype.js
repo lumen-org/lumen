@@ -17,8 +17,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // the default model to be loaded on startup
     //const DEFAULT_MODEL = 'Auto_MPG';
-    // const DEFAULT_MODEL = 'mcg_iris_map';
-    const DEFAULT_MODEL = 'emp_titanic';
+    const DEFAULT_MODEL = 'mcg_allbus_map';
+    //const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
     const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
@@ -28,9 +28,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-        drop(shelves.column, shelves.dim.at(0));
-        drop(shelves.column, shelves.meas.at(1));
-        drop(shelves.filter, shelves.dim.at(0));
+        // drop(shelves.column, shelves.dim.at(0));
+        // drop(shelves.column, shelves.meas.at(1));
+        // drop(shelves.filter, shelves.dim.at(0));
     }
 
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
@@ -267,17 +267,19 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           stages['update.facets'] = stages['new_query']
             .then(() => c._setBusyStatus('fetching facets'))
             .then(() => infoBox.hide())
-            .then(() => c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap))
-            .then(() => c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
-              data_category: 'training data',
-              data_point_limit: Settings.tweaks.data_point_limit
-            }))
-            .then(() => c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {
-              data_category: 'test data',
-              data_point_limit: Settings.tweaks.data_point_limit
-            }))
-            .then(() => c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap)) // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-            .then(() => c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap));
+            .then(() => Promise.all([
+                c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
+                  data_category: 'training data',
+                  data_point_limit: Settings.tweaks.data_point_limit
+                }),
+                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {
+                  data_category: 'test data',
+                  data_point_limit: Settings.tweaks.data_point_limit
+                }),
+                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap)]
+            ))
         } else {
           stages['update.facets'] = Promise.resolve();
         }
