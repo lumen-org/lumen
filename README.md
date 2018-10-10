@@ -11,7 +11,7 @@ Clone this repository into a folder <path> of your choice. If you simply want to
 
 1. start your local backend, if not running already. Note that that Lumen is only the client but relies on a backend for storing and querying of data and models.
  This 'modelbase' must run at 'localhost:5000/webservice'. You can get it from [here](https://bitbucket.org/phlpp/modelbase).
-2. open `html/prototype.html` in your chrome browser.
+2. open `html/lumen.html` in your chrome browser.
 
 NOTE: currently only the chrome browser is supported!
 

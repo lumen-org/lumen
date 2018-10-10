@@ -1,14 +1,14 @@
 {
-  "name": "PMV",
-  "version": "0.2",
-  "description": "a webinterface for exploratory visualization of probability models",
+  "name": "Lumen",
+  "version": "0.9",
+  "description": "A Visual Exploration Interface for Data and Probability Distributions",
   "author": {
     "name": "Philipp Lucas",
     "email": "philipp.lucas@uni-jena.de"
   },
   "repository": {
     "type": "git",
-    "url": "."
+    "url": "https://github.com/lumen-org/lumen"
   },
   "private": true,
   "dependencies": {
@@ -30,9 +30,9 @@
     "karma-requirejs": "^0.2.2"
   },
   "scripts": {
-    "test": "js/test-entry.js"
+    "test": "js/run-tests.js"
   },
-  "license": "(c) Philipp Lucas, All Rights Reserved",
+  "license": "(c) 2016-2018 Philipp Lucas, All Rights Reserved",
   "jshintConfig": {
     "globals": {
       "interact": false,
