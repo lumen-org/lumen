@@ -1,5 +1,5 @@
 /**
- * Test module for prototype.js
+ * Test module for lumen.js
  *
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)

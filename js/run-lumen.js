@@ -27,7 +27,7 @@ require.config({
 });
 
 // dynamic load of required libraries. When done, call callback
-require(['app/prototype'], function  (proto) {
+require(['app/lumen'], function  (proto) {
   'use strict';
 
   // start the app!

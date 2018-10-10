@@ -233,7 +233,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
 
     /**
      * Constructs a VisMEL query from given shelves and a source.
-     * @param shelves A dictionary of shelves, as used in 'prototype.js'. see the code for all 'keys'. Too lazy to document here.
+     * @param shelves A dictionary of shelves, as used in 'lumen.js'. see the code for all 'keys'. Too lazy to document here.
      * @param source A model to be used for the query. Note that this model should the same model which the entries of the shelves refer to eventually (i.e. shelves contain FieldUsages, which refer to Fields, which are part of a model). However, this is NOT validated. You can however use the method VisMEL.rebase(model) to rebase all FieldUsages on another model. This might be useful to prevent changes to prevent changes to the original model in course of the execution of the query.
      * @returns {VisMEL}
      * @constructor
