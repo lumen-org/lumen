@@ -15,26 +15,26 @@
 /*** common element style ***/
 
 .pl-h1 {
-    font-family: Roboto sans-serif;
+    font-family: Roboto, sans-serif;
     font-size: x-large;
     font-weight: lighter;
 }
 
 .pl-h2 {
-    font-family: Roboto sans-serif;
+    font-family: Roboto, sans-serif;
     font-size: smaller;
     font-weight: 400;
 }
 
 .pl-h3 {
-    font-family: Roboto sans-serif;
+    font-family: Roboto, sans-serif;
     font-size: x-small;
     font-weight: 400;
 }
 
 /* normal text */
 .pl-text {
-    font-family: Roboto sans-serif;
+    font-family: Roboto, sans-serif;
     font-weight: 400;
     font-size: 0.75rem;
     /* color: #6d6d6d; */
@@ -42,7 +42,7 @@
 
 /* labels, e.g to display a sliders value or description */
 .pl-label {
-    font-family: Roboto sans-serif;
+    font-family: Roboto, sans-serif;
     font-weight: 400;
     font-size: small;
     color: #515151;
