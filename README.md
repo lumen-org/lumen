@@ -1,16 +1,16 @@
 # README #
 
-Lumen is an interactive, visual web-application for exploration, comparision and validation of data and/or models derived from the data.
+Lumen is an interactive web-application for exploration, comparision and validation of data and/or models derived from the data.
 
 ### Setup ###
 
-Clone this repository into a folder <path> of your choice. If you simply want to run it, you are done. For a development setup see below.
+Clone this repository into a folder `<path>` of your choice. If you simply want to run it, you are done. For a development setup see below.
 
 ### Running it ###
 
 
-1. start your local backend, if not running already. Note that that Lumen is only the client but relies on a backend for storing and querying of data and models.
- This 'modelbase' must run at 'localhost:5000/webservice'. You can get it from [here](https://bitbucket.org/phlpp/modelbase).
+1. start the local backend, if not running already. Note that that Lumen is only the client but relies on a backend for storing and querying of data and models.
+ This 'modelbase' must run at 'localhost:5000/webservice'. You can get it from [here](https://github.com/lumen-org/modelbase).
 2. open `html/lumen.html` in your chrome browser.
 
 NOTE: currently only the chrome browser is supported!
@@ -21,12 +21,15 @@ NOTE: currently only the chrome browser is supported!
 3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
 4. Update npm (part of node-js): `sudo npm install -g npm`
 5. Install all npm-dependencies as provided by the projects `package.json`:
-    * run from `root` directory: `npm install`
-6. make sure you have the following packages installed (preferably) globally: TODO !?
+    * run from `<path>`: `npm install`
+6. make sure you have the following packages installed (preferably) globally:
+    * TODO !?
+
+------------
 
 ### Trouble Shooting ###
 
-#### When open the front-end I get the error message: "Could not load remote model from server!" ####
+#### When open lumen in my browser I get the error message: "Could not load remote model from server!" ####
  
  1. Confirm that the backend server actually running
  2. Check the developer console log of the browser where you are loading the front-end. If it shows something like:
@@ -44,6 +47,11 @@ NOTE: currently only the chrome browser is supported!
 #### I get the error message: "Could not load remote model 'XXXX' from server 'XXXX' !" ####
  1. Confirm that the backend server actually running
  2. Did the backend server load the particular model that you are trying to retrieve? Loaded models are listed in the terminal output of the backend server on its start up.
+
+#### Drag'n'Drop does not work! ####
+ * most likely you are not using Chrome ... Sorry, currently only Chrome is supported. 
+
+------------
 
 ### Contact ###
 
