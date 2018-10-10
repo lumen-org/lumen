@@ -18,7 +18,7 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3-collection', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings'],
+define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings'],
   function (Logger, d3c, PQL, VisMEL, ScaleGen, c) {
     "use strict";
 

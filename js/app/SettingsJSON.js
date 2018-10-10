@@ -22,7 +22,7 @@
  *    * DONE: make it hideable
  *       * .color is set at runtime dynamically. this should not be part of the settings object, since it is created at query time, instead of being an actual configuration setting
  **/
-define(['d3-scale-chromatic','d3-format', 'd3-color', './plotly-shapes', './SplitSample', './Domain', './ViewSettings', './utils'], function (d3chromatic, d3f, d3color, plotlyShapes, ss, Domain, viewSettings, utils) {
+define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shapes', './SplitSample', './Domain', './ViewSettings', './utils'], function (d3chromatic, d3f, d3color, plotlyShapes, ss, Domain, viewSettings, utils) {
   "use strict";
 
   // utility functions

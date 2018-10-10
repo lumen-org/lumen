@@ -4,7 +4,7 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4Traces'], function (Logger, d3c, d3, PQL, vismel2pql, V4T) {
+define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './VisMEL4Traces'], function (Logger, d3c, d3, PQL, vismel2pql, V4T) {
   "use strict";
 
   var logger = Logger.get('pl-ResultTable');

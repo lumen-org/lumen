@@ -1,4 +1,4 @@
-define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'd3-color'], function (Emitter, cytoscape, cola, d3color) {
+define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function (Emitter, cytoscape, cola, d3color) {
 
   cola(cytoscape); // register cola extension
 
