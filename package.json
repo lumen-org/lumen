@@ -32,7 +32,7 @@
   "scripts": {
     "test": "js/run-tests.js"
   },
-  "license": "(c) 2016-2018 Philipp Lucas, All Rights Reserved",
+  "license": "lgpl-3.0",
   "jshintConfig": {
     "globals": {
       "interact": false,
