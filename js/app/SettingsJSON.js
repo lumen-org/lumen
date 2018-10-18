@@ -900,13 +900,18 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       modelbase_subdomain: '/webservice',
     };
 
-    c.userStudy = {
-      enabled: true && (c.meta.activity_logging_mode !== "disabled"),
+    c.widget = {
+      graph: {
+        enable: false,  // enable or disable the graph widget
+      },
+      userStudy: {
+        enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
+      },
+      details: {
+        enabled: false,
+      }
     };
 
-    c.graphWidget = {
-      enable: true,  // enable or disable the graph widget
-    };
 
     return c;
   }
@@ -914,7 +919,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   function _addRefactorJSON(c) {
     c.views = { // TODO: rename to facets!
       aggregations: {
-        possible: true, // true iff the view should be made accessible to the user at all, false else
+        possible: false, // true iff the view should be made accessible to the user at all, false else
         active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
       data: {
@@ -922,16 +927,16 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       testData: {
-        possible: false,
+        possible: true,
         active: false,
       },
       marginals: {
         possible: true,
-        active: true,
+        active: false,
       },
       contour: {
         possible: true,
-        active: true,
+        active: false,
       },
       /*predictionOffset: {
         possible: false,
@@ -959,18 +964,22 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       details: {
-        active: true,
+        active: false,
       },
       graph: {
-        active: true,
-        graph: {active: true},
-        threshold: {active: false},
+        active: false,
+        graph: {
+          active: true
+        },
+        threshold: {
+          active: false
+        },
       },
       config: {
-        active: true,
+        active: false,
       },
       reloadmodels: {
-        active: true,
+        active: false,
       },
       modelselector: {
         active: true,

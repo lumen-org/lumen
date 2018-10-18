@@ -200,7 +200,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
       }
 
       /**
-       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is commited, if any of the calls to `update` has truthy commit flag.
+       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has truthy commit flag.
        *
        * Note that this function accesses the file scope, as it uses the infoBox variable.
        * @private
@@ -268,6 +268,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             .then(() => c._setBusyStatus('fetching facets'))
             .then(() => infoBox.hide())
             .then(() => Promise.all([
+                // query all facets in parallel
                 c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
                   data_category: 'training data',
@@ -278,8 +279,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap)]
-            ))
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap)
+              ]))
         } else {
           stages['update.facets'] = Promise.resolve();
         }
@@ -1540,11 +1541,15 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     swapper.$visual.appendTo($('#pl-layout-container'));
 
     // details view
-    let detailsView = new DetailsView();
-    detailsView.$visual.appendTo($('#pl-details-container'));
+    if (Settings.widget.details.enabled) {
+      let detailsView = new DetailsView();
+      detailsView.$visual.appendTo($('#pl-details-container'));
+    } else {
+      $('.pl-details').hide();
+    }
 
     // create survey widget
-    if (Settings.userStudy.enabled) {
+    if (Settings.widget.userStudy.enabled) {
       let surveyWidget = new SurveyWidget(
         $('#pl-survey-container'),
         newID  => {
@@ -1558,11 +1563,16 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         }
       );
       //surveyWidget.$visual.appendTo($('#pl-survey'));
+    } else {
+      $('#pl-survey').hide();
     }
+
+    if (!Settings.widget.userStudy.enabled && !Settings.widget.details.enabled)
+      $('.pl-layout-right').hide();
 
     // dependency graph widget
     let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-container'));
-    if (!Settings.graphWidget.enable) {
+    if (!Settings.widget.graph.enable) {
       $('.pl-layout-lower-left').hide();
       $('.pl-layout-upper-left').css('height', '95%');
     }
