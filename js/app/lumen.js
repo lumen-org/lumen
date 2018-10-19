@@ -21,7 +21,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     //const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
-    //const DEFAULT_SERVER_ADDRESS = 'http://:141.35.13.12:5000';  // static IP of http://lumen.inf-i2.uni-jena.de';
+    //const DEFAULT_SERVER_ADDRESS = 'http://141.35.13.12:5000';  // static IP of http://lumen.inf-i2.uni-jena.de';
     const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
     // const DEFAULT_SERVER_ADDRESS = 'http://lumen.inf-i2.uni-jena.de';
 
