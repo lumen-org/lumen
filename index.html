@@ -1,23 +1,133 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/html">
+<!-- Copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de) -->
+<!DOCTYPE HTML>
+<html class="no-js" lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
 <head lang="en">
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=html/lumen.html" />
-    <title>Project Template</title>
-    <script data-main="js/run-entry" src="js/lib/require.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Lumen - A Visual Exploration Interface for Data and Probability Distributions</title>
+
+    <!--Font Import -->
+    <!--<link href="https://fonts.googleapis.com/css?family=Roboto+Slab|Roboto:300" rel="stylesheet">-->
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:100,300,400,700|Roboto:300,400,400i,500,700" rel="stylesheet">
+
+    <!-- jquery -->
+    <script src="js/lib/jquery_2.1.3.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> -->
+
+    <!-- jquery ui: for resizable-->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- underscore js -->
+    <script src="js/lib/underscore_1.8.3.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>-->
+
+    <!-- plotly.js -->
+    <script src="js/lib/plotly-latest.min.js"></script>
+    <!--<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>-->
+
+    <!-- jsoneditor.js -->
+    <script src="js/lib/jsoneditor.min.js"></script>
+
+    <!-- custom styling -->
+    <link rel="stylesheet" type="text/css" href="css/lumen.css">
+
+    <!-- require.js
+    Note that the 'data-main' attribute specifies the run configuration for require js!!  -->
+    <script data-main="js/run-lumen.js" src="js/lib/require.min.js"></script>
 </head>
 
 <body>
 
-<article>
-    <h2>Lumen</h2>
-    <a href="html/lumen.html"> Lumen</a> - A Visual Exploration Interface for Data and Probability Distributions
-</article>
+<!-- top navigation bar -->
+<nav id="header-bar" class="top-bar" data-topbar>
+    <ul class="title-area">
+        <!--<li class="name"><h1><a href="#">A Visual Interface for Exploring Multivariate Probability Distributions</a></h1><h2><a href="#">Philipp Lucas and Joachim Giesen</a></h2></li>-->
+		<li class="name"><h1><a href="#">A Visual Interface for Exploring Multivariate Probability Distributions</a></h1></li>
+        <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+    </ul>
+    <section class="top-bar-section"> <!-- Right Nav Section -->
+        <ul class="right">
+            <li class="has-dropdown active">
+                <a href="#">Settings</a>
+                <ul class="dropdown">
+                    <li><a href="#">First link in dropdown</a></li>
+                    <li class="active"><a href="#">Active link in dropdown</a></li>
+                </ul>
+            </li>
+            <!--<li class="has-dropdown active">
+                <a href="#">Links</a>
+                <ul class="dropdown">
+                    <li><a href="http://wiki.inf-i2.uni-jena.de/doku.php?id=emv">Our Wiki</a></li>
+                    <li><a href="http://foundation.zurb.com/docs/">Foundation Doc</a></li>
+                    <li><a href="http://foundation.zurb.com/docs/components/kitchen_sink.html">Foundation Sink</a></li>
+                </ul>
+            </li>-->
+        </ul>
+    </section>
+</nav>
 
-<article>
-    <h2>About</h2>
-    <a href="https://github.com/lumen-dev">Here</a> you can find more information about this project.
-</article>
+<!-- main content -->
+<div id="pl-toolbar__container">
+
+</div>
+<main>
+    <div class="pl-layout-left">
+        <div class="pl-layout-upper-left">
+            <div class="pl-column pl-schema">
+                <div class="pl-h1 pl-column__title">Schema</div>
+                <div class="pl-column__content" id="pl-model-container"> </div>
+            </div>
+            <div class="pl-column pl-spec">
+                <div class="pl-h1 pl-column__title">Specification</div>
+                <div class="pl-column__content pl-spec-container">
+                    <div id="pl-layout-container"></div>
+                    <div id="pl-mappings-container"></div>
+                    <div id="pl-facet-container"></div>
+                </div>
+            </div>
+        </div>
+        <!--<div id="pl-mid"></div>-->
+        <div class="pl-layout-lower-left">
+            <div class="pl-column pl-graph">
+                <div class="pl-h1 pl-column__title">Dependency Graph</div>
+                <div class="pl-column__content" id="pl-graph-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pl-layout-middle-left">
+        <div class="pl-column pl-config" style="display:none;">
+            <div class="pl-h1 pl-column__title">Configuration</div>
+            <div class="pl-column__content" id="pl-config-container"> </div>
+        </div>
+    </div>
+
+    <div class="pl-column pl-dashboard">
+        <div class="pl-h1 pl-column__title">Dash Board</div>
+        <div class="pl-column__content" id="pl-dashboard__container"></div>
+    </div>
+
+    <div class="pl-layout-right">
+        <div class='pl-column' id='pl-survey'>
+            <div class="pl-h1 pl-column__title">User Study</div>
+            <div class="pl-column__content" id="pl-survey-container"></div>
+        </div>
+        <div class="pl-column pl-details">
+            <div class="pl-h1 pl-column__title">Details</div>
+            <div class="pl-column__content" id="pl-details-container"> </div>
+        </div>
+    </div>
+
+
+    <div id="pl-playground">
+        <img src="icons/close.svg" alt="close">
+    </div>
+    <!--<div id="pl-playground2" class="pl-fu--filter__popUp"></div>-->
+</main>
 
 </body>
+
 </html>
