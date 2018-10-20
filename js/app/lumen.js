@@ -537,19 +537,29 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             }
           });
 
+        $vis.__is_dragging = false;
         $vis.draggable(
           { stop:
-              (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move'),
+              (event, ui) => {
+                  ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
+              },
             handle: '.pl-visualization__pane',
+            start: (ev, ui) => {
+                $vis.__is_dragging = true; // 
+            },
+    
             drag: (ev, ui) => {
               // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
               // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
-              if (ev.toElement && ev.toElement.className === 'dragcover')
-                // this used to work for chrome
-               return false;
-              if (ev.originalEvent.target.getAttribute('class').includes('drag'))
-               // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
-               return false;              
+              if (ev.toElement && ev.toElement.className === 'dragcover') {
+                  return false;
+              }
+              // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
+              // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it 
+              else if (ev.originalEvent.target.getAttribute('class').includes('drag') && $vis.__is_dragging) {
+                  return false;
+              } 
+              $vis.__is_dragging = false;
             }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
@@ -569,7 +579,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
-        shelves.detail.beVisual({label: 'Details'}).beInteractable();
+        // PL: SIGMOD: shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
         shelves.shape.beVisual({label: 'Shape'}).beInteractable();
@@ -586,7 +596,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+          shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: shelves.detail.$visual, $('<hr>'),*/  shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
@@ -1507,7 +1517,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // set context in singelton widgets
         toolbar.setContext(context);
         swapper.setContext(context);
-        detailsView.setContext(context);
+        if (detailsView)
+            detailsView.setContext(context);
         graphWidgetManager.setContext(context);
 
         // emit signal from the new context, that the new context is now active
@@ -1543,8 +1554,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     swapper.$visual.appendTo($('#pl-layout-container'));
 
     // details view
+    let detailsView = undefined;
     if (Settings.widget.details.enabled) {
-      let detailsView = new DetailsView();
+      detailsView = new DetailsView();
       detailsView.$visual.appendTo($('#pl-details-container'));
     } else {
       $('.pl-details').hide();
