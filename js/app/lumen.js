@@ -536,19 +536,29 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             }
           });
 
+        $vis.__is_dragging = false;
         $vis.draggable(
           { stop:
-              (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move'),
+              (event, ui) => {
+                  ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
+              },
             handle: '.pl-visualization__pane',
+            start: (ev, ui) => {
+                $vis.__is_dragging = true; // 
+            },
+    
             drag: (ev, ui) => {
               // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
               // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
-              if (ev.toElement && ev.toElement.className === 'dragcover')
-                // this used to work for chrome
-               return false;
-              if (ev.originalEvent.target.getAttribute('class').includes('drag'))
-               // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
-               return false;              
+              if (ev.toElement && ev.toElement.className === 'dragcover') {
+                  return false;
+              }
+              // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
+              // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it 
+              else if (ev.originalEvent.target.getAttribute('class').includes('drag') && $vis.__is_dragging) {
+                  return false;
+              } 
+              $vis.__is_dragging = false;
             }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
