@@ -568,7 +568,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
-        shelves.detail.beVisual({label: 'Details'}).beInteractable();
+        // PL: SIGMOD: shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
         shelves.shape.beVisual({label: 'Shape'}).beInteractable();
@@ -585,7 +585,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+          shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: shelves.detail.$visual, $('<hr>'),*/  shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
@@ -1506,7 +1506,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // set context in singelton widgets
         toolbar.setContext(context);
         swapper.setContext(context);
-        detailsView.setContext(context);
+        if (detailsView)
+            detailsView.setContext(context);
         graphWidgetManager.setContext(context);
 
         // emit signal from the new context, that the new context is now active
@@ -1542,8 +1543,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     swapper.$visual.appendTo($('#pl-layout-container'));
 
     // details view
+    let detailsView = undefined;
     if (Settings.widget.details.enabled) {
-      let detailsView = new DetailsView();
+      detailsView = new DetailsView();
       detailsView.$visual.appendTo($('#pl-details-container'));
     } else {
       $('.pl-details').hide();
