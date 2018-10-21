@@ -919,7 +919,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   function _addRefactorJSON(c) {
     c.views = { // TODO: rename to facets!
       aggregations: {
-        possible: false, // true iff the view should be made accessible to the user at all, false else
+        possible: true, // true iff the view should be made accessible to the user at all, false else
         active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
       data: {
