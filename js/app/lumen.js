@@ -16,9 +16,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     'use strict';
 
     // the default model to be loaded on startup
-    //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'mcg_allbus_map';
-    //const DEFAULT_MODEL = 'emp_titanic';
+    // const DEFAULT_MODEL = 'Auto_MPG';
+    // const DEFAULT_MODEL = 'mcg_allbus_map';
+    const DEFAULT_MODEL = 'emp_titanic';
 
     // the default model server
     const DEFAULT_SERVER_ADDRESS = 'https://modelvalidation.mooo.com:8080';
@@ -30,9 +30,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-        // drop(shelves.column, shelves.dim.at(0));
-        // drop(shelves.column, shelves.meas.at(1));
-        // drop(shelves.filter, shelves.dim.at(0));
+        drop(shelves.column, shelves.meas.at(0));
+        drop(shelves.row, shelves.meas.at(1));
+        drop(shelves.color, shelves.dim.at(1));
     }
 
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
