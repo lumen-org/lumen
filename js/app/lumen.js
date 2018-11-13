@@ -23,6 +23,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     // the default model server
     const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
     // const DEFAULT_SERVER_ADDRESS = 'http://lumen.inf-i2.uni-jena.de';
+    // const DEFAULT_SERVER_ADDRESS = 'http://modelevaluation.mooo.com';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query

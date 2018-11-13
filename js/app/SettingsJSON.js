@@ -112,8 +112,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
-    resolution_1d: 20,
-    resolution_2d: 20,
+    resolution_1d: 25,
+    resolution_2d: 25,
     opacity: 0.5,
     levels: 12,
     splitCnts: {
@@ -964,7 +964,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       details: {
-        active: false,
+        active: true,
       },
       graph: {
         active: false,
@@ -976,7 +976,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         },
       },
       config: {
-        active: false,
+        active: true,
       },
       reloadmodels: {
         active: false,
