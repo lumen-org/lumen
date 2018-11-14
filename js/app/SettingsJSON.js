@@ -902,7 +902,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     c.widget = {
       graph: {
-        enable: false,  // enable or disable the graph widget
+        enable: true,  // enable or disable the graph widget
       },
       userStudy: {
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
@@ -932,7 +932,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       },
       marginals: {
         possible: true,
-        active: false,
+        active: true,
       },
       contour: {
         possible: true,
@@ -955,10 +955,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       undo: {
-        active: true,
+        active: false,
       },
       redo: {
-        active: true,
+        active: false,
       },
       clear: {
         active: true,
@@ -967,7 +967,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       graph: {
-        active: false,
+        active: true,
         graph: {
           active: true
         },
@@ -979,7 +979,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       reloadmodels: {
-        active: false,
+        active: true,
       },
       modelselector: {
         active: true,

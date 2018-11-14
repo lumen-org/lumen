@@ -75,13 +75,13 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
    * @return {string}
    */
   function icon (iconName) {
-    return `<img class="pl-icon pl-icon--${iconName}$" alt="${iconName}" src="../icons/${iconName}.svg">`
+    return `<img class="pl-icon pl-icon--${iconName}$" alt="${iconName}" src="./images/${iconName}.svg">`
   }
 
   /**
    * Return a new button as a jQuery selection.
    * @param label The label of the button.
-   * @param iconName The name of the icon to use for the button. Must be available as <iconName>.svg under '../icons'.
+   * @param iconName The name of the icon to use for the button. Must be available as <iconName>.svg under './images'.
    * @return {jQuery}
    */
   function button (label, iconName) {
@@ -91,7 +91,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
   }
 
   function removeButton () {
-    return $('<img class="pl-button pl-remove-button pl-icon pl-icon__close pl-hidden" alt="close" src="../icons/close.svg">');
+    return $('<img class="pl-button pl-remove-button pl-icon pl-icon__close pl-hidden" alt="close" src="./images/close.svg">');
   }
 
   function head (fu, opts={}) {
@@ -207,13 +207,13 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
         fu = isBaseMap ? content.fu : content;
       let src, altText, handler, oldCssClass, newCssClass;
       if (PQL.isSplit(fu)) {
-        src = '../icons/split.svg';
+        src = './images/split.svg';
         altText = 'Sp';
         handler = () => translate(record, PQL.Aggregation);
         oldCssClass = 'pl-conversion-widget__button--split';
         newCssClass = 'pl-conversion-widget__button--aggregation';
       } else if (PQL.isAggregation(fu)) {
-        src = '../icons/aggregate.svg';
+        src = './images/aggregate.svg';
         altText = 'Aggr';
         handler = () => translate(record, PQL.Split);
         oldCssClass = 'pl-conversion-widget__button--aggregation';

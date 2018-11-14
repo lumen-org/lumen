@@ -11,27 +11,17 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
-
-    // the default model to be loaded on startup
-    //const DEFAULT_MODEL = 'Auto_MPG';
-    const DEFAULT_MODEL = 'mcg_allbus_map';
-    //const DEFAULT_MODEL = 'emp_titanic';
-
-    // the default model server
-    const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
-    // const DEFAULT_SERVER_ADDRESS = 'http://lumen.inf-i2.uni-jena.de';
-    // const DEFAULT_SERVER_ADDRESS = 'http://modelevaluation.mooo.com';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
     function initialQuerySetup(shelves) {
-        // drop(shelves.column, shelves.dim.at(0));
-        // drop(shelves.column, shelves.meas.at(1));
-        // drop(shelves.filter, shelves.dim.at(0));
+        drop(shelves.column, shelves.meas.at(0));
+        drop(shelves.row, shelves.meas.at(1));
+        drop(shelves.color, shelves.dim.at(1));
     }
 
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
@@ -536,19 +526,29 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
             }
           });
 
+        $vis.__is_dragging = false;
         $vis.draggable(
           { stop:
-              (event, ui) => ActivityLogger.log({'context': context.getNameAndUUID()}, 'move'),
+              (event, ui) => {
+                  ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
+              },
             handle: '.pl-visualization__pane',
+            start: (ev, ui) => {
+                $vis.__is_dragging = true; // 
+            },
+    
             drag: (ev, ui) => {
               // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
               // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
-              if (ev.toElement && ev.toElement.className === 'dragcover')
-                // this used to work for chrome
-               return false;
-              if (ev.originalEvent.target.getAttribute('class').includes('drag'))
-               // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
-               return false;              
+              if (ev.toElement && ev.toElement.className === 'dragcover') {
+                  return false;
+              }
+              // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
+              // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it 
+              else if (ev.originalEvent.target.getAttribute('class').includes('drag') && $vis.__is_dragging) {
+                  return false;
+              } 
+              $vis.__is_dragging = false;
             }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
@@ -568,6 +568,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
+        // PL: SIGMOD: commend next line
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
@@ -585,7 +586,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'), shelves.color.$visual,
+          shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: comment next 2(!) items */ shelves.detail.$visual, $('<hr>'),  shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
@@ -727,7 +728,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       _loadModel (modelName) {
         // create new context and visualization with that model if it exists
-        let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
+        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
         contextQueue.add(context);
 
         // fetch model
@@ -1506,7 +1507,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         // set context in singelton widgets
         toolbar.setContext(context);
         swapper.setContext(context);
-        detailsView.setContext(context);
+        if (detailsView)
+            detailsView.setContext(context);
         graphWidgetManager.setContext(context);
 
         // emit signal from the new context, that the new context is now active
@@ -1525,7 +1527,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // activity logger
     ActivityLogger.logPath(Settings.meta.activity_logging_filename);
-    ActivityLogger.logServerUrl(DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
+    ActivityLogger.logServerUrl(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
     ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
     ActivityLogger.mode(Settings.meta.activity_logging_mode);
 
@@ -1542,8 +1544,9 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
     swapper.$visual.appendTo($('#pl-layout-container'));
 
     // details view
+    let detailsView = undefined;
     if (Settings.widget.details.enabled) {
-      let detailsView = new DetailsView();
+      detailsView = new DetailsView();
       detailsView.$visual.appendTo($('#pl-details-container'));
     } else {
       $('.pl-details').hide();
@@ -1603,7 +1606,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       start: function () {
         // create initial context with model
-        let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, DEFAULT_MODEL).makeGUI();
+        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);
 
         // fetch model
