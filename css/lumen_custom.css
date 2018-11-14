@@ -1,17 +1,17 @@
 
 /* these modification are for anonymous submission to SIGMOD2019 */
 
-/*.pl-layout-right {*/
-  /*!*  original: display: flex; *!*/
-  /*display: none;*/
-/*}*/
+.pl-layout-right {
+  /*  original: display: flex; */
+  display: none;
+}
 
-/*.pl-graph {*/
-  /*!*  original: display: flex; *!*/
-  /*display: none;*/
-/*}*/
+.pl-graph {
+  /*  original: display: flex; */
+  display: none;
+}
 
-/*.pl-conversion-widget {*/
-  /*!*  original: display: flex; *!*/
-  /*display: none;*/
-/*}*/
+.pl-conversion-widget {
+  /*  original: display: flex; */
+  display: none;
+}
