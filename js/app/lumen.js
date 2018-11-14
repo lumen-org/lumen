@@ -11,20 +11,9 @@
  * @author Philipp Lucas
  */
 
-define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
-
-    // the default model to be loaded on startup
-    // const DEFAULT_MODEL = 'Auto_MPG';
-    // const DEFAULT_MODEL = 'mcg_allbus_map';
-    const DEFAULT_MODEL = 'emp_titanic';
-
-    // the default model server
-    const DEFAULT_SERVER_ADDRESS = 'https://modelvalidation.mooo.com:8080';
-    // const DEFAULT_SERVER_ADDRESS = 'https://141.35.13.12:5000';  // static IP of http://lumen.inf-i2.uni-jena.de';
-    //const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:5000';
-    //const DEFAULT_SERVER_ADDRESS = 'http://lumen.inf-i2.uni-jena.de';
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -579,7 +568,8 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
         //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
-        // PL: SIGMOD: shelves.detail.beVisual({label: 'Details'}).beInteractable();
+        // PL: SIGMOD: commend next line
+        shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
         shelves.shape.beVisual({label: 'Shape'}).beInteractable();
@@ -596,7 +586,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: shelves.detail.$visual, $('<hr>'),*/  shelves.color.$visual,
+          shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: comment next 2(!) items */ shelves.detail.$visual, $('<hr>'),  shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
@@ -738,7 +728,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       _loadModel (modelName) {
         // create new context and visualization with that model if it exists
-        let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
+        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, modelName).makeGUI();
         contextQueue.add(context);
 
         // fetch model
@@ -1537,7 +1527,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
 
     // activity logger
     ActivityLogger.logPath(Settings.meta.activity_logging_filename);
-    ActivityLogger.logServerUrl(DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
+    ActivityLogger.logServerUrl(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
     ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
     ActivityLogger.mode(Settings.meta.activity_logging_mode);
 
@@ -1616,7 +1606,7 @@ define(['lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDr
        */
       start: function () {
         // create initial context with model
-        let context = new Context(DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, DEFAULT_MODEL).makeGUI();
+        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);
 
         // fetch model

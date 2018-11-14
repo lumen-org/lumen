@@ -145,8 +145,7 @@ body {
 }
 
 .pl-layout-right {
-    /*  PL: SIGMOD: display: flex; */
-    display: none;
+    display: flex;
     flex-direction: column;
 }
 
@@ -333,8 +332,7 @@ body {
 .pl-graph {
     min-height: 400px;
     /*flex-grow: 1;*/
-    /*  PL: SIGMOD: display: flex; */
-    display: none;
+    display: flex;
     flex-direction: column;
 }
 
@@ -655,8 +653,7 @@ textarea.pl-survey__content {
 
 .pl-conversion-widget {
     margin: 0 0.1rem;
-    /*  PL: SIGMOD: display: flex; */
-    display: none;
+    display: flex;
     align-items: center;
     height: inherit;
     /* width: 32px; */

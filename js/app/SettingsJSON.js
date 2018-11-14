@@ -902,7 +902,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     c.widget = {
       graph: {
-        enable: false,  // enable or disable the graph widget
+        enable: true,  // enable or disable the graph widget
       },
       userStudy: {
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
@@ -919,7 +919,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   function _addRefactorJSON(c) {
     c.views = { // TODO: rename to facets!
       aggregations: {
-        possible: false, // true iff the view should be made accessible to the user at all, false else
+        possible: true, // true iff the view should be made accessible to the user at all, false else
         active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
       data: {
@@ -949,7 +949,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     c.toolbar = {
       query: {
-        active: false,
+        active: true,
       },
       clone: {
         active: true,
@@ -964,10 +964,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       details: {
-        active: false,
+        active: true,
       },
       graph: {
-        active: false,
+        active: true,
         graph: {
           active: true
         },
@@ -976,10 +976,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         },
       },
       config: {
-        active: false,
+        active: true,
       },
       reloadmodels: {
-        active: false,
+        active: true,
       },
       modelselector: {
         active: true,
