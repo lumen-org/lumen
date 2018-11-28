@@ -1,20 +1,10 @@
 # README #
 
-Lumen is an interactive web-application for exploration, comparision and validation of data and/or models derived from the data.
+`lumen` is an interactive web-application for exploration, comparision and validation of data and/or machine learning models derived from the data.
 
-## Content ##
+It is part of the (equally named) [Lumen project](https://github.com/lumen-org/) which consists of two parts: the back-end [modelbase](https://github.com/lumen-org/modelbase) and (this one) the front-end [lumen](https://github.com/lumen-org/lumen).
 
-## Repository Overview ##
-
-## The Lumen Project ##
-
-
-
-
-
-
-
-
+There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/).
 
 ## Setup and Configuration 
 
