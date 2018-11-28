@@ -2,20 +2,83 @@
 
 Lumen is an interactive web-application for exploration, comparision and validation of data and/or models derived from the data.
 
-### Setup ###
+## Content ##
+
+## Repository Overview ##
+
+## The Lumen Project ##
+
+
+
+
+
+
+
+
+
+## Setup and Configuration 
+
+This explains how to get and configure `lumen` and it's dependencies.
+
+### Requirements
+
+* `lumen` is a webfrontend (web application) that requires access to a webservice instance of the `modelbase` backend. `lumen` allows a user to interactively compile queries and visualize the queries results, while `modelbase` does the heavy computation and actually answers the queries. You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
+
+* *`lumen` and `modelbase` need to be configured correctly with 'matching' settings*: 
+  * hostname set in `lumen` must match the actual hostname of `modelbase` 
+  * port must match
+  * protocol must match (http or https)
+
+* In order to do anything useful the backend needs to host the models that you want to explore. This is configured in `modelbase`
+
+### Get it
 
 Clone this repository into a folder `<path>` of your choice. If you simply want to run it, you are done. For a development setup see below.
 
-### Running it ###
+**Updating it** 
+
+Just pull the branch/verion you'd like.
+
+### Configuring `lumen`
+
+For configuration of `modelbase` see its documentation.
+
+`lumen` requires a configuration file `run.conf.js` which is *NOT* part of the repository. In the future this file will probably be created automatically, but at the moment you have to do it manually. Adapt and save this in a new file under `<path>/run.conf.js`:
+  
+    define([], function () {
+    
+      // the model to be loaded on startup of the page
+      /* this name must match the name of the model that the backend loaded */
+      const DEFAULT_MODEL = 'mcg_iris_map';
+    
+      // the model server to use for PQL queries
+      /* Make sure that all aspects are correct:
+      
+           <protocol>://<ip/hostname>:<port>/<directory>
+      
+           * hostname/ip: e.g. 127.0.0.1
+           * protocol: https or http ??
+           * port: e.g. 8080
+           * directory on host (if any)
+       */  
+      const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:52104';
+    
+      return {
+        DEFAULT_MODEL,
+        DEFAULT_SERVER_ADDRESS
+      }
+    });
+
+### Using it
+
+ * make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore.
+ 
+Open `<path>/index.html` in your browser. Using chrome is recommended, since it - by far - provides the best performance. 
 
 
-1. start the local backend, if not running already. Note that that Lumen is only the client but relies on a backend for storing and querying of data and models.
- This 'modelbase' must run at 'localhost:5000/webservice'. You can get it from [here](https://github.com/lumen-org/modelbase).
-2. open `html/lumen.html` in your chrome browser.
+---
 
-NOTE: currently only the chrome browser is supported!
-
-### Development Setup ###
+## Development Setup ###
 1. Do the steps as described in the Setup section above.
 2. recommended IDE is [WebStorm](https://www.jetbrains.com/webstorm/download/)
 3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
@@ -25,7 +88,7 @@ NOTE: currently only the chrome browser is supported!
 6. make sure you have the following packages installed (preferably) globally:
     * TODO !?
 
-------------
+---
 
 ### Trouble Shooting ###
 
@@ -45,21 +108,18 @@ NOTE: currently only the chrome browser is supported!
  
 
 #### I get the error message: "Could not load remote model 'XXXX' from server 'XXXX' !" ####
- 1. Confirm that the backend server actually running
+ 1. Confirm that the backend server is actually running
  2. Did the backend server load the particular model that you are trying to retrieve? Loaded models are listed in the terminal output of the backend server on its start up.
-
-#### Drag'n'Drop does not work! ####
- * most likely you are not using Chrome ... Sorry, currently only Chrome is supported. 
 
 ------------
 
 ### Contact ###
 
-For any questions, feedback, bug reports, feature requests, spam, etc please contact: [philipp.lucas@uni-jena.de](philipp.lucas@uni-jena.de).
+For any questions, feedback, bug reports, feature requests, spam, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de).
 
 ### Copyright and Licence ###
 
-© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de)
+© 2016-2018 Philipp Lucas (philipp.lucas@dlr.de)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
