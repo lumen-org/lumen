@@ -33,7 +33,7 @@ Just pull the branch/verion you'd like.
 
 For configuration of `modelbase` see its documentation.
 
-`lumen` requires a configuration file `run.conf.js` which is *NOT* part of the repository. In the future this file will probably be created automatically, but at the moment you have to do it manually. Adapt and save this in a new file under `<path>/run.conf.js`:
+`lumen` requires a configuration file `run.conf.js` which is *NOT* part of the repository. In the future this file will probably be created automatically, but at the moment you have to do it manually. Adapt and save this in a new file under `<path>/js/run.conf.js`:
   
     define([], function () {
     
