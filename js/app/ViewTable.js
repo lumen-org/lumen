@@ -880,8 +880,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
       // add 'global' layout options
       Object.assign(layout, {
-        title: "",
-        //title: "Model: " + query.sources[0].name,
+        //title: "",
+        title: vismel.sources[0].name,
         barmode: 'group',
         bargroupgap: 0.05,
         margin: config.plots.layout.margin,
@@ -956,7 +956,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         let axesSyncManager = this.axesSyncManager;
 
         // create global extent (i.e. across all result collections as far as it makes sense!)
-        // globalExtent is a Map that maps of FieldUsages to their extents
+        // globalExtent is a Map that maps FieldUsages to their extents
         let globalExtent = getGlobalExtent(facets);
         // generate yield-based extents from it
         let yieldExtent = getYieldExtent(globalExtent);

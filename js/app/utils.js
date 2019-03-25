@@ -190,6 +190,29 @@ define([], function() {
     return target;
   }
 
+  /**
+   * Triggers client-side download of data.
+   *
+   * @param filename The name of the file to download.
+   * @param data The data download to the client.
+   * @param type optional. The MIME type. Defaults to 'text/csv'.
+   */
+  function download(filename, data, type='text/csv') {
+    // from: https://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
+    var blob = new Blob([data], {type: type});
+    if(window.navigator.msSaveOrOpenBlob) {
+      window.navigator.msSaveBlob(blob, filename);
+    }
+    else{
+      var elem = window.document.createElement('a');
+      elem.href = window.URL.createObjectURL(blob);
+      elem.download = filename;
+      document.body.appendChild(elem);
+      elem.click();
+      document.body.removeChild(elem);
+    }
+  }
+
   return {
     selectValue,
     listify,
@@ -202,5 +225,6 @@ define([], function() {
     uuid,
     todayString,
     assignWithFilter,
+    download,
   };
 });

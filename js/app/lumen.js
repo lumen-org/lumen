@@ -11,9 +11,12 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
+
+    var logger = Logger.get('pl-lumen-main');
+    logger.setLevel(Logger.DEBUG);
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -74,7 +77,7 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
         let that = this;
         setTimeout( () => {
             that.hide()
-        }, 3500);
+        }, timeout);
       }
 
       get $visual () {
@@ -85,8 +88,9 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
 
     class Context {
       /**
-       * Creates an new context. If no parameters are given, the context is empty.
-       * However, you can also specify the server, or the server and the modelName, or the server, the model name and existing shelves for these.
+       * Creates a new context. If no parameters are given, the context is empty.
+       * However, you can also specify the server, or the server and the modelName,
+       * or the server, the model name and existing shelves for these.
        *
        * Note that the context is not immediately visual when instantiated. Call this.makeGUI for that.
        *
@@ -260,7 +264,7 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
             .then(() => infoBox.hide())
             .then(() => Promise.all([
                 // query all facets in parallel
-                c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),              ,
                 c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
@@ -330,7 +334,9 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
               facet.fetchedData = res;
               facet.data = res;
               facet.fetchState = 'fetched';
-              return res;
+              //return res;
+              logger.debug(`fetched facet: ${facetName}`)
+              return Promise.resolve()
             });
         else if (facet.active && facet.fetchState === 'fetched') {
           facet.data = facet.fetchedData;
@@ -828,9 +834,25 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
      */
     class DetailsView {
       constructor (context) {
+
+        function download_facet_data(facetName) {
+          let facet = that._context.facets[facetName];
+          if (!facet.active)
+            return; // abort
+          let data = facet.data[0][0];  // default to data of facet with index [0,0]
+          let header = data.header;
+          utils.download(facetName + ".csv", [header].concat(data).join("\n"), 'text/csv');
+        }
+
+        let that = this;
         this._$modelInfo = $('<div class="pl-text pl-details__body">'); // pl-details-model
         this._$queryInfo = $('<div class="pl-text pl-details__body">'); // pl-details-query
-        this._$resultInfo = $('<div class="pl-text pl-details__body">'); // pl-details-result
+        this._$resultInfo = $('<div class="pl-text pl-details__body">');
+        for (let facetName of _facetNames) {
+          let $facet_download = $(`<div class="pl-details__body pl-button">extract ${_facetNameMap[facetName]} facet</div>`)
+              .click(() => download_facet_data(facetName));
+          this._$resultInfo.append($facet_download)
+        }
 
         this.$visual = $('<div class>')
           .append('<div class="pl-h2 pl-details__heading">Model</div>')
@@ -840,6 +862,7 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
           .append('<div class="pl-h2 pl-details__heading">Result</div>')
           .append(this._$resultInfo);
 
+        this._context = undefined;
         if(context !== undefined) {
           this.setContext(context);
           this.update();
@@ -862,6 +885,7 @@ define(['../run.conf', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', '
 
       updateResultInfo() {
         // TODO
+        // i want a button each that downloads the data facet and density/contour facet results
       }
 
       updateModelInfo () {

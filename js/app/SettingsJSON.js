@@ -908,7 +908,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
       },
       details: {
-        enabled: false,
+        enabled: true,
       }
     };
 
