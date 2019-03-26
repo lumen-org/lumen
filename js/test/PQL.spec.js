@@ -1,6 +1,6 @@
 /**
  * @author Philipp Lucas
- * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2016-2019 Philipp Lucas (philipp.lucas@uni-jena.de. philipp.lucas@dlr.de)
  */
 define( ['app/RemoteModelling', 'app/PQL'], function (Remote, PQL) {
   "use strict";

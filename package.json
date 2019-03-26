@@ -1,10 +1,11 @@
 {
   "name": "Lumen",
-  "version": "0.9",
+  "version": 0,
+  "subversion": 9,
   "description": "A Visual Exploration Interface for Data and Probability Distributions",
   "author": {
     "name": "Philipp Lucas",
-    "email": "philipp.lucas@uni-jena.de"
+    "email": "philipp.lucas@dlr.de"
   },
   "repository": {
     "type": "git",
