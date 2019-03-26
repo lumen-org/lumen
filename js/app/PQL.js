@@ -54,6 +54,14 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
   var logger = Logger.get('pl-PQL');
   logger.setLevel(Logger.DEBUG);
 
+
+  function getFieldFromModel(name, model) {
+    let field = model.fields.get(jsonObj.name);
+    if (field === undefined)
+      throw `field with name ${jsonObj.name} is not in model.`;
+  }
+
+
   /**
    * Type definitions of a Field.
    * @type {{Type: {string: string, num: string}, Role: {measure: string, dimension: string}, Kind: {cont: string, discrete: string}}}
@@ -116,6 +124,22 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
         dataType: this.dataType,
         model: this.model.name,
       }
+    }
+
+    static
+    fromJSON (jsonObj, model) {
+      if (jsonObj.class !== 'Field')
+        throw `json object is not a Field, as it's 'class' attribute has value ${jsonObj.class}`;
+
+      if (jsonObj.model !== model.name)
+        throw "name of model of field in JSON and of reference model do not match.";
+
+      field = getFieldFromModel(jsonObj.name, model);
+
+      if (field.dataType !== jsonObj.dataType)
+        throw  `data types of field in json (${jsonObj.dataType}) and model (${field.dataType}) do not match.`;
+
+      return field;
     }
 
   }
@@ -216,6 +240,14 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       };
     }
 
+    static
+    FromJSON (jsonObj, model) {
+      if (jsonObj.class !== 'Filter')
+        throw `json object is not a Filter, as its 'class' attribute has value ${jsonObj.class}`;
+      let field = getFieldFromModel(jsonObj.name, model);
+      return new Filter(field, jsonObj.operator, jsonObj.value);
+    }
+
     toString() {
       return "FILTER: " + this.field.name + " " + this.method + " " + this.args;
     }
@@ -291,7 +323,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
      * @returns {Split}
      * @constructor
      */
-    static DefaultSplit (field, mode = "layout") {
+    static
+    DefaultSplit (field, mode = "layout") {
       // TODO: move to settings.
       let split_cnt = config.tweaks.splitCnts[mode];
       if (field.dataType === FieldT.DataType.string)
@@ -302,13 +335,22 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
         throw new RangeError("invalid data type");
     }
 
-    static toJSON (a) {
+    static
+    toJSON (a) {
       return {
         name: a.name,
         split: a.method,
         args: a.args,
         class: 'Split',
       };
+    }
+
+    static
+    FromJSON (jsonObj, model) {
+      if (jsonObj.class !== 'Split')
+        throw `json object is not a Split, as its 'class' attribute has value ${jsonObj.class}`;
+      let field = getFieldFromModel(jsonObj.name, model);
+      return new Split(field, jsonObj.split, jsonObj.args);
     }
   }
 
@@ -328,12 +370,14 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       this.args = args;
     }
 
-    static DefaultAggregation (fields) {
+    static
+    DefaultAggregation (fields) {
       fields = utils.listify(fields);
       return new Aggregation(fields, AggregationMethods.argmax, fields[0].name);
     }
 
-    static FromFieldUsage (fu) {
+    static
+    FromFieldUsage (fu) {
       if (isSplit(fu) || isFilter(fu))
         return Aggregation.DefaultAggregation(fu.field);
       else if (isAggregation(fu) || isDensity(fu))
@@ -362,7 +406,16 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return new Aggregation(this.fields.map(field => field.copy()), this.method, this.yields, this.args);
     }
 
-    static toJSON (a) {
+    static
+    FromJSON (jsonObj, model) {
+      if (jsonObj.class !== 'Aggregation')
+        throw `json object is not a Aggregation, as its 'class' attribute has value ${jsonObj.class}`;
+      let fields = jsonObj.name.map( name => getFieldFromModel(name, model));
+      return new Aggregation(fields, jsonObj.aggregation, jsonObj.yields, jsonObj.args);
+    }
+
+    static
+    toJSON (a) {
       return {
         name: a.names.sort(),
         aggregation: a.method,
@@ -404,7 +457,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return new Density(this.fields.map(field => field.copy()));
     }
 
-    static toJSON(d) {
+    static
+    toJSON(d) {
       return {
         name: d.names.sort(),
         aggregation: d.method,
@@ -413,7 +467,16 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       };
     }
 
-    static FromFieldUsage (fu) {
+    static
+    FromJSON (jsonObj, model) {
+      if (jsonObj.class !== 'Density')
+        throw `json object is not a Density, as its 'class' attribute has value ${jsonObj.class}`;
+      let fields = jsonObj.name.map( name => getFieldFromModel(name, model));
+      return new Density(fields, jsonObj.aggregation);
+    }
+
+    static
+    FromFieldUsage (fu) {
       if (isSplit(fu) || isFilter(fu))
         return new Density(fu.field);
       else if (isAggregation(fu) || isDensity(fu))

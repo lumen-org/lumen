@@ -3,9 +3,15 @@
  *
  * This module allows to construct VisMEL queries from shelves and sources, and defines utility functions on VisMEL queries.
  *
+ * VisMEL queries come in two representations:
+ *  1. external: as JSON objects (which of course can be constructed from serialized JSON and be converted in such serialized JSON)
+ *  2. internal: as JavaScript objects
+ **
+ *
+ *
  * @module VisMEL
  * @author Philipp Lucas
- * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2016-2019 Philipp Lucas (philipp.lucas@uni-jena.de, philipp.lucas@dlr.de)
  */
 
 define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, utils, PQL, TableAlgebra) {
@@ -35,6 +41,10 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
 
     toJSON () {
       return this.fu.toJSON();
+    }
+
+    fromJSON (jsonObj) {
+
     }
   }
 
@@ -71,6 +81,11 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     toString() {
       return "ColorMap on "+ this.channel + " of " + this.fu.toString();
     }
+
+    fromJSON (jsonObj, model) {
+      // TODO: implement scale and colormap recovering
+      return super.fromJSON()
+    }
   }
 
   //var DetailMap = BaseMap;
@@ -80,7 +95,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   //var LayoutMap = BaseMap;
 
   /**
-   * Converts given instance of (subclass of) BaseMap to a split map, i.e. a BaseMapp that has a Split as its FieldUsage.
+   * Converts given instance of (subclass of) BaseMap to a split map, i.e. a BaseMap that has a Split as its FieldUsage.
    * @param map_
    */
   function toSplitMap(map_) {
@@ -246,6 +261,115 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       vismel.layers = [Layer.FromShelves(shelves)];
       vismel.mode = mode;
       return vismel;
+    }
+
+    /**
+     * Create VisMEL object from JSON representation.
+     *
+     * @param jsonStr
+     * @constructor
+     * @return Returns a promise to a VisMEL object representing the qury in `jsonStr`
+     */
+    static FromJSON(jsonStr) {
+      /*
+
+       * it should actually not be too difficult!
+       * do it component-wise
+       *
+       * But i need kind of a parser ... however, it should be similar to the one used on python-side
+       */
+
+      /*
+
+      {
+        'FROM': [
+          'model': {
+            'name': <str>,
+            'url': <url>,
+          }
+        ]
+      }
+
+       */
+
+
+
+      /**
+       * Create model from JSON and return as a Promise.
+       * @param jsonObj
+       * @return {*|Promise<TResult>}
+       */
+      function fromJSON_model(jsonObj) {
+        let modelJSON = undefined;
+        if (jsonObj.sources.length === 1)
+          modelJSON = jsonObj.source[0];
+        else
+          throw "A VisMEL query must have exactly one source";
+
+        let model = new RemoteModel(modelJSON.name, modelJSON.url);
+
+        return model.update();
+      }
+
+      function fromJSON_mode(jsonObj) {
+        return Promise.resolve(jsonObj.mode);
+      }
+
+      function fromJSON_layers(jsonObj, model) {
+        if (jsonObj.layers.length !== 1)
+          throw "vismel query must have exactly one layer";
+        let layerJson = jsonObj.layers[0];
+
+        let layer = new Layer(),
+            aest = layer.aesthetics,
+            aestJson = layerJson.aesthetics;
+
+        aest.mark = aestJson.mark;
+        aest.color = ColorMap.fromJSON(aestJson.color, model);
+        aest.shape = BaseMap.fromJSON(aestJson.shape, model);
+        aest.size = BaseMap.fromJSON(aestJson.size, model);
+        aest.details = BaseMap.fromJSON(aestJson.details, model);
+
+        // TODO:
+        aest.filters = [];
+        aest.defaults = [];
+
+      }
+
+      function fromJSON_layout(jsonObj, model) {
+
+      }
+
+      // stage 1: take str (`jsonStr`) and turn it into JSON object (`jsonObj`)
+      let jsonObj = JSON.parse(jsonStr);
+
+      // stage 2: take JSON object (`jsonObj`) and create VisMEL object (`vismelObj`) from it
+      let modelPromise = fromJSON_model(jsonObj);
+
+      // chain and execute promises, and collect results locally in order to conveniently combine them into vismel query
+      let model, mode, vismel, layers, layout;
+      vismelPromise = 
+          modelPromise.then(res => model = res)
+          .then(() => fromJSON_mode(jsonObj)).then( res => mode = res)
+          .then(() => vismel = new VisMEL(model, mode))
+          .then(() => fromJSON_layers()).then( res => layers = res)
+          .then(() => fromJSON_layout()).then(res => layout = res)
+          .then(() => {
+            model.layout = layout;
+            model.layers = layers;
+            return vismel;
+          })
+
+      // layout
+      this.layout = new Layout();
+
+      // layers
+      this.layers = [new Layer()];
+
+      // all together
+      let vismelObj = new VisMEL(source, mode)
+
+
     }
 
     /**
