@@ -158,7 +158,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
      * @returns {*|Promise.<TResult>} A promise to operation.
      */
     update() {
-      var jsonPQL = PQL.toJSON.header(this.name);
+      let jsonPQL = PQL.toJSON.header(this.name);
       return executeRemotely(jsonPQL, this.url)
         .then(this._updateHeader.bind(this));
     }

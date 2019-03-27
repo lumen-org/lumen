@@ -158,7 +158,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
     }
 
     extend(objs) {
-      return objs.map(append.bind(this));
+      return objs.map(this.append.bind(this));
       // let res = []
       // for (let obj of objs) {
       //   res.push(this.append(obj))
@@ -290,7 +290,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       size: new Shelf(ShelfTypeT.size),
       row: new Shelf(ShelfTypeT.row),
       column: new Shelf(ShelfTypeT.column),
-      remove: new Shelf(ShelfTypeT.remove)
+      remove: new Shelf(ShelfTypeT.remove),
     };
   }
 

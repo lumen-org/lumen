@@ -100,7 +100,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
     FromJSON (jsonObj, model) {
       let _class = jsonObj.class;
       if (!PQL.FieldUsageT.types.has(_class))
-        throw `json object is not of any FieldUsage class, but ${_class}`
+        throw `json object is not of any FieldUsage class, but ${_class}`;
       let fu = PQL[_class].FromJSON(jsonObj, model);
       return new ColorMap(fu, jsonObj.channel);
     }
@@ -358,11 +358,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
      * @constructor
      * @return Returns a promise to a VisMEL object representing the qury in `jsonStr`
      */
-    static FromJSON(jsonStr) {
-      // stage 1: take str (`jsonStr`) and turn it into JSON object (`jsonObj`)
-      let jsonObj = JSON.parse(jsonStr);
-
-      // stage 2: take JSON object (`jsonObj`) and create VisMEL object (`vismelObj`) from it
+    static FromJSON(jsonObj) {
       // constructing a model from JSON returns a promise!
       jsonutils.assertClass(jsonObj, 'vismel');
 

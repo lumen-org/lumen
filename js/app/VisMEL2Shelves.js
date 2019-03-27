@@ -1,6 +1,6 @@
 /**
  *
- * Extends the prototypes of VisMEL to allow conversion to and from shelves.
+ * Extends the prototypes of VisMEL queries and its components to allow conversion to and from shelves.
  *
  * @module VisMEL2Shelves
  * @author Philipp Lucas
@@ -33,13 +33,25 @@ define(['lib/logger', './shelves', './VisMEL',], function (Logger, sh, VisMEL) {
   };
 
   VisMEL.Layer.prototype.toShelves = function (shelves) {
-    shelves.filters.extend(this.filters);
-    shelves.defaults.extend(this.defaults);
-    shelves.color.append(this.color);
-    shelves.shape.append(this.shape);
-    shelves.size.size(this.size);
-    shelves.details.extend(this.details);
+    shelves.filter.extend(this.filters);
+    if (!_.isEmpty(this.defaults)) throw "Not implemented."
+    let aest = this.aesthetics
+    //shelves.defaults.extend(aest.defaults);
+    if (!_.isEmpty(aest.color)) shelves.color.append(aest.color);
+    if (!_.isEmpty(aest.shape)) shelves.shape.append(aest.shape);
+    if (!_.isEmpty(aest.size)) shelves.size.size(aest.size);
+    if (!_.isEmpty(aest.details)) shelves.details.extend(aest.details);
     return shelves
+  };
+
+  VisMEL.Layout.prototype.toShelves = function (shelves) {
+    shelves.row.extend(this.rows);
+    shelves.column.extend(this.cols);
+    return shelves;
+  };
+
+  VisMEL.Layout.FromShelves = function (shelves) {
+    return new VisMEL.Layout(shelves.row.content(), shelves.column.content())
   };
 
   /**
@@ -52,17 +64,23 @@ define(['lib/logger', './shelves', './VisMEL',], function (Logger, sh, VisMEL) {
   VisMEL.VisMEL.FromShelves = function (shelves, source) {
     let vismel = new VisMEL.VisMEL();
     vismel.sources = new VisMEL.Sources(source);
-    vismel.layout = new VisMEL.Layout(shelves.row.content(), shelves.column.content());
+    vismel.layout = VisMEL.Layout.FromShelves(shelves);
     vismel.layers = [VisMEL.Layer.FromShelves(shelves)];
     return vismel;
   };
 
   VisMEL.VisMEL.prototype.toShelves = function () {
-    let shelves = sh.construct();
+    let shelves = sh.construct(),
+        model = this.getModel();
+
+    sh.populate(model, shelves.dim, shelves.meas);
+        
     this.layout.toShelves(shelves);
     if (this.layers.length > 1)
       throw "multiple layers not implemented.";
+
     this.layers[0].toShelves(shelves);
+
     return shelves;
   };
 

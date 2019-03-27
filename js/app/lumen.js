@@ -480,20 +480,50 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         return copiedContext;
       }
 
+      // get set position
+      visualizationPosition () {
+        return this.$visuals.visualization.position();
+      }
+
+      // get set size
+      visualizationSize() {
+        let $vis = this.$visuals.visualization;
+        return {
+          width: $vis.css('width'),
+          height: $vis.css('height'),
+        };
+      }
+
+      toJSON () {
+        return {
+          position: this.visualizationPosition(),
+          size: this.visualizationSize(),
+          //TODO: include it. facets: JSON.parse(JSON.stringify(this.facets)),
+          vismel: this.query.toJSON()
+        };
+      }
+
       /**
-       *
+       * Returns a promise to a Context made from a suitable JSON object.
        * @param jsonObj
        * @constructor
        */
       static
       FromJSON (jsonObj) {
-        return VisMEL.FromJSON(jsonObj).then( vismel => {
+        return VisMEL.VisMEL.FromJSON(jsonObj.vismel).then( vismel => {
           let model = vismel.getModel(),
               shelves = vismel.toShelves(),
               context = new Context(model.url, model.name, shelves);
 
+          context.model = model;
+          context.query = vismel;
+
           // TODO: see restriction above in Context.copy()
-          context.facets = JSON.parse(JSON.stringify(jsonObj.facets.facets));
+          // context.facets = JSON.parse(JSON.stringify(jsonObj.facets));
+          context.facets = JSON.parse(JSON.stringify(Settings.views)); // TODO:
+
+          context.makeGUI();
+
           return context;
         });
       }
@@ -872,53 +902,86 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
                 let json = that._context.query.toJSON();
                 utils.download("vismel.json", jsonutils.stringify(json), 'text/json');
             });
+        let $context_download = $('<div class="pl-details__body pl-button">download context </div>')
+            .click(() => {
+              let json = that._context.toJSON();
+              utils.download("context.json", jsonutils.stringify(json), 'text/json');
+              console.log(jsonutils.stringify(json));
+            });
         let $test_conversion = $('<div class="pl-details__body pl-button">test conversion</div>')
             .click( () => testConversion(that._context));
         let $load_vismel_to_context = $('<div class="pl-details__body pl-button">load query into context</div>')
             .click( () => {
-              const querystr = '{\n' +
-                  '  "class": "vismel",\n' +
-                  '  "from": [\n' +
-                  '    {\n' +
-                  '      "name": "mcg_iris_map",\n' +
-                  '      "url": "http://127.0.0.1:52104/webservice",\n' +
-                  '      "class": "model"\n' +
-                  '    }\n' +
-                  '  ],\n' +
-                  '  "layout": {\n' +
-                  '    "class": "layout",\n' +
-                  '    "rows": [\n' +
-                  '      {\n' +
-                  '        "name": "species",\n' +
-                  '        "split": "elements",\n' +
-                  '        "class": "Split"\n' +
-                  '      }\n' +
-                  '    ],\n' +
-                  '    "cols": [\n' +
-                  '      {\n' +
-                  '        "name": [\n' +
-                  '          "sepal_length"\n' +
-                  '        ],\n' +
-                  '        "aggregation": "maximum",\n' +
-                  '        "yields": "sepal_length",\n' +
-                  '        "class": "Aggregation"\n' +
-                  '      }\n' +
-                  '    ]\n' +
-                  '  },\n' +
-                  '  "layers": [\n' +
-                  '    {\n' +
-                  '      "class": "layer",\n' +
-                  '      "aesthetics": {\n' +
-                  '        "mark": "auto"\n' +
-                  '      }\n' +
-                  '    }\n' +
-                  '  ]\n' +
-                  '}';
+              const querystr =
+                  "{\n" +
+                  "  \"position\": {\n" +
+                  "    \"top\": 0,\n" +
+                  "    \"left\": 0\n" +
+                  "  },\n" +
+                  "  \"size\": {\n" +
+                  "    \"width\": \"500px\",\n" +
+                  "    \"height\": \"500px\"\n" +
+                  "  },\n" +
+                  "  \"vismel\": {\n" +
+                  "    \"class\": \"vismel\",\n" +
+                  "    \"from\": [\n" +
+                  "      {\n" +
+                  "        \"name\": \"emp_titanic\",\n" +
+                  "        \"url\": \"http://127.0.0.1:52104/webservice\",\n" +
+                  "        \"class\": \"model\"\n" +
+                  "      }\n" +
+                  "    ],\n" +
+                  "    \"layout\": {\n" +
+                  "      \"class\": \"layout\",\n" +
+                  "      \"rows\": [\n" +
+                  "        {\n" +
+                  "          \"name\": [\n" +
+                  "            \"Fare\"\n" +
+                  "          ],\n" +
+                  "          \"aggregation\": \"maximum\",\n" +
+                  "          \"yields\": \"Fare\",\n" +
+                  "          \"class\": \"Aggregation\"\n" +
+                  "        }\n" +
+                  "      ],\n" +
+                  "      \"cols\": [\n" +
+                  "        {\n" +
+                  "          \"name\": [\n" +
+                  "            \"Age\"\n" +
+                  "          ],\n" +
+                  "          \"aggregation\": \"maximum\",\n" +
+                  "          \"yields\": \"Age\",\n" +
+                  "          \"class\": \"Aggregation\"\n" +
+                  "        }\n" +
+                  "      ]\n" +
+                  "    },\n" +
+                  "    \"layers\": [\n" +
+                  "      {\n" +
+                  "        \"class\": \"layer\",\n" +
+                  "        \"aesthetics\": {\n" +
+                  "          \"mark\": \"auto\",\n" +
+                  "          \"color\": {\n" +
+                  "            \"name\": \"Pclass\",\n" +
+                  "            \"split\": \"elements\",\n" +
+                  "            \"class\": \"Split\",\n" +
+                  "            \"channel\": \"rgb\"\n" +
+                  "          }\n" +
+                  "        }\n" +
+                  "      }\n" +
+                  "    ]\n" +
+                  "  }\n" +
+                  "}";
+              Context.FromJSON( JSON.parse(querystr) ).then( context => {
+                contextQueue.add(context);                
+                // TODO: what does this do!?
+                activate(context, ['visualization', 'visPane', 'legendPane']);
+                return context.update()
+              })
 
             });
 
         that._$queryInfo = $('<div class="pl-text pl-details__body">')
             .append($vismel_download)
+            .append($context_download)
             .append($test_conversion)
             .append($load_vismel_to_context);
 
@@ -1719,7 +1782,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         console.log("json and string are identical");
 
       // turn into Vismel
-      let vismel_re_promise = VisMEL.VisMEL.FromJSON(vismelStr);
+      let vismel_re_promise = VisMEL.VisMEL.FromJSON(JSON.parse(vismelStr));
 
       vismel_re_promise.then( vismel_re => {
         // turn into JSON
