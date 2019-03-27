@@ -40,7 +40,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON () {
-      return this.fu.toJSON();
+      return utils.jsonRemoveEmptyElements(this.fu.toJSON());
     }
 
     static
@@ -152,10 +152,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   };
 
   Sources.prototype.toJSON = function () {
-    return {
-      "sources": this.map(s => s.toJSON())
-    }
-  }
+    return this.map(s => s.toJSON())
+  };
 
 
   /**
@@ -197,13 +195,12 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON () {
-      return {
-        "layout": {
-          "class": 'layout',
-          "rows": this.rows.toJSON(),
-          "cols": this.cols.toJSON()
-        }
-      };
+      return utils.jsonRemoveEmptyElements({
+        "class": 'layout',
+        "rows": this.rows.toJSON(),
+        "cols": this.cols.toJSON()
+      });
+
     }
 
     /**
@@ -305,19 +302,21 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON() {
-      let aest = this.aesthetics;
-      return {
+      let aest = this.aesthetics,
+          jsonAest = utils.jsonRemoveEmptyElements({
+                mark: aest.mark,
+                color: aest.color.toJSON(),
+                shape: aest.shape.toJSON(),
+                size: aest.size.toJSON(),
+                details: aest.details.toJSON()
+          });
+
+      return utils.jsonRemoveEmptyElements({
         class: 'layer',
-        filters: this.filters.map( f -> f.toJSON()),
-        defaults: this.defaults.map( d -> d.toJSON()),
-        aesthetics: {
-          mark: aest.mark,
-          color: aest.color.toJSON(),
-          shape: aest.shape.toJSON(),
-          size: aest.size.toJSON(),
-          details: aest.details.toJSON()
-        }
-      };
+        filters: this.filters.map( f => f.toJSON()),
+        defaults: this.defaults.map( d => d.toJSON()),
+        aesthetics: jsonAest,
+      });
     }
 
     shallowCopy() {
@@ -411,13 +410,13 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON () {
-      return {
+      return utils.jsonRemoveEmptyElements({
         'class': 'vismel',
         'mode': this.mode,
         'from': this.sources.map( s => s.toJSON()),
         'layout': this.layout.toJSON(),
         'layers': this.layers.map( l => l.toJSON())
-      };
+      });
     }
 
     /**

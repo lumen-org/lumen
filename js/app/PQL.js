@@ -118,12 +118,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toJSON () {
-      return {
+      return utils.jsonRemoveEmptyElements({
         class: 'Field',
         name: this.name,
         dataType: this.dataType,
         model: this.model.name,
-      }
+      });
     }
 
     static
@@ -232,12 +232,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     static toJSON (f) {
-      return {
+      return utils.jsonRemoveEmptyElements({
         name: f.name,
         operator: f.method,
         value: f.args.values,
         class: 'Filter',
-      };
+      });
     }
 
     static
@@ -337,12 +337,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static
     toJSON (a) {
-      return {
+      return utils.jsonRemoveEmptyElements({
         name: a.name,
         split: a.method,
         args: a.args,
         class: 'Split',
-      };
+      });
     }
 
     static
@@ -416,13 +416,13 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static
     toJSON (a) {
-      return {
+      return utils.jsonRemoveEmptyElements({
         name: a.names.sort(),
         aggregation: a.method,
         yields: a.yields,
         args: a.args,
         class: 'Aggregation',
-      };
+      });
     }
 
     toString () {
@@ -459,12 +459,12 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static
     toJSON(d) {
-      return {
+      return utils.jsonRemoveEmptyElements({
         name: d.names.sort(),
         aggregation: d.method,
         args: d.args,
         class: 'Density',
-      };
+      });
     }
 
     static

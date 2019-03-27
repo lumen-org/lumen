@@ -98,6 +98,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
        *
        *   * "ContextDeletedEvent" if it is deconstructed / deleted.
        *   * "ContextQueryFinishSuccessEvent": iff the context successfully finished its update cycle.
+       *
+       *  Context has
        */
       constructor (server, modelName, shelves) {
         // note that model is expected to be constant, i.e. it never is changed
@@ -121,7 +123,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         this._discardFetchedFacets();
 
         // the stages of the pipeline in terms of queries
-        this.query = {};
+        this.query = {};  // vismel query
         this.baseQueryTable = {};
         this.baseModelTable = {};
         this.viewTable = {};
@@ -845,16 +847,24 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         }
 
         let that = this;
-        this._$modelInfo = $('<div class="pl-text pl-details__body">'); // pl-details-model
-        this._$queryInfo = $('<div class="pl-text pl-details__body">'); // pl-details-query
-        this._$resultInfo = $('<div class="pl-text pl-details__body">');
+        // Model Info
+        that._$modelInfo = $('<div class="pl-text pl-details__body">');
+
+        // Query Info
+        let $vismel_download = $('<div class="pl-details__body pl-button">download query </div>')
+            .click(() => utils.download("vismel.json", that._context.query.toJSON(), 'text/json'));
+        that._$queryInfo = $('<div class="pl-text pl-details__body">')
+          .append($vismel_download);
+
+        // Result Info
+        that._$resultInfo = $('<div class="pl-text pl-details__body">');
         for (let facetName of _facetNames) {
           let $facet_download = $(`<div class="pl-details__body pl-button">extract ${_facetNameMap[facetName]} facet</div>`)
               .click(() => download_facet_data(facetName));
-          this._$resultInfo.append($facet_download)
+          that._$resultInfo.append($facet_download);
         }
 
-        this.$visual = $('<div class>')
+        that.$visual = $('<div class>')
           .append('<div class="pl-h2 pl-details__heading">Model</div>')
           .append(this._$modelInfo)
           .append('<div class="pl-h2 pl-details__heading">Query</div>')
@@ -862,10 +872,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
           .append('<div class="pl-h2 pl-details__heading">Result</div>')
           .append(this._$resultInfo);
 
-        this._context = undefined;
+        that._context = undefined;
         if(context !== undefined) {
-          this.setContext(context);
-          this.update();
+          that.setContext(context);
+          that.update();
         }
       }
 
@@ -1624,6 +1634,28 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
     // make dash board pannable
     makePannable('#pl-dashboard__container', '.pl-visualization');
 
+
+    function onStartUp() {
+
+      let json2indentedString = json => JSON.stringify(json, undefined, 2);
+
+      if (contextQueue.empty())
+        return;
+
+      // get current vismel
+      let context = contextQueue.first(),
+          vismel = context.query;
+      console.log(`Current vismel query:\n ${vismel.toString()}`);
+
+      // turn into JSON
+      let vismelJson = vismel.toJSON();
+      console.log(`Current vismel query as JSON:\n ${json2indentedString(vismelJson)}`);
+
+      // turn into Vismel
+
+      // turn into JSON
+    }
+
     return {
       /**
        * Starts the application.
@@ -1636,10 +1668,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         // fetch model
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
-          .then(() => {
-          })
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
           .then(() => initialQuerySetup(context.shelves)) // on initial startup only
+          .then(() => {
+            //onStartUp();
+          })
           .catch((err) => {
             console.error(err);
             infoBox.message("Could not load remote model from Server!");
