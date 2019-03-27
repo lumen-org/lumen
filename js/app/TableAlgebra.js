@@ -8,7 +8,7 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
+define(['./utils', './jsonUtils', './PQL', './SplitSample'], function (utils, jsonutils, PQL, S) {
   "use strict";
 
   /**
@@ -183,7 +183,8 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
   };
 
   TableAlgebraExpr.prototype.toJSON = function () {
-    return this.map(elem => elem.toJSON())
+    // TODO: there should not be any "*" or "+" at the moment
+    return this.filter(e => !_.isString(e)).map(elem => /*_.isString(elem) ? elem : */elem.toJSON());
   };
 
 
@@ -196,15 +197,13 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
    * @constructor
    */
   TableAlgebraExpr.FromJSON = function (jsonObj, model) {
-    let fus = jsonObj.map( elem => PQL[elem.class].FromJSON(elem, model) );
+    
+    function elemFromJSON (elem) {
+      return /*_.isString(elem) ? elem : */PQL[elem.class].FromJSON(elem, model);
+    }
+    
+    let fus = _.isEmpty(jsonObj) ? undefined : jsonObj.filter(e => !_.isString(e)).map(elemFromJSON);    
     return new TableAlgebraExpr(fus);
-      // let class_ = elem.class;
-      // if (class_ === 'Field')
-      //   return PQL.Field.FromFieldUsage(elem);
-      // else if (class_ === 'Split')
-      //   return PQL.Split.FromFieldUsage(elem);
-      // else if (class_ === 'Aggregation')
-      //   return PQL.Aggregation.FromFieldUsage(elem);
   };
 
 

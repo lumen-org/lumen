@@ -199,7 +199,9 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
       if (args === undefined)
         args = new field.domain.constructor();
       if (!(args instanceof domain.Abstract))
-        throw TypeError("'args' must be a domain");
+        // try build domain of args
+        args = new field.domain.constructor(args);
+        //throw TypeError("'args' must be a domain");
       this.field = field;
       this.method = method;
       this.args = args;
