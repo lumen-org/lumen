@@ -1,6 +1,8 @@
 /**
  * @author Philipp Lucas
  * @copyright © 2019 Philipp Lucas (philipp.lucas@dlr.de)
+ *
+ * TODO: implement these tests.
  */
 define( ['app/PQL', 'app/VisMEL', 'app/RemoteModelling'],
     function (PQL, VisMEL, Remote ) {
@@ -25,18 +27,28 @@ define( ['app/PQL', 'app/VisMEL', 'app/RemoteModelling'],
           //       sw = iris.fields.get("sepal_width");
           //       sl = iris.fields.get("sepal_length");
           //     });
-          // paneD3 = d3.selection()
-          //     .append("svg")
-          //     .attr({
-          //       width: 400,
-          //       height: 400
-          //     });
         });
 
-        it('constructs and runs a VisMEL query 01', function (done) {
-          it('tests Model.density', function () {
-            expect(true).toEqual(true);
-          });
+
+        it('test forth and back conversion of a query', function (done) {
+          function testConversion(context) {
+
+            // get vismel query
+            let vismel = context.query;
+            console.log(`Current vismel query:\n ${vismel.toString()}`);
+
+            // turn into JSON
+            let vismelJson = vismel.toJSON(),
+                vismelStr = jsonutils.stringify(vismelJson);
+            expect(vismel.toString()).toEqual(vismelStr);
+
+            // turn back into Vismel
+            let vismel_re_promise = VisMEL.VisMEL.FromJSON(vismelStr);
+            vismel_re_promise.then( vismel_re => {
+              let vismel_re_str = jsonutils.stringify(vismel_re);
+              expect(vismel_re_str).toEqual(vismelStr);
+            });
+
         });
 
       });
