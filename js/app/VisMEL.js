@@ -14,7 +14,7 @@
  * @copyright © 2016-2019 Philipp Lucas (philipp.lucas@uni-jena.de, philipp.lucas@dlr.de)
  */
 
-define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, utils, PQL, TableAlgebra) {
+define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './RemoteModelling'], function(Emitter, utils, jsonutils, PQL, TableAlgebra, Remote) {
   'use strict';
 
   // TODO: need to emit some internal changed event for visualization synchronization
@@ -40,24 +40,16 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON () {
-      return utils.jsonRemoveEmptyElements(this.fu.toJSON());
+      return jsonutils.removeEmptyElements(this.fu.toJSON());
     }
 
     static
     FromJSON (jsonObj, model) {
-      let _class = jsonObj.class, fu;
-      if (_class === 'Density') {
-        fu = PQL.Density.FromJSON(jsonObj, model);
-      } else if (_class === 'Aggregation') {
-        fu = PQL.Aggregation.FromJSON(jsonObj, model);
-      } else if (_class === 'Split') {
-        fu = PQL.Split.FromJSON(jsonObj, model);
-      } else if (_class === 'Filter') {
-        fu = PQL.Filter.FromJSON(jsonObj, model);
-      } else {
+      let _class = jsonObj.class;
+      if (!PQL.FieldUsageT.types.has(_class))
         throw `json object is not of any FieldUsage class, but ${_class}`
-      }
-      return constructor(fu);
+      let fu = PQL[_class].FromJSON(jsonObj, model);
+      return new this.prototype.constructor(fu);
     }
   }
 
@@ -159,7 +151,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   /**
    * Create model from JSON and return it as a Promise.
    * @param jsonObj
-   * @return {[Promise]}
+   * @return {Promise}
    */
   Sources.FromJSON = function (jsonObj) {
     let modelJSON = undefined;
@@ -168,7 +160,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     else
       throw "A VisMEL query must have exactly one source";
 
-    return RemoteModel.FromJSON(modelJSON)
+    return Remote.Model.FromJSON(modelJSON)
         .then( model => [model]);  // return a 1-element array
   };
 
@@ -195,7 +187,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON () {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         "class": 'layout',
         "rows": this.rows.toJSON(),
         "cols": this.cols.toJSON()
@@ -212,10 +204,13 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      */
     static
     FromJSON (jsonObj, model) {
-      utils.assertClassOfJSON(jsonObj, 'layout');
+      jsonutils.assertClass(jsonObj, 'layout');
       let row = TableAlgebra.FromJSON(jsonObj.rows, model),
-        col = TableAlgebra.FromJSON(jsonObj.cols, model);
-      return new Layout(row, col)
+        col = TableAlgebra.FromJSON(jsonObj.cols, model),
+        layout = new Layout();
+      layout.rows = row;
+      layout.cols = col;
+      return layout;
     }
   }
 
@@ -280,18 +275,25 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
 
     static
     FromJSON(jsonObj, model) {
-      utils.assertClassOfJSON(jsonObj, 'layer');
+      jsonutils.assertClass(jsonObj, 'layer');
 
       let layer = new Layer(),
           aestJson = jsonObj.aesthetics;
 
       layer.aesthetics.update({
-          'mark': aestJson.mark,
-          'color': ColorMap.fromJSON(aestJson.color, model),
-          'shape': BaseMap.fromJSON(aestJson.shape, model),
-          'size': BaseMap.fromJSON(aestJson.size, model),
-          'details': BaseMap.fromJSON(aestJson.details, model)
+          mark: aestJson.mark,
+          color: jsonutils.fromJSON_failsafe(aestJson.color, ColorMap.FromJSON, model),
+          shape: jsonutils.fromJSON_failsafe(aestJson.shape, BaseMap.FromJSON, model),
+          size: jsonutils.fromJSON_failsafe(aestJson.size, BaseMap.FromJSON, model),
+        // ColorMap.FromJSON(aestJson.color, model),
+        //   'shape': BaseMap.FromJSON(aestJson.shape, model),
+        //   'size': BaseMap.FromJSON(aestJson.size, model),
+          //details: BaseMap.FromJSON(aestJson.details, model),
+          // details: aestJson.details.map( d => BaseMap.FromJSON(d, model) ),
+          details: jsonutils.arrayFromJSON(aestJson.details, BaseMap.FromJSON, model)
       });
+
+
 
       layer.filters = jsonObj.filters.map( f => PQL.Filter.FromJSON(f, model));
 
@@ -303,18 +305,18 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
 
     toJSON() {
       let aest = this.aesthetics,
-          jsonAest = utils.jsonRemoveEmptyElements({
+          jsonAest = jsonutils.removeEmptyElements({
                 mark: aest.mark,
-                color: aest.color.toJSON(),
-                shape: aest.shape.toJSON(),
-                size: aest.size.toJSON(),
-                details: aest.details.toJSON()
+                color: jsonutils.toJSON_failsafe(aest.color),
+                shape: jsonutils.toJSON_failsafe(aest.shape),
+                size: jsonutils.toJSON_failsafe(aest.size),
+                details: jsonutils.arrayToJSON(aest.details),
           });
 
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         class: 'layer',
-        filters: this.filters.map( f => f.toJSON()),
-        defaults: this.defaults.map( d => d.toJSON()),
+        filters: jsonutils.arrayToJSON(this.filters),
+        defaults: jsonutils.arrayToJSON(this.defaults),
         aesthetics: jsonAest,
       });
     }
@@ -395,7 +397,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
 
       // stage 2: take JSON object (`jsonObj`) and create VisMEL object (`vismelObj`) from it
       // constructing a model from JSON returns a promise!
-      utils.assertClassOfJSON(jsonObj, 'vismel');
+      jsonutils.assertClass(jsonObj, 'vismel');
 
       let sourcesPromise = Sources.FromJSON(jsonObj.from);
       return sourcesPromise.then(models => {
@@ -410,12 +412,12 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toJSON () {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         'class': 'vismel',
         'mode': this.mode,
-        'from': this.sources.map( s => s.toJSON()),
+        'from': jsonutils.arrayToJSON(this.sources),
         'layout': this.layout.toJSON(),
-        'layers': this.layers.map( l => l.toJSON())
+        'layers': jsonutils.arrayToJSON(this.layers)
       });
     }
 
@@ -508,8 +510,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      *   * there is at most one FieldUsage on this.layout.rows / cols
      */
     isAtomic () {
-      return ((this.layout.cols.length == 1 && PQL.isFieldUsage(this.layout.cols[0])) &&
-              (this.layout.rows.length == 1 && PQL.isFieldUsage(this.layout.rows[0])));
+      return ((this.layout.cols.length === 1 && PQL.isFieldUsage(this.layout.cols[0])) &&
+              (this.layout.rows.length === 1 && PQL.isFieldUsage(this.layout.rows[0])));
     }
   }
 

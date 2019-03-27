@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -852,9 +852,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
 
         // Query Info
         let $vismel_download = $('<div class="pl-details__body pl-button">download query </div>')
-            .click(() => utils.download("vismel.json", that._context.query.toJSON(), 'text/json'));
+            .click(() => {
+                let json = that._context.query.toJSON();
+                utils.download("vismel.json", jsonutils.stringify(json), 'text/json');
+            });
+        let $test_conversion = $('<div class="pl-details__body pl-button">test conversion</div>')
+            .click( () => testConversion(that._context))
         that._$queryInfo = $('<div class="pl-text pl-details__body">')
-          .append($vismel_download);
+            .append($vismel_download)
+            .append($test_conversion);
 
         // Result Info
         that._$resultInfo = $('<div class="pl-text pl-details__body">');
@@ -1635,23 +1641,22 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
     makePannable('#pl-dashboard__container', '.pl-visualization');
 
 
-    function onStartUp() {
-
-      let json2indentedString = json => JSON.stringify(json, undefined, 2);
+    function testConversion(context) {
 
       if (contextQueue.empty())
         return;
 
       // get current vismel
-      let context = contextQueue.first(),
-          vismel = context.query;
+      let vismel = context.query;
       console.log(`Current vismel query:\n ${vismel.toString()}`);
 
       // turn into JSON
-      let vismelJson = vismel.toJSON();
-      console.log(`Current vismel query as JSON:\n ${json2indentedString(vismelJson)}`);
+      let vismelJson = vismel.toJSON(),
+      vismelStr = jsonutils.stringify(vismelJson);
+      console.log(`Current vismel query as JSON:\n ${vismelStr}`);
 
       // turn into Vismel
+      let vismel_re = VisMEL.VisMEL.FromJSON(vismelStr);
 
       // turn into JSON
     }

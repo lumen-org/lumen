@@ -9,7 +9,7 @@
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function (Logger, d3, utils, Domain, PQL, Model) {
+define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Model'], function (Logger, d3, utils, jsonutils, Domain, PQL, Model) {
   "use strict";
 
   /**
@@ -109,7 +109,7 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
      */
     static
     FromJSON (jsonObj) {
-      utils.assertClassOfJSON(jsonObj, 'model');
+      jsonutils.assertClass(jsonObj, 'model');
       let model = new RemoteModel(jsonObj.name, jsonObj.url);
       return model.update();
     }

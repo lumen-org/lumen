@@ -48,7 +48,7 @@
  *
  */
 
-define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], function (Emitter, Logger, domain, utils, config) {
+define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './ViewSettings'], function (Emitter, Logger, domain, utils, jsonutils, config) {
   "use strict";
 
   var logger = Logger.get('pl-PQL');
@@ -56,9 +56,10 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
 
   function getFieldFromModel(name, model) {
-    let field = model.fields.get(jsonObj.name);
+    let field = model.fields.get(name);
     if (field === undefined)
-      throw `field with name ${jsonObj.name} is not in model.`;
+      throw `field with name ${name} is not in model.`;
+    return field;
   }
 
 
@@ -118,7 +119,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     toJSON () {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         class: 'Field',
         name: this.name,
         dataType: this.dataType,
@@ -127,15 +128,14 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     static
-    fromJSON (jsonObj, model) {
+    FromJSON (jsonObj, model) {
       if (jsonObj.class !== 'Field')
         throw `json object is not a Field, as it's 'class' attribute has value ${jsonObj.class}`;
 
       if (jsonObj.model !== model.name)
         throw "name of model of field in JSON and of reference model do not match.";
 
-      field = getFieldFromModel(jsonObj.name, model);
-
+      let field = getFieldFromModel(jsonObj.name, model);
       if (field.dataType !== jsonObj.dataType)
         throw  `data types of field in json (${jsonObj.dataType}) and model (${field.dataType}) do not match.`;
 
@@ -174,7 +174,6 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     in: 'in'
   });
   let isFilterMethod = (m) => m === FilterMethodT.equals || m === FilterMethodT.in;
-
 
   class FieldUsage {
     constructor () {
@@ -232,7 +231,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     }
 
     static toJSON (f) {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         name: f.name,
         operator: f.method,
         value: f.args.values,
@@ -337,7 +336,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static
     toJSON (a) {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         name: a.name,
         split: a.method,
         args: a.args,
@@ -416,7 +415,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static
     toJSON (a) {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         name: a.names.sort(),
         aggregation: a.method,
         yields: a.yields,
@@ -459,7 +458,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
 
     static
     toJSON(d) {
-      return utils.jsonRemoveEmptyElements({
+      return jsonutils.removeEmptyElements({
         name: d.names.sort(),
         aggregation: d.method,
         args: d.args,
@@ -489,6 +488,16 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
       return this.method  + " of [" + this.names.sort() + "]";
     }
   }
+
+  var FieldUsageT = Object.freeze({
+    type: {
+      "Filter": Filter,
+      "Aggregation": Aggregation,
+      "Density": Density,
+      "Split": Split      
+    },
+    types: new Set([ "Filter", "Aggregation", "Density", "Split"])
+  });
 
   function isAggregation (obj) {
     return obj instanceof Aggregation;
@@ -796,6 +805,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './ViewSettings'], f
     isSplit: isSplit,
     isFilter: isFilter,
     isFieldUsage: isFieldUsage,
+    FieldUsageT: FieldUsageT,
     fields: fields,
     hasDiscreteYield: hasDiscreteYield,
     hasNumericYield: hasNumericYield,
