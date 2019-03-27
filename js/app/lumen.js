@@ -1655,10 +1655,20 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
       vismelStr = jsonutils.stringify(vismelJson);
       console.log(`Current vismel query as JSON:\n ${vismelStr}`);
 
-      // turn into Vismel
-      let vismel_re = VisMEL.VisMEL.FromJSON(vismelStr);
+      if (vismel.toString() === vismelStr)
+        console.log("json and string are identical");
 
-      // turn into JSON
+      // turn into Vismel
+      let vismel_re_promise = VisMEL.VisMEL.FromJSON(vismelStr);
+
+      vismel_re_promise.then( vismel_re => {
+        // turn into JSON
+        let vismel_re_str = jsonutils.stringify(vismel_re);
+        console.log(`Re parsed vismel query as JSON:\n ${vismel_re_str}`);
+
+        if (vismel_re_str === vismelStr)
+          console.log("string or original and re parsed vismel are identical");
+      });
     }
 
     return {

@@ -49,7 +49,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
       if (!PQL.FieldUsageT.types.has(_class))
         throw `json object is not of any FieldUsage class, but ${_class}`
       let fu = PQL[_class].FromJSON(jsonObj, model);
-      return new this.prototype.constructor(fu);
+       return new BaseMap(fu);
     }
   }
 
@@ -88,11 +88,22 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
       return "ColorMap on "+ this.channel + " of " + this.fu.toString();
     }
 
-    // static
-    // FromJSON (jsonObj, model) {
-    //   // TODO: implement scale and colormap recovering
-    //   return super.FromJSON(jsonObj, model)
-    // }
+    toJSON() {
+      // let jsonObj = super.toJSON();
+      let jsonObj = this.fu.toJSON();
+      return Object.assign(jsonObj, {
+        channel: this.channel
+      });
+    }
+
+    static
+    FromJSON (jsonObj, model) {
+      let _class = jsonObj.class;
+      if (!PQL.FieldUsageT.types.has(_class))
+        throw `json object is not of any FieldUsage class, but ${_class}`
+      let fu = PQL[_class].FromJSON(jsonObj, model);
+      return new ColorMap(fu, jsonObj.channel);
+    }
   }
 
   //var DetailMap = BaseMap;
@@ -280,25 +291,18 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
       let layer = new Layer(),
           aestJson = jsonObj.aesthetics;
 
-      layer.aesthetics.update({
+      Object.assign(layer.aesthetics, {
           mark: aestJson.mark,
           color: jsonutils.fromJSON_failsafe(aestJson.color, ColorMap.FromJSON, model),
           shape: jsonutils.fromJSON_failsafe(aestJson.shape, BaseMap.FromJSON, model),
           size: jsonutils.fromJSON_failsafe(aestJson.size, BaseMap.FromJSON, model),
-        // ColorMap.FromJSON(aestJson.color, model),
-        //   'shape': BaseMap.FromJSON(aestJson.shape, model),
-        //   'size': BaseMap.FromJSON(aestJson.size, model),
-          //details: BaseMap.FromJSON(aestJson.details, model),
-          // details: aestJson.details.map( d => BaseMap.FromJSON(d, model) ),
           details: jsonutils.arrayFromJSON(aestJson.details, BaseMap.FromJSON, model)
       });
 
-
-
-      layer.filters = jsonObj.filters.map( f => PQL.Filter.FromJSON(f, model));
-
-      if (jsonObj.defaults.length > 0)
-        throw "not implemented.";
+      layer.filters = jsonutils.arrayFromJSON(jsonObj.filters, PQL.Filter.FromJSON, model);
+      
+      if (jsonObj.defaults && jsonObj.defaults.length > 0)
+        throw "not implemented";
 
       return layer;
     }
@@ -362,6 +366,8 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
      * @alias module:VisMEL
      */
     constructor(source, mode='model') {
+      if (mode === undefined)
+        mode = 'model';
       this.mode = mode;
       this.sources = new Sources(source);
       this.layout = new Layout();
@@ -404,7 +410,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
         if (models.length > 1)
           throw "not implemented";
         let model = models[0];
-        let vismel = new VisMEL(jsonObj.mode, model);
+        let vismel = new VisMEL(model, jsonObj.mode);
         vismel.layout = Layout.FromJSON(jsonObj.layout, model);
         vismel.layers = Layers_fromJSON(jsonObj.layers, model);
         return vismel;
@@ -577,15 +583,15 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
     public interface
    */
   return {
-    VisMEL: VisMEL,
-    Sources: Sources,
-    Layers: Layer,
-    Layout: Layout,
-    BaseMap: BaseMap,
-    ColorMap: ColorMap,
-    ShapeMap: ShapeMap,
-    SizeMap: SizeMap,
-    FilterMap: FilterMap,
+    VisMEL,
+    Sources,
+    Layer,
+    Layout,
+    BaseMap,
+    ColorMap,
+    ShapeMap,
+    SizeMap,
+    FilterMap,
     isMap: isMap,
     isSplitMap,
     toSplitMap,

@@ -93,7 +93,7 @@ define([], function() {
   }
 
   function arrayFromJSON(arr, FromJSON, ...moreargs) {
-    return arr.map( d => FromJSON(d, ...moreargs) )
+    return _.isEmpty(arr) ? [] :  arr.map( d => FromJSON(d, ...moreargs) );
   }
 
   return {
