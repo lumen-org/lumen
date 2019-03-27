@@ -365,10 +365,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
      * @constructor
      * @alias module:VisMEL
      */
-    constructor(source, mode='model') {
-      if (mode === undefined)
-        mode = 'model';
-      this.mode = mode;
+    constructor(source) {
       this.sources = new Sources(source);
       this.layout = new Layout();
       this.layers = [new Layer()];
@@ -381,12 +378,11 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
      * @returns {VisMEL}
      * @constructor
      */
-    static FromShelves(shelves, source, mode) {
+    static FromShelves(shelves, source) {
       let vismel = new VisMEL();
       vismel.sources = new Sources(source);
       vismel.layout = new Layout(shelves.row.content(), shelves.column.content());
       vismel.layers = [Layer.FromShelves(shelves)];
-      vismel.mode = mode;
       return vismel;
     }
 
@@ -410,7 +406,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
         if (models.length > 1)
           throw "not implemented";
         let model = models[0];
-        let vismel = new VisMEL(model, jsonObj.mode);
+        let vismel = new VisMEL(model);
         vismel.layout = Layout.FromJSON(jsonObj.layout, model);
         vismel.layers = Layers_fromJSON(jsonObj.layers, model);
         return vismel;
@@ -420,7 +416,6 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
     toJSON () {
       return jsonutils.removeEmptyElements({
         'class': 'vismel',
-        'mode': this.mode,
         'from': jsonutils.arrayToJSON(this.sources),
         'layout': this.layout.toJSON(),
         'layers': jsonutils.arrayToJSON(this.layers)
@@ -437,7 +432,6 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
       copy.sources = this.sources.shallowCopy();
       copy.layout = this.layout.shallowCopy();
       copy.layers = this.layers.map(layer => layer.shallowCopy());
-      copy.mode = this.mode;
       return copy;
     }
 

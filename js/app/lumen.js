@@ -220,12 +220,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         if (actions['new.query']) {
           c._setBusyStatus('getting base query');
           try {
-            let mode = $('input[name=datavsmodel]:checked', '#pl-datavsmodel-form').val();
-
             c.basemodel = c.model.localCopy();
 
             // get user query
-            c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel, mode);
+            c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel);
             c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
             // log this activity
