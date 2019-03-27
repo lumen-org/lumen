@@ -213,6 +213,18 @@ define([], function() {
     }
   }
 
+  /**
+   * Utility function for parsing of json objects.
+   * Asserts that given {jsonObj} has an attribute 'class' with value {cls} and throw otherwise.
+   * @param jsonObj
+   * @param cls
+   */
+  function assertClassOfJSON (jsonObj, cls) {
+    if (jsonObj.class !== cls)
+      throw `json object is not a ${cls}, as it's 'class' attribute has value ${jsonObj.class}`;
+  }
+
+
   return {
     selectValue,
     listify,
@@ -226,5 +238,6 @@ define([], function() {
     todayString,
     assignWithFilter,
     download,
+    assertClassOfJSON,
   };
 });

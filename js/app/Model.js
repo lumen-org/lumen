@@ -29,7 +29,7 @@ define(['./PQL'], function (PQL) {
       this.fields = new Map(); // dict of {@link F.Fields}, name is the key
     }
 
-    get names () {
+    get names() {
       return this.fields.keys();
     }
 
@@ -49,8 +49,27 @@ define(['./PQL'], function (PQL) {
       return field instanceof PQL.Field && (this.fields.get(field.name) === field);
     }
 
-    get dim () {
-      return this.fields.size+1;
+    get dim() {
+      return this.fields.size + 1;
+    }
+
+    /**
+     * Return a JSON object representing this model.
+     *
+     * @param includeFields {Boolean} Boolean flag to enable or disable the inclusion of this model's fields to the
+     *  returned json. Optional. Defaults to false.
+     */
+    toJSON(includeFields = false) {
+      let json = {
+        "name": this.name,
+        "url": this.url,
+        "class": 'model',
+      };
+
+      if (includeFields) {
+        throw "inclusion of fields in Model.toJSON() not implemented";
+      }
+      return json;
     }
 
   }

@@ -43,8 +43,21 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       return this.fu.toJSON();
     }
 
-    fromJSON (jsonObj) {
-
+    static
+    FromJSON (jsonObj, model) {
+      let _class = jsonObj.class, fu;
+      if (_class === 'Density') {
+        fu = PQL.Density.FromJSON(jsonObj, model);
+      } else if (_class === 'Aggregation') {
+        fu = PQL.Aggregation.FromJSON(jsonObj, model);
+      } else if (_class === 'Split') {
+        fu = PQL.Split.FromJSON(jsonObj, model);
+      } else if (_class === 'Filter') {
+        fu = PQL.Filter.FromJSON(jsonObj, model);
+      } else {
+        throw `json object is not of any FieldUsage class, but ${_class}`
+      }
+      return constructor(fu);
     }
   }
 
@@ -74,7 +87,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       return new ColorMap(this.fu, this.channel);
     }
 
-    static DefaultMap(fu) {
+    static
+    DefaultMap(fu) {
       return new ColorMap(fu, 'rgb');
     }
 
@@ -82,10 +96,11 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       return "ColorMap on "+ this.channel + " of " + this.fu.toString();
     }
 
-    fromJSON (jsonObj, model) {
-      // TODO: implement scale and colormap recovering
-      return super.fromJSON()
-    }
+    // static
+    // FromJSON (jsonObj, model) {
+    //   // TODO: implement scale and colormap recovering
+    //   return super.FromJSON(jsonObj, model)
+    // }
   }
 
   //var DetailMap = BaseMap;
@@ -128,8 +143,35 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     return copy;
   };
 
+  /**
+   * TODO: use toJSON as basis instead of yet another representation.
+   * @return {string}
+   */
   Sources.prototype.toString = function () {
     return JSON.stringify(sources, _replacer.source, _delim);
+  };
+
+  Sources.prototype.toJSON = function () {
+    return {
+      "sources": this.map(s => s.toJSON())
+    }
+  }
+
+
+  /**
+   * Create model from JSON and return it as a Promise.
+   * @param jsonObj
+   * @return {[Promise]}
+   */
+  Sources.FromJSON = function (jsonObj) {
+    let modelJSON = undefined;
+    if (jsonObj.length === 1)
+      modelJSON = jsonObj[0];
+    else
+      throw "A VisMEL query must have exactly one source";
+
+    return RemoteModel.FromJSON(modelJSON)
+        .then( model => [model]);  // return a 1-element array
   };
 
 
@@ -153,6 +195,31 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     toString() {
       return JSON.stringify(this, _replacer.layout, _delim);
     }
+
+    toJSON () {
+      return {
+        "layout": {
+          "class": 'layout',
+          "rows": this.rows.toJSON(),
+          "cols": this.cols.toJSON()
+        }
+      };
+    }
+
+    /**
+     *
+     * @param jsonObj
+     * @param model
+     * @return
+     * @constructor
+     */
+    static
+    FromJSON (jsonObj, model) {
+      utils.assertClassOfJSON(jsonObj, 'layout');
+      let row = TableAlgebra.FromJSON(jsonObj.rows, model),
+        col = TableAlgebra.FromJSON(jsonObj.cols, model);
+      return new Layout(row, col)
+    }
   }
 
 
@@ -164,7 +231,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
   class Layer {
     constructor() {
       // empty constructor
-      var aesthetics = {
+      let aesthetics = {
         mark: "auto",
         color: {},
         shape: {},
@@ -192,7 +259,8 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       return collection;
     }
 
-    static FromShelves(shelves) {
+    static
+    FromShelves(shelves) {
       // construct from shelves
       var layer = new Layer();
       layer.filters = shelves.filter.content();
@@ -213,6 +281,45 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
       return layer;
     }
 
+    static
+    FromJSON(jsonObj, model) {
+      utils.assertClassOfJSON(jsonObj, 'layer');
+
+      let layer = new Layer(),
+          aestJson = jsonObj.aesthetics;
+
+      layer.aesthetics.update({
+          'mark': aestJson.mark,
+          'color': ColorMap.fromJSON(aestJson.color, model),
+          'shape': BaseMap.fromJSON(aestJson.shape, model),
+          'size': BaseMap.fromJSON(aestJson.size, model),
+          'details': BaseMap.fromJSON(aestJson.details, model)
+      });
+
+      layer.filters = jsonObj.filters.map( f => PQL.Filter.FromJSON(f, model));
+
+      if (jsonObj.defaults.length > 0)
+        throw "not implemented.";
+
+      return layer;
+    }
+
+    toJSON() {
+      let aest = this.aesthetics;
+      return {
+        class: 'layer',
+        filters: this.filters.map( f -> f.toJSON()),
+        defaults: this.defaults.map( d -> d.toJSON()),
+        aesthetics: {
+          mark: aest.mark,
+          color: aest.color.toJSON(),
+          shape: aest.shape.toJSON(),
+          size: aest.size.toJSON(),
+          details: aest.details.toJSON()
+        }
+      };
+    }
+
     shallowCopy() {
       var copy = new Layer();
       copy.filters = this.filters.slice();
@@ -226,8 +333,22 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
     }
 
     toString() {
+      // TODO: use toJSON() as basis
       return JSON.stringify(this, _replacer.layer, _delim);
     }
+  }
+
+  /**
+   * Construct Array of {Layer}s from json.
+   * @param jsonObj
+   * @param model
+   * @return {[Layer]}
+   * @constructor
+   */
+  function Layers_fromJSON(jsonObj, model) {
+    if (jsonObj.length !== 1)
+      throw "layers must have exactly one layer. Will be generalized to support multiple layers in the future.";
+    return [Layer.FromJSON(jsonObj[0], model)];
   }
 
 
@@ -254,8 +375,7 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      * @constructor
      */
     static FromShelves(shelves, source, mode) {
-      // construct from shelves and sources
-      var vismel = new VisMEL();
+      let vismel = new VisMEL();
       vismel.sources = new Sources(source);
       vismel.layout = new Layout(shelves.row.content(), shelves.column.content());
       vismel.layers = [Layer.FromShelves(shelves)];
@@ -271,105 +391,33 @@ define(['lib/emitter', './utils', './PQL', './TableAlgebra'], function(Emitter, 
      * @return Returns a promise to a VisMEL object representing the qury in `jsonStr`
      */
     static FromJSON(jsonStr) {
-      /*
-
-       * it should actually not be too difficult!
-       * do it component-wise
-       *
-       * But i need kind of a parser ... however, it should be similar to the one used on python-side
-       */
-
-      /*
-
-      {
-        'FROM': [
-          'model': {
-            'name': <str>,
-            'url': <url>,
-          }
-        ]
-      }
-
-       */
-
-
-
-      /**
-       * Create model from JSON and return as a Promise.
-       * @param jsonObj
-       * @return {*|Promise<TResult>}
-       */
-      function fromJSON_model(jsonObj) {
-        let modelJSON = undefined;
-        if (jsonObj.sources.length === 1)
-          modelJSON = jsonObj.source[0];
-        else
-          throw "A VisMEL query must have exactly one source";
-
-        let model = new RemoteModel(modelJSON.name, modelJSON.url);
-
-        return model.update();
-      }
-
-      function fromJSON_mode(jsonObj) {
-        return Promise.resolve(jsonObj.mode);
-      }
-
-      function fromJSON_layers(jsonObj, model) {
-        if (jsonObj.layers.length !== 1)
-          throw "vismel query must have exactly one layer";
-        let layerJson = jsonObj.layers[0];
-
-        let layer = new Layer(),
-            aest = layer.aesthetics,
-            aestJson = layerJson.aesthetics;
-
-        aest.mark = aestJson.mark;
-        aest.color = ColorMap.fromJSON(aestJson.color, model);
-        aest.shape = BaseMap.fromJSON(aestJson.shape, model);
-        aest.size = BaseMap.fromJSON(aestJson.size, model);
-        aest.details = BaseMap.fromJSON(aestJson.details, model);
-
-        // TODO:
-        aest.filters = [];
-        aest.defaults = [];
-
-      }
-
-      function fromJSON_layout(jsonObj, model) {
-
-      }
-
       // stage 1: take str (`jsonStr`) and turn it into JSON object (`jsonObj`)
       let jsonObj = JSON.parse(jsonStr);
 
       // stage 2: take JSON object (`jsonObj`) and create VisMEL object (`vismelObj`) from it
-      let modelPromise = fromJSON_model(jsonObj);
+      // constructing a model from JSON returns a promise!
+      utils.assertClassOfJSON(jsonObj, 'vismel');
 
-      // chain and execute promises, and collect results locally in order to conveniently combine them into vismel query
-      let model, mode, vismel, layers, layout;
-      vismelPromise = 
-          modelPromise.then(res => model = res)
-          .then(() => fromJSON_mode(jsonObj)).then( res => mode = res)
-          .then(() => vismel = new VisMEL(model, mode))
-          .then(() => fromJSON_layers()).then( res => layers = res)
-          .then(() => fromJSON_layout()).then(res => layout = res)
-          .then(() => {
-            model.layout = layout;
-            model.layers = layers;
-            return vismel;
-          })
+      let sourcesPromise = Sources.FromJSON(jsonObj.from);
+      return sourcesPromise.then(models => {
+        if (models.length > 1)
+          throw "not implemented";
+        let model = models[0];
+        let vismel = new VisMEL(jsonObj.mode, model);
+        vismel.layout = Layout.FromJSON(jsonObj.layout, model);
+        vismel.layers = Layers_fromJSON(jsonObj.layers, model);
+        return vismel;
+      });
+    }
 
-      // layout
-      this.layout = new Layout();
-
-      // layers
-      this.layers = [new Layer()];
-
-      // all together
-      let vismelObj = new VisMEL(source, mode)
-
-
+    toJSON () {
+      return {
+        'class': 'vismel',
+        'mode': this.mode,
+        'from': this.sources.map( s => s.toJSON()),
+        'layout': this.layout.toJSON(),
+        'layers': this.layers.map( l => l.toJSON())
+      };
     }
 
     /**

@@ -172,7 +172,7 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
    * @returns {string} Returns a concise string representation...
    */
   TableAlgebraExpr.prototype.toString = function () {
-    var str = "";
+    let str = "";
     this.forEach( function(elem) {
       if (elem instanceof PQL.Field)
         str += elem.name;
@@ -181,6 +181,32 @@ define(['./utils', './PQL', './SplitSample'], function (utils, PQL, S) {
     });
     return str;
   };
+
+  TableAlgebraExpr.prototype.toJSON = function () {
+    return this.map(elem => elem.toJSON())
+  };
+
+
+  /**
+   * Returns a TableAlgebraExpr constructed from {jsonObj}.
+   *
+   * @param jsonObj {Array} Array of {Field}s and {FieldUsage}s.
+   * @param model {Model}
+   * @returns {TableAlgebraExpr}
+   * @constructor
+   */
+  TableAlgebraExpr.FromJSON = function (jsonObj, model) {
+    let fus = jsonObj.map( elem => PQL[elem.class].FromJSON(elem, model) );
+    return new TableAlgebraExpr(fus);
+      // let class_ = elem.class;
+      // if (class_ === 'Field')
+      //   return PQL.Field.FromFieldUsage(elem);
+      // else if (class_ === 'Split')
+      //   return PQL.Split.FromFieldUsage(elem);
+      // else if (class_ === 'Aggregation')
+      //   return PQL.Aggregation.FromFieldUsage(elem);
+  };
+
 
   return TableAlgebraExpr;
 });

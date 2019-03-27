@@ -2,8 +2,8 @@
  * @author Philipp Lucas
  * @copyright © 2019 Philipp Lucas (philipp.lucas@dlr.de)
  */
-define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'app/ModelTable', 'app/ResultTable', 'app/ViewTable', 'app/RemoteModelling'],
-    function (d3, PQL, VisMEL, TableAlgebraExpr, QueryTable, ModelTable, RT, ViewTable, Remote ) {
+define( ['app/PQL', 'app/VisMEL', 'app/RemoteModelling'],
+    function (PQL, VisMEL, Remote ) {
       "use strict";
 
       describe('VisMEL specifications', function () {
@@ -34,15 +34,9 @@ define( ['d3', 'app/PQL', 'app/VisMEL', 'app/TableAlgebra', 'app/QueryTable', 'a
         });
 
         it('constructs and runs a VisMEL query 01', function (done) {
-
-          // TODO: fill
-          promise
-            .then( () => done )
-            .catch( err => {
-              console.error(err);
-              fail(err);
-              done();
-            });
+          it('tests Model.density', function () {
+            expect(true).toEqual(true);
+          });
         });
 
       });

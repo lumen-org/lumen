@@ -102,6 +102,19 @@ define(['lib/logger', 'd3', './utils', './Domain', './PQL', './Model'], function
     }
 
     /**
+     * Create RemoteModel from json and return Promise to 'updated' model.
+     * @param jsonObj
+     * @return {*|Promise<TResult>}
+     * @constructor
+     */
+    static
+    FromJSON (jsonObj) {
+      utils.assertClassOfJSON(jsonObj, 'model');
+      let model = new RemoteModel(jsonObj.name, jsonObj.url);
+      return model.update();
+    }
+
+    /**
      * Updates the locally stored header (i.e. the fields) of the model according to the given json header data.
      * @param json JSON object containing the field information.
      */
