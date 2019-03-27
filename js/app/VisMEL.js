@@ -248,7 +248,8 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
     }
 
     /**
-     * @returns an array of all visual maps in this aesthetics object. Note that there are never any visual maps on the details shelf, as this contains field usages.
+     * @returns an array of all visual maps in this aesthetics object. Note that there are never any visual maps on the
+     * details shelf, as this contains field usages.
      */
     visualMaps () {
       let collection = [];
@@ -260,28 +261,6 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
       if (a.size && a.size instanceof SizeMap)
         collection.push(a.size);
       return collection;
-    }
-
-    static
-    FromShelves(shelves) {
-      // construct from shelves
-      var layer = new Layer();
-      layer.filters = shelves.filter.content();
-      layer.defaults = ('defaults' in shelves) ? shelves.defaults.content() : [];
-      layer.aesthetics = {
-        mark: "auto",
-        // shelves that hold a single field usages
-        color: shelves.color.contentAt(0),
-        shape: shelves.shape.contentAt(0),
-        size: shelves.size.contentAt(0),
-        //orientation: FIELD_USAGE_NAME, //future feature
-        // shelves that may hold multiple field usages
-        details: shelves.detail.content()
-        //label:   { FIELD_USAGE_NAME* },//future feature
-        //hover:   { FIELD_USAGE_NAME* } //future feature
-      };
-      //specializations: [] // future feature
-      return layer;
     }
 
     static
@@ -371,20 +350,6 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
       this.layers = [new Layer()];
     }
 
-    /**
-     * Constructs a VisMEL query from given shelves and a source.
-     * @param shelves A dictionary of shelves, as used in 'lumen.js'. see the code for all 'keys'. Too lazy to document here.
-     * @param source A model to be used for the query. Note that this model should the same model which the entries of the shelves refer to eventually (i.e. shelves contain FieldUsages, which refer to Fields, which are part of a model). However, this is NOT validated. You can however use the method VisMEL.rebase(model) to rebase all FieldUsages on another model. This might be useful to prevent changes to prevent changes to the original model in course of the execution of the query.
-     * @returns {VisMEL}
-     * @constructor
-     */
-    static FromShelves(shelves, source) {
-      let vismel = new VisMEL();
-      vismel.sources = new Sources(source);
-      vismel.layout = new Layout(shelves.row.content(), shelves.column.content());
-      vismel.layers = [Layer.FromShelves(shelves)];
-      return vismel;
-    }
 
     /**
      * Create VisMEL object from JSON representation.
@@ -512,6 +477,15 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
     isAtomic () {
       return ((this.layout.cols.length === 1 && PQL.isFieldUsage(this.layout.cols[0])) &&
               (this.layout.rows.length === 1 && PQL.isFieldUsage(this.layout.rows[0])));
+    }
+
+    /**
+     * Get the model of this query.
+     */
+    getModel() {
+      if (this.sources.length > 1)
+        throw "more than one source in vismel queries is not yet implemented.";
+      return this.sources[0];
     }
   }
 

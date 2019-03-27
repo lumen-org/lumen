@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, VisMEL, V4T, drop, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -99,7 +99,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
        *   * "ContextDeletedEvent" if it is deconstructed / deleted.
        *   * "ContextQueryFinishSuccessEvent": iff the context successfully finished its update cycle.
        *
-       *  Context has
        */
       constructor (server, modelName, shelves) {
         // note that model is expected to be constant, i.e. it never is changed
@@ -399,7 +398,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
       }
 
       /**
-       * Loads a new configuration of shelves in this context. Note that the shelves must match the model. The shelves replace the currently set shelves, and are also set as made visual and interactive.
+       * Loads a new configuration of shelves in this context. Note that the shelves must match the model. The shelves
+       * replace the currently set shelves, and are also set as made visual and interactive.
        * @param shelves A new configuration of shelves.
        */
       loadShelves (shelves) {
@@ -478,6 +478,24 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         $visCopy.css(pos);
 
         return copiedContext;
+      }
+
+      /**
+       *
+       * @param jsonObj
+       * @constructor
+       */
+      static
+      FromJSON (jsonObj) {
+        return VisMEL.FromJSON(jsonObj).then( vismel => {
+          let model = vismel.getModel(),
+              shelves = vismel.toShelves(),
+              context = new Context(model.url, model.name, shelves);
+
+          // TODO: see restriction above in Context.copy()
+          context.facets = JSON.parse(JSON.stringify(jsonObj.facets.facets));
+          return context;
+        });
       }
 
       /**
@@ -855,10 +873,54 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
                 utils.download("vismel.json", jsonutils.stringify(json), 'text/json');
             });
         let $test_conversion = $('<div class="pl-details__body pl-button">test conversion</div>')
-            .click( () => testConversion(that._context))
+            .click( () => testConversion(that._context));
+        let $load_vismel_to_context = $('<div class="pl-details__body pl-button">load query into context</div>')
+            .click( () => {
+              const querystr = '{\n' +
+                  '  "class": "vismel",\n' +
+                  '  "from": [\n' +
+                  '    {\n' +
+                  '      "name": "mcg_iris_map",\n' +
+                  '      "url": "http://127.0.0.1:52104/webservice",\n' +
+                  '      "class": "model"\n' +
+                  '    }\n' +
+                  '  ],\n' +
+                  '  "layout": {\n' +
+                  '    "class": "layout",\n' +
+                  '    "rows": [\n' +
+                  '      {\n' +
+                  '        "name": "species",\n' +
+                  '        "split": "elements",\n' +
+                  '        "class": "Split"\n' +
+                  '      }\n' +
+                  '    ],\n' +
+                  '    "cols": [\n' +
+                  '      {\n' +
+                  '        "name": [\n' +
+                  '          "sepal_length"\n' +
+                  '        ],\n' +
+                  '        "aggregation": "maximum",\n' +
+                  '        "yields": "sepal_length",\n' +
+                  '        "class": "Aggregation"\n' +
+                  '      }\n' +
+                  '    ]\n' +
+                  '  },\n' +
+                  '  "layers": [\n' +
+                  '    {\n' +
+                  '      "class": "layer",\n' +
+                  '      "aesthetics": {\n' +
+                  '        "mark": "auto"\n' +
+                  '      }\n' +
+                  '    }\n' +
+                  '  ]\n' +
+                  '}';
+
+            });
+
         that._$queryInfo = $('<div class="pl-text pl-details__body">')
             .append($vismel_download)
-            .append($test_conversion);
+            .append($test_conversion)
+            .append($load_vismel_to_context);
 
         // Result Info
         that._$resultInfo = $('<div class="pl-text pl-details__body">');

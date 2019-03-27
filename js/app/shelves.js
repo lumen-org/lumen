@@ -157,9 +157,18 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
       return typeof obj === 'number' || obj instanceof Record;
     }
 
+    extend(objs) {
+      return objs.map(append.bind(this));
+      // let res = []
+      // for (let obj of objs) {
+      //   res.push(this.append(obj))
+      // }
+      // return record;
+    }
+
     append(obj) {
       if (this.length >= this.limit) return false;
-      var record = new Record(obj, this);
+      let record = new Record(obj, this);
       this.records.push(record);
       this.emit(Shelf.Event.Add, record);
       return record;
