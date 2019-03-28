@@ -174,7 +174,7 @@ define(['lib/logger'], function (Logger) {
     ]
   };
 
-  json.push(initial);
+  //json.push(initial);
 
   /* json is a list and each element is:
    *  * a json object or json string describing a Context

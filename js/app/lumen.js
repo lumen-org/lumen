@@ -901,85 +901,28 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         that._$modelInfo = $('<div class="pl-text pl-details__body">');
 
         // Query Info
-        let $vismel_download = $('<div class="pl-details__body pl-button">download query </div>')
+        let $vismel_load = $('<div class="pl-details__body pl-button">load query</div>')
+            .click( () => {
+              return infoBox.message("loading of contexts not yet implemented");
+              let querystr = "";
+              Context.FromJSON( JSON.parse(querystr) ).then( context => {
+                contextQueue.add(context);
+                activate(context, ['visualization', 'visPane', 'legendPane']);
+                return context.update()
+              })
+            });
+        let $vismel_save = $('<div class="pl-details__body pl-button">save query </div>')
             .click(() => {
                 let json = that._context.query.toJSON();
                 utils.download("vismel.json", jsonutils.stringify(json), 'text/json');
             });
         let $test_conversion = $('<div class="pl-details__body pl-button">test conversion</div>')
             .click( () => testConversion(that._context));
-        let $load_vismel_to_context = $('<div class="pl-details__body pl-button">load query into context</div>')
-            .click( () => {
-              const querystr =
-                  "{\n" +
-                  "  \"position\": {\n" +
-                  "    \"top\": 0,\n" +
-                  "    \"left\": 0\n" +
-                  "  },\n" +
-                  "  \"size\": {\n" +
-                  "    \"width\": \"500px\",\n" +
-                  "    \"height\": \"500px\"\n" +
-                  "  },\n" +
-                  "  \"vismel\": {\n" +
-                  "    \"class\": \"vismel\",\n" +
-                  "    \"from\": [\n" +
-                  "      {\n" +
-                  "        \"name\": \"emp_titanic\",\n" +
-                  "        \"url\": \"http://127.0.0.1:52104/webservice\",\n" +
-                  "        \"class\": \"model\"\n" +
-                  "      }\n" +
-                  "    ],\n" +
-                  "    \"layout\": {\n" +
-                  "      \"class\": \"layout\",\n" +
-                  "      \"rows\": [\n" +
-                  "        {\n" +
-                  "          \"name\": [\n" +
-                  "            \"Fare\"\n" +
-                  "          ],\n" +
-                  "          \"aggregation\": \"maximum\",\n" +
-                  "          \"yields\": \"Fare\",\n" +
-                  "          \"class\": \"Aggregation\"\n" +
-                  "        }\n" +
-                  "      ],\n" +
-                  "      \"cols\": [\n" +
-                  "        {\n" +
-                  "          \"name\": [\n" +
-                  "            \"Age\"\n" +
-                  "          ],\n" +
-                  "          \"aggregation\": \"maximum\",\n" +
-                  "          \"yields\": \"Age\",\n" +
-                  "          \"class\": \"Aggregation\"\n" +
-                  "        }\n" +
-                  "      ]\n" +
-                  "    },\n" +
-                  "    \"layers\": [\n" +
-                  "      {\n" +
-                  "        \"class\": \"layer\",\n" +
-                  "        \"aesthetics\": {\n" +
-                  "          \"mark\": \"auto\",\n" +
-                  "          \"color\": {\n" +
-                  "            \"name\": \"Pclass\",\n" +
-                  "            \"split\": \"elements\",\n" +
-                  "            \"class\": \"Split\",\n" +
-                  "            \"channel\": \"rgb\"\n" +
-                  "          }\n" +
-                  "        }\n" +
-                  "      }\n" +
-                  "    ]\n" +
-                  "  }\n" +
-                  "}";
-              Context.FromJSON( JSON.parse(querystr) ).then( context => {
-                contextQueue.add(context);                
-                // TODO: what does this do!?
-                activate(context, ['visualization', 'visPane', 'legendPane']);
-                return context.update()
-              })
-            });
 
         that._$queryInfo = $('<div class="pl-text pl-details__body">')
-            .append($vismel_download)
-            .append($test_conversion)
-            .append($load_vismel_to_context);
+            .append($vismel_load)
+            .append($vismel_save)
+            .append($test_conversion);
 
         // Result Info
         that._$resultInfo = $('<div class="pl-text pl-details__body">');
