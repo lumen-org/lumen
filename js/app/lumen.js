@@ -480,18 +480,23 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return copiedContext;
       }
 
-      // get set position
-      visualizationPosition () {
-        return this.$visuals.visualization.position();
+      visualizationPosition (position=undefined) {
+        let $vis = this.$visuals.visualization;
+        if (position == undefined)
+            return $vis.position();
+        else 
+            $vis.css(position);            
       }
 
-      // get set size
-      visualizationSize() {
+      visualizationSize(size=undefined) {
         let $vis = this.$visuals.visualization;
-        return {
-          width: $vis.css('width'),
-          height: $vis.css('height'),
-        };
+        if (size == undefined)
+            return {
+              width: $vis.css('width'),
+              height: $vis.css('height'),
+            };
+        else 
+            $vis.css(size);
       }
 
       toJSON () {
@@ -523,6 +528,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           context.facets = JSON.parse(JSON.stringify(Settings.views)); // TODO:
 
           context.makeGUI();
+
+          context.visualizationPosition(jsonObj.position);
+          context.visualizationSize(jsonObj.size);
 
           return context;
         });
@@ -1529,9 +1537,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       _addSingleContextFromJSON(jsonObj) {
+        let that = this;
         return Context.FromJSON(jsonObj).then( context => {
-          this.add(context);
-          // TODO: what does this do!?
+          that.add(context);
           activate(context, ['visualization', 'visPane', 'legendPane']);
           return context.update()
         });
