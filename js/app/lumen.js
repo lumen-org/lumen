@@ -85,7 +85,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
     }
 
-
     class Context {
       /**
        * Creates a new context. If no parameters are given, the context is empty.
@@ -118,7 +117,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           this.shelves = sh.construct();
 
         // facet states and config
-        this.facets = JSON.parse(JSON.stringify(Settings.views));
+        this.facets = utils.getFacetsFlags(Settings.views);
+        //this.facets = JSON.parse(JSON.stringify(Settings.views));
         this._discardFetchedFacets();
 
         // the stages of the pipeline in terms of queries
@@ -457,8 +457,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let copiedContext = new Context(this.server, this.model.name, this.copyShelves());
 
         copiedContext.facets = JSON.parse(JSON.stringify(this.facets));
-        // TODO: facet data is copied but functions etc are missing. Hence i actually cannot reuse it ... I'd need a copy constructor for the facet collections
-        // TODO: also copy value of this._changes and this._commitFlag
+        // TODO: facet data is copied but functions etc are missing. Hence i actually cannot reuse it ...
+        //  I'd need a copy constructor for the facet collections object.
+        // TODO: also need copy value of this._changes and this._commitFlag
 
         // now make it visual
         copiedContext.makeGUI();
@@ -503,7 +504,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return {
           position: this.visualizationPosition(),
           size: this.visualizationSize(),
-          //TODO: include it. facets: JSON.parse(JSON.stringify(this.facets)),
+          facets: utils.getFacetsFlags(this.facets),
           vismel: this.query.toJSON()
         };
       }
@@ -522,16 +523,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
           context.model = model;
           context.query = vismel;
-
           // TODO: see restriction above in Context.copy()
-          // context.facets = JSON.parse(JSON.stringify(jsonObj.facets));
-          context.facets = JSON.parse(JSON.stringify(Settings.views)); // TODO:
-
+          context.facets = JSON.parse(JSON.stringify(jsonObj.facets));
           context.makeGUI();
-
           context.visualizationPosition(jsonObj.position);
           context.visualizationSize(jsonObj.size);
-
           return context;
         });
       }

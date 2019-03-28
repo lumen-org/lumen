@@ -15,18 +15,40 @@ define(['lib/logger'], function (Logger) {
     "contexts": [
       {
         "position": {
-          "top": 288,
-          "left": 674
+          "top": 83,
+          "left": 431
         },
         "size": {
           "width": "500px",
           "height": "500px"
         },
+        "facets": {
+          "aggregations": {
+            "active": false,
+            "possible": true
+          },
+          "data": {
+            "active": false,
+            "possible": true
+          },
+          "testData": {
+            "active": true,
+            "possible": true
+          },
+          "marginals": {
+            "active": true,
+            "possible": true
+          },
+          "contour": {
+            "active": false,
+            "possible": true
+          }
+        },
         "vismel": {
           "class": "vismel",
           "from": [
             {
-              "name": "emp_mpg",
+              "name": "emp_titanic",
               "url": "http://127.0.0.1:52104/webservice",
               "class": "model"
             }
@@ -35,18 +57,21 @@ define(['lib/logger'], function (Logger) {
             "class": "layout",
             "rows": [
               {
-                "name": "car_size",
-                "split": "elements",
-                "class": "Split"
+                "name": [
+                  "Fare"
+                ],
+                "aggregation": "maximum",
+                "yields": "Fare",
+                "class": "Aggregation"
               }
             ],
             "cols": [
               {
                 "name": [
-                  "displacement"
+                  "Age"
                 ],
                 "aggregation": "maximum",
-                "yields": "displacement",
+                "yields": "Age",
                 "class": "Aggregation"
               }
             ]
@@ -55,7 +80,13 @@ define(['lib/logger'], function (Logger) {
             {
               "class": "layer",
               "aesthetics": {
-                "mark": "auto"
+                "mark": "auto",
+                "color": {
+                  "name": "Pclass",
+                  "split": "elements",
+                  "class": "Split",
+                  "channel": "rgb"
+                }
               }
             }
           ]
@@ -63,18 +94,40 @@ define(['lib/logger'], function (Logger) {
       },
       {
         "position": {
-          "top": 37,
-          "left": 67
+          "top": 394,
+          "left": 61
         },
         "size": {
           "width": "500px",
           "height": "500px"
         },
+        "facets": {
+          "aggregations": {
+            "active": true,
+            "possible": true
+          },
+          "data": {
+            "active": true,
+            "possible": true
+          },
+          "testData": {
+            "active": false,
+            "possible": true
+          },
+          "marginals": {
+            "active": false,
+            "possible": true
+          },
+          "contour": {
+            "active": true,
+            "possible": true
+          }
+        },
         "vismel": {
           "class": "vismel",
           "from": [
             {
-              "name": "emp_iris",
+              "name": "iris_tsne_pred",
               "url": "http://127.0.0.1:52104/webservice",
               "class": "model"
             }
@@ -83,18 +136,21 @@ define(['lib/logger'], function (Logger) {
             "class": "layout",
             "rows": [
               {
-                "name": "species",
-                "split": "elements",
-                "class": "Split"
+                "name": [
+                  "sepal_width"
+                ],
+                "aggregation": "maximum",
+                "yields": "sepal_width",
+                "class": "Aggregation"
               }
             ],
             "cols": [
               {
                 "name": [
-                  "sepal_length"
+                  "petal_width"
                 ],
                 "aggregation": "maximum",
-                "yields": "sepal_length",
+                "yields": "petal_width",
                 "class": "Aggregation"
               }
             ]
@@ -103,7 +159,13 @@ define(['lib/logger'], function (Logger) {
             {
               "class": "layer",
               "aesthetics": {
-                "mark": "auto"
+                "mark": "auto",
+                "color": {
+                  "name": "species",
+                  "split": "elements",
+                  "class": "Split",
+                  "channel": "rgb"
+                }
               }
             }
           ]

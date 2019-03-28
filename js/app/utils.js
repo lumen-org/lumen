@@ -213,6 +213,18 @@ define([], function() {
     }
   }
 
+  /**
+   * Returns a copy of facets object {obj} with only the relevant flags included as object properties.
+   * @param obj
+   * @param flags Flags to extract.
+   */
+  function getFacetsFlags(obj, flags=['active', 'possible']) {
+    let facets = {};
+    for (let key in obj)
+      facets[key] = _.pick(obj[key], flags);
+    return facets;
+  }
+
   return {
     selectValue,
     listify,
@@ -225,7 +237,7 @@ define([], function() {
     uuid,
     todayString,
     assignWithFilter,
-    download
-
+    download,
+    getFacetsFlags
   };
 });
