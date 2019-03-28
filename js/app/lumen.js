@@ -1528,7 +1528,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return {prev, next, context}
       }
 
-      _fromJSON_singleContext(jsonObj) {
+      _addSingleContextFromJSON(jsonObj) {
         return Context.FromJSON(jsonObj).then( context => {
           this.add(context);
           // TODO: what does this do!?
@@ -1537,14 +1537,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         });
       }
 
-      fromJSON(jsonObj) {
+      addContextFromJSON(jsonObj) {
         if (_.isString(jsonObj))
           jsonObj = JSON.parse(jsonObj);
 
         jsonObj = (jsonObj.class === 'ContextCollection') ?  jsonObj.contexts : [jsonObj];
 
         for (let jsonContext of jsonObj)
-          this._fromJSON_singleContext(jsonContext);
+          this._addSingleContextFromJSON(jsonContext);
       }
 
       empty() {
@@ -1855,7 +1855,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
           .then(() => initialQuerySetup(context.shelves))
-          .then(() => InitialContexts.forEach( json => contextQueue.fromJSON(json)))
+          .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
           .then(() => {
             //onStartUp();
           })
