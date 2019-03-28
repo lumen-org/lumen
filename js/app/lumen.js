@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -1528,6 +1528,25 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         return {prev, next, context}
       }
 
+      _fromJSON_singleContext(jsonObj) {
+        return Context.FromJSON(jsonObj).then( context => {
+          this.add(context);
+          // TODO: what does this do!?
+          activate(context, ['visualization', 'visPane', 'legendPane']);
+          return context.update()
+        });
+      }
+
+      fromJSON(jsonObj) {
+        if (_.isString(jsonObj))
+          jsonObj = JSON.parse(jsonObj);
+
+        jsonObj = (jsonObj.class === 'ContextCollection') ?  jsonObj.contexts : [jsonObj];
+
+        for (let jsonContext of jsonObj)
+          this._fromJSON_singleContext(jsonContext);
+      }
+
       empty() {
         return this._first === undefined;
       }
@@ -1835,7 +1854,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
         context.model.update()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
-          .then(() => initialQuerySetup(context.shelves)) // on initial startup only
+          .then(() => initialQuerySetup(context.shelves))
+          .then(() => InitialContexts.forEach( json => contextQueue.fromJSON(json)))
           .then(() => {
             //onStartUp();
           })

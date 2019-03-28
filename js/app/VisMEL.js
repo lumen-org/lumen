@@ -216,11 +216,9 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
     static
     FromJSON (jsonObj, model) {
       jsonutils.assertClass(jsonObj, 'layout');
-      let row = TableAlgebra.FromJSON(jsonObj.rows, model),
-        col = TableAlgebra.FromJSON(jsonObj.cols, model),
-        layout = new Layout();
-      layout.rows = row;
-      layout.cols = col;
+      let layout = new Layout();
+      layout.rows = TableAlgebra.FromJSON(jsonObj.rows, model);
+      layout.cols = TableAlgebra.FromJSON(jsonObj.cols, model);
       return layout;
     }
   }

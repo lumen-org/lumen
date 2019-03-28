@@ -10,8 +10,109 @@ define(['lib/logger'], function (Logger) {
 
   let json = [];
 
-  // TODO fill
-  json.push();
+  let initial = {
+    "class": "ContextCollection",
+    "contexts": [
+      {
+        "position": {
+          "top": 288,
+          "left": 674
+        },
+        "size": {
+          "width": "500px",
+          "height": "500px"
+        },
+        "vismel": {
+          "class": "vismel",
+          "from": [
+            {
+              "name": "emp_mpg",
+              "url": "http://127.0.0.1:52104/webservice",
+              "class": "model"
+            }
+          ],
+          "layout": {
+            "class": "layout",
+            "rows": [
+              {
+                "name": "car_size",
+                "split": "elements",
+                "class": "Split"
+              }
+            ],
+            "cols": [
+              {
+                "name": [
+                  "displacement"
+                ],
+                "aggregation": "maximum",
+                "yields": "displacement",
+                "class": "Aggregation"
+              }
+            ]
+          },
+          "layers": [
+            {
+              "class": "layer",
+              "aesthetics": {
+                "mark": "auto"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "position": {
+          "top": 37,
+          "left": 67
+        },
+        "size": {
+          "width": "500px",
+          "height": "500px"
+        },
+        "vismel": {
+          "class": "vismel",
+          "from": [
+            {
+              "name": "emp_iris",
+              "url": "http://127.0.0.1:52104/webservice",
+              "class": "model"
+            }
+          ],
+          "layout": {
+            "class": "layout",
+            "rows": [
+              {
+                "name": "species",
+                "split": "elements",
+                "class": "Split"
+              }
+            ],
+            "cols": [
+              {
+                "name": [
+                  "sepal_length"
+                ],
+                "aggregation": "maximum",
+                "yields": "sepal_length",
+                "class": "Aggregation"
+              }
+            ]
+          },
+          "layers": [
+            {
+              "class": "layer",
+              "aesthetics": {
+                "mark": "auto"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  };
+
+  json.push(initial);
 
   /* json is a list and each element is:
    *  * a json object or json string describing a Context
