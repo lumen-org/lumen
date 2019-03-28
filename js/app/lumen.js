@@ -902,12 +902,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
                 let json = that._context.query.toJSON();
                 utils.download("vismel.json", jsonutils.stringify(json), 'text/json');
             });
-        let $context_download = $('<div class="pl-details__body pl-button">download context </div>')
-            .click(() => {
-              let json = that._context.toJSON();
-              utils.download("context.json", jsonutils.stringify(json), 'text/json');
-              console.log(jsonutils.stringify(json));
-            });
         let $test_conversion = $('<div class="pl-details__body pl-button">test conversion</div>')
             .click( () => testConversion(that._context));
         let $load_vismel_to_context = $('<div class="pl-details__body pl-button">load query into context</div>')
@@ -976,12 +970,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
                 activate(context, ['visualization', 'visPane', 'legendPane']);
                 return context.update()
               })
-
             });
 
         that._$queryInfo = $('<div class="pl-text pl-details__body">')
             .append($vismel_download)
-            .append($context_download)
             .append($test_conversion)
             .append($load_vismel_to_context);
 
@@ -993,13 +985,40 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
           that._$resultInfo.append($facet_download);
         }
 
+        // Context info
+        let $context_save = $('<div class="pl-details__body pl-button">save active context</div>')
+            .click(() => {
+              let json = that._context.toJSON(),
+                  filename = that._context.model.name + ".json";
+              utils.download(filename, jsonutils.stringify(json), 'text/json');
+            });
+        let $context_load = $('<div class="pl-details__body pl-button">load context</div>')
+            .click(() => {
+              infoBox.message("loading of contexts not yet implemented");
+            });
+        let $all_context_save = $('<div class="pl-details__body pl-button">save all contexts</div>')
+            .click(() => {              
+              let json = {
+                class: 'ContextCollection',
+                contexts: [...contextQueue].map(c => c.toJSON()),
+              };
+              utils.download("all_contexts.json", jsonutils.stringify(json), 'text/json');
+            });
+
+        that._$contextInfo = $('<div class="pl-text pl-details__body">')
+            .append($context_load)
+            .append($context_save)
+            .append($all_context_save);
+
         that.$visual = $('<div class>')
           .append('<div class="pl-h2 pl-details__heading">Model</div>')
           .append(this._$modelInfo)
           .append('<div class="pl-h2 pl-details__heading">Query</div>')
           .append(this._$queryInfo)
           .append('<div class="pl-h2 pl-details__heading">Result</div>')
-          .append(this._$resultInfo);
+          .append(this._$resultInfo)
+          .append('<div class="pl-h2 pl-details__heading">Context</div>')
+          .append(this._$contextInfo);
 
         that._context = undefined;
         if(context !== undefined) {
@@ -1498,15 +1517,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
      */
     class ContextQueue {
 
-      static
-      _makeElem(context=undefined, prev=undefined, next=undefined) {
-        return {prev, next, context}
-      }
-
       constructor() {
         this._first = undefined;
         this._last = undefined;
         Emitter(this);
+      }
+
+      static
+      _makeElem(context=undefined, prev=undefined, next=undefined) {
+        return {prev, next, context}
       }
 
       empty() {
@@ -1588,6 +1607,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './VisMEL', './Vis
        */
       first() {
         return this.empty() ? undefined : this._first.context;
+      }
+
+      // *makeIterator() {
+      *[Symbol.iterator]() {
+        let current = this._first;
+        while (current !== undefined) {
+          yield current.context;
+          current = current.next;
+        }
       }
     }
 
