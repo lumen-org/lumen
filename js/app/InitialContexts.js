@@ -215,7 +215,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "mcg_iris_map",
-              "url": "http://141.35.13.12:8080/webservice",
+              "url": "http://modelvalidation.mooo.com:8080/webservice",
               "class": "model"
             }
           ],
@@ -288,7 +288,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "mcg_allbus_map",
-              "url": "http://141.35.13.12:8080/webservice",
+              "url": "http://modelvalidation.mooo.com:8080/webservice",
               "class": "model"
             }
           ],
@@ -367,7 +367,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "emp_allbus",
-              "url": "http://141.35.13.12:8080/webservice",
+              "url": "http://modelvalidation.mooo.com:8080/webservice",
               "class": "model"
             }
           ],
@@ -446,7 +446,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "spflow_iris",
-              "url": "http://141.35.13.12:8080/webservice",
+              "url": "http://modelvalidation.mooo.com:8080/webservice",
               "class": "model"
             }
           ],
