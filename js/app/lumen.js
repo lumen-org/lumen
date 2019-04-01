@@ -23,8 +23,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
      */
     function initialQuerySetup(shelves) {
         drop(shelves.column, shelves.meas.at(0));
-        drop(shelves.row, shelves.meas.at(1));
-        drop(shelves.color, shelves.dim.at(1));
+        drop(shelves.row, shelves.meas.at(2));
+        drop(shelves.color, shelves.dim.at(0));
     }
 
     // TODO: clean up. this is a quick hack for the paper only to rename the appearance.
