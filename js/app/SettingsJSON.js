@@ -976,13 +976,13 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         },
       },
       config: {
-        active: true,
+        active: false,
       },
       reloadmodels: {
         active: true,
       },
       modelselector: {
-        active: true,
+        active: false,
       }
     };
     return c;
