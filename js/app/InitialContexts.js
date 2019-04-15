@@ -15,28 +15,28 @@ define(['lib/logger'], function (Logger) {
     "contexts": [
       {
         "position": {
-          "top": 83,
-          "left": 431
+          "top": 1.9791679382324219,
+          "left": 443.9410095214844
         },
         "size": {
-          "width": "500px",
-          "height": "500px"
+          "width": "381px",
+          "height": "346px"
         },
         "facets": {
           "aggregations": {
-            "active": false,
+            "active": true,
             "possible": true
           },
           "data": {
-            "active": false,
+            "active": true,
             "possible": true
           },
           "testData": {
-            "active": true,
+            "active": false,
             "possible": true
           },
           "marginals": {
-            "active": true,
+            "active": false,
             "possible": true
           },
           "contour": {
@@ -48,7 +48,89 @@ define(['lib/logger'], function (Logger) {
           "class": "vismel",
           "from": [
             {
-              "name": "emp_titanic",
+              "name": "Iris_tsne_testdata",
+              "url": "http://127.0.0.1:52104/webservice",
+              "class": "model"
+            }
+          ],
+          "layout": {
+            "class": "layout",
+            "rows": [
+              {
+                "name": "Emb_dim2",
+                "split": "equiinterval",
+                "args": [
+                  8
+                ],
+                "class": "Split"
+              }
+            ],
+            "cols": [
+              {
+                "name": "Emb_dim1",
+                "split": "equiinterval",
+                "args": [
+                  8
+                ],
+                "class": "Split"
+              }
+            ]
+          },
+          "layers": [
+            {
+              "class": "layer",
+              "aesthetics": {
+                "mark": "auto",
+                "color": {
+                  "name": [
+                    "petal_length"
+                  ],
+                  "aggregation": "maximum",
+                  "yields": "petal_length",
+                  "class": "Aggregation",
+                  "channel": "rgb"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "position": {
+          "top": 352.9340591430664,
+          "left": 452.9166564941406
+        },
+        "size": {
+          "width": "359px",
+          "height": "310px"
+        },
+        "facets": {
+          "aggregations": {
+            "active": true,
+            "possible": true
+          },
+          "data": {
+            "active": false,
+            "possible": true
+          },
+          "testData": {
+            "active": false,
+            "possible": true
+          },
+          "marginals": {
+            "active": false,
+            "possible": true
+          },
+          "contour": {
+            "active": true,
+            "possible": true
+          }
+        },
+        "vismel": {
+          "class": "vismel",
+          "from": [
+            {
+              "name": "mpg_lle_pred",
               "url": "http://127.0.0.1:52104/webservice",
               "class": "model"
             }
@@ -58,20 +140,20 @@ define(['lib/logger'], function (Logger) {
             "rows": [
               {
                 "name": [
-                  "Fare"
+                  "mpg_highway"
                 ],
                 "aggregation": "maximum",
-                "yields": "Fare",
+                "yields": "mpg_highway",
                 "class": "Aggregation"
               }
             ],
             "cols": [
               {
                 "name": [
-                  "Age"
+                  "year"
                 ],
                 "aggregation": "maximum",
-                "yields": "Age",
+                "yields": "year",
                 "class": "Aggregation"
               }
             ]
@@ -82,8 +164,11 @@ define(['lib/logger'], function (Logger) {
               "aesthetics": {
                 "mark": "auto",
                 "color": {
-                  "name": "Pclass",
-                  "split": "elements",
+                  "name": "Emb_dim1",
+                  "split": "equiinterval",
+                  "args": [
+                    10
+                  ],
                   "class": "Split",
                   "channel": "rgb"
                 }
@@ -94,16 +179,89 @@ define(['lib/logger'], function (Logger) {
       },
       {
         "position": {
-          "top": 394,
-          "left": 61
+          "top": 307.98612213134766,
+          "left": 7.986114501953125
         },
         "size": {
-          "width": "500px",
-          "height": "500px"
+          "width": "422px",
+          "height": "372px"
         },
         "facets": {
           "aggregations": {
+            "active": false,
+            "possible": true
+          },
+          "data": {
             "active": true,
+            "possible": true
+          },
+          "testData": {
+            "active": false,
+            "possible": true
+          },
+          "marginals": {
+            "active": true,
+            "possible": true
+          },
+          "contour": {
+            "active": true,
+            "possible": true
+          }
+        },
+        "vismel": {
+          "class": "vismel",
+          "from": [
+            {
+              "name": "mpg_spectrale_pred",
+              "url": "http://127.0.0.1:52104/webservice",
+              "class": "model"
+            }
+          ],
+          "layout": {
+            "class": "layout",
+            "rows": [
+              {
+                "name": [
+                  "Emb_dim2"
+                ],
+                "aggregation": "maximum",
+                "yields": "Emb_dim2",
+                "class": "Aggregation"
+              }
+            ],
+            "cols": [
+              {
+                "name": [
+                  "Emb_dim1"
+                ],
+                "aggregation": "maximum",
+                "yields": "Emb_dim1",
+                "class": "Aggregation"
+              }
+            ]
+          },
+          "layers": [
+            {
+              "class": "layer",
+              "aesthetics": {
+                "mark": "auto"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "position": {
+          "top": 12.951393127441406,
+          "left": 12.951385498046875
+        },
+        "size": {
+          "width": "297px",
+          "height": "288px"
+        },
+        "facets": {
+          "aggregations": {
+            "active": false,
             "possible": true
           },
           "data": {
@@ -136,22 +294,22 @@ define(['lib/logger'], function (Logger) {
             "class": "layout",
             "rows": [
               {
-                "name": [
-                  "sepal_width"
+                "name": "Emb_dim2",
+                "split": "equiinterval",
+                "args": [
+                  8
                 ],
-                "aggregation": "maximum",
-                "yields": "sepal_width",
-                "class": "Aggregation"
+                "class": "Split"
               }
             ],
             "cols": [
               {
-                "name": [
-                  "petal_width"
+                "name": "Emb_dim1",
+                "split": "equiinterval",
+                "args": [
+                  8
                 ],
-                "aggregation": "maximum",
-                "yields": "petal_width",
-                "class": "Aggregation"
+                "class": "Split"
               }
             ]
           },
@@ -173,630 +331,7 @@ define(['lib/logger'], function (Logger) {
       }
     ]
   };
-
-  //json.push(initial);
-
-  let initial2 = {
-    "class": "ContextCollection",
-    "contexts": [
-      {
-        "position": {
-          "top": 14.98046875,
-          "left": 590.78125
-        },
-        "size": {
-          "width": "404px",
-          "height": "389px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": false,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": true,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "mcg_iris_map",
-              "url": "http://modelvalidation.mooo.com:8080/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "petal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "petal_length",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": [
-                  "sepal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "sepal_length",
-                "class": "Aggregation"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "position": {
-          "top": 536.85546875,
-          "left": 653.84765625
-        },
-        "size": {
-          "width": "500px",
-          "height": "500px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": true,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": false,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "mcg_allbus_map",
-              "url": "http://modelvalidation.mooo.com:8080/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "income"
-                ],
-                "aggregation": "maximum",
-                "yields": "income",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": "age",
-                "split": "equiinterval",
-                "args": [
-                  5
-                ],
-                "class": "Split"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto",
-                "color": {
-                  "name": "sex",
-                  "split": "elements",
-                  "class": "Split",
-                  "channel": "rgb"
-                }
-              }
-            }
-          ]
-        }
-      },
-      {
-        "position": {
-          "top": 534.82421875,
-          "left": 51.89453125
-        },
-        "size": {
-          "width": "500px",
-          "height": "500px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": true,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": false,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "emp_allbus",
-              "url": "http://modelvalidation.mooo.com:8080/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "income"
-                ],
-                "aggregation": "maximum",
-                "yields": "income",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": "age",
-                "split": "equiinterval",
-                "args": [
-                  5
-                ],
-                "class": "Split"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto",
-                "color": {
-                  "name": "sex",
-                  "split": "elements",
-                  "class": "Split",
-                  "channel": "rgb"
-                }
-              }
-            }
-          ]
-        }
-      },
-      {
-        "position": {
-          "top": 7.9296875,
-          "left": 1020.87890625
-        },
-        "size": {
-          "width": "435px",
-          "height": "399px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": false,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": true,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "spflow_iris",
-              "url": "http://modelvalidation.mooo.com:8080/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "petal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "petal_length",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": [
-                  "sepal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "sepal_length",
-                "class": "Aggregation"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto"
-              }
-            }
-          ]
-        }
-      }
-    ]
-  };
-  json.push(initial2);
-
-  let initial3 = {
-    "class": "ContextCollection",
-    "contexts": [
-      {
-        "position": {
-          "top": 14.98046875,
-          "left": 590.78125
-        },
-        "size": {
-          "width": "404px",
-          "height": "389px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": false,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": true,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "mcg_iris_map",
-              "url": "http://127.0.0.1:52104/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "petal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "petal_length",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": [
-                  "sepal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "sepal_length",
-                "class": "Aggregation"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "position": {
-          "top": 536.85546875,
-          "left": 653.84765625
-        },
-        "size": {
-          "width": "500px",
-          "height": "500px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": true,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": false,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "mcg_allbus_map",
-              "url": "http://127.0.0.1:52104/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "income"
-                ],
-                "aggregation": "maximum",
-                "yields": "income",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": "age",
-                "split": "equiinterval",
-                "args": [
-                  5
-                ],
-                "class": "Split"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto",
-                "color": {
-                  "name": "sex",
-                  "split": "elements",
-                  "class": "Split",
-                  "channel": "rgb"
-                }
-              }
-            }
-          ]
-        }
-      },
-      {
-        "position": {
-          "top": 534.82421875,
-          "left": 51.89453125
-        },
-        "size": {
-          "width": "500px",
-          "height": "500px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": true,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": false,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "emp_allbus",
-              "url": "http://127.0.0.1:52104/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "income"
-                ],
-                "aggregation": "maximum",
-                "yields": "income",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": "age",
-                "split": "equiinterval",
-                "args": [
-                  5
-                ],
-                "class": "Split"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto",
-                "color": {
-                  "name": "sex",
-                  "split": "elements",
-                  "class": "Split",
-                  "channel": "rgb"
-                }
-              }
-            }
-          ]
-        }
-      },
-      {
-        "position": {
-          "top": 7.9296875,
-          "left": 1020.87890625
-        },
-        "size": {
-          "width": "435px",
-          "height": "399px"
-        },
-        "facets": {
-          "aggregations": {
-            "active": false,
-            "possible": true
-          },
-          "data": {
-            "active": true,
-            "possible": true
-          },
-          "testData": {
-            "active": false,
-            "possible": true
-          },
-          "marginals": {
-            "active": true,
-            "possible": true
-          },
-          "contour": {
-            "active": true,
-            "possible": true
-          }
-        },
-        "vismel": {
-          "class": "vismel",
-          "from": [
-            {
-              "name": "spflow_iris",
-              "url": "http://127.0.0.1:52104/webservice",
-              "class": "model"
-            }
-          ],
-          "layout": {
-            "class": "layout",
-            "rows": [
-              {
-                "name": [
-                  "petal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "petal_length",
-                "class": "Aggregation"
-              }
-            ],
-            "cols": [
-              {
-                "name": [
-                  "sepal_length"
-                ],
-                "aggregation": "maximum",
-                "yields": "sepal_length",
-                "class": "Aggregation"
-              }
-            ]
-          },
-          "layers": [
-            {
-              "class": "layer",
-              "aesthetics": {
-                "mark": "auto"
-              }
-            }
-          ]
-        }
-      }
-    ]
-  };
-  //json.push(initial3);
+  json.push(initial);
 
   /* json is a list and each element is:
    *  * a json object or json string describing a Context

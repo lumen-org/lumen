@@ -1793,23 +1793,26 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        * Starts the application.
        */
       start: function () {
-        // create initial context with model
-        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
-        contextQueue.add(context);
 
-        // fetch model
-        context.model.update()
-          .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
-          .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
-          .then(() => initialQuerySetup(context.shelves))
-          .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
-          .then(() => {
-            //onStartUp();
-          })
-          .catch((err) => {
-            console.error(err);
-            infoBox.message("Could not load remote model from Server!");
-          });
+        InitialContexts.forEach( json => contextQueue.addContextFromJSON(json));
+
+        // // create initial context with model
+        // let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
+        // contextQueue.add(context);
+        //
+        // // fetch model
+        // context.model.update()
+        //   .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
+        //   .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
+        //   .then(() => initialQuerySetup(context.shelves))
+        //   .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
+        //   .then(() => {
+        //     //onStartUp();
+        //   })
+        //   .catch((err) => {
+        //     console.error(err);
+        //     infoBox.message("Could not load remote model from Server!");
+        //   });
       }
     };
 

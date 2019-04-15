@@ -932,11 +932,11 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       },
       marginals: {
         possible: true,
-        active: true,
+        active: false,
       },
       contour: {
         possible: true,
-        active: false,
+        active: true,
       },
       /*predictionOffset: {
         possible: false,
