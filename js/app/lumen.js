@@ -1794,6 +1794,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       start: function () {
 
+        if (!utils.isChrome()) {
+          infoBox.message("Please use this site with Chrome! Other browsers are not yet supported - sorry!!", "warning", 60000);
+          return;
+        }
+
         InitialContexts.forEach( json => contextQueue.addContextFromJSON(json));
 
         // // create initial context with model

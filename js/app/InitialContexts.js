@@ -49,7 +49,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "Iris_tsne_testdata",
-              "url": "http://127.0.0.1:52104/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/explore/webservice",
               "class": "model"
             }
           ],
@@ -131,7 +131,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "mpg_lle_pred",
-              "url": "http://127.0.0.1:52104/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/explore/webservice",
               "class": "model"
             }
           ],
@@ -213,7 +213,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "mpg_spectrale_pred",
-              "url": "http://127.0.0.1:52104/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/explore/webservice",
               "class": "model"
             }
           ],
@@ -286,7 +286,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "iris_tsne_pred",
-              "url": "http://127.0.0.1:52104/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/explore/webservice",
               "class": "model"
             }
           ],
