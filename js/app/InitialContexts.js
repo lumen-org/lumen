@@ -215,7 +215,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "mcg_iris_map",
-              "url": "https://modelvalidation.mooo.com:8080/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/vis2019/webservice",
               "class": "model"
             }
           ],
@@ -288,7 +288,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "mcg_allbus_map",
-              "url": "https://modelvalidation.mooo.com:8080/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/vis2019/webservice",
               "class": "model"
             }
           ],
@@ -367,7 +367,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "emp_allbus",
-              "url": "https://modelvalidation.mooo.com:8080/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/vis2019/webservice",
               "class": "model"
             }
           ],
@@ -446,7 +446,7 @@ define(['lib/logger'], function (Logger) {
           "from": [
             {
               "name": "spflow_iris",
-              "url": "https://modelvalidation.mooo.com:8080/webservice",
+              "url": "https://modelvalidation.mooo.com:8080/vis2019/webservice",
               "class": "model"
             }
           ],
