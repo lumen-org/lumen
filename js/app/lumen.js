@@ -1793,6 +1793,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        * Starts the application.
        */
       start: function () {
+
+        if (!utils.isChrome()) {
+          infoBox.message("Please use this site with Chrome! Other browsers are not yet supported - sorry!!", "warning", 60000);
+          return;
+        }
+
         // create initial context with model
         let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
         contextQueue.add(context);

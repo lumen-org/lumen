@@ -225,6 +225,29 @@ define([], function() {
     return facets;
   }
 
+  /**
+   * Returns true iff the used browser is chrome and false else.
+   * @return {boolean}
+   */
+  function isChrome() {
+    // based on: https://stackoverflow.com/questions/4565112/javascript-how-to-find-out-if-the-user-browser-is-chrome/13348618#13348618
+    let isChromium = window.chrome;
+    let winNav = window.navigator;
+    let vendorName = winNav.vendor;
+    let isOpera = typeof window.opr !== "undefined";
+    let isIEedge = winNav.userAgent.indexOf("Edge") > -1;
+    let isIOSChrome = winNav.userAgent.match("CriOS");
+
+    if (isIOSChrome) {
+      // is Google Chrome on IOS
+      return true;
+    } else return isChromium !== null &&
+        typeof isChromium !== "undefined" &&
+        vendorName === "Google Inc." &&
+        isOpera === false &&
+        isIEedge === false;
+  }
+
   return {
     selectValue,
     listify,
@@ -238,6 +261,7 @@ define([], function() {
     todayString,
     assignWithFilter,
     download,
-    getFacetsFlags
+    getFacetsFlags,
+    isChrome
   };
 });
