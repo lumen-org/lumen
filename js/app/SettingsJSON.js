@@ -924,7 +924,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       },
       data: {
         possible: true,
-        active: true,
+        active: false,
       },
       testData: {
         possible: true,
