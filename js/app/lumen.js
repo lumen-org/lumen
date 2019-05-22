@@ -780,6 +780,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
+       * Clear input text field
+       * @private
+       */
+      _clearInput () {
+        $('.pl-input', this.$visual).val("")
+      }
+
+      /**
        * Load model with name modelname.
        * @param modelName {String} Name of the model to load.
        * @private
@@ -790,12 +798,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         contextQueue.add(context);
 
         // fetch model
+        let that = this;
         context.model.update()
           .catch((err) => {
             console.error(err);
             infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
             // TODO: remove vis and everything else ...
           })
+          .then(() => that._clearInput())
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
           .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
