@@ -749,14 +749,24 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
     class UploadWidget {
-      constructor (context) {
-        this._context = context;
-        this._$modelNameTextBox = $('<input class="pl-input" type="text"/>')
+      constructor (/*context*/) {
+        //this._context = context;
+        this._$modelNameTextBox = $('<input class="pl-input" type="text"/>');
             // onchange( check that this name does not exist ,and inform about it otherwise. overwriting is allowed, however)
         let $uploadButton = $('<div class="pl-button pl-toolbar__button pl-data-upload__button">Upload!</div>')
             .click(
                 () => 1 // TODO: add code for uploading here. it should then trigger a confirmation for the user, ...
             );
+
+        this.$visual = $('<div class="pl-data-upload"></div>')
+            .append( $('<div class="pl-label pl-data-upload__label">Upload Data:</div>'),
+                this._$modelNameTextBox, $uploadButton);
+
+        CONTINUE_HERE
+
+        // if(context !== undefined) {
+        //   this.setContext(context);
+        // }
       }
 
       /**
@@ -1078,7 +1088,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         }
 
         if (config.upload.active) {
-          // TOOD
+          this._uploadWidget = new UploadWidget();
+          elems.push(this._uploadWidget.$visual);
         }
 
         if (config.query.active) {

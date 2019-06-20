@@ -907,6 +907,15 @@ textarea.pl-survey__content {
     margin-right: 0.3rem;
 }
 
+.pl-data-upload {
+    display: flex;
+    align-items: center;
+}
+
+.pl-data-upload .pl-input {
+
+}
+
 .pl-model-selector {
     display: flex;
     align-items: center;

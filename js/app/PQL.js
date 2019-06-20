@@ -746,7 +746,6 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
         "FROM_DATA": data,
         "AS": modelName
       })
-    }
   };
 
   /**
