@@ -739,6 +739,13 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
     drop: function (name) {
       if (!_.isString(name)) throw new TypeError("'name' must be of type String");
       return {"SHOW": name};
+    },
+
+    buildModel: (data, modelName, modelClass) => ({
+        "MAKE_MODEL": modelClass,
+        "FROM_DATA": data,
+        "AS": modelName
+      })
     }
   };
 

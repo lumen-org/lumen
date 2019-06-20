@@ -748,6 +748,35 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
     }
 
+    class UploadWidget {
+      constructor (context) {
+        this._context = context;
+        this._$modelNameTextBox = $('<input class="pl-input" type="text"/>')
+            // onchange( check that this name does not exist ,and inform about it otherwise. overwriting is allowed, however)
+        let $uploadButton = $('<div class="pl-button pl-toolbar__button pl-data-upload__button">Upload!</div>')
+            .click(
+                () => 1 // TODO: add code for uploading here. it should then trigger a confirmation for the user, ...
+            );
+      }
+
+      /**
+       * Called when csv was uploaded successfully and confirmed by user to be transmitted to backend.
+       * @private
+       */
+      _onUploadConfirmed (data) {
+        c.modelbase.buildModel(data, _$modelNameTextBox.val(), 'empirical_model')
+            .then( res => {
+              if (res.status === 'SUCCESS') {
+                infoBox.message('model successfully trained. ');
+                // TODO maybe: trigger update of available models
+                // TODO: load it!
+              }
+              else {
+                infoBox.error(`failed to create model from the data you specified: ${res.message}`)
+              }
+            })
+      }
+    }
 
     /**
      * A model selector, i.e. an input field whose value is used as a model name.
@@ -1046,6 +1075,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._modelSelector = new ModelSelector(context);
         if (config.modelselector.active) {
           elems.push(this._modelSelector.$visual);
+        }
+
+        if (config.upload.active) {
+          // TOOD
         }
 
         if (config.query.active) {

@@ -951,6 +951,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       query: {
         active: true,
       },
+      upload: {
+        active: true,
+      },
       clone: {
         active: true,
       },

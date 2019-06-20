@@ -346,6 +346,18 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
       return this.execute({'RELOAD': models});
     }
 
+    /**
+     * Triggers creation of model of given class from given data.
+     * TODO: add possibility for options for model learning.
+     * @param data
+     * @param modelName
+     * @param modelClass
+     * @returns {Promise}
+     */
+    buildModel (data, modelName, modelClass) {
+      return this.execute(PQL.toJSON.buildModel(data, modelName, modelClass));
+    }
+
   }
 
   return {
