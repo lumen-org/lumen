@@ -608,7 +608,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     /**
      * Using annotations to title templating axis:
      *
-     * Templating axis need only one titel per level, however the axes themselves may be duplicated several times within one level. Moreover we cannot control where exactly normal titles are shown. Hence we use annotations to generate proper per-level-titles for them.
+     * Templating axis need only one title per level, however the axes themselves may be duplicated several times within one level. Moreover we cannot control where exactly normal titles are shown. Hence we use annotations to generate proper per-level-titles for them.
      *
      * For a x-axis (analogous for y-axis):
      *
@@ -676,8 +676,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       //  * but only if it is generally enabled in the config
       //  * and if there was any data passed in for marginals
       let marginal = {
-        x: facets.marginals.active && used.y, // && uniColl[0][0] && uniColl[0][0].y,
-        y: facets.marginals.active && used.x, // && uniColl[0][0] && uniColl[0][0].x
+        x: facets.marginals.active && used.y && qx.last().varType === 'distributed', // && uniColl[0][0] && uniColl[0][0].y,
+        //x: facets.marginals.active && used.y, // && uniColl[0][0] && uniColl[0][0].y,
+        y: facets.marginals.active && used.x && qy.last().varType === 'distributed', // && uniColl[0][0] && uniColl[0][0].x
       };
 
       // get absolute pane size [in px]

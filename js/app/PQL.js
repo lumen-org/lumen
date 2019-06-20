@@ -70,7 +70,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
    */
   var FieldT = Object.freeze({
     DataType: {string: 'string', num: 'numerical'},
-    Role: {measure: 'measure', dimension: 'dimension'}
+    Role: {measure: 'measure', dimension: 'dimension'},
+    VarType: {independent: 'independent', distributed: 'distributed'}
   });
 
   /**
@@ -83,20 +84,22 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
   class Field {
 
     /**
-     *
      * @param name {String} The name of the Field
-     * @param dataType {String} The desired data type. Either 'string' or 'numerical'. For convinience use FieldT
+     * @param dataType {String} The desired data type. Either 'string' or 'numerical'. For convenience use FieldT.
      * @param domain {Domain} The domain of the Field, i.e. the values it may take
      * @param extent {Domain} A finite range/set of values, that it typical.
+     * @param varType {String} The desired variable type. Either 'distributed' or 'independent'. For convenience use FieldT.
      * @param model {Model} Optional. The model this field belongs to.
      */
-    constructor (name, dataType, domain, extent, model=undefined) {
+    constructor (name, dataType, domain, extent, varType, model=undefined) {
       if (!_.isString(name)) throw TypeError("name must be a string, but is: " + name.toString());
       if (!_.contains(FieldT.DataType, dataType)) throw RangeError("invalid dataType: " + dataType.toString());
+      if (!_.contains(FieldT.VarType, varType)) throw RangeError("invalid varType: " + varType.toString());
       if (extent.isUnbounded()) throw RangeError("extent may not be unbounded.");
 
       this.name = name;
       this.dataType = dataType;
+      this.varType = varType;
       this.domain = domain;
       this.extent = extent;
       this.model = model;
@@ -115,7 +118,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
     }
 
     copy () {
-      return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy(), this.model);
+      return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy(), this.varType,
+          this.model);
     }
 
     toJSON () {
@@ -123,6 +127,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
         class: 'Field',
         name: this.name,
         dataType: this.dataType,
+        varType: this.varType,
         model: this.model.name,
       });
     }
@@ -138,6 +143,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
       let field = getFieldFromModel(jsonObj.name, model);
       if (field.dataType !== jsonObj.dataType)
         throw  `data types of field in json (${jsonObj.dataType}) and model (${field.dataType}) do not match.`;
+      if (field.varType !== jsonObj.varType)
+        throw  `variable types of field in json (${jsonObj.varType}) and model (${field.varType}) do not match.`;
 
       return field;
     }

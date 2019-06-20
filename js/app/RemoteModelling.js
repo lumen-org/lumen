@@ -75,6 +75,17 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
     return row;
   }
 
+  /**
+   * Return the varType of the field given in its JSON representation.
+   * @param {Object} json JSON representation of a {Field}, typically as received from a modelbase.
+   * @returns {String}
+   */
+  function varType_from_fieldJSON(field) {
+    if (field.hasOwnProperty('independent'))
+      return (field.independent ? PQL.FieldT.VarType.independent : PQL.FieldT.VarType.distributed);
+    else
+      return PQL.FieldT.VarType.distributed;
+  }
 
   /**
    * A RemoteModel is a local representation of / proxy to a remote Probability Model. It holds a local copy of the header
@@ -127,6 +138,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
           field.dtype,
           (field.dtype === 'numerical' ? new Domain.Numeric(field.domain) : new Domain.Discrete(field.domain)),
           (field.dtype === 'numerical' ? new Domain.Numeric(field.extent) : new Domain.Discrete(field.extent)),
+          varType_from_fieldJSON(field),
           this);
         this.fields.set(field.name, modelField);
         this.byIndex.push(modelField);
