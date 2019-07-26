@@ -867,6 +867,15 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           shape: mapper.samplesShape,
           size: mapper.samplesSize
         };
+      } else if (mode === 'samples') {
+        // TODO change visual representation
+        cfg = c.map.sampleMarker;
+        console.log("drawing samples!");
+        mapper = {
+          fillColor: mapper.dataFillColor,
+          shape: mapper.samplesShape,
+          size: mapper.samplesSize
+        };
       } else {
         throw RangeError("invalid mode: " + mode.toString());
       }

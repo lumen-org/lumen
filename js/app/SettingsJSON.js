@@ -918,26 +918,67 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
   function _addRefactorJSON(c) {
     c.views = { // TODO: rename to facets!
+
+      // new way of representation:  differentiate between what and where:
+      // what is the advantage?
+      // dataDensity : {
+      //  marginal: { // -> histograms
+      //    possible: true,
+      //    active: true,
+      //  },
+      //  central: { // -> density plot
+      //    possible: true,
+      //    active: true,
+      //  },
+      // }
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
         active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
+
+      // training data
       data: {
         possible: true,
         active: true,
       },
+
+      // test data
       testData: {
         possible: true,
         active: false,
       },
+
+      // model samples
+      samples: {
+        possible: true,
+        active: false,
+      },
+
+      // model density marginal
       marginals: {
         possible: true,
         active: true,
       },
+
+      // training data marginals
+      dataMarginals: {
+        possible: true,
+        active: false,
+      },
+
+      // model density 'central' plot
       contour: {
         possible: true,
         active: false,
       },
+
+      // data-local model prediction
+      // -> enable choosing between which data?
+      predictionDataLocal: {
+        possible: true,
+        active: false,
+      },
+
       /*predictionOffset: {
         possible: false,
         active: false,

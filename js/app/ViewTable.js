@@ -139,9 +139,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
+    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, samplesRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
-      for (let rt of [aggrRT, dataRT, testDataRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
+      for (let rt of [aggrRT, dataRT, testDataRT, samplesRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
         if (rt !== undefined)
           rt.formatter = resultTableFormatter(rt);
 
@@ -211,6 +211,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
             else { // if (used.shape) {
@@ -222,6 +223,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
+              traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
+
             }
 
           }
@@ -233,6 +236,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
+            traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
           }
         }
 
@@ -268,6 +272,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
+          traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
         }
       }
 
@@ -286,6 +291,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
         traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
         traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
+        traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
         traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       } else {
         traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
@@ -589,7 +595,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
+          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets.samples.data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
           // let atomicTraces = atomicPlotlyTraces(geometry, aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x],
             {
             x: mainAxesIds.x[x],

@@ -80,9 +80,10 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     });
 
     let measures = [];
-    let aggrDensities = fieldUsages
+    fieldUsages
       .filter(fu => PQL.isAggregationOrDensity(fu))
       .forEach(fu => {
+        // using this leads to all kinds of problems, since variables are then undefined which are not expected to be
         //_validateDensityFU(fu);
         fu.index = idx;
         idx2fu.push(fu);

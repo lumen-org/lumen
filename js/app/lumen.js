@@ -32,10 +32,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
     // careful: you cannot just change the _keys_! they are reused in multiple places!
     const _facetNameMap = {
-      'aggregations': 'prediction',
-      'marginals': 'marginals',
-      'contour': 'density',
-      'data': 'data',
+      'aggregations': 'global prediction',      
+      'predictionDataLocal': 'data-local prediction',
+      'marginals': 'model marginals',
+      'dataMarginals': 'data marginals',
+      'contour': 'model density',
+      'samples': 'model samples',
+      'data': 'training data',
       'testData': 'test data',
 //      'predictionOffset': 'prediction offset',
     };
@@ -272,8 +275,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
+                c.updateFacetCollection('samples', RT.samplesCollection, fieldUsageCacheMap, {
+                  data_category: 'training data',
+                  data_point_limit: Settings.tweaks.data_point_limit
+                }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap)
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('dataMarginals', RT.dataMarginalsCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap),
+
               ]))
         } else {
           stages['update.facets'] = Promise.resolve();
@@ -334,7 +344,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
               facet.data = res;
               facet.fetchState = 'fetched';
               //return res;
-              logger.debug(`fetched facet: ${facetName}`)
+              logger.debug(`fetched facet: ${facetName}`);
               return Promise.resolve()
             });
         else if (facet.active && facet.fetchState === 'fetched') {

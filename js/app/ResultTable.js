@@ -267,11 +267,31 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         return Promise.all(fetchPromises).then(() => collection);
     }
 
+    function dataMarginalsCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
+        let size = queryCollection.size;
+        let collection = getEmptyCollection(size, enabled);
+        if (!enabled)  // quit early if disabled
+            return Promise.resolve(collection);
+        throw "Not implemented Error";
+    }
+
+    function predictionDataLocalCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
+        let size = queryCollection.size;
+        let collection = getEmptyCollection(size, enabled);
+        if (!enabled)  // quit early if disabled
+            return Promise.resolve(collection);
+        throw "Not implemented Error";
+    }
+
+
     return {
         aggrCollection,
         samplesCollection,
         uniDensityCollection,
         biDensityCollection,
         getEmptyCollection,
+        dataMarginalsCollection,
+        predictionDataLocalCollection,
+
     };
 });
