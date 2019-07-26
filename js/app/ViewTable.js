@@ -522,7 +522,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
     function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout) {
-      // build up helper variables needed later and to check if we are in the quant-categorical case
+      // build up helper variables needed later and to check if we are in the quant-categorical case     
+     if (rt === undefined)
+        return
+
       let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
         catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
         quantXY = PQL.hasNumericYield(fu.x) ? 'x' : (PQL.hasNumericYield(fu.y) ? 'y' : undefined);
@@ -672,13 +675,15 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       };
 
       // flag whether or not in an atomic plot a marginal axis will be drawn. .x (.y) is the flag for the marginal x axis (y axis)
-      //  * we need a marginal plot, iff the opposite letter axis is used!
+      //  * we need a marginal plot, iff the opposite letter axis is used
       //  * but only if it is generally enabled in the config
       //  * and if there was any data passed in for marginals
+      //  * and if the variable encoded by the axis is distributed
       let marginal = {
-        x: facets.marginals.active && used.y && qx.last().varType === 'distributed', // && uniColl[0][0] && uniColl[0][0].y,
-        //x: facets.marginals.active && used.y, // && uniColl[0][0] && uniColl[0][0].y,
-        y: facets.marginals.active && used.x && qy.last().varType === 'distributed', // && uniColl[0][0] && uniColl[0][0].x
+        // the stuff after "//" detect if we do not want marginal distribution plots. but detecting it here, comes with many
+        // issues, e.g. data histograms may anyway be drawn
+        x: facets.marginals.active && used.y, // && (!used.x || (used.x && qx.last().fields[0].varType === 'distributed')),
+        y: facets.marginals.active && used.x, // && (!used.y || (used.y && qy.last().fields[0].varType === 'distributed')),
       };
 
       // get absolute pane size [in px]

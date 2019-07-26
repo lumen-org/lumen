@@ -23,6 +23,18 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   class ConversionError extends utils.ExtendableError {}
 
   /**
+   * A density query may only be issued for distributed variables. This function will throw if this rule is violated and
+   * return the aggregation otherwise.
+   * @param aggr
+   * @private
+   */
+  function _validateDensityFU (aggr) {
+    if (!aggr.fields.every(f => f.varType === 'distributed'))
+      throw new ConversionError("Density may not be queried on independent variables.");
+    return aggr;
+  }
+
+  /**
    * Translates a VisMEL query into a predict PQL query as specified in the VisMEL query.
    * @param vismel
    * @return {query, fu2idx, idx2fu}
@@ -36,7 +48,8 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 
     // note: in the general case query.fieldUsages() and [...dimensions, ...measures] do not contain the same set of
     //  field usages, as duplicate dimensions won't show up in dimensions
-    // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
+    // TODO: it's not just about the same method, is just should be the same Split! Once I implemented this possiblity
+    //  (see "TODO-reference" in interaction.js) no duplicate split should be allowed at all!
 
     let fieldUsages = PQL.cleanFieldUsages(vismel.fieldUsages()),
       dimensions = [],
@@ -67,9 +80,10 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     });
 
     let measures = [];
-    fieldUsages
+    let aggrDensities = fieldUsages
       .filter(fu => PQL.isAggregationOrDensity(fu))
       .forEach(fu => {
+        //_validateDensityFU(fu);
         fu.index = idx;
         idx2fu.push(fu);
         fu2idx.set(fu, idx);

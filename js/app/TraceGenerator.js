@@ -626,8 +626,15 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
       let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
-
+      
       let traces = [];
+
+      // TODO: this is a bigger issue: sometimes we may not want to draw / or actually even query a particular trace from the server
+      // e.g. because it makes not sense: density of independent variables.
+      // WORKAROUND: detect "all undefined" query results      
+      // abort
+      if (zdata.every(e => e === undefined))
+        return traces;
 
       // TODO: should we apply some heuristic to reduce the impact of few, very large density value
       // TODO: this cannot work, because it sets the scale on a per trace basis...

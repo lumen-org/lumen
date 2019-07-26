@@ -242,6 +242,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
             for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
                 let promise,
                     model = modelTable.at[rIdx][cIdx];
+
                 try {
                     // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
                     let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx]);
