@@ -49,7 +49,7 @@
  *
  * @module ViewTable
  * @author Philipp Lucas
- * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
+ * @copyright © 2017-2019 Philipp Lucas (philipp.lucas@uni-jena.de, philipp.lucas@dlr.de)
  */
 
 define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
@@ -164,14 +164,34 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         mapper.lineColor = MapperGen.lineColor(aggrVismel);
       }
 
-      if (dataRT !== undefined || testDataRT !== undefined) {
-        let dataVismel = (dataRT !== undefined ? dataRT.vismel : testDataRT.vismel);
+      // if (dataRT !== undefined || testDataRT !== undefined) {
+      //   let dataVismel = (dataRT !== undefined ? dataRT.vismel : testDataRT.vismel);
+      //   mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
+      //   mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
+      //   if (dataRT !== undefined)
+      //     mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
+      //   if (testDataRT !== undefined)
+      //     mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
+      // }
+
+      if (dataRT !== undefined || testDataRT !== undefined || samplesRT !== undefined) {
+        let dataVismel;
+        if (dataRT !== undefined)
+          dataVismel =  dataRT.vismel;
+        else if (testDataRT !== undefined)
+          dataVismel =  testDataRT.vismel;
+        else
+          dataVismel =  samplesRT.vismel;
+
         mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
         mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
-        if (dataRT !== undefined)
+
+        if (dataRT !== undefined || samplesRT !== undefined)
           mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
         if (testDataRT !== undefined)
           mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
+        // if (samplesRT !== undefined)
+          // anything?
       }
 
       if (p1dRT !== undefined) {
@@ -596,8 +616,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         for (let x of _.range(size.x)) {
           // create traces for one atomic plot
           let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets.samples.data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
-          // let atomicTraces = atomicPlotlyTraces(geometry, aggrColl[y][x], dataColl[y][x], testDataColl[y][x], uniColl[y][x], biColl[y][x], vismelColl.at[y][x],
-            {
+          {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],
           }, marginalAxesIds[y][x], catQuantAxesIds[y][x], facets);

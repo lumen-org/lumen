@@ -843,7 +843,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
     tracer.samples = function (rt, mapper, mode, axisId) {
       if (!axisId) throw RangeError("invalid axisId");
 
-      if (rt == undefined)  // means 'disable this trace type'
+      if (rt === undefined)  // means 'disable this trace type'
         return [];
 
       let vismel = rt.vismel,

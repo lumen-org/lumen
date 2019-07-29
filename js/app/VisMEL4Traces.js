@@ -64,13 +64,18 @@
  *    What about rebasing of queries? Can we even share all the field usages at all? The different vismel queries for
  *    different atomic plots are executed against different models. And different model have different instances of
  *    <Field> at their 'core'...
- *    Answer: Yes, this is a bit messy. The different models do have different instances of <Field>, even for the same dimensions. Read on
- *    TODO/Note: One way to make it cleaner: Decouple PQL/VisMEL queries and models stronger. Right now the coupling is the reference of a particular model's Field in the query. This should not happen. It would be enough to reference the Field by its name, for example. Actually, however, the only real coupling here, is that Fields also store their extent and domain (since these are / could be different for each model, and are not directly relevant for the query statement. We do not use this information at any point _after_ we constructed the queries. Hence, we should be fine with leaving things as they are.
+ *    Answer: Yes, this is a bit messy. The different models do have different instances of <Field>, even for the same
+ *    dimensions. Read on:
+ *
+ *    TODO/Note: One way to make it cleaner: Decouple PQL/VisMEL queries and models stronger. Right now the coupling is
+ *      the reference of a particular model's Field in the query. This should not happen. It would be enough to
+ *      reference the Field by its name, for example. Actually, however, the only real coupling here, is that Fields
+ *      also store their extent and domain (since these are / could be different for each model, and are not directly
+ *      relevant for the query statement. We do not use this information at any point _after_ we constructed the
+ *      queries. Hence, we should be fine with leaving things as they are.
  *
  * TODO Issue: better way to derive queries:
- *
  *   Now: user query -> base query --(expand)--> base query table -> specialized query tables (for prediction, uniDensity, biDensity, ...)
- *
  *   Better: user query -> base query -> specialized base queries --(expand each)--> specialized query tables
  *
  * Advantage: it would automatically solve the problem of reuse field usages along x and y axis.
