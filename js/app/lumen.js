@@ -37,7 +37,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       'marginals': 'model marginals',
       'dataMarginals': 'data marginals',
       'contour': 'model density',
-      'samples': 'model samples',
+      'model samples': 'model samples',
       'data': 'training data',
       'testData': 'test data',
 //      'predictionOffset': 'prediction offset',
@@ -275,8 +275,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('samples', RT.samplesCollection, fieldUsageCacheMap, {
-                  data_category: 'samples',
+                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap, {
+                  data_category: 'model samples',
                   number_of_samples: 200, // TODO: make configurable
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
@@ -696,7 +696,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             'contour': 'contour',
             'data': 'dataPoints',
             'testData': 'dataPoints',
-            'samples': 'dataPoints',
+            'model samples': 'dataPoints',
             'predictionDataLocal': 'prediction',
             'dataMarginals': 'uniDensity',  // TODO: make histogram icon
           };

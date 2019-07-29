@@ -223,7 +223,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
-              traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
+              traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
               //traces.push(...TraceGen.aggr(aggrRT, query, mapper, mainAxis));
             }
             else { // if (used.shape) {
@@ -235,7 +235,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
-              traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
+              traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
 
             }
 
@@ -248,7 +248,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
-            traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
+            traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
           }
         }
 
@@ -284,7 +284,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
-          traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
+          traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
         }
       }
 
@@ -303,7 +303,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           throw RangeError("axisFU has invalid yield type: " + axisFu.yieldDataType);
         traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
         traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
-        traces.push(...TraceGen.samples(samplesRT, mapper, 'samples', mainAxis));
+        traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
         traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
       } else {
         traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
@@ -607,7 +607,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets.samples.data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
+          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
           {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],

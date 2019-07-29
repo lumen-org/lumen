@@ -983,7 +983,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       },
 
       // model samples
-      samples: {
+      'model samples': {
         possible: true,
         active: false,
       },
