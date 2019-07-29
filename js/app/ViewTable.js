@@ -164,16 +164,6 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         mapper.lineColor = MapperGen.lineColor(aggrVismel);
       }
 
-      // if (dataRT !== undefined || testDataRT !== undefined) {
-      //   let dataVismel = (dataRT !== undefined ? dataRT.vismel : testDataRT.vismel);
-      //   mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
-      //   mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
-      //   if (dataRT !== undefined)
-      //     mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
-      //   if (testDataRT !== undefined)
-      //     mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
-      // }
-
       if (dataRT !== undefined || testDataRT !== undefined || samplesRT !== undefined) {
         let dataVismel;
         if (dataRT !== undefined)
@@ -190,8 +180,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
         if (testDataRT !== undefined)
           mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
-        // if (samplesRT !== undefined)
-          // anything?
+        if (samplesRT !== undefined)
+          mapper.modelSampleFillColor = MapperGen.markersFillColor(dataVismel, 'model samples');
+          mapper.modelSampleShape = MapperGen.markersShape(dataVismel, 'model samples');
+          mapper.modelSampleSize = MapperGen.markersSize(dataVismel, config.map.modelSampleMarker.size);
       }
 
       if (p1dRT !== undefined) {

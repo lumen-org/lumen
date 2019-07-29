@@ -858,7 +858,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         mapper = {
           fillColor: mapper.dataFillColor,
           shape: mapper.samplesShape,
-          size: mapper.samplesSize
+          size: mapper.samplesSize,
         };
       } else if (mode === 'test data') {
         cfg = c.map.testDataMarker;
@@ -868,13 +868,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           size: mapper.samplesSize
         };
       } else if (mode === 'samples') {
-        // TODO change visual representation
         cfg = c.map.sampleMarker;
-        console.log("drawing samples!");
         mapper = {
-          fillColor: mapper.dataFillColor,
-          shape: mapper.samplesShape,
-          size: mapper.samplesSize
+          fillColor: mapper.modelSampleFillColor,
+          shape: mapper.modelSampleShape,
+          size: mapper.modelSampleSize
         };
       } else {
         throw RangeError("invalid mode: " + mode.toString());

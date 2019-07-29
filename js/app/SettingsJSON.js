@@ -227,7 +227,11 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     },
 
     testData: {
-      single: d3chromatic.schemePaired[6], // TODO: improve?
+      single: d3chromatic.schemePaired[3],
+    },
+
+    modelSamples: {
+      single: d3chromatic.schemePaired[1],
     }
   };
 
@@ -367,6 +371,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "maxDisplayed": {type: "integer"},
         }
       },
+      "modelSampleMarker": {
+        type: "object",
+        properties: {
+          "size": {
+            type: "object", format: "grid",
+            properties: {
+              "min": {type: "integer"},
+              "max": {type: "integer"},
+              "def": {type: "integer"},
+            }
+          },
+          "fill": {
+            type: "object", format: "grid",
+            properties: {
+              "def": {type: "string", format: "color", watch: {_single: "colors.testData.single"}, template: "{{_single}}"},
+            },
+          },
+        }
+      },
       "testDataMarker": {
         type: "object",
         properties: {
@@ -502,6 +525,17 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         opacity: 0.5, // TODO: watch tweaks->opacity
       },
       maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
+    },
+
+    modelSampleMarker: {
+      size: {
+        min: 8,
+        max: 40,
+        def: 12,
+      },
+      fill: {
+        def: colorsInitial.modelSamples.single,// TODO: watched!
+      }
     },
 
     testDataMarker: {

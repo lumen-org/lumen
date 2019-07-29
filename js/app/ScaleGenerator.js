@@ -54,9 +54,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
       if (l <= 9)
         if (mode === 'aggr')
           palette = c.colors.semanticScales.discrete9dark;
-        else if (mode === 'data')
-          palette = c.colors.semanticScales.discrete9light;
-        else if (mode === 'test data')
+        else if ((mode === 'data') || (mode === 'test data') || (mode === 'model samples'))
           palette = c.colors.semanticScales.discrete9light;
         else
           throw RangeError("invalid mode " + mode);

@@ -46,6 +46,8 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       defaultColor = c.map.sampleMarker.fill.def;
     else if (mode === 'test data')
       defaultColor = c.map.testDataMarker.fill.def;
+    else if (mode === 'model samples')
+      defaultColor = c.map.modelSampleMarker.fill.def;
     else
       throw RangeError("invalid mode " + mode);
 
@@ -80,16 +82,21 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
   };
 
   gen.markersShape = function (query, mode = 'filled') {
-    if (mode !== 'filled' && mode !== 'open' && mode !== 'svgPath ')
-      throw RangeError("mode must be 'filled' or 'open' or 'svgPath', but is: " + mode.toString());
+    if (!['filled', 'open', 'svgPath', 'model samples'].includes(mode))
+        //mode !== 'filled' && mode !== 'open' && mode !== 'svgPath'
+        throw RangeError("mode must be 'filled' or 'open' or 'svgPath' or 'model samples', but is: " + mode.toString());
     let aesthetics = query.layers[0].aesthetics,
       shape = aesthetics.shape;
     if (shape instanceof VisMEL.ShapeMap) {
       return _averaged(ScaleGen.shape(shape, shape.fu.extent, mode));
     } else {
-      return "circle" + (mode === 'open' ? '-open' : "");
+      if (mode === 'model samples')
+        return "triangle-up"; // not open
+      else
+        return "circle" + (mode === 'open' ? '-open' : "");
     }
   };
+
 
   /**
    * What is the color of a line?

@@ -276,7 +276,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('samples', RT.samplesCollection, fieldUsageCacheMap, {
-                  data_category: 'training data',
+                  data_category: 'samples',
+                  number_of_samples: 200, // TODO: make configurable
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
@@ -695,6 +696,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             'contour': 'contour',
             'data': 'dataPoints',
             'testData': 'dataPoints',
+            'samples': 'dataPoints',
+            'predictionDataLocal': 'prediction',
+            'dataMarginals': 'uniDensity',  // TODO: make histogram icon
           };
         let checkBoxes = //['contour', 'marginals', 'aggregations', 'data', 'testData'] //, 'predictionOffset']
           Object.keys(context.facets)
