@@ -709,8 +709,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       let marginal = {
         // the stuff after "//" detect if we do not want marginal distribution plots. but detecting it here, comes with many
         // issues, e.g. data histograms may anyway be drawn
-        x: facets.marginals.active && used.y, // && (!used.x || (used.x && qx.last().fields[0].varType === 'distributed')),
-        y: facets.marginals.active && used.x, // && (!used.y || (used.y && qy.last().fields[0].varType === 'distributed')),
+        x: (facets.marginals.active || facets.dataMarginals.active) && used.y, // && (!used.x || (used.x && qx.last().fields[0].varType === 'distributed')),
+        y: (facets.marginals.active || facets.dataMarginals.active) && used.x, // && (!used.y || (used.y && qy.last().fields[0].varType === 'distributed')),
       };
 
       // get absolute pane size [in px]
@@ -888,7 +888,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           }
 
           // create marginal axes as needed
-          marginalAxesIds[idx.y][idx.x] = makeMarginalAxes(marginal, paneOffset, axisLength, templAxisSize, mainAxesIds, idx, facets.marginals.data, idgen, layout, size);
+          let marginalFacetData = (facets.marginals.active ? facets.marginals.data : facets.dataMarginals.data);
+          marginalAxesIds[idx.y][idx.x] = makeMarginalAxes(marginal, paneOffset, axisLength, templAxisSize, mainAxesIds, idx, marginalFacetData, idgen, layout, size);
 
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension

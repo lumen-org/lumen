@@ -440,7 +440,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               // "opacity": {type: "number"},   // line opacity
               // "fill": {type: "boolean"},
               // "fillopacity": {type: "number"},
-              "shape": {type: "string"}, // spline, linear, hv, vh, hvh, or vhv
+              "shapex": {type: "string"}, // spline, linear, hv, vh, hvh, or vhv
+              "shapey": {type: "string"}, // spline, linear, hv, vh, hvh, or vhv
             }
           },
           "resolution": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"}

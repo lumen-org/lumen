@@ -113,7 +113,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         else
           this.model = {};
 
-        // emprical model
+        // empirical model
         // TODO: make model configurable
         this.emp_model = new Remote.Model('emp_iris', server);
 
