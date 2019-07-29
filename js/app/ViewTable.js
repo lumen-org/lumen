@@ -139,9 +139,11 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, samplesRT, p1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
+    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, samplesRT, p1dRT, data1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
-      for (let rt of [aggrRT, dataRT, testDataRT, samplesRT, p2dRT].concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y]))
+      for (let rt of [aggrRT, dataRT, testDataRT, samplesRT, p2dRT]
+          .concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y])
+          .concat(data1dRT === undefined ? [] : [data1dRT.x, data1dRT.y]))
         if (rt !== undefined)
           rt.formatter = resultTableFormatter(rt);
 
@@ -186,8 +188,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           mapper.modelSampleSize = MapperGen.markersSize(dataVismel, config.map.modelSampleMarker.size);
       }
 
-      if (p1dRT !== undefined) {
-        let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
+      if (p1dRT !== undefined || data1dRT !== undefined) {
+        // TODO: do we need to unify these?
+        let rt = (p1dRT !== undefined ? p1dRT : data1dRT),
+          pvismel = ('x' in rt ? rt.x : rt.y).vismel;
         mapper.marginalColor = MapperGen.marginalColor(pvismel);
       }
 
@@ -219,6 +223,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               //&& PQL.hasNumericYield(aest.color.fu)) {
               // -> heatmap
               traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
               // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
@@ -230,6 +235,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               // scatter plot
               // TODO: unterscheide weiter ob use.size? siehe http://wiki.inf-i2.uni-jena.de/doku.php?id=emv:visualization:default_chart_types
               traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+              traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
               traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
               traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
@@ -243,6 +249,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           // at least on is dependent -> line chart
           else {
             traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+            traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
             traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
             traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
@@ -255,6 +262,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         //  x and y are discrete
         else if (xDiscrete && yDiscrete) {
           traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
 
           // hard to show splits of more than rows and cols: overlap in visualization
           // TODO: solve by creating a bubble plot/jittered plot
@@ -279,6 +287,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         // one is discrete, the other numerical
         else {
           traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
+          traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
           traces.push(...TraceGen.biQC(p2dRT, mapper, mainAxis, catQuantAxisIds));
           traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
           traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
@@ -292,6 +301,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       else if (used.x && !used.y || !used.x && used.y) {
         let [xOrY, axisFu] = used.x ? ['x', xfu] : ['y', yfu];
         traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
+        traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
         // the one in use is categorical
         if (PQL.hasDiscreteYield(axisFu)) {
           // anything special here to do?
@@ -398,7 +408,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       let globalExtent = new Map();
       for (let facetName in facets) {
           let facetColl = facets[facetName].data;
-          if (facetName === 'marginals') {
+          if (facetName === 'marginals' || facetName === 'dataMarginals') {
               for (let xy of ['x', 'y'])
                 addCollectionExtents(facetColl, globalExtent, xy);
           } else {
@@ -607,7 +617,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
+          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.dataMarginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
           {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],

@@ -423,6 +423,29 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           }
         }
       },
+      "dataMarginals": {
+        type: "object",
+        properties: {
+          // // "color": { TODO: link to colors.density. ... },
+          // "bar": {
+          //   type: "object",
+          //   properties: {
+          //     "opacity": {type: "number"},
+          //   }
+          // },
+          "line": {
+            type: "object", format: "grid",
+            properties: {
+              // "width": {type: "number"},
+              // "opacity": {type: "number"},   // line opacity
+              // "fill": {type: "boolean"},
+              // "fillopacity": {type: "number"},
+              "shape": {type: "string"}, // spline, linear, hv, vh, hvh, or vhv
+            }
+          },
+          "resolution": {type: "integer", watch: {_res1d: "tweaks.resolution_1d"}, template: "{{_res1d}}"}
+        }
+      },
       "uniDensity": {
         type: "object",
         properties: {
@@ -556,6 +579,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         opacity: 0.8,
         fill: false,
       },
+    },
+
+    dataMarginals: {
+      line: {
+        shapex: 'hvh',
+        shapey: 'vhv',
+      },
+      resolution: tweaksInitial.resolution_1d,  // TODO: watched!
     },
 
     uniDensity: {

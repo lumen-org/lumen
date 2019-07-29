@@ -383,7 +383,7 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
 
     /**
      * Creates and returns a shallow copy of this VisMEL query.
-     * 'Shallow' mean that it recreates the whole structure of the VisMEL query however it just references the {@link FieldUsage}s but doesn't deep copy them. In a sense, it copies everything of the VisMEL tree but only references its 'leaves'.
+     * 'Shallow' mean that it recreates the whole structure of the VisMEL query, however it just references the {@link FieldUsage}s but doesn't deep copy them. In a sense, it copies everything of the VisMEL tree but only references its 'leaves'.
      * @returns {VisMEL}
      */
     shallowCopy() {

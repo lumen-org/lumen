@@ -113,6 +113,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         else
           this.model = {};
 
+        // emprical model
+        // TODO: make model configurable
+        this.emp_model = new Remote.Model('emp_iris', server);
+
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
           this.shelves = shelves;
@@ -223,10 +227,16 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._setBusyStatus('getting base query');
           try {
             c.basemodel = c.model.localCopy();
+            c.emp_basemodel = c.emp_model.localCopy();
 
             // get user query
             c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel);
             c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
+
+            // get query on empirical model
+            // instead of the next line: c.emp_query = c.query.shallowCopy();
+            c.emp_query = VisMEL.VisMEL.FromShelves(c.shelves, c.emp_basemodel);
+            c.emp_query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
             // log this activity
             ActivityLogger.log({
@@ -237,9 +247,42 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
             // TODO: apply global filters and remove them from query. i.e. change basemodel, and basequery
             c.basequery = c.query;
+            c.emp_basequery = c.emp_query;
 
             c.baseQueryTable = new QueryTable(c.basequery);
             c.baseModelTable = new ModelTable(c.baseQueryTable);
+
+            c.emp_baseQueryTable = new QueryTable(c.emp_basequery);
+            c.emp_baseModelTable = new ModelTable(c.emp_baseQueryTable);
+
+            ///////
+            // c.basemodel = c.model.localCopy();
+            // c.emp_basemodel = c.emp_model.localCopy();
+            //
+            // // get user query
+            // c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel);
+            // c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
+            //
+            // // get query on empirical  empirical queries
+            // // instead of the next line: c.emp_query = c.query.shallowCopy();
+            // c.emp_query = VisMEL.VisMEL.FromShelves(c.shelves, c.emp_basemodel);
+            // c.emp_query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
+            //
+            // // log this activity
+            // ActivityLogger.log({
+            //   'VISMEL': c.query,
+            //   'facets': c._getFacetActiveState(),
+            //   'context': c.getNameAndUUID()
+            // }, 'vismel_query');
+            //
+            // // TODO: apply global filters and remove them from query. i.e. change basemodel, and basequery
+            // c.basequery = c.query;
+            // c.emp_basequery = c.emp_query;
+            //
+            // c.baseQueryTable = new QueryTable(c.basequery);
+            // c.baseModelTable = new ModelTable(c.baseQueryTable);
+            //////
+
           }
           catch (error) {
             console.error(error);
@@ -251,7 +294,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._discardFetchedFacets();
 
           // get promise to base model
-          stages['new_query'] = c.baseModelTable.model();
+          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model()])
         } else {
           stages['new_query'] = Promise.resolve(); // because it is already there
         }
@@ -281,10 +324,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
+                c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap,
+                    {'model': 'empirical'}),
                 c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap),
-                c.updateFacetCollection('dataMarginals', RT.dataMarginalsCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap),
-
               ]))
         } else {
           stages['update.facets'] = Promise.resolve();
@@ -337,9 +380,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       updateFacetCollection (facetName, collectionFactory, fieldUsageCacheMap, opts=undefined) {
         if (opts === undefined)
           opts = {};
+
+        let baseQueryTable = (opts['model'] === 'empirical' ? this.emp_baseQueryTable : this.baseQueryTable),
+            baseModelTable = (opts['model'] === 'empirical' ? this.emp_baseModelTable : this.baseModelTable);
+
         let facet = this.facets[facetName];
         if (facet.active && facet.fetchState === 'not fetched')
-          return collectionFactory(this.baseQueryTable, this.baseModelTable, fieldUsageCacheMap, facet.active, opts)
+          return collectionFactory(baseQueryTable, baseModelTable, fieldUsageCacheMap, facet.active, opts)
             .then(res => {
               facet.fetchedData = res;
               facet.data = res;
@@ -355,7 +402,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         else {
           // result table of matching size is required
           //if (facet.data === undefined)
-          facet.data = RT.getEmptyCollection(this.baseQueryTable.size, true);
+          facet.data = RT.getEmptyCollection(baseQueryTable.size, true);
           return Promise.resolve();
         }
       }

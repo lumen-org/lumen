@@ -172,7 +172,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param model
      * @return {Promise.<Array>}
      */
-    function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
+    function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true, opts = {}) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -267,7 +267,8 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         return Promise.all(fetchPromises).then(() => collection);
     }
 
-    function dataMarginalsCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
+
+    function predictionDataLocalCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -275,7 +276,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         throw "Not implemented Error";
     }
 
-    function predictionDataLocalCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
+    function dataMarginalsCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled

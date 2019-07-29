@@ -354,12 +354,18 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
      * @param p1dRT
      * @return {Array}
      */
-    tracer.uni = function (p1dRT, mapper, mainAxisId, marginalAxisId) {
+    tracer.uni = function (p1dRT, mapper, mainAxisId, marginalAxisId, opts={}) {
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
 
       if (p1dRT == undefined)  // means 'disable this trace type'
         return [];
+
+      if (!opts.hasOwnProperty('facetName'))
+        opts.facetName = 'uniDensity';
+
+      if ( !['uniDensity', 'dataMarginals'].includes(opts.facetName))
+        throw new RangeError(`invalid facet name: ${opts.facetName}`);
 
      let vismel = undefined,
        traceName = {"x": "setMe", "y": "setMe"};
@@ -404,8 +410,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         } 
         //else color = color;
 
-
         if (PQL.hasNumericYield(axisFu)) {
+
           // line chart trace
           _.extendOwn(trace, {
             //type: PQL.hasNumericYield(axisFu) ? 'scatter' : 'bar',
@@ -416,7 +422,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
               color: color,
               width: c.map.uniDensity.line.width,
               opacity: c.map.uniDensity.line.opacity,
-              shape: c.map.uniDensity.line.shape,
+              shape: c.map[opts.facetName].line['shape' + (opts.facetName === 'dataMarginals' ? xy : '')],
               smoothing: 0.75,
             },
             fill: c.map.uniDensity.line.fill ? ('tozero' + (xy === 'x' ? 'y' : 'x')) : 'none',
