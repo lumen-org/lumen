@@ -257,7 +257,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
             c.baseQueryTable = new QueryTable(c.basequery);
             c.baseModelTable = new ModelTable(c.baseQueryTable);
-            c.dataLocalPrediction_baseModelTable = new ModelTable(c.baseQueryTable);  // may reuse c.baseQueryTable!
+            c.predictionDataLocal_baseModelTable = new ModelTable(c.baseQueryTable);  // may reuse c.baseQueryTable!
 
             c.emp_baseQueryTable = new QueryTable(c.emp_basequery);
             c.emp_baseModelTable = new ModelTable(c.emp_baseQueryTable);
@@ -272,7 +272,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._discardFetchedFacets();
 
           // get promise to base models
-          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model(), c.dataLocalPrediction_baseModelTable.model('dataLocalPrediction')])
+          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model(), c.predictionDataLocal_baseModelTable.model('predictionDataLocal')])
         } else {
           stages['new_query'] = Promise.resolve(); // because it is already there
         }
@@ -306,13 +306,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                     c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
                 c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap,
-                    undefined, c.dataLocalPrediction_baseModelTable,
-                    {
-                      data_category: 'training data',
-                      data_point_limit: 200,
-                      data_point_minimum: 20,
-                      data_percentage_target: 10.0,
-                    }),
+                    undefined, c.predictionDataLocal_baseModelTable,
+                    Settings.tweaks['data local prediction']),
               ]))
         } else {
           stages['update.facets'] = Promise.resolve();

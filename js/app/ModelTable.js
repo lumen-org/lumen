@@ -30,7 +30,7 @@ define(['./PQL'], function(PQL) {
 
     // in any way all fields of field usages must be in the model
     let modelFields = PQL.fields(query.fieldUsages());
-    if (facetName === 'dataLocalPrediction') {
+    if (facetName === 'predictionDataLocal') {
       let modelFieldNames = new Set(modelFields.map(f => f.name)),
           model = query.getModel(),
           missingFields = model.observedFields.filter(of => !modelFieldNames.has(of.name));

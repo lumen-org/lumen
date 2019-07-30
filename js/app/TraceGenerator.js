@@ -215,7 +215,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       if (!(aest.color instanceof VisMEL.ColorMap)) throw RangeError("Cannot use aggrHeatmap if color is _not_ in use!");
 
       // in fact no split, other than on rows and cols may be present, since we wouldn't know how to visualize the split within one heatmap tile
-      if (rt !== undefined) {
+      if (rt) {
         if (!_.isFunction(mapper.aggrFillColor)) throw TypeError("Didn't expect that. Implement this case!");
 
         let colorFu = aest.color.fu,
@@ -826,7 +826,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
       // iterate over groups in same order like given in extent
       let catExtent = rt.extent[catIdx];
-      if (catExtent.length != cqAxisIds.length)
+      if (catExtent.length !== cqAxisIds.length)
         throw RangeError("this should not happen. See trace.biQC.");
       let traces = [];
       for (let i = 0; i < cqAxisIds.length; ++i) {

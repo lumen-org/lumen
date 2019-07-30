@@ -357,11 +357,10 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     // all existing splits: convert to method = 'data' splits
     let splitFus = fus.filter(PQL.isSplit);
     for (let splitFu of splitFus) {
-      splitFu.method = 'data'
+      splitFu.method = 'data';
     }
 
     // Note: cannot use the same derived basemodel as the other queries since we work with _all_ data dimensions!
-
     // Additionally:
     // * use threshhold for number of predicted points: 10% but at most 100
     // * use flag to trigger between prediction for training data points or test data points

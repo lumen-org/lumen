@@ -122,12 +122,11 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
     }
 
 
-    function predictionDataLocalCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled = true) {
+    function predictionDataLocalCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled = true, opts = {}) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
-        if (!enabled)  // quit early if disabled
+        if (!enabled)
             return Promise.resolve(collection);
-        //throw "Not implemented Error";
 
         let fetchPromises = new Set();
         for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
@@ -141,7 +140,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
 
                 try {
                     // 2. convert this facet's atomic VisMEL query to PQL query
-                    let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
+                    let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel, opts);
 
                     // 3. run this query and return promise to its result
                     promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);

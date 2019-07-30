@@ -39,7 +39,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
    * @param vismel
    * @return {query, fu2idx, idx2fu}
    */
-  function predict(vismel) {
+  function predict(vismel, opts) {
     // note:
     // - all dimensions based on the same field must use the same split function and hence map to the same column of the result table
     // - multiple measures of the same field are possible
@@ -97,16 +97,11 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 //       'predict': [...dimensions.map(d => d.name), ...measures],
       'predict': [...dimensions, ...measures],
       'splitby': dimensions,
-      'mode': vismel.mode
+      'mode': vismel.mode,
+      'opts': opts,
     };
 
     return {query, fu2idx, idx2fu};
-  }
-
-  function predictionDataLocal(vismelQuery, opts={}) {
-
-
-
   }
 
 
@@ -163,7 +158,6 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   return {
     predict,
     sample,
-    predictionDataLocal,
     ConversionError,
   };
 

@@ -170,7 +170,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
       if (!qtype)
         throw RangeError("a PQL query must have a type, but has none.");
       if (qtype === 'predict')
-        return this.predict(query.predict, query.where, query.splitby, query.mode);
+        return this.predict(query.predict, query.where, query.splitby, query.mode, query.opts);
       if (qtype === 'model')
         return this.model(query.model, query.where, query.defaults, query.as);
       if (qtype === 'select')
@@ -225,9 +225,9 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
      * @param splitBy {FieldUsage} A list or a single object of {@link Split}.
      * @returns {Array} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
-    predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/, mode = 'model') {
+    predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/, mode = 'model', opts=undefined) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
-      var jsonContent = PQL.toJSON.predict(this.name, predict, where, splitBy);
+      var jsonContent = PQL.toJSON.predict(this.name, predict, where, splitBy, opts);
 
       // list of datatypes of fields to predict - needed to parse returned csv-string correctly
       let dtypes = [];

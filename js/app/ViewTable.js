@@ -139,9 +139,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function atomicPlotlyTraces(geometry, aggrRT, dataRT, testDataRT, samplesRT, p1dRT, data1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
+    function atomicPlotlyTraces(geometry, aggrRT, dataLocalPredRT, dataRT, testDataRT, samplesRT, p1dRT, data1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
-      for (let rt of [aggrRT, dataRT, testDataRT, samplesRT, p2dRT]
+      for (let rt of [aggrRT, dataLocalPredRT, dataRT, testDataRT, samplesRT, p2dRT]
           .concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y])
           .concat(data1dRT === undefined ? [] : [data1dRT.x, data1dRT.y]))
         if (rt !== undefined)
@@ -158,8 +158,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
       // build all mappers
       let mapper = {};
-      if (aggrRT !== undefined) {
-        let aggrVismel = aggrRT.vismel;
+      if (aggrRT !== undefined || dataLocalPredRT !== undefined) {
+        let aggrVismel = (aggrRT !== undefined ? aggrRT.vismel : dataLocalPredRT.vismel);
         mapper.aggrFillColor = MapperGen.markersFillColor(aggrVismel, 'aggr');
         mapper.aggrSize = MapperGen.markersSize(aggrVismel, config.map.aggrMarker.size);
         mapper.aggrShape = MapperGen.markersShape(aggrVismel, 'filled');
@@ -253,6 +253,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
             traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
+            traces.push(...TraceGen.aggr(dataLocalPredRT, mapper, mainAxis));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
             traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
@@ -617,7 +618,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.dataMarginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
+          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.predictionDataLocal.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.dataMarginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
           {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],

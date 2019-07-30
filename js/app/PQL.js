@@ -618,7 +618,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
      * @param splitBy A list or a single object of {@link Split}.
      * @returns {Object} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
-    predict: function (from, predict, where = [], splitBy = [] /*, returnBasemodel=false*/) {
+    predict: function (from, predict, where = [], splitBy = [], opts=undefined) {
       let json = {};
 
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
@@ -645,6 +645,10 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
           throw new TypeError("'predict' must be all of type Aggregation, Density or string.");
       });
       json.PREDICT = predict;
+
+      if (opts !== undefined)
+        json.OPTS = opts;
+      
       return json;
     },
 

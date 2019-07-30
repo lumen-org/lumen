@@ -106,6 +106,16 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "aggregation": {type: "integer"},
         }
       },
+      "data local prediction": {
+        type: "object",
+        format: "grid",
+        properties: {
+          "point number minimum": {type: "integer"},
+          "point  number maximum": {type: "integer"},
+          "point percentage": {type: "integer"},
+          "category": {type: "string"},
+        }
+      },
       "data_point_limit": {type: "integer"},
     },
   };
@@ -120,6 +130,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       layout: 5,
       density: undefined, // TODO: watches
       aggregation: 15,
+    },
+    "data local prediction": {
+      "point number maximum": 200,
+      "point number minimum": 10,
+      "point percentage target": 5,
+      "data category": "training data", // or "training data" or "test data"
     },
     data_point_limit: 2000,
   };
