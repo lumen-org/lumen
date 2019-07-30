@@ -121,6 +121,43 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         return Promise.all(fetchPromises).then(() => collection);
     }
 
+
+    function predictionDataLocalCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled = true) {
+        let size = queryCollection.size;
+        let collection = getEmptyCollection(size, enabled);
+        if (!enabled)  // quit early if disabled
+            return Promise.resolve(collection);
+        //throw "Not implemented Error";
+
+        let fetchPromises = new Set();
+        for (let rIdx = 0; rIdx < size.rows; ++rIdx) {
+            for (let cIdx = 0; cIdx < size.cols; ++cIdx) {
+                let promise;
+
+                // 1. convert atomic vismel VisMEL query to suitable VisMEL query for this facet
+                let vismel = V4T.predictionDataLocal(queryCollection.at[rIdx][cIdx]);
+                // unify identical field usages / maps
+                vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
+
+                try {
+                    // 2. convert this facet's atomic VisMEL query to PQL query
+                    let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
+
+                    // 3. run this query and return promise to its result
+                    promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+
+                } catch (e) {
+                    if (e instanceof vismel2pql.ConversionError)
+                        promise = Promise.resolve(undefined);
+                    else
+                        throw e;
+                }
+                fetchPromises.add(promise);
+            }
+        }
+        return Promise.all(fetchPromises).then(() => collection);
+    }
+
     /**
      * See aggr Collection
      * @param queryCollection
@@ -267,31 +304,12 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         return Promise.all(fetchPromises).then(() => collection);
     }
 
-
-    function predictionDataLocalCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
-        let size = queryCollection.size;
-        let collection = getEmptyCollection(size, enabled);
-        if (!enabled)  // quit early if disabled
-            return Promise.resolve(collection);
-        throw "Not implemented Error";
-    }
-
-    function dataMarginalsCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
-        let size = queryCollection.size;
-        let collection = getEmptyCollection(size, enabled);
-        if (!enabled)  // quit early if disabled
-            return Promise.resolve(collection);
-        throw "Not implemented Error";
-    }
-
-
     return {
         aggrCollection,
         samplesCollection,
         uniDensityCollection,
         biDensityCollection,
         getEmptyCollection,
-        dataMarginalsCollection,
         predictionDataLocalCollection,
 
     };

@@ -188,6 +188,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._boundNormalizedUpdate();
       }
 
+      _updateModels () {
+        let that = this;
+        return that.model.update()
+            .then(() => that.emp_model.update());
+      }
+
       /**
        * Sets a visual indicator to show how the context is busy, if it is.
        * @param status Status to indicate. Pass `false` to indicate that the context is not busy, or a string to indicate with what it is busy.
@@ -234,7 +240,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
             // get query on empirical model
-            // instead of the next line: c.emp_query = c.query.shallowCopy();
+            // instead of the next line: c.emp_query = c.query.shallowCopy(); ?
             c.emp_query = VisMEL.VisMEL.FromShelves(c.shelves, c.emp_basemodel);
             c.emp_query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
 
@@ -251,38 +257,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
             c.baseQueryTable = new QueryTable(c.basequery);
             c.baseModelTable = new ModelTable(c.baseQueryTable);
+            c.dataLocalPrediction_baseModelTable = new ModelTable(c.baseQueryTable);  // may reuse c.baseQueryTable!
 
             c.emp_baseQueryTable = new QueryTable(c.emp_basequery);
             c.emp_baseModelTable = new ModelTable(c.emp_baseQueryTable);
-
-            ///////
-            // c.basemodel = c.model.localCopy();
-            // c.emp_basemodel = c.emp_model.localCopy();
-            //
-            // // get user query
-            // c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel);
-            // c.query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
-            //
-            // // get query on empirical  empirical queries
-            // // instead of the next line: c.emp_query = c.query.shallowCopy();
-            // c.emp_query = VisMEL.VisMEL.FromShelves(c.shelves, c.emp_basemodel);
-            // c.emp_query.rebase(c.basemodel);  // important! rebase on the model's copy to prevent modification of model
-            //
-            // // log this activity
-            // ActivityLogger.log({
-            //   'VISMEL': c.query,
-            //   'facets': c._getFacetActiveState(),
-            //   'context': c.getNameAndUUID()
-            // }, 'vismel_query');
-            //
-            // // TODO: apply global filters and remove them from query. i.e. change basemodel, and basequery
-            // c.basequery = c.query;
-            // c.emp_basequery = c.emp_query;
-            //
-            // c.baseQueryTable = new QueryTable(c.basequery);
-            // c.baseModelTable = new ModelTable(c.baseQueryTable);
-            //////
-
           }
           catch (error) {
             console.error(error);
@@ -293,8 +271,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._fieldUsageCacheMap = new Map();
           c._discardFetchedFacets();
 
-          // get promise to base model
-          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model()])
+          // get promise to base models
+          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model(), c.dataLocalPrediction_baseModelTable.model('dataLocalPrediction')])
         } else {
           stages['new_query'] = Promise.resolve(); // because it is already there
         }
@@ -309,25 +287,32 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             .then(() => infoBox.hide())
             .then(() => Promise.all([
                 // query all facets in parallel
-                c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),              ,
-                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, {
+                c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, {
+                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap,undefined,undefined,{
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap, {
+                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
                   data_category: 'model samples',
                   number_of_samples: 200, // TODO: make configurable
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
                 c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap,
-                    {'model': 'empirical'}),
+                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
                 c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap),
-                c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap,
+                    undefined, c.dataLocalPrediction_baseModelTable,
+                    {
+                      data_category: 'training data',
+                      data_point_limit: 200,
+                      data_point_minimum: 20,
+                      data_percentage_target: 10.0,
+                    }),
               ]))
         } else {
           stages['update.facets'] = Promise.resolve();
@@ -377,12 +362,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       }
 
-      updateFacetCollection (facetName, collectionFactory, fieldUsageCacheMap, opts=undefined) {
+      updateFacetCollection (facetName, collectionFactory, fieldUsageCacheMap, baseQueryTable=undefined,
+                             baseModelTable=undefined, opts=undefined) {
         if (opts === undefined)
           opts = {};
-
-        let baseQueryTable = (opts['model'] === 'empirical' ? this.emp_baseQueryTable : this.baseQueryTable),
-            baseModelTable = (opts['model'] === 'empirical' ? this.emp_baseModelTable : this.baseModelTable);
+        if (baseQueryTable === undefined)
+          baseQueryTable = this.baseQueryTable;
+        if (baseModelTable === undefined)
+          baseModelTable = this.baseModelTable;
 
         let facet = this.facets[facetName];
         if (facet.active && facet.fetchState === 'not fetched')
@@ -860,7 +847,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // fetch model
         let that = this;
-        context.model.update()
+        context._updateModels()
           .catch((err) => {
             console.error(err);
             infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
@@ -1124,7 +1111,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
               contextQueue.add(contextCopy);
 
               // fetch model
-              contextCopy.model.update()
+              contextCopy._updateModels()
                 .then(() => activate(contextCopy, ['visualization', 'visPane', 'legendPane']))
                 .then(() => contextCopy.update('all', true))
                 .catch((err) => {
@@ -1869,7 +1856,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         contextQueue.add(context);
 
         // fetch model
-        context.model.update()
+        context._updateModels()
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
           .then(() => initialQuerySetup(context.shelves))

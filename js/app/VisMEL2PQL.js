@@ -94,6 +94,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 
     let query = {
       'type': 'predict',
+//       'predict': [...dimensions.map(d => d.name), ...measures],
       'predict': [...dimensions, ...measures],
       'splitby': dimensions,
       'mode': vismel.mode
@@ -101,6 +102,13 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
 
     return {query, fu2idx, idx2fu};
   }
+
+  function predictionDataLocal(vismelQuery, opts={}) {
+
+
+
+  }
+
 
   function sample(vismelQuery, opts) {
     // we derive the data-select query from a PQL/VisMEL query as follows:
@@ -155,6 +163,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   return {
     predict,
     sample,
+    predictionDataLocal,
     ConversionError,
   };
 

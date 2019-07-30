@@ -50,7 +50,7 @@ define(['./PQL'], function (PQL) {
     }
 
     get dim() {
-      return this.fields.size + 1;
+      return this.fields.size;
     }
 
     /**

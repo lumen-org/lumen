@@ -1005,7 +1005,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data
       data: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // test data
@@ -1023,7 +1023,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // model density marginal
       marginals: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // training data marginals
@@ -1042,7 +1042,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // -> enable choosing between which data?
       predictionDataLocal: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       /*predictionOffset: {

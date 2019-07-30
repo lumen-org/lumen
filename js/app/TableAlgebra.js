@@ -95,7 +95,7 @@ define(['./utils', './jsonUtils', './PQL', './SplitSample'], function (utils, js
     // (i) in case of a measure: an array containing a single element: the measure itself
     // (ii) in case of a dimension: an array containing the result of the split of the dimension
 
-    // also note the way its encapsulated in three array levels:
+    // also note the way it's encapsulated in three array levels:
     // level 1: expression level: each element is an operand / operator
     // level 2: element level: each element is a combination of domain values / symbols
     // level 3: value level: each element is a certain domain value / symbol of a fieldUsage

@@ -71,7 +71,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
   var FieldT = Object.freeze({
     DataType: {string: 'string', num: 'numerical'},
     Role: {measure: 'measure', dimension: 'dimension'},
-    VarType: {independent: 'independent', distributed: 'distributed'}
+    VarType: {independent: 'independent', distributed: 'distributed'},
+    ObsType: {latent: 'latent', observed: 'observed'}
   });
 
   /**
@@ -91,15 +92,17 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
      * @param varType {String} The desired variable type. Either 'distributed' or 'independent'. For convenience use FieldT.
      * @param model {Model} Optional. The model this field belongs to.
      */
-    constructor (name, dataType, domain, extent, varType, model=undefined) {
+    constructor (name, dataType, domain, extent, varType, obsType, model=undefined) {
       if (!_.isString(name)) throw TypeError("name must be a string, but is: " + name.toString());
       if (!_.contains(FieldT.DataType, dataType)) throw RangeError("invalid dataType: " + dataType.toString());
       if (!_.contains(FieldT.VarType, varType)) throw RangeError("invalid varType: " + varType.toString());
+      if (!_.contains(FieldT.ObsType, obsType)) throw RangeError("invalid ObsType: " + obsType.toString());
       if (extent.isUnbounded()) throw RangeError("extent may not be unbounded.");
 
       this.name = name;
       this.dataType = dataType;
       this.varType = varType;
+      this.obsType = obsType;
       this.domain = domain;
       this.extent = extent;
       this.model = model;
@@ -119,7 +122,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
 
     copy () {
       return new Field(this.name, this.dataType, this.domain.copy(), this.extent.copy(), this.varType,
-          this.model);
+          this.obsType, this.model);
     }
 
     toJSON () {
@@ -434,7 +437,8 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
     }
 
     toString () {
-      return this.method  + " of [" + this.names.sort() + "] with args: [" + this.args + "]";
+      return `${this.yields}@${this.method} of [ ${this.names.sort()} + ] with args: [ ${this.args} ]`;
+      //return this.method  + " of [" + this.names.sort() + "] with args: [" + this.args + "]";
     }
   }
 

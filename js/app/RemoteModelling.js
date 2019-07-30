@@ -88,6 +88,18 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
   }
 
   /**
+   * Return the varType of the field given in its JSON representation.
+   * @param {Object} json JSON representation of a {Field}, typically as received from a modelbase.
+   * @returns {String}
+   */
+  function obsType_from_fieldJSON(field) {
+    if (field.hasOwnProperty('obstype'))
+      return field.obstype;
+    logger.warn(`missing 'obstype' in variable ${field.name}. using default value.`);
+    return "observed";
+  }
+
+  /**
    * A RemoteModel is a local representation of / proxy to a remote Probability Model. It holds a local copy of the header
    * of the model, but any further data are fetched from the remote model. It provides an interface to run
    * PQL queries on this model. Note that the interface is model centric, i.e. it implicitly sets the FROM-clause of
@@ -139,6 +151,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
           (field.dtype === 'numerical' ? new Domain.Numeric(field.domain) : new Domain.Discrete(field.domain)),
           (field.dtype === 'numerical' ? new Domain.Numeric(field.extent) : new Domain.Discrete(field.extent)),
           varType_from_fieldJSON(field),
+          obsType_from_fieldJSON(field),
           this);
         this.fields.set(field.name, modelField);
         this.byIndex.push(modelField);
@@ -257,7 +270,13 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         });
     }
 
-
+    /**
+     * Return all observed fields of this model in order.
+     * @returns {T[]}
+     */
+    get observedFields() {
+      return this.byIndex.filter(f => f.obsType === "observed");
+    }
 
     /**
      * Creates remotely a copy of this model with a given name.
@@ -273,6 +292,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         .then(() => {
           myClone = new RemoteModel(name, that.url);
           myClone.fields = new Map(that.fields);
+          myClone.byIndex = [...that.byIndex];
           return myClone;
         });
     }
@@ -300,6 +320,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
       for (let [key, value] of this.fields.entries()) {
         clone.fields.set(key, value.copy());
       }
+      clone.byIndex = this.byIndex.map(f => f.copy());
       return clone;
     }
   }

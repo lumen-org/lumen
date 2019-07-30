@@ -12,30 +12,41 @@ define(['./PQL'], function(PQL) {
    * @param query
    * @param rIdx Row index in the model table
    * @param cIdx Column index in the model table
+   * @param facetName Name of the facet to derive base mode for
    * @returns {DummyModel|*}
    */
-  var deriveBaseModel = function (query, rIdx, cIdx) {
+  function deriveBaseModel (query, rIdx, cIdx, facetName) {
 
-    function makeBaseModelName (modelName, rIdx, cIdx) {
-      return "__" + modelName + "_" + rIdx + "_" + cIdx;
+    function makeBaseModelName (modelName, facetName, rIdx, cIdx) {
+      return "__" + modelName + (facetName !== "" ? "-" + facetName + "-" : "") + "_" + rIdx + "_" + cIdx;
     }
 
     // todo: extend: only 1 layer and 1 source is supported for now
-    var model = query.sources[0];
+    let model = query.sources[0];
 
     // assert that row/col only has at most 1 fieldUsage on it (as a result of the template expansion)
     if (query.layout.rows.length > 1 || query.layout.cols.length > 1)
       throw new RangeError ("query.layout.rows or query.layout.cols contains more than 1 FieldUsage");
 
+    // in any way all fields of field usages must be in the model
+    let modelFields = PQL.fields(query.fieldUsages());
+    if (facetName === 'dataLocalPrediction') {
+      let modelFieldNames = new Set(modelFields.map(f => f.name)),
+          model = query.getModel(),
+          missingFields = model.observedFields.filter(of => !modelFieldNames.has(of.name));
+      // must also include all observed dims
+      modelFields.push(...missingFields);
+    }
+
     return model.model(
-      PQL.fields(query.fieldUsages()),
+      modelFields,
       query.layers[0].filters,
       query.layers[0].defaults,
-      makeBaseModelName(model.name, rIdx, cIdx));
+      makeBaseModelName(model.name, facetName, rIdx, cIdx));
 
     // TODO: apply all remaining filters on independent variables
     // TODO: don't forget to remove filters from sub query(?)
-  };
+  }
 
 
   /**
@@ -56,13 +67,18 @@ define(['./PQL'], function(PQL) {
       this.at = new Array(this.size.rows);
     }
 
-    model () {
+    /**
+     * Derives promise collection of base models for a facet.
+     * @param facetName {String}, optional. The facet name for which to derive base models.
+     * @returns {Promise<unknown[]>}
+     */
+    model (facetName="") {
       let modelPromises = new Set().add(Promise.resolve());
       for (let rIdx = 0; rIdx < this.size.rows; ++rIdx) {
         this.at[rIdx] = new Array(this.size.cols);
         for (let cIdx = 0; cIdx < this.size.cols; ++cIdx) {
           let query = this.queryTable.at[rIdx][cIdx];
-          let promise = deriveBaseModel(query, rIdx, cIdx) // derive base model for a single atomic query
+          let promise = deriveBaseModel(query, rIdx, cIdx, facetName) // derive base model for a single atomic query
             .then( baseModel => { // jshint ignore:line
               this.at[rIdx][cIdx] = baseModel;
               //return baseModel;

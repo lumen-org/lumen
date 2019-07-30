@@ -5,7 +5,7 @@
  * This module derives VisMEL queries for difference facets from a given VisMEL query.
  *
  * The VisMEL query is the one that is specified by the user to describe what "he is interested in".
- * It implicitely specifies:
+ * It implicitly specifies:
  *
  *   * a set of dimensions of interest
  *   * a division of the dimensions into co-variate and variate dimensions
@@ -84,8 +84,11 @@
  * @author Philipp Lucas
  * @copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, VisMEL, c) {
+define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], function(Logger, utils, PQL, VisMEL, c) {
   'use strict';
+
+  let logger = Logger.get('pl-lumen-VisMEL4Traces');
+  logger.setLevel(Logger.WARN);
 
   function checkItIsRowsOrCols(rowsOrCols) {
     if (rowsOrCols !== 'cols' && rowsOrCols !== 'rows')
@@ -118,6 +121,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
       return obj;
     } else {
       // DEBUG: console.log("replacing:\n" + obj.toString() + " \n with:\n " + cached.toString());
+      console.log("replacing:\n" + obj.toString() + " \n with:\n " + cached.toString());
       return cached;
     }
   }
@@ -140,7 +144,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
 
     let details = aest.details;
     for (let i = 0; i < details.length; i++)
-        details[i] = useUpdateHashmap(details[i], hashmap)
+        details[i] = useUpdateHashmap(details[i], hashmap);
 
     for (let [xy, cr] of [['x', 'cols'], ['y', 'rows']]) {
       if (vismel.used[xy]) {
@@ -160,7 +164,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
   }
 
 
-  /**f
+  /**
    * Returns a VisMEL query for the marginal density over the innermost dimension on <rowsOrCols>.
    *
    * The rules for conversion are as follows:
@@ -178,29 +182,12 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
    *
    * @param vismel A VisMEL query.
    * @param rowsOrCols Either 'rows' or 'cols'.
-   * @param reuse [Optional]. A map of FieldUsage hashes to FieldUsages. Contains mappings for those fieldusages to reuse. Note that the hashes are identical also if the value of FieldUsages are identical, even if they are not object-identical.
-   *
    */
   function uniDensity(vismel, rowsOrCols) {
-  //function uniDensity(vismel, rowsOrCols, reuse=undefined) {
     checkItIsRowsOrCols(rowsOrCols);
-    let invRoC = invertRowsOrCols(rowsOrCols);
+    let invRoC = invertRowsOrCols(rowsOrCols),
+        axisFieldUsage = vismel.layout[rowsOrCols][0];
 
-    // if (reuse != undefined) {
-    //   // TODO: what was the plan here????
-    //   //
-    //   // reuse the vismel given in <reuse>.
-    //   // what can potentially differ between <reuse> and the vismel to be generated?
-    //   //  * the field usages on x and y shelf
-    //   //  * that's it!
-    //   //  * but:
-    //
-    //   // need to store
-    //   //  * split over dims for positional axis: key = name to split ?? need a hash function:
-    //   //  * densities over dims for positional axis: key = ??? need a hash function
-    // }
-
-    let axisFieldUsage = vismel.layout[rowsOrCols][0];
     if (!PQL.isFieldUsage(axisFieldUsage))
       // nothing to do!
       throw new ConversionError("Shelf for " + rowsOrCols + " is empty.");
@@ -213,7 +200,6 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
       color = aest.color;
     if (VisMEL.isMap(color) && !VisMEL.isSplitMap(color))
       aest.color = VisMEL.toSplitMap(color);
-    //aest.color = useUpdateHashmap(aest.color, reuse);
 
     // convert shape and size to splits in details
     for (let key of ['shape', 'size'])
@@ -223,7 +209,6 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
           splitMap = aest[key];
         else
           splitMap = VisMEL.toSplitMap(aest[key]);
-//        fu = useUpdateHashmap(fu, reuse);
         aest.details.push(splitMap.fu);
         aest[key] = {};
       }
@@ -337,6 +322,54 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
   }
 
 
+  function predictionDataLocal (vismel) {
+    // ignore filters for now
+    if (!vismel.used)
+      vismel.used = vismel.usages();
+
+    if (!vismel.used.atomic)
+      throw new InvalidConversionError("VisMEL query must be atomic, but is not.");
+
+    if (!vismel.layers[0].filters.empty())
+      logger.warn("filters are currently not supported for the 'prediction data local'-facet and ignored.")
+
+    let predDataLocalVismel = vismel.shallowCopy(),
+        model = predDataLocalVismel.getModel(),
+        observedFields = model.byIndex.filter(f => f.obsType === "observed"),
+        fus = predDataLocalVismel.fieldUsages(),
+        aggrFus = fus.filter(PQL.isAggregation),
+        predictedFieldNames = new Set(aggrFus.map(fu=>fu.yieldField.name));
+
+    // add data splits for all not predicted and not already split data dims
+    let observedSplitFields = observedFields.filter(f => !predictedFieldNames.has(f.name));    
+    predDataLocalVismel.layers[0].aesthetics.details = observedSplitFields.map(
+      f => new PQL.Split(f, 'data') // TODO: make configurable      
+    );
+
+    // predict the targeted dimensions as before, but need to add more fields to the aggregation's fields
+    // // TODO: does this modify the original FU?
+    // for (let aggrFu of aggrFus) {
+    //   // predict based on all split fields!
+    //   //aggrFu.fields = [aggrFu.yieldField, ...observedSplitFields];
+    //   aggrFu.fields = [aggrFu.yieldField];
+    // }
+
+    // all existing splits: convert to method = 'data' splits
+    let splitFus = fus.filter(PQL.isSplit);
+    for (let splitFu of splitFus) {
+      splitFu.method = 'data'
+    }
+
+    // Note: cannot use the same derived basemodel as the other queries since we work with _all_ data dimensions!
+
+    // Additionally:
+    // * use threshhold for number of predicted points: 10% but at most 100
+    // * use flag to trigger between prediction for training data points or test data points
+
+    return predDataLocalVismel;
+  }
+
+
   /**
    * Return a VisMEL query for the data facet.
    *
@@ -354,6 +387,7 @@ define(['./utils', './PQL', './VisMEL', './ViewSettings'], function(utils, PQL, 
     uniDensity,
     biDensity,
     samples,
+    predictionDataLocal,
     reuseIdenticalFieldUsagesAndMaps,
     ConversionError,
     InvalidConversionError,

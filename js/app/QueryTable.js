@@ -27,7 +27,7 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
   var _expandTemplate = function (vismel, what) {
 
     if (what !== "rows" && what !== "cols")
-      throw "the value of 'what' has to be 'rows' or 'cols' but it is : " + what;
+      throw new RangeError("the value of 'what' has to be 'rows' or 'cols' but it is : " + what.toString());
 
     let nsf = vismel.layout[what].normalize(),
       len = nsf.length,
