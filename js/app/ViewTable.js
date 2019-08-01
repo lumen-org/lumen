@@ -162,7 +162,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         let aggrVismel = (aggrRT !== undefined ? aggrRT.vismel : dataLocalPredRT.vismel);
         mapper.aggrFillColor = MapperGen.markersFillColor(aggrVismel, 'aggr');
         mapper.aggrSize = MapperGen.markersSize(aggrVismel, config.map.aggrMarker.size);
-        mapper.aggrShape = MapperGen.markersShape(aggrVismel, 'filled');
+        mapper.aggrShape = MapperGen.markersShape(aggrVismel, 'model samples');
         mapper.lineColor = MapperGen.lineColor(aggrVismel);
       }
 
@@ -175,17 +175,24 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         else
           dataVismel =  samplesRT.vismel;
 
-        mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
+        //mapper.samplesShape = MapperGen.markersShape(dataVismel, 'filled');
         mapper.samplesSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
 
-        if (dataRT !== undefined || samplesRT !== undefined)
-          mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'data');
-        if (testDataRT !== undefined)
+        if (dataRT !== undefined || samplesRT !== undefined) {
+          mapper.dataFillColor = MapperGen.markersFillColor(dataVismel, 'training data');
+          mapper.dataShape = MapperGen.markersShape(dataVismel, 'training data');
+          mapper.dataSize = MapperGen.markersSize(dataVismel, config.map.sampleMarker.size);
+        }
+        if (testDataRT !== undefined) {
           mapper.testDataFillColor = MapperGen.markersFillColor(dataVismel, 'test data');
-        if (samplesRT !== undefined)
+          mapper.testDataShape = MapperGen.markersShape(dataVismel, 'test data');
+          mapper.testDataSize = MapperGen.markersSize(dataVismel, config.map.testDataMarker.size);
+        }
+        if (samplesRT !== undefined) {
           mapper.modelSampleFillColor = MapperGen.markersFillColor(dataVismel, 'model samples');
           mapper.modelSampleShape = MapperGen.markersShape(dataVismel, 'model samples');
           mapper.modelSampleSize = MapperGen.markersSize(dataVismel, config.map.modelSampleMarker.size);
+        }
       }
 
       if (p1dRT !== undefined || data1dRT !== undefined) {
@@ -239,12 +246,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
               traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
-              traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
               traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
-
+              traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             }
-
           }
           // at least on is dependent -> line chart
           else {
@@ -253,10 +258,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
             traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
-            traces.push(...TraceGen.aggr(dataLocalPredRT, mapper, mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
             traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
+            traces.push(...TraceGen.aggr(dataLocalPredRT, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           }
         }
 
@@ -292,9 +297,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           traces.push(...TraceGen.biQC(p2dRT, mapper, mainAxis, catQuantAxisIds));
           traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
           traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
-          traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
           traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
+          traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
         }
       }
 

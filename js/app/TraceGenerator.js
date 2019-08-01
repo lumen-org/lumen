@@ -317,7 +317,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
             size: applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
             symbol: applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
             line: { // configures the line bounding the marker points
-              color: cfg.stroke.color,
+              color: cfg.stroke["color prediction"],
               width: cfg.stroke.width
             },
             showscale: false,
@@ -685,8 +685,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
             {
               type: 'contour',
               autocontour: false,
-              ncontours: c.map.biDensity.levels,
+              ncontours: c.map.biDensity.contour.levels,
               opacity: c.map.biDensity.opacity,
+              contours: {
+                coloring: c.map.biDensity.contour.coloring,
+              },
+              line: {
+                width: c.map.biDensity.contour.width,
+              }
             },
             commonTrace,
             commonHeatmapContour
@@ -720,7 +726,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           mode: 'markers',
           opacity: 1,
           marker: {
-            symbol: "circle",
+            //symbol: "circle",
+            symbol: c.shapes.model,
             sizemin: 0,
             sizemode: 'area',
             size: zdata,
@@ -863,18 +870,18 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         cfg = c.map.sampleMarker;
         mapper = {
           fillColor: mapper.dataFillColor,
-          shape: mapper.samplesShape,
+          shape: mapper.dataShape,
           size: mapper.samplesSize,
         };
       } else if (mode === 'test data') {
         cfg = c.map.testDataMarker;
         mapper = {
           fillColor: mapper.testDataFillColor,
-          shape: mapper.samplesShape,
+          shape: mapper.testDataShape,
           size: mapper.samplesSize
         };
       } else if (mode === 'model samples') {
-        cfg = c.map.sampleMarker;
+        cfg = c.map.modelSampleMarker;
         mapper = {
           fillColor: mapper.modelSampleFillColor,
           shape: mapper.modelSampleShape,
@@ -887,7 +894,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       let xIdx = fu2idx.get(xfu),
         yIdx = fu2idx.get(yfu);
       let trace = {
-        name: 'model samples',
+        name: mode,
         type: 'scatter',
         mode: 'markers',
         showlegend: false,

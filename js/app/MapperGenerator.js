@@ -42,7 +42,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     let defaultColor;
     if (mode === 'aggr')
       defaultColor = c.map.aggrMarker.fill.def;
-    else if (mode === 'data')
+    else if (mode === 'training data')
       defaultColor = c.map.sampleMarker.fill.def;
     else if (mode === 'test data')
       defaultColor = c.map.testDataMarker.fill.def;
@@ -52,7 +52,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
       throw RangeError("invalid mode " + mode);
 
     let aesthetics = query.layers[0].aesthetics,
-      color = aesthetics.color;
+        color = aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       return _averaged(ScaleGen.color(color, color.fu.extent, mode));
     } else {
@@ -62,7 +62,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
 
   gen.aggrFillColor = function (query, defaultColor=c.map.sampleMarker.fill.def) {
     let aesthetics = query.layers[0].aesthetics,
-      color = aesthetics.color;
+        color = aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       return _averaged(ScaleGen.color(color, color.fu.extent));
     } else {
@@ -73,7 +73,7 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
 
   gen.markersSize = function (query, opts) {
     let aesthetics = query.layers[0].aesthetics,
-      size = aesthetics.size;
+        size = aesthetics.size;
     if (size instanceof VisMEL.SizeMap) {
       return _averaged(ScaleGen.size(size, size.fu.extent, [opts.min, opts.max]));
     } else {
@@ -81,22 +81,24 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
     }
   };
 
-  gen.markersShape = function (query, mode = 'filled') {
-    if (!['filled', 'open', 'svgPath', 'model samples'].includes(mode))
-        //mode !== 'filled' && mode !== 'open' && mode !== 'svgPath'
-        throw RangeError("mode must be 'filled' or 'open' or 'svgPath' or 'model samples', but is: " + mode.toString());
+  gen.markersShape = function (query, mode) {
+    if (!['filled', 'open', 'svgPath', 'model samples', 'training data', 'test data'].includes(mode))
+      throw RangeError("mode must be ''model samples', 'training data', 'test data', but is: " + mode.toString());
     let aesthetics = query.layers[0].aesthetics,
-      shape = aesthetics.shape;
+        shape = aesthetics.shape;
     if (shape instanceof VisMEL.ShapeMap) {
-      return _averaged(ScaleGen.shape(shape, shape.fu.extent, mode));
+      return _averaged(ScaleGen.shape(shape, shape.fu.extent, 'filled'));
     } else {
       if (mode === 'model samples')
-        return "triangle-up"; // not open
+        return c.map.aggrMarker.shape.def;
+      else if (mode === 'test data')
+        return c.map.testDataMarker.shape.def;
+      else if (mode === 'training data')
+        return c.map.sampleMarker.shape.def;
       else
-        return "circle" + (mode === 'open' ? '-open' : "");
+        throw new RangeError("invalid mode");
     }
   };
-
 
   /**
    * What is the color of a line?
@@ -111,11 +113,11 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
    */
   gen.lineColor = function (query) {
     let aesthetics = query.layers[0].aesthetics,
-      color = aesthetics.color;
+        color = aesthetics.color;
 
     if (color instanceof VisMEL.ColorMap) {
       let fu = color.fu,
-       scale = ScaleGen.color(color, fu.extent);
+          scale = ScaleGen.color(color, fu.extent);
       if (PQL.isSplit(fu)) {
         if (PQL.hasDiscreteYield(fu))
           return _averaged(scale);  // compute on demand

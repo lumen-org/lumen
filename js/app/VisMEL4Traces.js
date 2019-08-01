@@ -121,7 +121,6 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
       return obj;
     } else {
       // DEBUG: console.log("replacing:\n" + obj.toString() + " \n with:\n " + cached.toString());
-      console.log("replacing:\n" + obj.toString() + " \n with:\n " + cached.toString());
       return cached;
     }
   }

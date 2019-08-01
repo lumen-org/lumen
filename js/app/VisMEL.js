@@ -469,8 +469,10 @@ define(['lib/emitter', './utils', './jsonUtils', './PQL', './TableAlgebra', './R
      *   * there is at most one FieldUsage on this.layout.rows / cols
      */
     isAtomic () {
-      return ((this.layout.cols.length === 1 && PQL.isFieldUsage(this.layout.cols[0])) &&
-              (this.layout.rows.length === 1 && PQL.isFieldUsage(this.layout.rows[0])));
+      let cols = this.layout.cols,
+          rows = this.layout.rows;
+      return (((cols.length === 0) || (cols.length === 1 && PQL.isFieldUsage(cols[0]))) &&
+              ((rows.length === 0) || (rows.length === 1 && PQL.isFieldUsage(rows[0]))));
     }
 
     /**

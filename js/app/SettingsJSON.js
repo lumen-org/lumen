@@ -82,6 +82,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       discrete6dark: d3.range(6).map(i => d3chromatic.schemePaired[i * 2 + 1]),
       discrete9light: d3chromatic.schemeSet1.map(co => d3color.hsl(co).brighter(0.5).rgb().toString()),
       discrete9dark: d3chromatic.schemeSet1,
+      discrete9dark2: d3chromatic.schemeDark2,
     },
     colorscalesKeys = Object.keys(colorscalesEnum),
     colorscalesValues = Object.values(colorscalesEnum);
@@ -106,6 +107,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "aggregation": {type: "integer"},
         }
       },
+      "stroke": {
+        type: "object",
+        format: "grid",
+        properties: {
+          "color prediction": {type: "string"},
+          "color data": {type: "string"},
+        }
+      },
       "data local prediction": {
         type: "object",
         format: "grid",
@@ -119,6 +128,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "data_point_limit": {type: "integer"},
     },
   };
+
   let tweaksInitial = {
     hideAggregations: false,
     hideAccuMarginals: true,
@@ -130,6 +140,16 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       layout: 5,
       density: undefined, // TODO: watches
       aggregation: 15,
+    },
+    data: {
+      "stroke color": greys(0.1),
+      "stroke width": 1,
+      "fill opacity": 0.55,
+    },
+    prediction: {
+      "stroke color": greys(0.9),
+      "stroke width": 1,
+      "fill opacity": 0.8,
     },
     "data local prediction": {
       "point number maximum": 200,
@@ -159,6 +179,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           discrete6dark_Enum: {type: "string", enum: colorscalesKeys},
           discrete9light_Enum: {type: "string", enum: colorscalesKeys},
           discrete9dark_Enum: {type: "string", enum: colorscalesKeys},
+          discrete9dark2_Enum: {type: "string", enum: colorscalesKeys},
         },
       },
       "density": {
@@ -200,6 +221,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     }
   };
 
+  let shapesInitial= {
+      model:  'square',
+      "training data": 'circle',
+      "test data": 'cross',
+  };
+
   let colorsInitial = {
     // abstract scales for certain data characteristics
     semanticScales: {
@@ -211,6 +238,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       discrete6dark_Enum: "discrete6dark",
       discrete9light_Enum: "discrete9light",
       discrete9dark_Enum: "discrete9dark",
+      discrete9dark2_Enum: "discrete9dark2",
     },
 
     density: {
@@ -229,25 +257,29 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     //   single: greys(0.5),
     // },
 
-    aggregation: {
-      // single:  d3chromatic.interpolateReds(0.55),
-      // single:  d3chromatic.schemeSet1[6],
-      //single:  d3chromatic.schemeSet1[5],
-      single: d3chromatic.schemePaired[7],
+    data: { //TODO: where is that used?
+      single: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      // single: d3chromatic.schemePaired[9],
     },
 
-    data: {
-      //single: d3chromatic.interpolateBlues(0.7),
-      //single: d3chromatic.schemeSet1[7],
-      single: d3chromatic.schemePaired[6],
+    aggregation: {
+      single: d3chromatic.schemeDark2[3],
+      // single: d3chromatic.schemePaired[1],
     },
 
     testData: {
-      single: d3chromatic.schemePaired[3],
+      single: d3chromatic.schemeDark2[6],
+      // single: d3chromatic.schemePaired[7],
+    },
+
+    'training data': {
+      single: d3chromatic.schemeDark2[7],
+      //single: d3chromatic.schemePaired[3],
     },
 
     modelSamples: {
-      single: d3chromatic.schemePaired[1],
+      single: d3chromatic.schemeDark2[3],
+      // single: d3chromatic.schemePaired[1],
     }
   };
 
@@ -311,6 +343,20 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   let mapSchema = {
     type: "object",
     properties: {
+      "heatmap": {
+        type: "object",
+        properties: {
+          "opacity": {
+            type: "object",format: "grid",
+            properties: {
+              "discrete": {type: "number"},
+              "continuous": {type: "number"},
+            }
+          },
+          "xgap": {type: "integer"},
+          "ygap": {type: "integer"},
+        }
+      },
       "aggrMarker": {
         type: "object",
         properties: {
@@ -319,7 +365,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             properties: {
               "def": {type: "string", format: "color", watch: {_single: "colors.aggregation.single"}, template: "{{_single}}"},
               // TODO: "opacity": {type: "number", watch: {_hide:"tweaks.hideAggregations"}, template: "1*!{{_hide}}"},
-              opacity: {type: "number"},
+              "opacity": {type: "number"},
             }
           },
           "stroke": {
@@ -335,28 +381,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "min": {type: "integer"},
               "max": {type: "integer"},
               "def": {type: "integer"},
-              }
-            },
+            }
+          },
           "line": {
             type: "object",
             properties: {
               "color": {type: "string", format: "color"},
             }
           }
-        }
-      },
-      "heatmap": {
-        type: "object",
-        properties: {
-          "opacity": {
-            type: "object",format: "grid",
-            properties: {
-              "discrete": {type: "number"},
-              "continuous": {type: "number"},
-            }
-          },
-          "xgap": {type: "integer"},
-          "ygap": {type: "integer"},
         }
       },
       "sampleMarker": {
@@ -381,7 +413,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             type: "object", format: "grid",
             properties: {
               "def": {type: "string", format: "color", watch: {_single: "colors.data.single"}, template: "{{_single}}"},
-              opacity: {/*TODO*/}
+              opacity: {type: "number"},
             }
           },
           "maxDisplayed": {type: "integer"},
@@ -398,10 +430,18 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "def": {type: "integer"},
             }
           },
+          "stroke": {
+            type: "object", format: "grid",
+            properties: {
+              "color": {type: "string", format: "color"},
+              "width": {type: "number"},
+            }
+          },
           "fill": {
             type: "object", format: "grid",
             properties: {
               "def": {type: "string", format: "color", watch: {_single: "colors.testData.single"}, template: "{{_single}}"},
+              opacity: {type: "number"},
             },
           },
         }
@@ -409,6 +449,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "testDataMarker": {
         type: "object",
         properties: {
+          "size": {
+            type: "object", format: "grid",
+            properties: {
+              "min": {type: "integer"},
+              "max": {type: "integer"},
+              "def": {type: "integer"},
+            }
+          },
           "stroke": {
             type: "object", format: "grid",
             properties: {
@@ -496,6 +544,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "opacity": {type: "number"},
             }
           },
+          contour: {
+            type: "object", format: "grid",
+            properties: {
+              "width": {type: "number"},
+              "coloring": {type: "string"}, // possible values are: "fill" | "heatmap" | "lines"
+              "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
+            },
+          },
           line: {
             type: "object", format: "grid",
             properties: {
@@ -507,7 +563,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           },
           // TODO: make subgroup and  format: "grid",
           // "colorscale_Enum": { TODO: link to colors.density. ... },
-          "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
+
           "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
           "labelFormatterString": {type: "string"},
           "backgroundHeatMap": {type: "boolean"},
@@ -517,30 +573,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   };
 
   let mapInitial = {
-    aggrMarker: {
-      fill: {
-        //def: "#377eb8",
-        def: colorsInitial.aggregation.single, // TODO: watches!
-        //def: greys(0.05), // prepaper
-        opacity: 0.9 * !tweaksInitial.hideAggregations, // TODO: watches!
-      },
-      stroke: {
-        color: greys(0.95),
-        // color: greys(0.1),
-        width: 1.5,
-      },
-      size: {
-        min: 6, // HACK: used to be 8.
-        max: 40,
-        def: 12,
-        //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
-      },
-      line: { // the line connecting the marker points
-        //color: c.colors.aggregation.single,
-        color: greys(0.8),
-      }
-    },
-
     heatmap: {
       opacity: {
         discrete: 0.5,
@@ -550,19 +582,50 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       ygap: 2,
     },
 
-    sampleMarker: {
-      size: {
-        min: 6,
-        max: 40,
-        def: 10,
+    aggrMarker: {
+      fill: {
+        //def: "#377eb8",
+        def: colorsInitial.aggregation.single, // TODO: watches!
+        //def: greys(0.05), // prepaper
+        opacity: tweaksInitial.prediction['fill opacity'] * !tweaksInitial.hideAggregations, // TODO: watches!
       },
       stroke: {
-        color: greys(0.5),// #929292
+        color: tweaksInitial.prediction["stroke color"],
+        "color prediction": tweaksInitial.prediction["stroke color"],
+        // color: x,
+        width: 1.5,
+      },
+      size: {
+        min: 6, // HACK: used to be 8.
+        max: 40,
+        def: 10,
+        //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
+      },
+      line: { // the line connecting the marker points
+        //color: c.colors.aggregation.single,
+        color: greys(0.8),
+      },
+      shape: {
+        def: shapesInitial.model,
+      }
+    },
+
+    sampleMarker: {
+      size: {
+        min: 8,
+        max: 40,
+        def: 12,
+      },
+      stroke: {
+        color: tweaksInitial.data['stroke color'],// #929292
         width: 1,
       },
       fill: {
-        def: colorsInitial.data.single, // TODO: watched!
-        opacity: 0.5, // TODO: watch tweaks->opacity
+        def: colorsInitial['training data'].single, // TODO: watched!
+        opacity: tweaksInitial.data['fill opacity'], // TODO: watch tweaks->opacity
+      },
+      shape: {
+        def: shapesInitial["training data"],
       },
       maxDisplayed: 750,  // the maximum number of samples plotted in one trace of one atomic plot
     },
@@ -571,21 +634,37 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       size: {
         min: 8,
         max: 40,
-        def: 12,
+        def: 11,
       },
       fill: {
         def: colorsInitial.modelSamples.single,// TODO: watched!
-      }
+        opacity: tweaksInitial.data['fill opacity'],
+      },
+      shape: {
+        def: shapesInitial.model,
+      },
+      stroke: {
+        color: tweaksInitial.data['stroke color'],// #929292
+        width: 1,
+      },
     },
 
     testDataMarker: {
+      size: {
+        min: 8,
+        max: 40,
+        def: 12,
+      },
       stroke: {
-        color: greys(1),
+        color: tweaksInitial.data['stroke color'],
         width: 1,
       },
       fill: {
         def: colorsInitial.testData.single,// TODO: watched!
-        opacity: 0.6,
+        opacity: tweaksInitial.data['fill opacity'],
+      },
+      shape: {
+        def: shapesInitial["test data"],
       },
     },
 
@@ -630,8 +709,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         fill: true,
         fillopacity: 0.06,
       },
+      contour: {
+        width: 3,
+        levels: tweaksInitial.levels, // TODO: watches!
+        coloring: "lines", // possible values are: "fill" | "heatmap" | "lines"
+
+      },
       colorscale_Enum: colorsInitial.density.scale_Enum, // color scale to use for heat maps / contour plots  // TODO: watches!
-      levels: tweaksInitial.levels, // TODO: watches!
+
       resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
       backgroundHeatMap: false, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
@@ -936,6 +1021,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     map: mapInitial,
     tweaks: tweaksInitial,
     colors: colorsInitial,
+    shapes: shapesInitial,
     plots: plotsInitial,
   };
 
@@ -1021,19 +1107,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data
       data: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // test data
       testData: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // model samples
       'model samples': {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // model density marginal
@@ -1058,7 +1144,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // -> enable choosing between which data?
       predictionDataLocal: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       /*predictionOffset: {
