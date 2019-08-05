@@ -195,12 +195,20 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         }
       }
 
-      if (p1dRT !== undefined || data1dRT !== undefined) {
-        // TODO: do we need to unify these?
-        let rt = (p1dRT !== undefined ? p1dRT : data1dRT),
-          pvismel = ('x' in rt ? rt.x : rt.y).vismel;
-        mapper.marginalColor = MapperGen.marginalColor(pvismel);
+      if (p1dRT !== undefined) {
+          let pvismel = ('x' in p1dRT ? p1dRT.x : p1dRT.y).vismel;
+          mapper.modelMarginalColor = MapperGen.marginalColor(pvismel, 'model marginal');
       }
+
+      if (data1dRT !== undefined) {
+        let pvismel = ('x' in data1dRT ? data1dRT.x : data1dRT.y).vismel;
+        mapper.dataMarginalColor = MapperGen.marginalColor(pvismel, 'training data');
+      }
+
+      // if (testData1dRT !== undefined) {
+      //   let pvismel = ('x' in testData1dRT ? testData1dRT.x : testData1dRT.y).vismel;
+      //   mapper.testDataMarginalColor = MapperGen.marginalColor(pvismel, 'test data');
+      // }
 
       // TODO: we will have color for p2dRT in the future - maybe.
       // if (p2dRT != undefined) { ... }

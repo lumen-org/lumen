@@ -66,6 +66,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
       palette = palette.slice(0, l);
     }
     else {
+
       scale = d3.scale.linear();
       let [l,h] = domain,
         size = h-l,

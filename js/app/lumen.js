@@ -115,7 +115,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // empirical model
         // TODO: make model configurable
-        this.emp_model = new Remote.Model('emp_iris', server);
+        this.emp_model = undefined;
 
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
@@ -191,7 +191,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       _updateModels () {
         let that = this;
         return that.model.update()
-            .then(() => that.emp_model.update());
+            .then(() => {
+                // set and update empirical model
+                that.emp_model = new Remote.Model(that.model.empirical_model_name, that.server);
+                return that.emp_model.update()
+            });
       }
 
       /**

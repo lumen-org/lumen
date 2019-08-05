@@ -148,14 +148,22 @@ define(['lib/logger', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings']
    *
    * @param query A VisMEL query.
    */
-  gen.marginalColor = function (query) {
+  gen.marginalColor = function (query, mode) {
     let color = query.layers[0].aesthetics.color;
     if (color instanceof VisMEL.ColorMap) {
       let fu = color.fu;
-      let scale = ScaleGen.color(color, fu.extent);
+      let scale = ScaleGen.color(color, fu.extent, mode);
       return _averaged(scale);
+    } else {
+      if (mode === 'training data')
+        return c.colors['training data'].marginal;
+      else if (mode === 'test data')
+        return c.colors['testData'].marginal;
+      else if (mode === 'model marginal')
+        return c.colors['modelSamples'].marginal;
+      else
+        throw RangeError(`invalid mode: ${mode}`)
     }
-    return undefined;
     // OLD: return c.map.uniDensity.color.def;
   };
 

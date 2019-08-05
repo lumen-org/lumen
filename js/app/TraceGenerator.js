@@ -399,10 +399,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           hovertext: p1dRT[xy].formatter(data),
         };
 
-        let color = mapper.marginalColor;
-        if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
-          color = colorOfUniDensityTrace(vismel, xy, c);
-        }
+        let color = opts.facetName === 'dataMarginals' ? mapper.dataMarginalColor : mapper.modelMarginalColor;
+        // if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
+        //   color = colorOfUniDensityTrace(vismel, xy, c, opts);
+        // }
         if (_.isFunction(color)) {
           // apply the color mapping that color represents
           let colorIdx = fu2idx.get(vismel.layers[0].aesthetics.color.fu);
@@ -651,8 +651,9 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       // // of the remaining values get the .98 quantile and choose this as the upper value of the scale
       // let zmax = sortedZData[lowerIdx + Math.floor((l - lowerIdx)*0.98)];
 
-      let cd = c.colors.density,
-        colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
+      // let cd = c.colors.modelSamples.density_scale;
+      // colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
+      let colorscale = c.colors.modelSamples.density_scale;
 
       // merge color split data into one
       let commonTrace = {
@@ -800,14 +801,19 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
        * @param i index along the categorical axis' extent
        */
       function uniTrace4biQC(data, i) {
-        let color = mapper.marginalColor;
-        if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
-          // determine uniform fallback color
-          color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
-        } else {
-          // apply the color mapping that color represents. colorIdx is precomputed in the outer scope.
-          color = color(data[0][colorIdx]);  // data[0] because we simply need any data point of the trace, so the first one is good enough
-        }
+
+        let color = mapper.modelMarginalColor;
+        // if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
+        //   // determine uniform fallback color
+        //   color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
+
+        if (_.isFunction(color))
+          color = color(data[0][colorIdx]);
+
+        // } else {
+        //   apply the color mapping that color represents. colorIdx is precomputed in the outer scope.
+          // color = color(data[0][colorIdx]);  // data[0] because we simply need any data point of the trace, so the first one is good enough
+        // }
 
         let trace = {
           name: PQL.toString(rt.pql),

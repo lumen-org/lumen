@@ -71,6 +71,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       density_greens: makeDensityScale(d3chromatic.schemeGreens[9]),
       greys: d3chromatic.schemeGreys[9],
       density_greys: makeDensityScale(d3chromatic.schemeGreys[9]),
+      density_pinks: makeDensityScale(d3chromatic.schemeRdPu[9]),
       oranges: d3chromatic.schemeOranges[9],
       reds: d3chromatic.schemeReds[9],
       rdBu: d3chromatic.schemeRdBu[11],
@@ -244,13 +245,18 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     density: {
       adapt_to_color_usage: true,
 
-      primary_single: greys(0.7),
+      //primary_single: greys(0.7),
+      //primary_scale_Enum: "density_greys", // todo: debug
+      //primary_single: d3color.hsl(d3chromatic.schemeDark2[3]).brighter(3).rgb().toString(),
+      primary_single: d3chromatic.schemeDark2[3],
       primary_scale_Enum: "density_greys", // todo: debug
 
       secondary_single: c2h(d3chromatic.interpolateBlues(0.7)),
       secondary_scale_Enum: "density_blues",
       //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
     },
+
+
 
     // not used at the moment
     // marginal: {
@@ -259,27 +265,33 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     data: { //TODO: where is that used?
       single: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      marginal: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      // marginal_scale_Enum: ,
       // single: d3chromatic.schemePaired[9],
     },
 
     aggregation: {
       single: d3chromatic.schemeDark2[3],
-      // single: d3chromatic.schemePaired[1],
+      marginal: d3chromatic.schemeDark2[3],
     },
 
     testData: {
       single: d3chromatic.schemeDark2[6],
-      // single: d3chromatic.schemePaired[7],
+      marginal: d3chromatic.schemeDark2[6],
     },
 
     'training data': {
       single: d3chromatic.schemeDark2[7],
-      //single: d3chromatic.schemePaired[3],
+      marginal: d3chromatic.schemeDark2[7],
+      density: d3chromatic.schemeDark2[7],
+      density_scale_Enum: "density_greys",
     },
 
     modelSamples: {
       single: d3chromatic.schemeDark2[3],
-      // single: d3chromatic.schemePaired[1],
+      marginal: d3chromatic.schemeDark2[3],
+      density: d3chromatic.schemeDark2[3],
+      density_scale_Enum: "density_pinks",
     }
   };
 
@@ -1209,7 +1221,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     // .colors
     translateEnum(c.colors.density, ["primary_scale", "secondary_scale"], colorscalesEnum);
     translateEnum(c.colors.semanticScales, ["diverging", "sequential", "discrete9", "discrete12", "discrete6light", "discrete6dark", "discrete9light", "discrete9dark"], colorscalesEnum);
-    // translateEnum(c.myTest, ["color"], colorscalesEnum);
+    translateEnum(c.colors.modelSamples, ["density_scale"], colorscalesEnum);
+    translateEnum(c.colors['training data'], ["density_scale"], colorscalesEnum);
 
     // .map
     c.map.biDensity.labelFormatter = d3.format(c.map.biDensity.labelFormatterString);
