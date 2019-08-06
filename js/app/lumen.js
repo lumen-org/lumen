@@ -1865,7 +1865,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
           .catch((err) => {
             console.error(err);
-            infoBox.message("Could not load remote model from Server!");
+            if (err.status === 0) {
+                infoBox.message("Could not connect to Backend-Server!");
+            } else {
+                infoBox.message(err.response);
+            }
           });
       }
     };
