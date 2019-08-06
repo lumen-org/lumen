@@ -266,9 +266,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             c.emp_baseQueryTable = new QueryTable(c.emp_basequery);
             c.emp_baseModelTable = new ModelTable(c.emp_baseQueryTable);
           }
-          catch (error) {
-            console.error(error);
-            infoBox.message(err.response);
+          catch (err) {
+            console.error(err);
+            connection_errorhandling(err);
           }
 
           // reset field cache and fetched
@@ -349,9 +349,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
           .catch((err) => {
             console.error(err);
-            if (err instanceof XMLHttpRequest) {
-              connection_errorhandling(err)
-            } else if (err instanceof Error) {
+            connection_errorhandling(err)
+            if (err instanceof Error) {
               infoBox.message(err.toString());
             }
           });
@@ -854,7 +853,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           .catch((err) => {
             console.error(err);
             if (err instanceof XMLHttpRequest){
-                console.error("OAKY")
                 connection_errorhandling(err)
             } else {
                 infoBox.message("Internal error: " + err.toString());
@@ -1120,7 +1118,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 .then(() => contextCopy.update('all', true))
                 .catch((err) => {
                     console.error(err);
-                    console.error("WOW")
                     connection_errorhandling(err);
                   // TODO: remove vis and everything else ...
                 });
@@ -1877,11 +1874,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     };
 
     function connection_errorhandling(err) {
-        if (err.status === 0) {
-            infoBox.message("Could not connect to Backend-Server!");
-        } else if (err instanceof XMLHttpRequest) {
-            console.error("NEINENINI")
-            infoBox.message(err.response);
+        if (err instanceof XMLHttpRequest) {
+            if (err.status === 0) {
+                infoBox.message("Could not connect to Backend-Server!");
+            } else {
+                infoBox.message(err.response);
+            }
         }
     }
 
