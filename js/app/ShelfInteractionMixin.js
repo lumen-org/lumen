@@ -31,6 +31,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   function onDragStartHandler (event) {
     logger.debug('starting'); logger.debug(event.currentTarget);
     _draggedElem = event.currentTarget;
+    event.dataTransfer.setData('Text', _draggedElem);
   }
 
   /**
