@@ -268,7 +268,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           }
           catch (error) {
             console.error(error);
-            infoBox.message(error);
+            infoBox.message(err.response);
           }
 
           // reset field cache and fetched
@@ -347,12 +347,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             c._setBusyStatus();
             c.emit("ContextQueryFinishSuccessEvent", c);
           })
-          .catch((reason) => {
-            console.error(reason);
-            if (reason instanceof XMLHttpRequest) {
-              infoBox.message(reason.responseText);
-            } else if (reason instanceof Error) {
-              infoBox.message(reason.toString());
+          .catch((err) => {
+            console.error(err);
+            if (err instanceof XMLHttpRequest) {
+              connection_errorhandling(err)
+            } else if (err instanceof Error) {
+              infoBox.message(err.toString());
             }
           });
         } else {
@@ -847,18 +847,23 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         // fetch model
         let that = this;
         context._updateModels()
-          .catch((err) => {
-            console.error(err);
-            infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
-            // TODO: remove vis and everything else ...
-          })
           .then(() => that._clearInput())
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
           .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
           .catch((err) => {
             console.error(err);
-            infoBox.message("Internal error: " + err.toString());
+            if (err instanceof XMLHttpRequest){
+                console.error("OAKY")
+                connection_errorhandling(err)
+            } else {
+                infoBox.message("Internal error: " + err.toString());
+            }
+            // infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
+            // TODO: remove vis and everything else ...
+          })
+          .catch((err) => {
+            console.error(err);
           })
       }
 
@@ -1114,8 +1119,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 .then(() => activate(contextCopy, ['visualization', 'visPane', 'legendPane']))
                 .then(() => contextCopy.update('all', true))
                 .catch((err) => {
-                  console.error(err);
-                  infoBox.message("Could not load remote model from Server!");
+                    console.error(err);
+                    console.error("WOW")
+                    connection_errorhandling(err);
                   // TODO: remove vis and everything else ...
                 });
             }
@@ -1865,13 +1871,18 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
           .catch((err) => {
             console.error(err);
-            if (err.status === 0) {
-                infoBox.message("Could not connect to Backend-Server!");
-            } else {
-                infoBox.message(err.response);
-            }
+            connection_errorhandling(err)
           });
       }
     };
+
+    function connection_errorhandling(err) {
+        if (err.status === 0) {
+            infoBox.message("Could not connect to Backend-Server!");
+        } else if (err instanceof XMLHttpRequest) {
+            console.error("NEINENINI")
+            infoBox.message(err.response);
+        }
+    }
 
   });
