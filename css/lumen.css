@@ -593,6 +593,7 @@ textarea.pl-survey__content {
 .pl-remove-button {
     filter: opacity(60%);
     border: none;
+    z-index: 2;
 }
 
 .pl-fu__popUp {
