@@ -83,6 +83,10 @@ define(['./PQL'], function(PQL) {
               this.at[rIdx][cIdx] = baseModel;
               //return baseModel;
             });
+            // .catch( (err) => {
+            //   console.log(err);
+            //   this.at[rIdx][cIdx] = undefined;
+            // });
           modelPromises.add(promise);
         }
       }
