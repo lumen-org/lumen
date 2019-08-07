@@ -527,7 +527,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       visualizationPosition (position=undefined) {
         let $vis = this.$visuals.visualization;
-        if (position == undefined)
+        if (position === undefined)
             return $vis.position();
         else 
             $vis.css(position);            
@@ -535,7 +535,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       visualizationSize(size=undefined) {
         let $vis = this.$visuals.visualization;
-        if (size == undefined)
+        if (size === undefined)
             return {
               width: $vis.css('width'),
               height: $vis.css('height'),

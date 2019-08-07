@@ -591,7 +591,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
       if (isSplit(fu) && (fu.method !== SplitMethod.identity)) {
         let name = fu.field.name,
           used = usedSplits.get(name);
-        if (used == undefined) {
+        if (used === undefined) {
           usedSplits.set(name, fu);
           cleanedFus.push(fu);
         }
