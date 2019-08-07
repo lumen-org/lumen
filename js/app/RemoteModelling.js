@@ -47,7 +47,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
     }
 
     return new Promise((resolve, reject) => {
-      let jsonPQLasStr = JSON.stringify(jsonPQL)
+      let jsonPQLasStr = JSON.stringify(jsonPQL);
       logger.debug("SENT:");
       logger.debug(jsonPQLasStr);
       d3.json(remoteUrl)
@@ -164,19 +164,25 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
 
     /**
      * Runs the given PQL query against the model and returns a Promise to the result table.
+     *
+     * See the corresponding member function for details of behaviour specifiy to a query type.
+     *
      * @param query A PQL query.
+     * @param execOpts {Object} Optional execution options. Is passed on to corresponding member method.
      */
-    execute(query) {
-      let qtype = query.type;
+    execute(query, execOpts={}) {
+      let qtype = query.type,
+        promise = undefined;
       if (!qtype)
         throw RangeError("a PQL query must have a type, but has none.");
-      if (qtype === 'predict')
-        return this.predict(query.predict, query.where, query.splitby, query.mode, query.opts);
-      if (qtype === 'model')
-        return this.model(query.model, query.where, query.defaults, query.as);
-      if (qtype === 'select')
-        return this.select(query.select, query.where, query.opts);
-      throw Error("not yet impemented");
+      else if (qtype === 'predict')
+        promise = this.predict(query.predict, query.where, query.splitby, query.mode, query.opts, execOpts);
+      else if (qtype === 'model')
+        promise = this.model(query.model, query.where, query.defaults, query.as, execOpts);
+      else if (qtype === 'select')
+        promise = this.select(query.select, query.where, query.opts, execOpts);
+      else throw Error(`PQL query of unknown type: ${qtype}`);
+      return promise;
     }
 
     /**
@@ -213,7 +219,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
       return this.model(what, [], [], name);
     }
 
-    model(model, where = [], defaults = [], as_ = this.name) {
+    model(model, where = [], defaults = [], as_ = this.name, execOpts={}) {
       let jsonPQL = PQL.toJSON.model(this.name, model, as_, where, defaults);
       let newModel = (as_ !== this.name ? new RemoteModel(as_, this.url) : this);
       return executeRemotely(jsonPQL, this.url)
@@ -221,12 +227,17 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
     }
 
     /**
+     * Executes a predict query.
      * @param predict {FieldUsage} A list or a single object of ({@link Aggregation}|{@link Density}|name-of-field|{@link Field})
      * @param where {FieldUsage} A list or a single object of {@link Filter}
      * @param splitBy {FieldUsage} A list or a single object of {@link Split}.
+     * @param opts {Object}
+     * @param execOpts {Object} A dict of options. Available are:
+     *    returnEmptyTableOnFailure: true | false: If the query fails it resolves anyway and returns an empty result
+     *      table of correct size.
      * @returns {Array} A Table containing the predicted values. The table is row based, hence the first index is for the rows, the second for the columns. Moreover the table has a self-explanatory attribute '.header'.
      */
-    predict(predict, where = [], splitBy = [] /*, returnBasemodel=false*/, mode = 'model', opts=undefined) {
+    predict(predict, where = [], splitBy = [], mode = 'model', opts=undefined, execOpts={}) {
       [predict, where, splitBy] = utils.listify(predict, where, splitBy);
       var jsonContent = PQL.toJSON.predict(this.name, predict, where, splitBy, opts);
 
@@ -239,7 +250,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
           dtypes.push(p.dataType);
         else if (PQL.isAggregation(p) || PQL.isDensity(p) || PQL.isSplit(p))
           dtypes.push(p.yieldDataType);
-        else 
+        else
           throw new RangeError("unhandled case");
 
       // bind dtypes to parserows as needed
@@ -247,13 +258,31 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
 
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
-          let data = d3.csv.parseRows(jsonData.data, myparserows);
-          data.header = jsonData.header;
-          return data;
-        });
+            let data = d3.csv.parseRows(jsonData.data, myparserows);
+            data.header = jsonData.header;
+            return data;
+          },
+          err => {
+            if (execOpts['returnEmptyTableOnFailure']) {
+              // TODO: should we inform about this failure?!
+              //logger.warn(`Query execution failed. This may need investigation: ${err.toString()}`);
+              let data = [Array(dtypes.length).fill(undefined)];
+              return Promise.resolve(data);
+            }
+            return err;
+          });
     }
 
-    select (select, where=undefined, opts=undefined) {
+    /**
+     * Executes a predict query.
+     *     * @param select
+     *     * @param where
+     *     * @param opts
+     *     * @param execOpts {Object} A dict of options. Available are:
+     *        returnEmptyTableOnFailure: true | false: If the query fails it resolves anyway and returns an empty result
+     *          table of correct size.
+     */
+    select (select, where=undefined, opts=undefined, execOpts={}) {
       select = utils.listify(select);
       let jsonContent = PQL.toJSON.select(this.name, select, where, opts);
 
@@ -265,10 +294,19 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
 
       return executeRemotely(jsonContent, this.url)
         .then( jsonData => {
-          let data = d3.csv.parseRows(jsonData.data, myparserows);
-          data.header = jsonData.header;
-          return data;
-        });
+            let data = d3.csv.parseRows(jsonData.data, myparserows);
+            data.header = jsonData.header;
+            return data;
+          },
+          err =>{
+            if (execOpts['returnEmptyTableOnFailure']) {
+              // TODO: should we inform about this failure?!
+              //logger.warn(`Query execution failed. This may need investigation: ${err.toString()}`);
+              let data = [Array(dtypes.length).fill(undefined)];
+              return Promise.resolve(data);
+            }
+            return err;
+          });
     }
 
     /**

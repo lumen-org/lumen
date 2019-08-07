@@ -108,5 +108,11 @@ define(['lib/logger', './PQL', './init'], function (Logger, PQL, __) {
     return this.at[0][0].layout.cols[0];
   };
 
+  QueryTable.prototype.applyOnAll = function (fct) {
+    for (let row of this.at)
+      for (let pql of row)
+        fct(pql);
+  };
+
   return QueryTable;
 });

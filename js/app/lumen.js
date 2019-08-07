@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './EmpiricalModel', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, EmpModel, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -276,7 +276,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._discardFetchedFacets();
 
           // get promise to base models
-          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model(), c.predictionDataLocal_baseModelTable.model('predictionDataLocal')])
+          stages['new_query'] = Promise.all([
+            c.baseModelTable.model(),
+            c.emp_baseModelTable.model('dataMarginals'),
+            c.predictionDataLocal_baseModelTable.model('predictionDataLocal')]);
         } else {
           stages['new_query'] = Promise.resolve(); // because it is already there
         }
@@ -371,12 +374,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         let facet = this.facets[facetName];
         if (facet.active && facet.fetchState === 'not fetched')
-          return collectionFactory(baseQueryTable, baseModelTable, fieldUsageCacheMap, facet.active, opts)
+          return collectionFactory(baseQueryTable, baseModelTable, fieldUsageCacheMap, facetName, facet.active, opts)
             .then(res => {
               facet.fetchedData = res;
               facet.data = res;
               facet.fetchState = 'fetched';
-              //return res;
               logger.debug(`fetched facet: ${facetName}`);
               return Promise.resolve()
             });
@@ -386,7 +388,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         }
         else {
           // result table of matching size is required
-          //if (facet.data === undefined)
           facet.data = RT.getEmptyCollection(baseQueryTable.size, true);
           return Promise.resolve();
         }

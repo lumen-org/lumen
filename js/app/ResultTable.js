@@ -38,8 +38,11 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * Utility function for multiple reuse in collection creation below.
      * @private
      */
-    function _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, prop = undefined) {
-        return model.execute(pql).then(table => {
+    function _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, prop = undefined) {
+        let execOps = {
+            returnEmptyTableOnFailure: (facetName === 'dataMarginals')
+        };
+        return model.execute(pql, execOps).then(table => {
             table.idx2fu = idx2fu;
             table.fu2idx = fu2idx;
             table.pql = pql;
@@ -86,7 +89,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param modelCollection
      * @return {Promise.<Array>}
      */
-    function aggrCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled = true) {
+    function aggrCollection(queryCollection, modelCollection, fieldUsageCacheMap, facetName, enabled = true) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -107,7 +110,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                     let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
                     // 3. run this query and return promise to its result
-                    promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+                    promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName);
 
                 } catch (e) {
                     if (e instanceof vismel2pql.ConversionError)
@@ -122,7 +125,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
     }
 
 
-    function predictionDataLocalCollection(queryCollection, modelCollection, fieldUsageCacheMap, enabled = true, opts = {}) {
+    function predictionDataLocalCollection(queryCollection, modelCollection, fieldUsageCacheMap, facetName, enabled = true, opts = {}) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)
@@ -143,7 +146,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                     let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel, opts);
 
                     // 3. run this query and return promise to its result
-                    promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+                    promise = _runAndaddRTtoCollection(modelCollection.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName);
 
                 } catch (e) {
                     if (e instanceof vismel2pql.ConversionError)
@@ -163,7 +166,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param model
      * @return {Promise.<Array>}
      */
-    function samplesCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true, opts = {}) {
+    function samplesCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled = true, opts = {}) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -184,7 +187,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                     let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.sample(queryCollection.at[rIdx][cIdx], opts);
 
                     // 3. run this query and return promise to its result
-                    promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+                    promise = _runAndaddRTtoCollection(modelTable.at[rIdx][cIdx], pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName);
                 } catch (e) {
                     if (e instanceof vismel2pql.ConversionError)
                         promise = Promise.resolve(undefined);
@@ -205,10 +208,13 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * For the layout of the individual result tables see vismel2pq.uniDensity().
      *
      * @param queryCollection
-     * @param model
+     * @param modelTable
+     * @param fieldUsageCacheMap
+     * @param enabled
+     * @param opts
      * @return {Promise.<Array>}
      */
-    function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true, opts = {}) {
+    function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled = true, opts = {}) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -231,7 +237,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                         let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
                         // 3. run this query and return promise to its result
-                        promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, xOrY);
+                        promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, xOrY);
                         // .then(
                         // tbl => {
                         //   // TODO: Hack for Paper: simulate correct scaling of model probability queries
@@ -267,7 +273,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param model
      * @return {Promise.<Array>}
      */
-    function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, enabled = true) {
+    function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled=true) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -289,7 +295,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                     let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
                     // 3. run this query and return promise to its result
-                    promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx);
+                    promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName);
 
                 } catch (e) {
                     if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)
