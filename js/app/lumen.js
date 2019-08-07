@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './EmpiricalModel', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, EmpModel, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
