@@ -276,7 +276,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._discardFetchedFacets();
 
           // get promise to base models
-          stages['new_query'] = Promise.all([c.baseModelTable.model(), c.emp_baseModelTable.model(), c.predictionDataLocal_baseModelTable.model('predictionDataLocal')])
+          stages['new_query'] = Promise.all([
+            c.baseModelTable.model(),
+            c.emp_baseModelTable.model('dataMarginals'),
+            c.predictionDataLocal_baseModelTable.model('predictionDataLocal')]);
         } else {
           stages['new_query'] = Promise.resolve(); // because it is already there
         }
@@ -371,12 +374,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         let facet = this.facets[facetName];
         if (facet.active && facet.fetchState === 'not fetched')
-          return collectionFactory(baseQueryTable, baseModelTable, fieldUsageCacheMap, facet.active, opts)
+          return collectionFactory(baseQueryTable, baseModelTable, fieldUsageCacheMap, facetName, facet.active, opts)
             .then(res => {
               facet.fetchedData = res;
               facet.data = res;
               facet.fetchState = 'fetched';
-              //return res;
               logger.debug(`fetched facet: ${facetName}`);
               return Promise.resolve()
             });
@@ -386,7 +388,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         }
         else {
           // result table of matching size is required
-          //if (facet.data === undefined)
           facet.data = RT.getEmptyCollection(baseQueryTable.size, true);
           return Promise.resolve();
         }
@@ -526,7 +527,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       visualizationPosition (position=undefined) {
         let $vis = this.$visuals.visualization;
-        if (position == undefined)
+        if (position === undefined)
             return $vis.position();
         else 
             $vis.css(position);            
@@ -534,7 +535,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       visualizationSize(size=undefined) {
         let $vis = this.$visuals.visualization;
-        if (size == undefined)
+        if (size === undefined)
             return {
               width: $vis.css('width'),
               height: $vis.css('height'),

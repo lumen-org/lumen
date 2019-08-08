@@ -268,8 +268,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
             traces.push(...TraceGen.samples(samplesRT, mapper, 'model samples', mainAxis));
-            traces.push(...TraceGen.aggr(dataLocalPredRT, mapper, mainAxis));
-            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
+            traces.push(...TraceGen.aggr(dataLocalPredRT, mapper, mainAxis, {'facetName': 'predictionDataLocal'}));
+            traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis, {'facetName': 'aggregation'}));
           }
         }
 

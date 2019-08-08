@@ -28,22 +28,27 @@ define(['./PQL'], function(PQL) {
     if (query.layout.rows.length > 1 || query.layout.cols.length > 1)
       throw new RangeError ("query.layout.rows or query.layout.cols contains more than 1 FieldUsage");
 
-    // in any way all fields of field usages must be in the model
-    let modelFields = PQL.fields(query.fieldUsages());
+    let modelFields = PQL.fields(query.fieldUsages()),
+        filters = query.layers[0].filters,
+        defaults = query.layers[0].defaults,
+        modelName = makeBaseModelName(model.name, facetName, rIdx, cIdx);
+
+    // TODO: I think "facetName" is not really the right term here, since many facets may share the same
+    //  base queries. But it serves its purpose for now.
     if (facetName === 'predictionDataLocal') {
       let modelFieldNames = new Set(modelFields.map(f => f.name)),
           model = query.getModel(),
           missingFields = model.observedFields.filter(of => !modelFieldNames.has(of.name));
       // must also include all observed dims
       modelFields.push(...missingFields);
+    } else if (facetName === 'dataMarginals') {
+      modelFields = modelFields.filter(PQL.isObserved);
+      filters = filters.filter(f => PQL.isObserved(f.field));
+      if (defaults.length > 0)
+        throw "not implemented yet.";
     }
 
-    return model.model(
-      modelFields,
-      query.layers[0].filters,
-      query.layers[0].defaults,
-      makeBaseModelName(model.name, facetName, rIdx, cIdx));
-
+    return model.model(modelFields, filters, defaults, modelName);
     // TODO: apply all remaining filters on independent variables
     // TODO: don't forget to remove filters from sub query(?)
   }
