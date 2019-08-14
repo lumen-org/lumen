@@ -31,6 +31,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   function onDragStartHandler (event) {
     logger.debug('starting'); logger.debug(event.currentTarget);
     _draggedElem = event.currentTarget;
+    event.dataTransfer.setData('Text', _draggedElem);
   }
 
   /**
@@ -72,7 +73,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
    */
   function onDropHandler (event) {
 
-    logger.debug("drop occured:");    
+    logger.debug("drop occured:");
     logger.debug(event);
     logger.debug("dragged elem:");
     logger.debug(_draggedElem);
@@ -174,6 +175,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   function asRemoveElem ($elem) {
     $elem.get(0).addEventListener('dragover', event => event.preventDefault());
     $elem.get(0).addEventListener('drop', event => {
+      event.preventDefault();
       drop(new sh.Shelf(sh.ShelfTypeT.remove), $(_draggedElem).data(vis.AttachStringT.record), 'center');
       _draggedElem = null;
       event.stopPropagation();
