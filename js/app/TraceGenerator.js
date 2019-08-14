@@ -277,12 +277,13 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
      * Build and return traces for aggregation scatter plot, grouped by splits.
      * @param rt
      * @param vismel
+     * @param opts {Object} Options such as the facet for which the trace is generated, optional.
      * @return {Array}
      */
-    tracer.aggr = function (rt, mapper, axisId = {x: 'x', y: 'y'}) {
+    tracer.aggr = function (rt, mapper, axisId = {x: 'x', y: 'y'}, opts={}) {
       if (!axisId) throw RangeError("invalid axisId");
 
-      if (rt == undefined)  // means 'disable this trace type'
+      if (rt === undefined)  // means 'disable this trace type'
         return [];
 
       let vismel = rt.vismel,
@@ -295,16 +296,15 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         traceName = PQL.toString(rt.pql);
 
       let colorIdx = fu2idx.get(aest.color.fu);
-
       let [nestedData, depth] = splitRTIntoTraceData(rt, vismel);
+      let trace_mode = (opts.facetName === 'predictionDataLocal' ? "" : "lines+") + "markers";
 
       // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {
-
         let trace = {
           name: traceName,
           type: 'scatter',
-          mode: "lines+markers",
+          mode: trace_mode,
           showlegend: false,
           cliponaxis: false,
           x: selectColumn(data, fu2idx.get(xfu)),
@@ -358,7 +358,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       if (!mainAxisId) throw RangeError("invalid mainAxisId");
       if (!marginalAxisId) throw RangeError("invalid marginalAxisId");
 
-      if (p1dRT == undefined)  // means 'disable this trace type'
+      if (p1dRT === undefined)  // means 'disable this trace type'
         return [];
 
       if (!opts.hasOwnProperty('facetName'))
@@ -928,8 +928,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
     };
 
     /**
-     * Builds and returns a trace for line segments that connct the points given in testDataRT and predRT.
-     * It's meant to highlight theie difference....
+     * Builds and returns a trace for line segments that connect the points given in testDataRT and predRT.
+     * It highlights their difference.
      * @param predRT
      * @param testDataRT
      * @param vismel

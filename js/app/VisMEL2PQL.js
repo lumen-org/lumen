@@ -37,6 +37,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   /**
    * Translates a VisMEL query into a predict PQL query as specified in the VisMEL query.
    * @param vismel
+   * @param opts
    * @return {query, fu2idx, idx2fu}
    */
   function predict(vismel, opts) {

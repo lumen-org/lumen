@@ -20,7 +20,7 @@ define(['./utils'], function (utils) {
      */
     constructor(values) {
       super();
-      if (values == undefined)
+      if (values === undefined)
         values = null;
       values = utils.listify(values);
       this.values = values.slice();
@@ -105,7 +105,7 @@ define(['./utils'], function (utils) {
      */
     constructor(arg) {
       super();
-      if (arg == undefined)
+      if (arg === undefined)
         arg = null;
       if (_.isArray(arg)) {
         this.l = arg[0];

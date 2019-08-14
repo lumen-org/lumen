@@ -532,6 +532,10 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
     return obj instanceof Filter;
   }
 
+  function isField(f) {
+    return f instanceof Field;
+  }
+
   function isFieldUsage (fu) {
     return fu instanceof FieldUsage;
   }
@@ -542,6 +546,13 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
 
   function hasNumericYield(fu) {
     return fu.yieldDataType === FieldT.DataType.num;
+  }
+
+  function isObserved(obj) {
+    if (isField(obj))
+      return obj.obsType === FieldT.ObsType.observed;
+    else
+      throw "not yet implemented";
   }
 
   /**
@@ -580,7 +591,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
       if (isSplit(fu) && (fu.method !== SplitMethod.identity)) {
         let name = fu.field.name,
           used = usedSplits.get(name);
-        if (used == undefined) {
+        if (used === undefined) {
           usedSplits.set(name, fu);
           cleanedFus.push(fu);
         }
@@ -805,30 +816,31 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
 
 
   return {
-    Field: Field,
-    FieldT: FieldT,
-    isField: isField,
-    Aggregation: Aggregation,
+    Field,
+    FieldT,
+    isField,
+    Aggregation,
     AggrMethod: AggregationMethods,
-    Density: Density,
+    Density,
     DensityMethod: DensityMethodT,
-    Split: Split,
-    SplitMethod: SplitMethod,
-    Filter: Filter,
-    FilterMethodT: FilterMethodT,
-    isAggregation: isAggregation,
-    isDensity: isDensity,
-    isAggregationOrDensity: isAggregationOrDensity,
-    isSplit: isSplit,
-    isFilter: isFilter,
-    isFieldUsage: isFieldUsage,
-    FieldUsageT: FieldUsageT,
-    fields: fields,
-    hasDiscreteYield: hasDiscreteYield,
-    hasNumericYield: hasNumericYield,
+    Split,
+    SplitMethod,
+    Filter,
+    FilterMethodT,
+    isAggregation,
+    isDensity,
+    isAggregationOrDensity,
+    isSplit,
+    isFilter,
+    isFieldUsage,
+    FieldUsageT,
+    fields,
+    hasDiscreteYield,
+    hasNumericYield,
+    isObserved,
     cleanFieldUsages,
-    toJSON: toJSON,
-    toString: toString,
+    toJSON,
+    toString,
   };
 
 });
