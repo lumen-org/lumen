@@ -1825,7 +1825,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         // context queue
         let contextQueue = new ContextQueue();
         contextQueue.on("ContextQueueEmpty", () => {
-            zIndexGenerator = 1;
             infoBox.message("Load a model to start!", "info")
         });
 
