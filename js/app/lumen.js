@@ -804,13 +804,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       constructor (context) {
         this._context = context;
+        this.milliseconds = 1000  * 10;
+        setInterval(this.refetchModels.bind(this), this.milliseconds);
+
         let $modelInput = $('<input class="pl-input" type="text" list="models"/>')
           .keydown( (event) => {
             if (event.keyCode === 13) {
               this._loadModel(event.target.value);
             }
           });
-
         this._$modelsDatalist = $('<datalist id="models"></datalist>');
 
         let $loadButton = $('<div class="pl-button pl-toolbar__button pl-model-selector__button">Go!</div>')
@@ -824,6 +826,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         if(context !== undefined) {
           this.setContext(context);
         }
+
       }
 
       /**
@@ -866,13 +869,31 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
       }
 
+      _filter_names(value){
+        return !value.startsWith("__")
+      }
+
+      _isSameList(datalist, model_list){
+        let filtered_models = model_list.filter(this._filter_names);
+        if(datalist.length !== filtered_models.length)
+          return false;
+        for(let i = datalist.length; i--;){
+          if (datalist[i].value !== filtered_models[i])
+            return false;
+        }
+        return true;
+      }
+
       _setModels(models) {
         let $datalist = this._$modelsDatalist;
-        $datalist.empty();
-        for (let name of models) {
-          // filter any names that begin with "__" since these are only 'internal' models
-          if (!name.startsWith("__"))
-            $datalist.append($("<option>").attr('value',name).text(name))
+        if (!this._isSameList($datalist[0].options, models)){
+          console.log("New Model");
+          $datalist.empty();
+          for (let name of models) {
+            // filter any names that begin with "__" since these are only 'internal' models
+            if (!name.startsWith("__"))
+              $datalist.append($("<option>").attr('value',name).text(name))
+          }
         }
       }
 
