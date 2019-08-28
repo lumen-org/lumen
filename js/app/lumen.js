@@ -1528,6 +1528,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       constructor() {
         this._first = undefined;
         this._last = undefined;
+        this.length = 0;
         Emitter(this);
       }
 
@@ -1605,6 +1606,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._first = elem;
       }
 
+      _reset_z_index(){
+        zIndexGenerator = this.length;
+        for(let i of this){
+          i.$visuals.visualization.css("z-index", zIndexGenerator--);
+        }
+        zIndexGenerator = this.length + 1;
+      }
+
       /**
        * Adds the context as a new and as the first element to the context queue.
        * @param context
@@ -1614,13 +1623,16 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let that = this;
 
         this._prepend(elem);
+        this.length++;
 
         // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
         context.on("ContextDeletedEvent", () => {
           that._remove(elem);
+          that.length--;
           that.activateFirst();
           if(that.empty())
-            that.emit("ContextQueueEmpty")
+            that.emit("ContextQueueEmpty");
+          that._reset_z_index()
         });
 
         // an element listens to a context being activated. it then is moved to the beginning of the queue
