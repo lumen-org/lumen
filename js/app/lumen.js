@@ -1817,16 +1817,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       infoBox.message("Load a model to start!", "info")
     });
 
-    contextQueue.on("ContextDeleteEvent", () => {
-        zIndexGenerator = contextQueue.length;
-        for(let c of contextQueue){
-            console.log(i.$visuals.visualization.css("z-index"));
-            i.$visuals.visualization.css("z-index", zIndexGenerator--);
-        }
-        zIndexGenerator = contextQueue.length + 1;
-        console.log(zIndexGenerator)
-    });
-
     // setup editor for settings
     SettingsEditor.setEditor(document.getElementById('pl-config-container'));
     // NOTE: SettingsEditor represents a singelton! The returned editor by setEditor() is an instance of jsoneditor (something different, which is encapsulated)
