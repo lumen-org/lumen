@@ -804,7 +804,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       constructor (context) {
         this._context = context;
-        this.milliseconds = 1000  * 10;
+        this.milliseconds = 1000  * 5;
         setInterval(this.refetchModels.bind(this), this.milliseconds);
 
         let $modelInput = $('<input class="pl-input" type="text" list="models"/>')
