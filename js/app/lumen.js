@@ -57,6 +57,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       constructor (id) {
         this.id = id;
         this._$visual = $('<div class="pl-info-box" id="' + id + '"></div>');
+        this._$visual.css("z-index", zIndexGenerator + 1);
         this._$visual.click( () => {
           this.hide();
         });
@@ -268,7 +269,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           }
           catch (err) {
             console.error(err);
-            connection_errorhandling(err);
+            context_errorhandling(err, c);
           }
 
           // reset field cache and fetched
@@ -352,10 +353,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
           .catch((err) => {
             console.error(err);
-            connection_errorhandling(err)
-            if (err instanceof Error) {
-              infoBox.message(err.toString());
-            }
+            context_errorhandling(err, c, false)
           });
         } else {
           throw "cannot skip final stage of query processing";
@@ -396,14 +394,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       /**
        * destructor of this context
        */
-      remove() {
+      remove(context, forced=false) {
         let $visuals = this.$visuals;
         for(let visual in $visuals) {
           if ($visuals.hasOwnProperty(visual))
             $visuals[visual].remove();
         }
         ActivityLogger.log({'context': this.getNameAndUUID()}, 'context.close');
-        this.emit("ContextDeletedEvent", this);
+        this.emit("ContextDeletedEvent", {context: context, forced: forced});
       }
 
       /**
@@ -853,11 +851,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
           .catch((err) => {
             console.error(err);
-            if (err instanceof XMLHttpRequest){
-                connection_errorhandling(err)
-            } else {
-                infoBox.message("Internal error: " + err.toString());
-            }
+            context_errorhandling(err, context)
             // infoBox.message("Could not load remote model '" + modelName + "' from Server '" + context.server + "' !");
             // TODO: remove vis and everything else ...
           })
@@ -1119,7 +1113,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 .then(() => contextCopy.update('all', true))
                 .catch((err) => {
                     console.error(err);
-                    connection_errorhandling(err);
+                    context_errorhandling(err, c)
                   // TODO: remove vis and everything else ...
                 });
             }
@@ -1377,14 +1371,21 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 widget.on('Node.Unselected', node => ActivityLogger.log({'context': context.getNameAndUUID(), 'dimension':node}, 'GraphWidget.Node.Unselected'));
 
                 resolve();
-              });
+              }).catch(err => {
+                // does not brake anything if thrown
+                console.log(err);
+            });
             // need to add both
           } else if (widget !== undefined && !hasContext) {
             this._registerContext(widget, context);
             resolve();
           }
         }).then(
-          () => that.activate(context)
+
+          () => {
+            console.log("okay");
+            that.activate(context)
+          }
         );
       }
     }
@@ -1626,11 +1627,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this.length++;
 
         // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
-        context.on("ContextDeletedEvent", () => {
+        context.on("ContextDeletedEvent", object => {
           that._remove(elem);
           that.length--;
           that.activateFirst();
-          if(that.empty())
+          if(that.empty() && !object.forced)
             that.emit("ContextQueueEmpty");
           that._reset_z_index()
         });
@@ -1881,19 +1882,30 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
           .catch((err) => {
             console.error(err);
-            connection_errorhandling(err)
+            context_errorhandling(err, context)
           });
       }
     };
 
-    function connection_errorhandling(err) {
-        if (err instanceof XMLHttpRequest) {
-            if (err.status === 0) {
-                infoBox.message("Could not connect to Backend-Server!");
-            } else {
-                infoBox.message(err.response);
-            }
+    function context_errorhandling(err, context, forced=true) {
+      if (err instanceof XMLHttpRequest) {
+        if (err.status === 0) {
+          infoBox.message("Could not connect to Backend-Server!");
+        } else {
+          infoBox.message(err.response);
         }
+        if (forced) {
+          if (context instanceof Context) {
+            context.remove(context, true);
+          } else {
+            console.log("Failed to close object", context)
+          }
+        }
+      } else if (err instanceof Error) {
+        infoBox.message("Internal error: " + err.toString());
+      } else {
+        infoBox.message(err.toString())
+      }
     }
 
   });
