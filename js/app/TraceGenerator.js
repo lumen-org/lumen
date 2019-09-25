@@ -216,7 +216,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
       // in fact no split, other than on rows and cols may be present, since we wouldn't know how to visualize the split within one heatmap tile
       if (rt) {
-        if (!_.isFunction(mapper.aggrFillColor)) throw TypeError("Didn't expect that. Implement this case!");
+        if (!_.isFunction(mapper.modelAggrFillColor)) throw TypeError("Didn't expect that. Implement this case!");
 
         let colorFu = aest.color.fu,
           colorIdx = fu2idx.get(colorFu),
@@ -226,7 +226,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         if (PQL.hasDiscreteYield(colorFu)) {
           // create step-wise continuous color table
           colorTable = [];
-          let colorMapper = mapper.aggrFillColor,
+          let colorMapper = mapper.modelAggrFillColor,
             len = colorFu.extent.length;
           let convertMap = d3c.map();
           colorFu.extent.forEach((v, idx) => {
@@ -240,7 +240,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           colorData = selectColumn(rt, colorIdx).map(v => convertMap.get(v));
           colorDomain = [0, colorFu.extent.length - 1];
         } else {
-          colorTable = ScaleGen.asTable(mapper.aggrFillColor.scale);
+          colorTable = ScaleGen.asTable(mapper.modelAggrFillColor.scale);
           colorDomain = colorFu.extent;
           colorData = selectColumn(rt, colorIdx);
         }
@@ -301,6 +301,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
       // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {
+
+        let color_mapper = (opts.facetName === 'data aggregations' ? mapper.dataAggrFillColor : mapper.modelAggrFillColor);
         let trace = {
           name: traceName,
           type: 'scatter',
@@ -313,7 +315,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           yaxis: axisId.y,
           opacity: cfg.fill.opacity,
           marker: {
-            color: applyMap(data, mapper.aggrFillColor, aest.color.fu, fu2idx),
+            color: applyMap(data, color_mapper , aest.color.fu, fu2idx),
             size: applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
             symbol: applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
             line: { // configures the line bounding the marker points

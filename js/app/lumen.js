@@ -32,7 +32,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
     // careful: you cannot just change the _keys_! they are reused in multiple places!
     const _facetNameMap = {
-      'aggregations': 'global prediction',      
+      'aggregations': 'global prediction',
+      'data aggregations': 'data aggregations',
       'predictionDataLocal': 'data-local prediction',
       'marginals': 'model marginals',
       'dataMarginals': 'data marginals',
@@ -296,6 +297,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             .then(() => Promise.all([
                 // query all facets in parallel
                 c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
+                c.updateFacetCollection('data aggregations', RT.aggrCollection, fieldUsageCacheMap,
+                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
                 c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
@@ -728,6 +731,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         // create checkboxes
         const name2iconMap = {
             'aggregations': 'prediction',
+            'data aggregations': 'prediction',
             'marginals': 'uniDensity',
             'contour': 'contour',
             'data density': 'contour',

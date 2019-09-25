@@ -1103,13 +1103,18 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // }
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
-        active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
+        active: true, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
+      },
+
+      'data aggregations': {
+        possible: true,
+        active: true,
       },
 
       // training data
       data: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // test data
@@ -1139,12 +1144,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // model density 'central' plot
       contour: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       'data density': {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // data-local model prediction

@@ -87,6 +87,9 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * Since the collection is merely an 2d array, elements can be accessed using the standard [] notation
      * @param queryCollection
      * @param modelCollection
+     * @param fieldUsageCacheMap
+     * @param facetName
+     * @param enabled
      * @return {Promise.<Array>}
      */
     function aggrCollection(queryCollection, modelCollection, fieldUsageCacheMap, facetName, enabled = true) {
