@@ -699,7 +699,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
               type: 'contour',
               autocontour: false,
               ncontours: c.map.biDensity.contour.levels,
-              opacity: c.map.biDensity.opacity,
+              //opacity: c.map.biDensity.contour.opacity,
               contours: {
                 coloring: c.map.biDensity.contour.coloring,
               },
@@ -836,7 +836,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
           xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
           yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-          //opacity: c.map.biDensity.mark.opacity,
           line: {
             width: c.map.biDensity.line.width,
             shape: c.map.biDensity.line.shape,

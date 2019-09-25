@@ -549,19 +549,13 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "biDensity": {
         type: "object",
         properties: {
-          mark: {
-            type: "object", format: "grid",
-            properties: {
-              // "color": { TODO: link to colors.density. ... }, // color of marks that represent density (e.g circle outline color for a chart where size encodes density)
-              "opacity": {type: "number"},
-            }
-          },
           contour: {
             type: "object", format: "grid",
             properties: {
               "width": {type: "number"},
               "coloring": {type: "string"}, // possible values are: "fill" | "heatmap" | "lines"
               "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
+              "opacity": {type: "number"}, // opacity of the contour trace
             },
           },
           line: {
@@ -712,9 +706,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     },
 
     biDensity: {
-      mark: {
-        opacity: 0.8,
-      },
       line: {
         width: 2,
         shape: 'spline', // only used for biqc plots at the moment
@@ -725,10 +716,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         width: 3,
         levels: tweaksInitial.levels, // TODO: watches!
         coloring: "lines", // possible values are: "fill" | "heatmap" | "lines"
-
+        opacity: 0.5,
       },
       colorscale_Enum: colorsInitial.density.scale_Enum, // color scale to use for heat maps / contour plots  // TODO: watches!
-
       resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
       backgroundHeatMap: false, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
@@ -1125,13 +1115,13 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // test data
       testData: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // model samples
       'model samples': {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // model density marginal
@@ -1149,12 +1139,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // model density 'central' plot
       contour: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       'data density': {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // data-local model prediction

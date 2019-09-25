@@ -262,12 +262,12 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             }
           }
-          // at least on is dependent -> line chart
+          // at least on is dependent
           else {
             traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
             traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
-            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
             traces.push(...TraceGen.bi(data2dRT, mapper, mainAxis, {'facetName': 'data density'}));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
             traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -639,7 +639,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x],
               facets.predictionDataLocal.data[y][x], facets.data.data[y][x], facets.testData.data[y][x],
               facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.dataMarginals.data[y][x],
-              facets.contour.data[y][x], facets['data density'][y][x], vismelColl.at[y][x],
+              facets.contour.data[y][x], facets['data density'].data[y][x], vismelColl.at[y][x],
           {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],
