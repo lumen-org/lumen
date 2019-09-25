@@ -608,11 +608,21 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
      *   * mixed: no trace
      *
      * @param rt
-     * @param vismel TODO: remove this param!
+     * @param mapper
+     * @param axisId
+     * @param opts
      * @return {Array}
      */
-    tracer.bi = function (rt, mapper, axisId = {x: 'x', y: 'y'}, geometry) {
-      if (!axisId) throw RangeError("invalid axisId");
+    tracer.bi = function (rt, mapper, axisId, opts=undefined) {
+
+      if (!opts)
+        opts = {};
+      if (!axisId)
+        throw RangeError("invalid axisId");
+      if (!opts.facetName)
+        opts.facetName = 'model density';
+      if (!['model density', 'data density'].includes(opts.facetName))
+        throw RangeError(`invalid facetName: ${opts.facetName}`);
 
       if (rt === undefined)  // means 'disable this trace type'
         return [];
@@ -643,7 +653,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         return traces;
 
       // TODO: should we apply some heuristic to reduce the impact of few, very large density value
-      // TODO: this cannot work, because it sets the scale on a per trace basis...
+      // TODO: this cannot work consistently, because it sets the scale on a per trace basis...
       // let sortedZData = _.sortBy(zdata),
       //   l = sortedZData.length;
       // // ignore all values smaller max*0.01
@@ -653,7 +663,9 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
       // let cd = c.colors.modelSamples.density_scale;
       // colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
-      let colorscale = c.colors.modelSamples.density_scale;
+
+      let colorscale = (opts.facetName === 'data density' ?
+          c.colors['training data'].density_scale : c.colors.modelSamples.density_scale);
 
       // merge color split data into one
       let commonTrace = {
@@ -687,7 +699,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
               type: 'contour',
               autocontour: false,
               ncontours: c.map.biDensity.contour.levels,
-              opacity: c.map.biDensity.opacity,
+              //opacity: c.map.biDensity.contour.opacity,
               contours: {
                 coloring: c.map.biDensity.contour.coloring,
               },
@@ -717,7 +729,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         }
 
         // compute maximum shape diameter
-        let cellSize = geometry.cellSizePx,
+        let cellSize = opts.geometry.cellSizePx,
           maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length)*0.45;
 
         let scatterTrace = {
@@ -824,7 +836,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           [catXy === 'x' ? 'y' : 'x']: selectColumn(data, numIdx), // the axis that encodes the quantitative dimension, encodes the quantitative dimension ...
           xaxis: xYieldsCat ? cqAxisIds[i] : axisId.x,
           yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
-          //opacity: c.map.biDensity.mark.opacity,
           line: {
             width: c.map.biDensity.line.width,
             shape: c.map.biDensity.line.shape,
