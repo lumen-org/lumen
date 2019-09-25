@@ -139,9 +139,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     }
 
 
-    function atomicPlotlyTraces(geometry, aggrRT, dataLocalPredRT, dataRT, testDataRT, samplesRT, p1dRT, data1dRT, p2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
+    function atomicPlotlyTraces(geometry, aggrRT, dataLocalPredRT, dataRT, testDataRT, samplesRT, p1dRT, data1dRT,
+                                p2dRT, data2dRT, vismel, mainAxis, marginalAxis, catQuantAxisIds, facets) {
       // attach formatter, i.e. something that pretty prints the contents of a result table
-      for (let rt of [aggrRT, dataLocalPredRT, dataRT, testDataRT, samplesRT, p2dRT]
+      for (let rt of [aggrRT, dataLocalPredRT, dataRT, testDataRT, samplesRT, p2dRT, data2dRT]
           .concat(p1dRT === undefined ? [] : [p1dRT.x, p1dRT.y])
           .concat(data1dRT === undefined ? [] : [data1dRT.x, data1dRT.y]))
         if (rt !== undefined)
@@ -210,8 +211,9 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       //   mapper.testDataMarginalColor = MapperGen.marginalColor(pvismel, 'test data');
       // }
 
-      // TODO: we will have color for p2dRT in the future - maybe.
+      // TODO: we will have color for p2dRT and data2dRT in the future - maybe.
       // if (p2dRT != undefined) { ... }
+      // if (data2dRT != undefined) { ... }
 
       // TODO:
       // if there is an aggregation on color in the original vismel query:
@@ -239,7 +241,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               // -> heatmap
               traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
               traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
-              // traces.push(...TraceGen.bi(p2dRT, query, mapper, mainAxis));
+              // traces.push(...TraceGen.bi(p2dRT, query, mapper, {axisId: mainAxis}));
               traces.push(...TraceGen.aggrHeatmap(aggrRT, mapper, mainAxis));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -252,6 +254,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
               traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
               traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
               traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+              traces.push(...TraceGen.bi(data2dRT, mapper, mainAxis, {'facetName': 'data density'}));
               traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
               traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
               traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -264,6 +267,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
             traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis));
             traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
             traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis));
+            traces.push(...TraceGen.bi(data2dRT, mapper, mainAxis, {'facetName': 'data density'}));
             traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
             traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
             traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));
@@ -293,7 +297,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis, geometry));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis, {'facetName': 'data density', 'geometry': geometry}));
+            traces.push(...TraceGen.bi(data2dRT, mapper, mainAxis, {'facetName': 'data density', 'geometry': geometry}));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
           }
         }
@@ -631,7 +636,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
       for (let y of _.range(size.y)) {
         for (let x of _.range(size.x)) {
           // create traces for one atomic plot
-          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x], facets.predictionDataLocal.data[y][x], facets.data.data[y][x], facets.testData.data[y][x], facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.dataMarginals.data[y][x], facets.contour.data[y][x], vismelColl.at[y][x],
+          let atomicTraces = atomicPlotlyTraces(geometry, facets.aggregations.data[y][x],
+              facets.predictionDataLocal.data[y][x], facets.data.data[y][x], facets.testData.data[y][x],
+              facets['model samples'].data[y][x], facets.marginals.data[y][x], facets.dataMarginals.data[y][x],
+              facets.contour.data[y][x], facets['data density'][y][x], vismelColl.at[y][x],
           {
             x: mainAxesIds.x[x],
             y: mainAxesIds.y[y],

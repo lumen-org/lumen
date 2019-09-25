@@ -1152,6 +1152,11 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: false,
       },
 
+      'data density': {
+        possible: true,
+        active: false,
+      },
+
       // data-local model prediction
       // -> enable choosing between which data?
       predictionDataLocal: {

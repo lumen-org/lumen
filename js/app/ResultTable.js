@@ -270,10 +270,14 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
     /**
      * See aggr Collection
      * @param queryCollection
-     * @param model
+     * @param modelTable
+     * @param fieldUsageCacheMap
+     * @param facetName
+     * @param enabled
+     * @param opts
      * @return {Promise.<Array>}
      */
-    function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled=true) {
+    function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled=true, opts={}) {
         let size = queryCollection.size;
         let collection = getEmptyCollection(size, enabled);
         if (!enabled)  // quit early if disabled
@@ -316,6 +320,5 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         biDensityCollection,
         getEmptyCollection,
         predictionDataLocalCollection,
-
     };
 });
