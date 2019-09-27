@@ -1398,6 +1398,63 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
     /**
+     * A widget that lets you create Posterior Predictive Check visualizations.
+     *
+     *
+     */
+    class PosteriorPredictiveCheckWidget {
+
+      constructor (context) {
+        let that = this;
+        that.context = undefined;
+        if (context !== undefined)
+          that.setContext(context);
+
+        // make visual context
+        that._$selectK = $('<div class="pl-ppc__section"></div>')
+            .append('<div class="pl-h2"># of repetitions</div>');
+
+        that._$selectN = $('<div class="pl-ppc__section"></div>')
+            .append('<div class="pl-h2"># of samples</div>');
+
+        that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>')
+            .append('<div class="pl-h2">test quantity</div>')
+            .append('<input class="pl-input" type="text" list="ppc-test-quantities">');
+            //.append('<datalist id="ppc-test-quantities">')
+
+        that._$dropField = $('<div class="pl-ppc__section"></div>')
+            .append('<div class="pl-label pl-ppc__dropField">drop here</div>');
+        // TODO: add functionality here
+
+        that.$visual = $('<div class="pl-ppc"></div>')
+//             .append('<div class="pl-h1">PPCs</div>')
+            .append(this._$selectK)
+            .append(this._$selectN)
+            .append(this._$selectTestQuantity)
+            .append(this._$dropField);
+      }
+
+      /**
+       * Sets the context that it controls.
+       * @param context A context.
+       */
+      setContext (context) {
+        if (!(context instanceof Context))
+          throw TypeError("context must be an instance of Context");
+        this._context = context;
+        // this.update();
+        // bind to events of this context
+        // this._context.on("ContextQueryFinishSuccessEvent", () => this.update());
+        this._context.on("ContextDeletedEvent", c => {
+          if (this._context.uuid === c.uuid)
+            this.$visual.hide()
+        });
+      }
+
+
+    }
+
+    /**
      * A widget for user studies. It allow a subject to report feedback.
      *
      * After instantiation its GUI is available under the .$visual attribute as a jQuery object
@@ -1748,6 +1805,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         if (detailsView)
             detailsView.setContext(context);
         graphWidgetManager.setContext(context);
+        ppcWidget.setContext(context);
 
         // emit signal from the new context, that the new context is now active
         context.emit("ContextActivatedEvent", context);
@@ -1789,6 +1847,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     } else {
       $('.pl-details').hide();
     }
+
+    // posterior predictive check widget
+    let ppcWidget = new PosteriorPredictiveCheckWidget(undefined);
+    ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
+    // if (!Settings.widget.posteriorPredictiveChecks.enable)
+    //   $('.pl-ppc').hide();
 
     // create survey widget
     if (Settings.widget.userStudy.enabled) {
@@ -1905,3 +1969,4 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
   });
+
