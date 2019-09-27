@@ -181,6 +181,8 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         promise = this.model(query.model, query.where, query.defaults, query.as, execOpts);
       else if (qtype === 'select')
         promise = this.select(query.select, query.where, query.opts, execOpts);
+      else if (qtype === 'ppc')
+        promise = this.ppc(query.ppc, query.opts, execOpts);
       else throw Error(`PQL query of unknown type: ${qtype}`);
       return promise;
     }
@@ -310,6 +312,33 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
     }
 
     /**
+     *
+     * @param ppc
+     * @param opts
+     * @param execOpts
+     * @returns {undefined}
+     */
+    ppc(ppc, opts, execOpts={}) {
+      let jsonContent = PQL.toJSON.ppc(this.name, ppc, opts);
+
+      return executeRemotely(jsonContent, this.url)
+          .then( jsonData => {
+                let data = d3.csv.parseRows(jsonData.data, myparserows);
+                data.header = jsonData.header;
+                return data;
+              },
+              err =>{
+                if (execOpts['returnEmptyTableOnFailure']) {
+                  // TODO: should we inform about this failure?!
+                  //logger.warn(`Query execution failed. This may need investigation: ${err.toString()}`);
+                  let data = [Array(dtypes.length).fill(undefined)];
+                  return Promise.resolve(data);
+                }
+                return err;
+              });
+    }
+
+    /**
      * Return all observed fields of this model in order.
      * @returns {T[]}
      */
@@ -362,6 +391,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
       clone.byIndex = this.byIndex.map(f => f.copy());
       return clone;
     }
+
   }
 
   /**

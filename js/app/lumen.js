@@ -1442,6 +1442,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         that.ppcShelf.on(Emitter.ChangedEvent, event => {
           infoBox.message("PPCs not implemented yet.")
           // TODO: add functionality here
+
+          model.execute()
+
         });
 
         that.$visual = $('<div class="pl-ppc"></div>')
