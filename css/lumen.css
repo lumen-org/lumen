@@ -1009,11 +1009,11 @@ textarea.pl-survey__content {
 }
 
 .pl-ppc__h2 {
-    width: 40%;
+    margin-right: 1rem;
 }
 
 .pl-ppc__input {
-    width: 50%;
+    width: 5rem;
 }
 
 .pl-ppc__dropField {
