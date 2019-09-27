@@ -316,25 +316,23 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
      * @param ppc
      * @param opts
      * @param execOpts
-     * @returns {undefined}
+     * @returns {Promise<{reference: *, test: *, header: *}>}
      */
-    ppc(ppc, opts, execOpts={}) {
+    ppc(ppc, opts=undefined, execOpts={}) {
       let jsonContent = PQL.toJSON.ppc(this.name, ppc, opts);
-
       return executeRemotely(jsonContent, this.url)
           .then( jsonData => {
-                let data = d3.csv.parseRows(jsonData.data, myparserows);
-                data.header = jsonData.header;
-                return data;
-              },
-              err =>{
-                if (execOpts['returnEmptyTableOnFailure']) {
-                  // TODO: should we inform about this failure?!
-                  //logger.warn(`Query execution failed. This may need investigation: ${err.toString()}`);
-                  let data = [Array(dtypes.length).fill(undefined)];
-                  return Promise.resolve(data);
-                }
-                return err;
+              // let res = {
+              //   reference: d3.csv.parseRows(jsonData.reference.test_quantity),
+              //   test: d3.csv.parseRows(jsonData.test.test_quantity),
+              //   header: jsonData.reference.header,
+              // };
+              console.log(jsonData);
+              return jsonData;
+            //
+            // let data = d3.csv.parseRows(jsonData.data, myparserows);
+            //     data.header = jsonData.header;
+            //     return data;
               });
     }
 

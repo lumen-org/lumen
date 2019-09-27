@@ -1406,7 +1406,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       constructor (context) {
         let that = this;
-        that.context = undefined;
+        that._context = undefined;
         if (context !== undefined)
           that.setContext(context);
 
@@ -1440,11 +1440,16 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
 
         that.ppcShelf.on(Emitter.ChangedEvent, event => {
-          infoBox.message("PPCs not implemented yet.")
-          // TODO: add functionality here
+          //infoBox.message("PPCs not implemented yet.");
+          let fields = that.ppcShelf.content(),
+            promise = that._context.model.ppc(fields, {k:10, n:3, TEST_QUANTITY:'median'});
 
-          model.execute()
-
+          promise.then(
+              res => {
+                infoBox.message("received PPC results!");
+                console.log(res.toString());
+              }
+          );
         });
 
         that.$visual = $('<div class="pl-ppc"></div>')
