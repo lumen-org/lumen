@@ -992,6 +992,33 @@ textarea.pl-survey__content {
     cursor: grab;
 }
 
+
+/* posterior predictive check widget */
+
+.pl-ppc {
+    display: flex;
+    align-content: center;
+    flex-direction: column;
+}
+
+.pl-ppc__section {
+    margin: 0.2rem;
+    display: flex;
+    align-content: center;
+    flex-direction: column;
+}
+
+.pl-ppc__dropField {
+    height: 2.5rem;
+    text-align: center;
+    border: lightgrey 1px solid;
+    color: grey;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+}
+
 /* presents details of an model */
 
 .pl-details {

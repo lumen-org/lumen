@@ -303,5 +303,10 @@ define(['lib/logger', './utils', './shelves', './visuals', './PQL', './VisMEL'],
     if (!_isDimOrMeasureShelf(sShelf)) sRecord.remove();
   };
 
+  onDrop[sh.ShelfTypeT.single] = function (tRecord, tShelf, sRecord, sShelf, overlap) {
+    (tRecord !== undefined ? tRecord : tShelf).append(sRecord);
+    // TODO: replace existing?
+  };
+
   return drop;
 });

@@ -19,7 +19,7 @@ define(['lib/logger', './shelves', './VisMELShelfDropping', './visuals', './inte
   let _draggedElem = null;
 
   /**
-   * A fallback drop targe, i.e. the lastly entered element
+   * A fallback drop target, i.e. the lastly entered element
    * @private
    */
   let _fallBackDropTarget = null;

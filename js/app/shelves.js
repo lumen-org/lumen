@@ -107,7 +107,7 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
    * @enum
    * @alias module:shelves.ShelfTypeT
    */
-  var ShelfTypeT = Object.freeze({
+  let ShelfTypeT = Object.freeze({
     //modeldata: 'mvdShelf',
     dimension: 'dimensionShelf',
     measure: 'measureShelf',
@@ -119,7 +119,8 @@ define(['lib/emitter', 'lib/logger', './utils', './PQL', './VisMEL',], function 
     size: 'sizeShelf',
     aesthetic: 'aestheticShelf',
     detail: 'detailShelf',
-    remove: 'removeShelf'
+    remove: 'removeShelf',
+    single: 'singleFieldShelf'
   });
 
   /**
