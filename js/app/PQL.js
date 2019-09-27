@@ -765,7 +765,24 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
     drop: function (name) {
       if (!_.isString(name)) throw new TypeError("'name' must be of type String");
       return {"SHOW": name};
-    }
+    },
+
+    ppc: (model, fields, opts=undefined) => {
+      let json = {};
+
+      if (!_.isString(model)) throw new TypeError("'from' must be of type String");
+      json.FROM = model;
+
+      fields = utils.listify(fields);
+      if(!fields.every( o => isField(o) || _.isString(o) )) throw new TypeError("'model' must be all strings or fields");
+      fields = fields.map( o => isField(o) ? o.name : o);
+      json.PPC = fields;
+
+      if (opts !== undefined)
+        json.OPTS = opts;
+
+      return json;
+    },
   };
 
   /**
