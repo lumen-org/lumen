@@ -699,7 +699,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
 
-        // Enables user querying for shelvesl
+        // Enables user querying for shelves
         // shelves emit ChangedEvent. Now we bind to it.
         for (const key of Object.keys(shelves)) {
           shelves[key].on(Emitter.ChangedEvent,
@@ -1410,7 +1410,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         if (context !== undefined)
           that.setContext(context);
 
-        const test_quanities = ['min', 'max', 'average', 'median'];
+        const test_quantities = ['min', 'max', 'average', 'median'];
 
         // make visual context
         that._$selectK = $('<div class="pl-ppc__section"></div>')
@@ -1425,9 +1425,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
             );
 
-        that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
         // currently it's static, but may be dynamic in future:
-        for (let q of test_quanities)
+        that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
+        for (let q of test_quantities)
           that._$testQuantityList.append($("<option>").attr('value',q).text(q));
 
         that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
@@ -1438,17 +1438,17 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
         that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
-        //
-        // that._$dropField = $('<div class="pl-ppc__section"></div>')
-        //     .append('<div class="pl-label pl-ppc__dropField shelf vertical">drop variable here</div>');
-        // // TODO: add functionality here
+
+        that.ppcShelf.on(Emitter.ChangedEvent, event => {
+          infoBox.message("PPCs not implemented yet.")
+          // TODO: add functionality here
+        });
 
         that.$visual = $('<div class="pl-ppc"></div>')
-//             .append('<div class="pl-h1">PPCs</div>')
+//             .append('<div class="pl-h2"># of repetitions</div>')
             .append(this._$selectK)
             .append(this._$selectN)
             .append(this._$selectTestQuantity)
-            // .append(this._$dropField)
             .append(this.ppcShelf.$visual);
       }
 
