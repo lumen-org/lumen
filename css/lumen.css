@@ -1004,8 +1004,16 @@ textarea.pl-survey__content {
 .pl-ppc__section {
     margin: 0.2rem;
     display: flex;
-    align-content: center;
-    flex-direction: column;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+}
+
+.pl-ppc__h2 {
+    width: 40%;
+}
+
+.pl-ppc__input {
+    width: 50%;
 }
 
 .pl-ppc__dropField {

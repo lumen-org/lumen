@@ -1415,13 +1415,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         // make visual context
         that._$selectK = $('<div class="pl-ppc__section"></div>')
             .append(
-                '<div class="pl-h2"># of repetitions</div>',
+                '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
                 '<input class="pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
             );
 
         that._$selectN = $('<div class="pl-ppc__section"></div>')
             .append(
-                '<div class="pl-h2"># of samples</div>',
+                '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
                 '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
             );
 
@@ -1431,8 +1431,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           that._$testQuantityList.append($("<option>").attr('value',q).text(q));
 
         that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
-            ('<div class="pl-h2">test quantity</div>'),
-            ('<input class="pl-input" type="text" list="ppc-test-quantities" value="median">'),
+            ('<div class="pl-h2 pl-ppc__h2">test quantity</div>'),
+            ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median">'),
             that._$testQuantityList
         );
 
