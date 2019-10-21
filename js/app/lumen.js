@@ -1816,7 +1816,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-container'));
     if (!Settings.widget.graph.enable) {
       $('.pl-layout-lower-left').hide();
-      $('.pl-layout-upper-left').css('height', '95%');
+      $('.pl-layout-upper-left').css('height', '100%');
     }
 
     // context queue
