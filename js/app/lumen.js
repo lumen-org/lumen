@@ -105,7 +105,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let that = this;
         this._$visual.on('click.pl-model-alert-box-background', function (event) {
           console.log($(event.target));
-          if ($(event.target).hasClass("pl-model-alert-box-background")) {
+          if ($(event.target).hasClass("pl-model-alert-box-background") || $(event.target).hasClass("pl-model-alert-box-header-close")) {
             that._$visual.fadeOut(100);
           }
           if ($(event.target).hasClass("pl-model-alert-box-models-li")) {
