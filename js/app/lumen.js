@@ -76,6 +76,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let toAdd =  "pl-info-box_" + (type === "warning"?"warning":"information"),
           toRemove =  "pl-info-box_" + (type === "warning"?"information":"warning");
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
+        this._$visual.css("z-index", zIndexGenerator + 1);
         this.show();
         let that = this;
         setTimeout( () => {
@@ -87,6 +88,59 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return this._$visual;
       }
     }
+
+    class AlertBox {
+      constructor(id, context) {
+        this.id = id;
+        this.context = context;
+        this._$visual = $('<div class="pl-model-alert-box-background" id="' + id + '">' +
+            '<div class="pl-model-alert-box-content">' +
+            '<div class="pl-model-alert-box-header">' +
+            '<span class="pl-model-alert-box-header-title">Models found:</span>' +
+            '<span class="pl-model-alert-box-header-close">\u00D7</span>' +
+            '</div>' +
+            '<ul class="pl-model-alert-box-models"></ul>' +
+            '</div></div>');
+        // let alert_box_models = $(".pl-model-alert-box-models");
+        let that = this;
+        this._$visual.on('click.pl-model-alert-box-background', function (event) {
+          console.log($(event.target));
+          if ($(event.target).hasClass("pl-model-alert-box-background")) {
+            that._$visual.fadeOut(100);
+          }
+          if ($(event.target).hasClass("pl-model-alert-box-models-li")) {
+            that.context._loadModel($(event.target).text());
+            that._$visual.fadeOut(100);
+          }
+        });
+
+      }
+
+      show() {
+        this.$visual.fadeIn(100);
+      }
+
+      message(name_list) {
+        let alertBoxList = $(".pl-model-alert-box-models");
+        if (alertBox.$visual.is(":hidden"))
+          alertBoxList.empty();
+        for (let name_l of name_list.sort())
+          alertBoxList.append("<li class='pl-model-alert-box-models-li'>" + name_l + "</li>");
+        let alertBoxHeaderTitle = $(".pl-model-alert-box-header-title");
+        if (alertBoxList.children().length === 1) {
+          alertBoxHeaderTitle.text("Model found:")
+        } else {
+          alertBoxHeaderTitle.text("Models found:")
+        }
+        this._$visual.css("z-index", zIndexGenerator + 1);
+        this.show();
+      }
+
+      get $visual() {
+        return this._$visual;
+      }
+    }
+
 
     class Context {
       /**
@@ -804,7 +858,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       constructor (context) {
         this._context = context;
-        this.milliseconds = 1000  * 5;
+        this.milliseconds = 1000  * 2;
         setInterval(this.refetchModels.bind(this), this.milliseconds);
 
         let $modelInput = $('<input class="pl-input" type="text" list="models"/>')
@@ -886,14 +940,24 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       _setModels(models) {
         let $datalist = this._$modelsDatalist;
-        if (!this._isSameList($datalist[0].options, models)){
-          console.log("New Model");
-          $datalist.empty();
-          for (let name of models) {
-            // filter any names that begin with "__" since these are only 'internal' models
-            if (!name.startsWith("__"))
-              $datalist.append($("<option>").attr('value',name).text(name))
+        if (!this._isSameList($datalist[0].options, models)) {
+          console.log("New Model list received!");
+          for (let i = $datalist[0].options.length - 1; i >= 0; --i) {
+            if (models.includes($datalist[0].options[i].value)) {
+              let index = models.indexOf($datalist[0].options[i].value);
+              if (index > -1) {
+                models.splice(index, 1);
+              }
+            } else {
+              $datalist[0].options[i].remove()
+            }
           }
+          // filter any names that begin with "__" since these are only 'internal' models
+          for (let name of models.filter(this._filter_names)) {
+            $datalist.append($("<option>").attr('value', name).text(name).attr('id', name));
+          }
+          if (models.filter(this._filter_names).length !== 0)
+            alertBox.message(models.filter(this._filter_names));
         }
       }
 
@@ -1789,6 +1853,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     // create toolbar
     let toolbar = new Toolbar();
     toolbar.$visual.appendTo($('#pl-toolbar__container'));
+
+    let alertBox = new AlertBox("alert-box", toolbar._modelSelector);
+    alertBox.$visual.insertAfter($('main'));
 
     // create x-y swap button
     let swapper = new ShelfSwapper();

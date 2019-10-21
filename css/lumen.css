@@ -992,6 +992,101 @@ textarea.pl-survey__content {
     cursor: grab;
 }
 
+.pl-model-alert-box-background {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* an alert box to inform user about a new model */
+.pl-model-alert-box-content {
+    overflow: hidden;
+    background-color: #fefefe;
+    margin: auto;
+    border-radius: 10px;
+    border: 2px solid #888;
+    width: 80%;
+
+    /* make all items unselectable */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+.pl-model-alert-box-header {
+    border: 0;
+    background-color: #d5d5d5;
+}
+
+.pl-model-alert-box-header-title {
+    width: 75%;
+    padding: 15px;
+    float: left;
+    font-size: 1.3em;
+    text-align: left;
+
+}
+
+.pl-model-alert-box-header-close {
+    font-size: 22px;
+    float: right;
+    margin: 0;
+    padding: 14px 16px 14px 16px;
+    border: 0;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.pl-model-alert-box-header-close:hover {
+    background-color: #f44336;
+    color: white;
+}
+
+.pl-model-alert-box-header:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.pl-model-alert-box-header-close:hover {
+    background-color: #f44336;
+    color: white;
+}
+
+.pl-model-alert-box-content ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.pl-model-alert-box-content ul li {
+    cursor: pointer;
+    position: relative;
+    padding: 12px 8px 12px 40px;
+    background: #eee;
+    font-size: 18px;
+    transition: 0.2s;
+}
+
+/* list items zebra-stripes */
+.pl-model-alert-box-content ul li:nth-child(odd) {
+    background: #f9f9f9;
+}
+
+/* Darker background-color on hover */
+.pl-model-alert-box-content ul li:hover {
+    background: #ddd;
+}
+
 /* presents details of an model */
 
 .pl-details {
