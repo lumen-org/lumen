@@ -141,7 +141,7 @@ body {
 }
 
 .pl-layout-upper-left {
-    max-height: 98vh;
+    max-height: 97vh;
     min-width: 200px;
     display: flex;
     flex-direction: row;
