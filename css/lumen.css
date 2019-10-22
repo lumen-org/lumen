@@ -1079,6 +1079,8 @@ textarea.pl-survey__content {
     margin: 0;
     padding: 0;
     list-style-type: none;
+    max-height: 75vh;
+    overflow-y: scroll;
 }
 
 .pl-model-alert-box-content ul li {
