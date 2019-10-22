@@ -78,6 +78,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let toAdd =  "pl-info-box_" + (type === "warning"?"warning":"information"),
           toRemove =  "pl-info-box_" + (type === "warning"?"information":"warning");
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
+        this._$visual.css("z-index", zIndexGenerator + 1);
         this.show();
         let that = this;
         setTimeout( () => {
@@ -89,6 +90,59 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return this._$visual;
       }
     }
+
+    class AlertBox {
+      constructor(id, context) {
+        this.id = id;
+        this.context = context;
+        this._$visual = $('<div class="pl-model-alert-box-background" id="' + id + '">' +
+            '<div class="pl-model-alert-box-content">' +
+            '<div class="pl-model-alert-box-header">' +
+            '<span class="pl-model-alert-box-header-title">Models found:</span>' +
+            '<span class="pl-model-alert-box-header-close">\u00D7</span>' +
+            '</div>' +
+            '<ul class="pl-model-alert-box-models"></ul>' +
+            '</div></div>');
+        // let alert_box_models = $(".pl-model-alert-box-models");
+        let that = this;
+        this._$visual.on('click.pl-model-alert-box-background', function (event) {
+          console.log($(event.target));
+          if ($(event.target).hasClass("pl-model-alert-box-background") || $(event.target).hasClass("pl-model-alert-box-header-close")) {
+            that._$visual.fadeOut(100);
+          }
+          if ($(event.target).hasClass("pl-model-alert-box-models-li")) {
+            that.context._loadModel($(event.target).text());
+            that._$visual.fadeOut(100);
+          }
+        });
+
+      }
+
+      show() {
+        this.$visual.fadeIn(100);
+      }
+
+      message(name_list) {
+        let alertBoxList = $(".pl-model-alert-box-models");
+        if (alertBox.$visual.is(":hidden"))
+          alertBoxList.empty();
+        for (let name_l of name_list.sort())
+          alertBoxList.append("<li class='pl-model-alert-box-models-li'>" + name_l + "</li>");
+        let alertBoxHeaderTitle = $(".pl-model-alert-box-header-title");
+        if (alertBoxList.children().length === 1) {
+          alertBoxHeaderTitle.text("Model found:")
+        } else {
+          alertBoxHeaderTitle.text("Models found:")
+        }
+        this._$visual.css("z-index", zIndexGenerator + 1);
+        this.show();
+      }
+
+      get $visual() {
+        return this._$visual;
+      }
+    }
+
 
     class Context {
       /**
@@ -812,13 +866,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
       constructor (context) {
         this._context = context;
+        this.milliseconds = 1000  * 2;
+        setInterval(this.refetchModels.bind(this), this.milliseconds);
+
         let $modelInput = $('<input class="pl-input" type="text" list="models"/>')
           .keydown( (event) => {
             if (event.keyCode === 13) {
               this._loadModel(event.target.value);
             }
           });
-
         this._$modelsDatalist = $('<datalist id="models"></datalist>');
 
         let $loadButton = $('<div class="pl-button pl-toolbar__button pl-model-selector__button">Go!</div>')
@@ -832,6 +888,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         if(context !== undefined) {
           this.setContext(context);
         }
+
       }
 
       /**
@@ -874,21 +931,48 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           })
       }
 
-      _setModels(models) {
+      _filter_names(value){
+        return !value.startsWith("__")
+      }
+
+      _isSameList(datalist, model_list){
+        let filtered_models = model_list.filter(this._filter_names);
+        if(datalist.length !== filtered_models.length)
+          return false;
+        for(let i = datalist.length; i--;){
+          if (datalist[i].value !== filtered_models[i])
+            return false;
+        }
+        return true;
+      }
+
+      _setModels(models, alert=true) {
         let $datalist = this._$modelsDatalist;
-        $datalist.empty();
-        for (let name of models) {
+        if (!this._isSameList($datalist[0].options, models)) {
+          for (let i = $datalist[0].options.length - 1; i >= 0; --i) {
+            if (models.includes($datalist[0].options[i].value)) {
+              let index = models.indexOf($datalist[0].options[i].value);
+              if (index > -1) {
+                models.splice(index, 1);
+              }
+            } else {
+              $datalist[0].options[i].remove()
+            }
+          }
           // filter any names that begin with "__" since these are only 'internal' models
-          if (!name.startsWith("__"))
-            $datalist.append($("<option>").attr('value',name).text(name))
+          for (let name of models.filter(this._filter_names)) {
+            $datalist.append($("<option>").attr('value', name).text(name).attr('id', name));
+          }
+          if (alert === true && models.filter(this._filter_names).length !== 0)
+            alertBox.message(models.filter(this._filter_names));
         }
       }
 
       /**
        * Refetch the available models on the server.
        */
-      refetchModels() {
-        this._context.modelbase.listModels().then( res => this._setModels(res.models) );
+      refetchModels(alert=true) {
+        this._context.modelbase.listModels().then( res => this._setModels(res.models, alert) );
       }
 
       /**
@@ -901,12 +985,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       /**
        * Sets the context that the toolbar controls.
        * @param context A context.
+       * @param alert defines if models are displayed immediately or not
        */
-      setContext (context) {
+      setContext (context, alert=false) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        this.refetchModels();
+        this.refetchModels(alert);
       }
     }
 
@@ -1232,13 +1317,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       /**
        * Sets the context that the toolbar controls.
        * @param context A context.
+       * @param alert If new models are displayed immediately or not
        */
-      setContext (context) {
+      setContext (context, alert=false) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
 
         this._context = context;
-        this._modelSelector.setContext(context);
+        this._modelSelector.setContext(context, alert);
       }
     }
 
@@ -1777,6 +1863,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     let toolbar = new Toolbar();
     toolbar.$visual.appendTo($('#pl-toolbar__container'));
 
+    let alertBox = new AlertBox("alert-box", toolbar._modelSelector);
+    alertBox.$visual.insertAfter($('main'));
+
     // create x-y swap button
     let swapper = new ShelfSwapper();
     swapper.$visual.appendTo($('#pl-layout-container'));
@@ -1876,22 +1965,27 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       start: function () {
         // create initial context with model
         let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
-        contextQueue.add(context);
 
-        // fetch model
-        context._updateModels()
-          .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
-          .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
-          .then(() => initialQuerySetup(context.shelves))
-          .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
-          .then(() => {
-            //onStartUp();
-          })
-          .catch((err) => {
-            console.error(err);
-            connection_errorhandling(err)
-          });
-      }
+        // when default model is set
+        if(RunConf.DEFAULT_MODEL !== ""){
+          // fetch model
+          contextQueue.add(context);
+          context._updateModels()
+            .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
+            .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
+            .then(() => initialQuerySetup(context.shelves))
+            .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
+            .then(() => {
+              //onStartUp();
+            })
+            .catch((err) => {
+              console.error(err);
+              connection_errorhandling(err)
+            });
+        } else {
+          toolbar.setContext(context, true);
+        }
+        }
     };
 
     function connection_errorhandling(err) {
