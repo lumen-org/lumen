@@ -946,7 +946,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return true;
       }
 
-      _setModels(models) {
+      _setModels(models, alert=true) {
         let $datalist = this._$modelsDatalist;
         if (!this._isSameList($datalist[0].options, models)) {
           console.log("New Model list received!");
@@ -964,7 +964,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           for (let name of models.filter(this._filter_names)) {
             $datalist.append($("<option>").attr('value', name).text(name).attr('id', name));
           }
-          if (models.filter(this._filter_names).length !== 0)
+          if (alert === true && models.filter(this._filter_names).length !== 0)
             alertBox.message(models.filter(this._filter_names));
         }
       }
@@ -972,8 +972,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       /**
        * Refetch the available models on the server.
        */
-      refetchModels() {
-        this._context.modelbase.listModels().then( res => this._setModels(res.models) );
+      refetchModels(alert=true) {
+        this._context.modelbase.listModels().then( res => this._setModels(res.models, alert) );
       }
 
       /**
@@ -991,7 +991,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        this.refetchModels();
+        this.refetchModels(false);
       }
     }
 
@@ -1963,7 +1963,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       start: function () {
         // create initial context with model
-        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, undefined).makeGUI();
+        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
 
         // when default model is set
         if(RunConf.DEFAULT_MODEL !== ""){
