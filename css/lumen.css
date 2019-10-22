@@ -127,8 +127,11 @@ body {
 }
 
 .pl-layout-left {
+    height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
 .pl-layout-lower-left {
@@ -138,10 +141,14 @@ body {
 }
 
 .pl-layout-upper-left {
+    max-height: 97vh;
     min-width: 200px;
     display: flex;
     flex-direction: row;
     flex-grow: 4;
+
+    /*overflow: scroll;*/
+    /*overflow-y: auto;*/
 }
 
 .pl-layout-right {
@@ -152,7 +159,6 @@ body {
 /* columns are grouping elements in the UI */
 
 .pl-column {
-    overflow-y: auto;
     margin: 0.3em;
     background-color: white;
     border: #dbdbdb 1px solid;
@@ -161,20 +167,27 @@ body {
     position: relative;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .pl-column__title {
-    margin-top: 0.2em;
+    z-index: 1;
+    margin: 0;
+    padding: 0.2em 0 0;
     position: sticky;
     top: 0;
     text-align: center;
     background-color: white;
+    border-bottom: 2px solid #d5d5d5;
     filter: brightness(98.5%);
     user-select:  none;
 }
 
 .pl-column__content {
-    margin: 0.5rem;
+    overflow-y: auto;
+    padding: 0.5rem;
+    margin: 0;
+
 }
 
 
