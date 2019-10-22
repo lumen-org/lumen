@@ -949,7 +949,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       _setModels(models, alert=true) {
         let $datalist = this._$modelsDatalist;
         if (!this._isSameList($datalist[0].options, models)) {
-          console.log("New Model list received!");
           for (let i = $datalist[0].options.length - 1; i >= 0; --i) {
             if (models.includes($datalist[0].options[i].value)) {
               let index = models.indexOf($datalist[0].options[i].value);
@@ -986,12 +985,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       /**
        * Sets the context that the toolbar controls.
        * @param context A context.
+       * @param alert defines if models are displayed immediately or not
        */
-      setContext (context) {
+      setContext (context, alert=false) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
         this._context = context;
-        this.refetchModels(false);
+        this.refetchModels(alert);
       }
     }
 
@@ -1317,13 +1317,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       /**
        * Sets the context that the toolbar controls.
        * @param context A context.
+       * @param alert If new models are displayed immediately or not
        */
-      setContext (context) {
+      setContext (context, alert=false) {
         if (!(context instanceof Context))
           throw TypeError("context must be an instance of Context");
 
         this._context = context;
-        this._modelSelector.setContext(context);
+        this._modelSelector.setContext(context, alert);
       }
     }
 
@@ -1982,7 +1983,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
               connection_errorhandling(err)
             });
         } else {
-          toolbar.setContext(context);
+          toolbar.setContext(context, true);
         }
         }
     };
