@@ -1875,23 +1875,28 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       start: function () {
         // create initial context with model
-        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, RunConf.DEFAULT_MODEL).makeGUI();
-        contextQueue.add(context);
+        let context = new Context(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.modelbase_subdomain, undefined).makeGUI();
 
-        // fetch model
-        context._updateModels()
-          .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
-          .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
-          .then(() => initialQuerySetup(context.shelves))
-          .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
-          .then(() => {
-            //onStartUp();
-          })
-          .catch((err) => {
-            console.error(err);
-            connection_errorhandling(err)
-          });
-      }
+        // when default model is set
+        if(RunConf.DEFAULT_MODEL !== ""){
+          // fetch model
+          contextQueue.add(context);
+          context._updateModels()
+            .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas)) // on model change
+            .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))  // activate that context
+            .then(() => initialQuerySetup(context.shelves))
+            .then(() => InitialContexts.forEach( json => contextQueue.addContextFromJSON(json)))
+            .then(() => {
+              //onStartUp();
+            })
+            .catch((err) => {
+              console.error(err);
+              connection_errorhandling(err)
+            });
+        } else {
+          toolbar.setContext(context);
+        }
+        }
     };
 
     function connection_errorhandling(err) {
