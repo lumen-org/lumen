@@ -1868,7 +1868,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
     // posterior predictive check widget
     let ppcWidget = new PosteriorPredictiveCheckWidget(undefined);
-    ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
+    if (Settings.widget.posteriorPredictiveChecks.enabled) {
+      ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
+    }
     // if (!Settings.widget.posteriorPredictiveChecks.enable)
     //   $('.pl-ppc').hide();
 
