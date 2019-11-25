@@ -98,6 +98,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "levels": {type: "number"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
+      "number of samples": {type: "integer"},
       "splitCnts": {
         type: "object",
         format: "grid",
@@ -137,6 +138,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     resolution_2d: 25,
     opacity: 0.5,
     levels: 12,
+    "number of samples": 200,
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches
@@ -1105,18 +1107,18 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // }
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
-        active: true, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
+        active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
 
       'data aggregations': {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // training data
       data: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // test data

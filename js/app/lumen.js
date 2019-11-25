@@ -309,7 +309,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 }),
                 c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
                   data_category: 'model samples',
-                  number_of_samples: 200, // TODO: make configurable
+                  number_of_samples: Settings.tweaks['number of samples'],
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
