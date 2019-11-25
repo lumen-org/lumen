@@ -778,18 +778,23 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
      * @param mapper
      * @param axisId
      * @param cqAxisIds
+     * @param opts
      * @return {{}}
      */
-    tracer.biQC = function (rt, mapper, axisId, cqAxisIds) {
-
+    tracer.biQC = function (rt, mapper, axisId, cqAxisIds, opts=undefined) {
       if (rt === undefined)  // means 'disable this trace type'
         return [];
 
-      let vismel = rt.vismel;
-
+      if (!opts)
+        opts = {};
+      if (!opts.facetName)
+        opts.facetName = 'model density';
+      if (!['model density', 'data density'].includes(opts.facetName))
+        throw RangeError(`invalid facetName: ${opts.facetName}`);
       if (!axisId) throw RangeError("invalid axisId");
       if (!cqAxisIds || cqAxisIds.length === 0) throw RangeError("invalid axisId");
 
+      let vismel = rt.vismel;
       let xFu = vismel.layout.cols[0],
         yFu = vismel.layout.rows[0];
 
@@ -816,18 +821,23 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
        */
       function uniTrace4biQC(data, i) {
 
-        let color = mapper.modelMarginalColor;
+        //REMOVE: let color = mapper.modelMarginalColor;
+        let color = opts.facetName === 'data density' ? mapper.dataMarginalColor : mapper.modelMarginalColor;
+
         // if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
         //   // determine uniform fallback color
         //   color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
 
         if (_.isFunction(color))
           color = color(data[0][colorIdx]);
-
         // } else {
         //   apply the color mapping that color represents. colorIdx is precomputed in the outer scope.
-          // color = color(data[0][colorIdx]);  // data[0] because we simply need any data point of the trace, so the first one is good enough
+        // color = color(data[0][colorIdx]);  // data[0] because we simply need any data point of the trace, so the first one is good enough
         // }
+
+        let shape = opts.facetName === 'data density' ?
+            c.map['dataMarginals'].line['shape' + (catXy === 'x' ? 'y' : 'x')] :
+            c.map['biDensity'].line.shape;
 
         let trace = {
           name: PQL.toString(rt.pql),
@@ -840,7 +850,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           yaxis: xYieldsCat ? axisId.y : cqAxisIds[i],
           line: {
             width: c.map.biDensity.line.width,
-            shape: c.map.biDensity.line.shape,
+            shape: shape,
             color: color,
           },
           fill: c.map.biDensity.line.fill ? ('tozero' + catXy) : 'none',
@@ -859,7 +869,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         let data = groupedData2["$" + catExtent[i]];
         // TODO: this is a hack. If a filter is applied on the categorical dimension, the above access to groupedData fails because the fields extent wasn't updated
         if (data !== undefined)
-          // create trace for each leave in the map for the grouped data:
+        // create trace for each leaf in the map for the grouped data:
           dfs(data, leafData => traces.push(uniTrace4biQC(leafData, i)), depth-1);  // -1 because we already iterate over the first level
       }
       return traces;
