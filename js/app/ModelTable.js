@@ -44,8 +44,9 @@ define(['./PQL'], function(PQL) {
     } else if (facetName === 'dataMarginals') {
       modelFields = modelFields.filter(PQL.isObserved);
       filters = filters.filter(f => PQL.isObserved(f.field));
-      if (defaults.length > 0)
-        throw "not implemented yet.";
+      // TODO: did we forget anything to do here?
+      //if (defaults.length > 0)
+      //  throw "not implemented yet.";            
     }
 
     return model.model(modelFields, filters, defaults, modelName);

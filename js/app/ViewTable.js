@@ -305,7 +305,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           }
           else {
             // TODO: make it a jittered plot?
-            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis, {'facetName': 'data density', 'geometry': geometry}));
+            traces.push(...TraceGen.bi(p2dRT, mapper, mainAxis, {'geometry': geometry}));
             traces.push(...TraceGen.bi(data2dRT, mapper, mainAxis, {'facetName': 'data density', 'geometry': geometry}));
             traces.push(...TraceGen.aggr(aggrRT, mapper, mainAxis));
             traces.push(...TraceGen.aggr(dataAggrRT, mapper, mainAxis, {'facetName': 'data aggregations'}));
@@ -317,6 +317,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           traces.push(...TraceGen.uni(p1dRT, mapper, mainAxis, marginalAxis/*, config.marginalColor.single*/));
           traces.push(...TraceGen.uni(data1dRT, mapper, mainAxis, marginalAxis, {'facetName': 'dataMarginals'}));
           traces.push(...TraceGen.biQC(p2dRT, mapper, mainAxis, catQuantAxisIds));
+          traces.push(...TraceGen.biQC(data2dRT, mapper, mainAxis, catQuantAxisIds, {'facetName': 'data density'}));
           traces.push(...TraceGen.predictionOffset(aggrRT, testDataRT, mapper, mainAxis, facets));
           traces.push(...TraceGen.samples(dataRT, mapper, 'training data', mainAxis));
           traces.push(...TraceGen.samples(testDataRT, mapper, 'test data', mainAxis));

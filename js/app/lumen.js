@@ -1896,6 +1896,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     if (!Settings.widget.userStudy.enabled && !Settings.widget.details.enabled)
       $('.pl-layout-right').hide();
 
+    if (!Settings.widget.posteriorPredictiveChecks.enabled)
+      $('#pl-ppc-column').hide();
+
     // dependency graph widget
     let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-container'));
     if (!Settings.widget.graph.enable) {

@@ -16,6 +16,9 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * Note that a result table is expected, which has the .idx2fu property.
      */
     function _attachExtent(resultTable) {
+        if (resultTable === undefined) {
+            throw "check this out"
+        }            
         if (resultTable.length === 0 || resultTable[0].length === 0)
             resultTable.extent = [];
         else {
