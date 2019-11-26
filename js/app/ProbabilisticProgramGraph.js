@@ -19,11 +19,12 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
    * @param nodenames
    * @returns {any[]}
    */
-  function convertNodenameDict(nodenames) {
+  function convertNodenameDict(nodenames, dtypes) {
     return nodenames.map( name => ({
         group: 'nodes',
         data: {
-          id: name
+          id: name,
+          dtype: dtypes.get(name).dataType,
         }
     }));
   }
@@ -33,6 +34,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     remainingNodeDiameterPrct: 25,
     minEdgeWidth: 1,
     wheelSensitivity: 0.25,
+
+    'line-color': '#929292',
+    'line-width': '6px',
+    'border-color': '#717171',
+    //'border-color': '#232323',
+    'border-width': '4px',
+
   };
 
   // default style sheet
@@ -40,74 +48,31 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     {
       selector: 'node',
       style: {
-        'background-color': '#a8a8a8',
+        'background-color': '#efefef',
         'label': 'data(id)',
-        'border-width': '1px',
-        'border-style': 'solid',
-        'border-color': "#7f7f7f",
+        'border-width': config["border-width"],
+        'border-style': 'dashed',
+        'border-color': config["border-color"],
         'width': config.defaultNodeDiameter,
         'height': config.defaultNodeDiameter,
         'font-family': 'Roboto Slab, serif',
         'color': '#404040',
+        'shape': ele => (ele.data('dtype') === 'string' ? 'rectangle' : 'ellipse'),
         //TODO: use min-zoomed-font-size ?
-      }
-    },
-
-
-    /* new styles */
-
-     {
-      selector: '.pl-default-node',
-      style: {
-        'background-color': '#FFFFFF',
-        'border-width': '4px',
-        'border-style': 'dashed',
-        'border-color': "#000000",
       }
     },
 
     {
       selector: '.pl-forced-node',
       style: {
-        'background-color': '#FFFFFF',
-        'border-width': '4px',
+        'border-width': config["border-width"],
         'border-style': 'solid',
-        'border-color': "#000000",
-      }
-    },
-
-    {
-      selector: 'pl-default-edge',
-      style: {
-        'width': config.defaultNodeDiameter * 0.7,
-        //'width': ele => {return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')},
-        'line-color': '#d7d7d7',
-        'line-style': 'dashed',
-        'opacity': 0.6,
-        //'curve-style': 'bezier',
-      }
-    },
-
-    {
-      selector: '.pl-forced-edge',
-      style: {
-        'line-color': '#d7d7d7',
-        'line-style': 'solid',
-      }
-    },
-
-    {
-      selector: '.pl-forbidded-edge',
-      style: {
-        'line-color': '#ffcccc',
-        'line-style': 'solid',
-        'opacity': 0.4,
       }
     },
 
     /* old styles */
 
-    {
+    /*{
       selector: '.pl-selected-node',
       style: {
         'background-color': '#cc7137',
@@ -137,19 +102,38 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
         // 'background-opacity': 0.4,
         // 'border-opacity': 0.4,
       }
-    },
+    }, */
 
     {
       selector: 'edge',
       style: {
-        'width': ele => {return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')},
-        'line-color': '#d7d7d7',
-        'opacity': 0.6,
+        //'width': ele => {return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')},
+        'width': config["line-width"],
+        'line-color': config["line-color"],
+        'line-style': 'dashed',
+        'opacity': 0.8,
         //'curve-style': 'bezier',
+      }
+    },
+    
+    {
+      selector: '.pl-forced-edge',
+      style: {
+        'line-style': 'solid',
       }
     },
 
     {
+      selector: '.pl-forbidden-edge',
+      style: {
+        'line-color': '#ffd9e0',
+        'width': "10px",
+        'line-style': 'solid',
+        'opacity': 0.8,
+      }
+    },
+
+/*    {
       selector: '.pl-adjacent-edge',
       style: {
         'line-color': '#cc7137',
@@ -179,14 +163,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
           return node.css('background-color');
         }
       }
-    }
+    }*/
   ];
 
   // defaults for layout
   let layout = {
     'cola': {
       name: 'cola',
-      nodeDimensionsIncludeLabels: false,
+      nodeDimensionsIncludeLabels: true,
       ungrabifyWhileSimulating: true,
       //edgeLength: 150,
       padding: 0,
@@ -215,22 +199,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
   /**
    * This widget display a graph whose nodes represent dimensions. It:
    *  * represents the dimensions of a given remote model
-   *  * represents a given weighted edge structure between all pairs of dimensions
-   *  * provides visual distinction between different data types of the dimensions
+   *  * represents
+   *  * provides visual distinction between different data types of the dimensions:
+   *    Categorical ones are encoded as rectangles, while numerical ones are encoded as circles
    *
    * It also provides interactivity as follows:
-   *  * user may select a node by clicking on it
-   *  * user may select multiple nodes by holding ctrl and clicking on nodes
-   *  * user may deselect all node by clicking anywhere in the widget
    *  * user may trigger auto-layout and centering of the plotted graph by double clicking anywhere
    *  * user may reposition a node by left-click dragging
    *  * user may drag a node over to shelves and drop it there by right-click dragging. This triggers a assignment of the dropped dimension to the target shelf, instead of moving the node with the drawing canvas.
-
-   * Selection causes a classification of the nodes, as follows
-   *  (i) pl-selected-node: selected nodes
-   *  (ii) pl-adjacent-node: nodes adjacant to selected nodes, but not selected:
-   *  (iii) pl-remaining-node: nodes that are neither in (i) or (ii)
-   *  (iv) pl-default-node: if no node is selected at all
    *
    * A Graph Widget also emit events.
    *    Node.DragMoved: passes the id of the moved/dragged node to the event handler
@@ -238,9 +214,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
    *    Node.Unselected: passes the id of the unselected node to the event handler
    */
   class GraphWidget {
-
-
-    constructor(domDiv, graph, layoutmode='cola') {
+    
+    constructor(domDiv, graph,  dtypes={}, layoutmode='cola') {
 
       let graphContainer = $('<div></div>')
           .addClass('dg_graphCanvas-container')
@@ -248,7 +223,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
 
       if (!graph) {
         graphContainer.append($('<div class=pl-graph-container__message>graph not available</div>'));
-
         graph = {
           'nodes': [],
           'edges': [],
@@ -258,11 +232,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
         }
       }
 
-      this._originalNodes = convertNodenameDict(graph.nodes);
+      this._originalNodes = convertNodenameDict(graph.nodes, dtypes);
       this._originalEdges = convertEdgeList([...graph.edges, ...graph.forbidden_edges]);
-
-      //this._forbiddenEdges = convertEdgeList(graph.enforced_edges);
-      //this._enforcedEdges = convertEdgeList(graph.forbidden_edges);
 
       this._enforcedCategoricals = new Set();
       this._enforcedNumericals = new Set();
@@ -287,26 +258,29 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       let cy = this._cy;
 
       // setup collection for each type and set class
-
       this.allNodes = cy.nodes();
       this.allEdges = cy.edges();
 
       this.enforcedCategoricalNodes = this.allNodes.filter( node => this._enforcedCategoricals.has(node.id()) );
       this.enforcedNumericalNodes = this.allNodes.filter( node => this._enforcedNumericals.has(node.id()) );
 
-      
       this.enforcedEdges = cy.collection();
       for (const [source, target] of graph.enforced_edges) {
         this.enforcedEdges.merge(
           this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
       }
 
-      
       this.forbiddenEdges = cy.collection();
       for (const [source, target] of graph.forbidden_edges) {
         this.forbiddenEdges.merge(
           this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
       }
+
+      // set styles
+      this.forbiddenEdges.addClass('pl-forbidden-edge');
+      this.enforcedEdges.addClass('pl-forced-edge');
+      this.enforcedCategoricalNodes.addClass('pl-forced-node');
+      this.enforcedNumericalNodes.addClass('pl-forced-node');
 
       this.selected = cy.collection();
       this.adjacent = cy.collection();
@@ -314,20 +288,19 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
 
       this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
 
-      this._updateStylings();
+      // this._updateStylings();
 
       onDoubleClick(cy, ev => {
         this._cy.fit();
         this._layout.run(); // rerun layout!
       });
 
-      this.allNodes
-          .on('select', this.onNodeSelect.bind(this))
-          .on('unselect', this.onNodeUnselect.bind(this))
-          .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
+      // this.allNodes
+      //     .on('select', this.onNodeSelect.bind(this))
+      //     .on('unselect', this.onNodeUnselect.bind(this))
+      //     .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
 
-      this._excludedEdges = cy.collection();
-      this._prependRangeSlider(domDiv);
+      //this._prependRangeSlider(domDiv);
 
       this.$visual = $(domDiv);
       Emitter(this);
@@ -338,9 +311,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
      * @private
      */
     _updateStylings() {
-      
-
-            
       this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
       this.allEdges.removeClass('pl-adjacent-edge pl-remaining-edge');
 
