@@ -1245,7 +1245,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     /**
      * A wrapper around a GraphWidget that manages GraphWidgets for contexts.
      *
-     * It always shows the GraphWidget for the active Context, creates them transparently if a not-seen-before context is set and remember previously set contexts. It automatically removes GraphWidgets for destroyed contexts.
+     * It always shows the GraphWidget for the active Context, creates them transparently if a not-seen-before context
+     * is set and remember previously set contexts. It automatically removes GraphWidgets for destroyed contexts.
      *
      * Visual consistency across contexts:
      *

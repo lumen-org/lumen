@@ -348,6 +348,17 @@ body {
     flex-grow: 1;
 }
 
+.pl-graph-container__message {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: larger;
+}
+
 .pl-config {
     width: 400px;
     height: 100%;
