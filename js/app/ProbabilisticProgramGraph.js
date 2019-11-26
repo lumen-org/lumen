@@ -50,7 +50,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     });
   }
 
-
   const config = {
     defaultNodeDiameter: 30,
     remainingNodeDiameterPrct: 25,
@@ -138,7 +137,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       selector: '.pl-node--hover',
       style: {
         // 'background-color': '#d8d8d8',
-        'background-color': node => {          
+        'background-color': node => {
           let stuff = node.scratch('_dg');
           // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
           if ( !stuff['hover'] ) {
@@ -174,9 +173,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     let lastClick = Date.now();
     cyOrElems.on('tap', (...args) => {
       let now = Date.now();
-      if ((now - lastClick) < 200) {        
+      if ((now - lastClick) < 200) {
         callback(...args)
-      } 
+      }
       lastClick = now;
     });
   }
@@ -208,23 +207,23 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
    */
   class GraphWidget {
 
-    constructor(domDiv, graph, layoutmode='cola') {    
+    constructor(domDiv, graph, layoutmode='cola') {
 
       let graphContainer = $('<div></div>')
-        .addClass('dg_graphCanvas-container')
-        .appendTo(domDiv);
-     
+          .addClass('dg_graphCanvas-container')
+          .appendTo(domDiv);
+
       if (!graph) {
         // no graph data avaiable - just show info message
-        graphContainer.append($('<div class=pl-graph-container__message>no graph available</div>'));       
+        graphContainer.append($('<div class=pl-graph-container__message>no graph available</div>'));
         this._originalNodes = convertNodenameDict([]);
-        this._originalEdges = convertEdgeList([]); 
+        this._originalEdges = convertEdgeList([]);
 
       } else {
         this._originalNodes = convertNodenameDict(graph.nodes);
-        this._originalEdges = convertEdgeList(graph.edges); 
-      }  
-  
+        this._originalEdges = convertEdgeList(graph.edges);
+      }
+
       this._cy = cytoscape({
         container: graphContainer,
         elements: [...this._originalNodes, ...this._originalEdges],
@@ -233,7 +232,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
         wheelSensitivity: config.wheelSensitivity,
       });
       this._layout = this._cy.layout(layout[layoutmode]);
-      this._layout.run();      
+      this._layout.run();
       let cy = this._cy;
 
       this.selected = cy.collection();
@@ -250,9 +249,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       });
 
       this.allNodes
-        .on('select', this.onNodeSelect.bind(this))
-        .on('unselect', this.onNodeUnselect.bind(this))
-        .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
+          .on('select', this.onNodeSelect.bind(this))
+          .on('unselect', this.onNodeUnselect.bind(this))
+          .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
 
       this._excludedEdges = cy.collection();
       this._prependRangeSlider(domDiv);
@@ -271,12 +270,12 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
 
       if (this.selected.size() !== 0) {
         this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
-          .addClass('pl-adjacent-node');
+            .addClass('pl-adjacent-node');
         this.remaining = this.allNodes.subtract(this.adjacent).subtract(this.selected)
-          .addClass('pl-remaining-node');
+            .addClass('pl-remaining-node');
 
         let selectedEdges = this.selected.connectedEdges()
-          .addClass('pl-adjacent-edge');
+            .addClass('pl-adjacent-edge');
         this.allEdges.subtract(selectedEdges).addClass('pl-remaining-edge');
       }
     }
@@ -284,39 +283,39 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     _prependRangeSlider(domDiv) {
       // make slider container
       let container = $('<div></div>')
-        .addClass('dg_slider-container')
-        .prependTo(domDiv);
+          .addClass('dg_slider-container')
+          .prependTo(domDiv);
 
       $('<div>threshold </div>')
-        .addClass('pl-label dg_slider__label')
-        .appendTo(container);
+          .addClass('pl-label dg_slider__label')
+          .appendTo(container);
 
       let sliderDiv = $('<div></div>')
-        .addClass('dg_slider__slider')
-        .appendTo(container);
+          .addClass('dg_slider__slider')
+          .appendTo(container);
 
       let valueDiv = $('<div></div>')
-        .addClass('pl-label dg_slider__value')
-        .text(0)
-        .appendTo(container);
+          .addClass('pl-label dg_slider__value')
+          .text(0)
+          .appendTo(container);
 
       // get maximum of graph weight
       let maxWeight = this.allEdges.max(
-        ele => ele.data('originalWeight')
+          ele => ele.data('originalWeight')
       ).value*1.1;
 
       // make slider
       sliderDiv.slider({
-          range: "min",
-          value: 0,
-          min: 0,
-          step: maxWeight/200,
-          max: maxWeight,
-          slide: (event, ui) => {
-            valueDiv.text(ui.value.toPrecision(3));
-            this.edgeThreshhold(ui.value);
-          }
-        });
+        range: "min",
+        value: 0,
+        min: 0,
+        step: maxWeight/200,
+        max: maxWeight,
+        slide: (event, ui) => {
+          valueDiv.text(ui.value.toPrecision(3));
+          this.edgeThreshhold(ui.value);
+        }
+      });
     }
 
     onNodeSelect(ev) {
@@ -369,9 +368,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
 
       // possibly include edges that are now excluded
       if (value < this._threshhold) {
-           let toRestore = this._excludedEdges.filter(`edge[originalWeight >= ${value}]`);
-           this._excludedEdges = this._excludedEdges.subtract(toRestore);
-           toRestore.restore();
+        let toRestore = this._excludedEdges.filter(`edge[originalWeight >= ${value}]`);
+        this._excludedEdges = this._excludedEdges.subtract(toRestore);
+        toRestore.restore();
       }
       // possible exclude edges that are not included
       else if (value > this._threshhold) {
@@ -387,7 +386,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
 
 
   GraphWidget.prototype.makeDragGhostForNode = function (node) {
-    let boundingRect = this._cy.container().getBoundingClientRect();    
+    let boundingRect = this._cy.container().getBoundingClientRect();
     return $('<div class="dg-drag-ghost"></div>').css({
       position: 'fixed',
       left: boundingRect.x + node.renderedPosition('x'),
@@ -418,28 +417,28 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       this._dropTargets = new Set();
       //see http://js.cytoscape.org/#events
       this.allNodes
-        .on('cxttapstart', ev => {
-          let node = ev.target;
+          .on('cxttapstart', ev => {
+            let node = ev.target;
 
-          this.draggedObject.node = node;
-          this.draggedObject.field = node.data('field');
+            this.draggedObject.node = node;
+            this.draggedObject.field = node.data('field');
 
-          this.dragGhost = this.makeDragGhostForNode(node)
-            .appendTo(this._cy.container());
-          this.dragState = "dragging";
-        })
-        .on('cxtdrag', (ev) => {
-          let boundingRect = this._cy.container().getBoundingClientRect();
-          this.dragGhost.css({
-            // this prevents the mouse from being directly above this div and hence blocking event triggerings
-            left: boundingRect.x + ev.renderedPosition.x+2,
-            top: boundingRect.y + ev.renderedPosition.y+2,
-          });
-        })
-        .on('cxttapend', ev => this._reset_drag())
-        .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
-        .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
-        .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
+            this.dragGhost = this.makeDragGhostForNode(node)
+                .appendTo(this._cy.container());
+            this.dragState = "dragging";
+          })
+          .on('cxtdrag', (ev) => {
+            let boundingRect = this._cy.container().getBoundingClientRect();
+            this.dragGhost.css({
+              // this prevents the mouse from being directly above this div and hence blocking event triggerings
+              left: boundingRect.x + ev.renderedPosition.x+2,
+              top: boundingRect.y + ev.renderedPosition.y+2,
+            });
+          })
+          .on('cxttapend', ev => this._reset_drag())
+          .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
+          .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
+          .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
     }
   };
 
@@ -464,7 +463,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
   GraphWidget.prototype.addDropTarget = function (domElem, handlers, eventFilter = () => true) {
     if (!this._isDraggable)
       throw "Cannot add drop target to undraggable GraphWidget. Call .draggable() before!";
-    
+
     /**
      * Augments a given handler by:
      *   * only calling it if there is currently a drag under go.
@@ -476,7 +475,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     function augmentHandler (handler) {
       return (event, ...args) => {
         if (that.dragState === 'dragging' && eventFilter(event, ...args))
-          // only if currently draggin!
+        // only if currently draggin!
           return handler({event:event, dragged: that.draggedObject, args: args});
       }
     }
