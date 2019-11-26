@@ -53,6 +53,60 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       }
     },
 
+
+    /* new styles */
+
+     {
+      selector: '.pl-default-node',
+      style: {
+        'background-color': '#FFFFFF',
+        'border-width': '4px',
+        'border-style': 'dashed',
+        'border-color': "#000000",
+      }
+    },
+
+    {
+      selector: '.pl-forced-node',
+      style: {
+        'background-color': '#FFFFFF',
+        'border-width': '4px',
+        'border-style': 'solid',
+        'border-color': "#000000",
+      }
+    },
+
+    {
+      selector: 'pl-default-edge',
+      style: {
+        'width': config.defaultNodeDiameter * 0.7,
+        //'width': ele => {return config.minEdgeWidth + (config.defaultNodeDiameter - config.minEdgeWidth) * 0.7 * ele.data('weight')},
+        'line-color': '#d7d7d7',
+        'line-style': 'dashed',
+        'opacity': 0.6,
+        //'curve-style': 'bezier',
+      }
+    },
+
+    {
+      selector: '.pl-forced-edge',
+      style: {
+        'line-color': '#d7d7d7',
+        'line-style': 'solid',
+      }
+    },
+
+    {
+      selector: '.pl-forbidded-edge',
+      style: {
+        'line-color': '#ffcccc',
+        'line-style': 'solid',
+        'opacity': 0.4,
+      }
+    },
+
+    /* old styles */
+
     {
       selector: '.pl-selected-node',
       style: {
@@ -205,12 +259,21 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       }
 
       this._originalNodes = convertNodenameDict(graph.nodes);
-      this._originalEdges = convertEdgeList(graph.edges);
-      this._forbiddenEdges = convertEdgeList(graph.enforced_edges);
-      this._enforcedEdges = convertEdgeList(graph.forbidden_edges);
-      this._enforcedCategoricals = []
-      this._enforcedNumericals = []
+      this._originalEdges = convertEdgeList([...graph.edges, ...graph.forbidden_edges]);
 
+      //this._forbiddenEdges = convertEdgeList(graph.enforced_edges);
+      //this._enforcedEdges = convertEdgeList(graph.forbidden_edges);
+
+      this._enforcedCategoricals = new Set();
+      this._enforcedNumericals = new Set();
+      for (const [name, dtype] of Object.entries(graph.enforced_node_dtypes)) {
+        if (dtype === 'string')
+          this._enforcedCategoricals.add(name);
+        else if (dtype === 'numerical')
+          this._enforcedNumericals.add(name);
+        else
+          throw RangeError();
+      }
 
       this._cy = cytoscape({
         container: graphContainer,
@@ -223,14 +286,36 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       this._layout.run();
       let cy = this._cy;
 
+      // setup collection for each type and set class
+
+      this.allNodes = cy.nodes();
+      this.allEdges = cy.edges();
+
+      this.enforcedCategoricalNodes = this.allNodes.filter( node => this._enforcedCategoricals.has(node.id()) );
+      this.enforcedNumericalNodes = this.allNodes.filter( node => this._enforcedNumericals.has(node.id()) );
+
+      
+      this.enforcedEdges = cy.collection();
+      for (const [source, target] of graph.enforced_edges) {
+        this.enforcedEdges.merge(
+          this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
+      }
+
+      
+      this.forbiddenEdges = cy.collection();
+      for (const [source, target] of graph.forbidden_edges) {
+        this.forbiddenEdges.merge(
+          this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
+      }
+
       this.selected = cy.collection();
       this.adjacent = cy.collection();
       this.remaining = cy.collection();
-      this.allNodes = cy.nodes();
-      this.allEdges = cy.edges();
+
       this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
 
       this._updateStylings();
+
       onDoubleClick(cy, ev => {
         this._cy.fit();
         this._layout.run(); // rerun layout!
@@ -253,6 +338,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
      * @private
      */
     _updateStylings() {
+      
+
+            
       this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
       this.allEdges.removeClass('pl-adjacent-edge pl-remaining-edge');
 
