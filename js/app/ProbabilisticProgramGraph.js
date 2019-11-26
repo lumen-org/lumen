@@ -4,50 +4,28 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
 
   /**
    * Convert a 'standard' edge list to suitable format for cytoscape.
+   * Each element of the edge list is a 2-element list, with first source and second target node of the edge.
    * @param edges
    */
   function convertEdgeList(edges) {
-
-    // get min and max of weights for normalization
-    let min_=Infinity, max_=-Infinity;
-    for (let edge of edges) {
-      if (edge.weight < min_)
-        min_ = edge.weight;
-      if (edge.weight > max_)
-        max_ = edge.weight;
-    }
-
-    if (min_ < 0)
-      throw RangeError("edges may not have negative weights!");
-    min_ = 0;
-    let len = max_ - min_;
-
-    return edges.map(edge => {
-      for (let prop of ['source', 'target', 'weight'])
-        if (!edge.hasOwnProperty(prop))
-          throw RangeError("missing '{1}' property in edge_ {2}".format(prop, edge.toString()));
-      return {
-        group: 'edges',
-        // normalize weights to [0,1]
-        data: Object.assign({}, edge, {'weight': (edge.weight - min_)/len, 'originalWeight': edge.weight}),
-      }
-    })
+    return edges.map( edge => ({
+          group: 'edges',
+          data: {'source': edge[0], 'target': edge[1], 'weight':1, 'originalWeight':1}
+        }));
   }
 
   /**
-   * Convert a Dictionary of indexes (that bear no meaning) to node names to a suitable list of nodes for cytoscape.
+   * Convert a list of node names to a suitable list of nodes for cytoscape.
    * @param nodenames
    * @returns {any[]}
    */
   function convertNodenameDict(nodenames) {
-    return Object.values(nodenames).map( name=> {
-      return {
+    return nodenames.map( name => ({
         group: 'nodes',
         data: {
           id: name
-        },
-      }
-    });
+        }
+    }));
   }
 
   const config = {
@@ -207,6 +185,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
    */
   class GraphWidget {
 
+
     constructor(domDiv, graph, layoutmode='cola') {
 
       let graphContainer = $('<div></div>')
@@ -214,15 +193,24 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
           .appendTo(domDiv);
 
       if (!graph) {
-        // no graph data avaiable - just show info message
-        graphContainer.append($('<div class=pl-graph-container__message>no graph available</div>'));
-        this._originalNodes = convertNodenameDict([]);
-        this._originalEdges = convertEdgeList([]);
+        graphContainer.append($('<div class=pl-graph-container__message>graph not available</div>'));
 
-      } else {
-        this._originalNodes = convertNodenameDict(graph.nodes);
-        this._originalEdges = convertEdgeList(graph.edges);
+        graph = {
+          'nodes': [],
+          'edges': [],
+          'forbidden_edges': [],
+          'enforced_edges': [],
+          'enforced_node_dtypes': {}
+        }
       }
+
+      this._originalNodes = convertNodenameDict(graph.nodes);
+      this._originalEdges = convertEdgeList(graph.edges);
+      this._forbiddenEdges = convertEdgeList(graph.enforced_edges);
+      this._enforcedEdges = convertEdgeList(graph.forbidden_edges);
+      this._enforcedCategoricals = []
+      this._enforcedNumericals = []
+
 
       this._cy = cytoscape({
         container: graphContainer,
