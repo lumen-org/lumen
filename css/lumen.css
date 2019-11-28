@@ -1,4 +1,4 @@
-/* copyright ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 
 /*** DEBUG STUFF ***/
@@ -60,6 +60,7 @@ div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, t
     font-family: Roboto, sans-serif;
     font-weight: 400;
     font-size: small;
+    align-self: center;
     color: #515151;
 }
 
@@ -719,6 +720,11 @@ textarea.pl-survey__content {
 .pl-fu__control-button {
     width: 25%;
     margin: 0 0.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
 }
 
 .pl-fu__popUp .pl-text {
