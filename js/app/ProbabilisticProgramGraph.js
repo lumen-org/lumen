@@ -363,7 +363,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           .appendTo($container);
 
       let modifyDTypeHandler = () => {throw "not implemented"};
-      VisUtils.button('Modify DType', 'categorical')
+      VisUtils.button('Modify Type', 'categorical')
           .addClass('pl-fu__control-button')
           .on('click', handleWithStopPropagation(modifyDTypeHandler))
           .appendTo($container);
