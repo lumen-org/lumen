@@ -30,12 +30,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
   }
 
   const config = {
-    defaultNodeDiameter: 30,
+    defaultNodeDiameter: 26,
     remainingNodeDiameterPrct: 25,
     minEdgeWidth: 1,
     wheelSensitivity: 0.25,
 
     'line-color': '#929292',
+    'arrow-color': '#d4d4d4',
     'line-width': '6px',
     'border-color': '#717171',
     //'border-color': '#232323',
@@ -55,10 +56,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
         'border-color': config["border-color"],
         'width': config.defaultNodeDiameter,
         'height': config.defaultNodeDiameter,
-        'font-family': 'Roboto Slab, serif',
-        'color': '#404040',
         'shape': ele => (ele.data('dtype') === 'string' ? 'rectangle' : 'ellipse'),
-        //TODO: use min-zoomed-font-size ?
+        'font-family': 'Roboto Slab, serif',
+        'font-size': "larger",
+        'color': '#404040',
+        'min-zoomed-font-size': "8px",  //TODO: use min-zoomed-font-size ?
+        'text-outline-color': "#FFFFFF",
+        'text-outline-opacity': 1,
+        'text-outline-width': "1px",
       }
     },
 
@@ -112,7 +117,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
         'line-color': config["line-color"],
         'line-style': 'dashed',
         'opacity': 0.8,
-        //'curve-style': 'bezier',
+        'curve-style': 'straight',
       }
     },
     
@@ -120,16 +125,25 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       selector: '.pl-forced-edge',
       style: {
         'line-style': 'solid',
+        'mid-target-arrow-shape': 'triangle',
+        'mid-target-arrow-color': config["arrow-color"],
+        'arrow-scale': 1.7,
+        'target-endpoint': 'inside-to-node',
       }
     },
 
     {
       selector: '.pl-forbidden-edge',
       style: {
-        'line-color': '#ffd9e0',
+        'line-color': '#ffffff',
         'width': "10px",
         'line-style': 'solid',
         'opacity': 0.8,
+        'mid-source-arrow-shape': 'vee',
+        'mid-source-arrow-color': '#ffd9e0',
+        'mid-target-arrow-shape': 'vee',
+        'mid-target-arrow-color': '#ffd9e0',
+        'arrow-scale': 0.6,
       }
     },
 
@@ -172,9 +186,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       name: 'cola',
       nodeDimensionsIncludeLabels: true,
       ungrabifyWhileSimulating: true,
-      //edgeLength: 150,
       padding: 0,
-      nodeSpacing: function( node ){ return 30; }
+      nodeSpacing: 30,
+      //nodeSpacing: function( node ){ return 30; }
+      //edgeLength: 150,
       //edgeLength: edge => edge.data.weight*10,
     },
     'circle': {
