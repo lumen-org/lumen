@@ -977,11 +977,16 @@ textarea.pl-survey__content {
     background-color: rgba(250,250,250,0.5);
 }
 
-.dg_slider-container {
+.dg_slider-container, .dg_tool-container {
     display: flex;
     flex-direction: row;
     /*justify-content: ;*/
     margin: 0.3em;
+}
+
+.dg_tool-container .pl-label {
+    max-width: 40%;
+    font-size: x-small;
 }
 
 .dg_slider__slider {

@@ -1,4 +1,4 @@
-define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function (Emitter, cytoscape, cola, d3color) {
+define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtils'], function (Emitter, cytoscape, cola, d3color, VisUtils) {
 
   cola(cytoscape); // register cola extension
 
@@ -315,7 +315,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       //     .on('unselect', this.onNodeUnselect.bind(this))
       //     .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
 
-      //this._prependRangeSlider(domDiv);
+      this._prependRangeSlider(domDiv);
+      this._makeToolBar().appendTo(domDiv);
 
       this.$visual = $(domDiv);
       Emitter(this);
@@ -341,6 +342,47 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       }
     }
 
+    _makeToolBar() {
+
+      let handleWithStopPropagation = handler => {return ev => {handler(); ev.stopPropagation();}};
+
+      // make slider container
+      let $container = $('<div></div>')
+          .addClass('dg_tool-container');
+
+      let addEdgeHandler = () => {throw "not implemented"};
+      VisUtils.button('Add Edge', 'plus')
+          .addClass('pl-fu__control-button')
+          .on('click', handleWithStopPropagation(addEdgeHandler))
+          .appendTo($container);
+
+      let removeEdgeHandler = () => {throw "not implemented"};
+      VisUtils.button('Remove Edge', 'minus')
+          .addClass('pl-fu__control-button')
+          .on('click', handleWithStopPropagation(removeEdgeHandler))
+          .appendTo($container);
+
+      let modifyDTypeHandler = () => {throw "not implemented"};
+      VisUtils.button('Modify DType', 'categorical')
+          .addClass('pl-fu__control-button')
+          .on('click', handleWithStopPropagation(modifyDTypeHandler))
+          .appendTo($container);
+
+      let applyHandler = () => {throw "not implemented"};
+      VisUtils.button('Apply', 'confirm')
+          .addClass('pl-fu__control-button')
+          .on('click', handleWithStopPropagation(applyHandler))
+          .appendTo($container);
+
+      let resetHandler = () => {throw "not implemented"};
+      VisUtils.button('Reset', 'revert')
+          .addClass('pl-fu__control-button')
+          .on('click', handleWithStopPropagation(resetHandler))
+          .appendTo($container);
+
+      return $container;
+    }
+
     _prependRangeSlider(domDiv) {
       // make slider container
       let container = $('<div></div>')
@@ -361,9 +403,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
           .appendTo(container);
 
       // get maximum of graph weight
-      let maxWeight = this.allEdges.max(
-          ele => ele.data('originalWeight')
-      ).value*1.1;
+      let maxWeight = 1;
 
       // make slider
       sliderDiv.slider({
@@ -374,10 +414,11 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
         max: maxWeight,
         slide: (event, ui) => {
           valueDiv.text(ui.value.toPrecision(3));
-          this.edgeThreshhold(ui.value);
+          //this.edgeThreshhold(ui.value);
         }
       });
     }
+  /*
 
     onNodeSelect(ev) {
       //this._cy.batchStart();
@@ -413,7 +454,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       node.toggleClass('pl-node--hover');
       // indicate with mouse cursor that the node is draggable 'drag' or return to default cursor
       $(this._cy.container()).toggleClass('dg_graphCanvas-container--hover-on-node');
-    }
+    } */
 
     redraw () {
       this._cy.resize();
@@ -422,7 +463,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
     /**
      * Sets or gets the threshold
      * @param value
-     */
+     *
     edgeThreshhold (value=undefined) {
       if (value === undefined)
         return this._threshhold;
@@ -441,10 +482,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
       this.allEdges = this._cy.edges();
       this._threshhold = value;
       this._updateStylings();
-    }
+    } */
 
   }
-
 
   GraphWidget.prototype.makeDragGhostForNode = function (node) {
     let boundingRect = this._cy.container().getBoundingClientRect();
