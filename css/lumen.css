@@ -1,6 +1,5 @@
 /* copyright 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
-
 /*** DEBUG STUFF ***/
 
 #pl-playground {
@@ -16,7 +15,6 @@
 
 html, body {
     height: 100vh;
-    /* overflow: hidden; */
 }
 
 *, *:before, *:after {
@@ -138,23 +136,19 @@ body {
 }
 
 .pl-layout-lower-left {
-    /* flex-grow: 1; */
+    min-height: 20vh;
     height: 43vh;
     display: flex;
-    align-items: stretch;
     flex-direction: row;
+    align-items: stretch;
 }
 
 .pl-layout-upper-left {
-    /*TODO: EUROVIS2020*/
     min-height: 30vh;
     height: 54vh;
     min-width: 200px;
     display: flex;
     flex-direction: row;
-    /* flex-grow: 4; */
-    /*overflow: scroll;*/
-    /*overflow-y: auto;*/
 }
 
 .pl-layout-right {
@@ -195,11 +189,9 @@ body {
     margin: 0;
 }
 
-
 /* main widgets/elements of UI
  * roughly from left to right and top to bottom
  */
-
 
 #header-bar, #footer-bar {
     width: 100%;
@@ -214,7 +206,6 @@ body {
 
 .pl-schema {
     min-width: 175px;
-    /* max-height: 45vh; */
 }
 
 .pl-model-container {
@@ -223,8 +214,7 @@ body {
 
 .pl-spec {
     min-width: 200px; /* for constant minimal width*/
-    /*overflow-y: scroll; /* always on scroll back to reduce flickering */
-    /* max-height: 45vh; */
+    overflow-y: scroll; /* always on scroll back to reduce flickering */
 }
 
 .pl-spec-container {
@@ -247,10 +237,7 @@ body {
 /* a shelf has a title and holds items in its list */
 
 .shelf {
-    /* margin: 0.5rem; */
-    /* padding-right: 0.2rem; */
     display: flex;
-    /* padding-left: 0.2rem; */
 }
 
 .shelf.horizontal {
@@ -350,8 +337,6 @@ body {
 
 .pl-facet__checkbox {
     margin: 0;
-    /* margin-top: 1px; */
-    /* margin-left: 0.5rem; */
 }
 
 .pl-facet__label {

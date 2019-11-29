@@ -294,8 +294,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
 
   //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
-
-
   //
   // function argumentsEditField (fu) {
   //   function submitOnEnter(elem) {

@@ -862,9 +862,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 // ... trigger an update
                 context.update('facets.changed');
               });
-          // let $icon = VisUtils.icon(name2iconMap[what]);
-          // let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
-          // return $('<div class="pl-facet__onOff"></div>').append($icon, $label, $checkBox);
           return $checkBox;
         };
 
@@ -879,14 +876,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
         ];
 
-        // let items = [
-        //    $('<div></div>'), $('<div></div>'), makeColumnLabel('model'),  makeColumnLabel('evidence'),
-        //    VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction'), makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
-        //    VisUtils.icon(name2iconMap['data']), makeRowLabel('data'), makeCheckbox('model samples'), makeCheckbox('data'),
-        //    VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals'), makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
-        //    VisUtils.icon(name2iconMap['contour']), makeRowLabel('density'), makeCheckbox('contour'), makeCheckbox('data density'),
-        // ];
-
         let items = [
           items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('evidence'),
           items4firstColumn[1], makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
@@ -896,16 +885,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         ];
 
         let shelfContainer = $('<div class="pl-facetWidget__container"></div>').append(...items);
-
-        // let checkBoxes = Object.keys(context.facets)
-        //         .filter( what => context.facets[what].possible)
-        //         .map();
-
-        return $('<div class="pl-facet shelf vertical"></div>').append(
-            //$('<hr>'),
-            title,
-            shelfContainer
-        );
+        return $('<div class="pl-facet shelf vertical"></div>').append(title, shelfContainer);
       }
 
       /**
