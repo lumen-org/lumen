@@ -143,12 +143,12 @@ body {
 }
 
 .pl-layout-upper-left {
-    max-height: 97vh;
+    /*TODO: EUROVIS2020*/
+    max-height: 50vh;
     min-width: 200px;
     display: flex;
     flex-direction: row;
     flex-grow: 4;
-
     /*overflow: scroll;*/
     /*overflow-y: auto;*/
 }
@@ -174,13 +174,13 @@ body {
 
 .pl-column__title {
     z-index: 1;
-    margin: 0;
-    padding: 0.2em 0 0;
+    margin: 0 0.5em 0 0.5em;
+    padding:0.2em 0 0 0;
     position: sticky;
     top: 0;
     text-align: center;
     background-color: white;
-    border-bottom: 2px solid #d5d5d5;
+    border-bottom: 1px solid #d5d5d5;
     filter: brightness(98.5%);
     user-select:  none;
 }
@@ -189,7 +189,6 @@ body {
     overflow-y: auto;
     padding: 0.5rem;
     margin: 0;
-
 }
 
 
