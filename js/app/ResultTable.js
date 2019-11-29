@@ -62,11 +62,22 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         });
     }
 
-    function normalizeRT (rt, columnIdx, targetWeight=1) {
-        let currentWeight = d3.sum(rt, row => row[columnIdx]),
-            rescaleFactor = targetWeight/currentWeight;
-        rt.forEach( row => row[columnIdx] *= rescaleFactor);
-        return rt;
+    /**
+     * Normalize a column of a ResultTable in place.
+     * @param rt ResulTable
+     * @param columnIdx integer.
+     *    Index of Column to normalize.
+     * @param targetWeight see code.
+     * @param normalizationFactor see code.
+     * @returns {*}
+     */
+    function normalizeRT (rt, columnIdx, targetWeight=1, normalizationFactor=undefined) {
+        if (normalizationFactor === undefined) {
+            let currentWeight = d3.sum(rt, row => row[columnIdx]);
+            normalizationFactor = targetWeight / currentWeight;
+        }
+        rt.forEach( row => row[columnIdx] *= normalizationFactor);
+        return _attachExtent(rt);
     }
 
     function getEmptyCollection(size, enabled) {
