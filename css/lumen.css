@@ -1,4 +1,4 @@
-/* copyright ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
+/* copyright 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 
 /*** DEBUG STUFF ***/
@@ -129,8 +129,11 @@ body {
 }
 
 .pl-layout-left {
+    height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
 .pl-layout-lower-left {
@@ -140,10 +143,14 @@ body {
 }
 
 .pl-layout-upper-left {
+    max-height: 97vh;
     min-width: 200px;
     display: flex;
     flex-direction: row;
     flex-grow: 4;
+
+    /*overflow: scroll;*/
+    /*overflow-y: auto;*/
 }
 
 .pl-layout-right {
@@ -154,7 +161,6 @@ body {
 /* columns are grouping elements in the UI */
 
 .pl-column {
-    overflow-y: auto;
     margin: 0.3em;
     background-color: white;
     border: #dbdbdb 1px solid;
@@ -163,20 +169,27 @@ body {
     position: relative;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .pl-column__title {
-    margin-top: 0.2em;
+    z-index: 1;
+    margin: 0;
+    padding: 0.2em 0 0;
     position: sticky;
     top: 0;
     text-align: center;
     background-color: white;
+    border-bottom: 2px solid #d5d5d5;
     filter: brightness(98.5%);
     user-select:  none;
 }
 
 .pl-column__content {
-    margin: 0.5rem;
+    overflow-y: auto;
+    padding: 0.5rem;
+    margin: 0;
+
 }
 
 
@@ -332,7 +345,7 @@ body {
 }
 
 .pl-graph {
-    min-height: 300px;
+    min-height: 400px;
     /*flex-grow: 1;*/
     display: flex;
     flex-direction: column;
@@ -1013,6 +1026,104 @@ textarea.pl-survey__content {
 .dg_graphCanvas-container--hover-on-node:hover {
     /* :hover is needed to take precedence over .dg_graphCanvas-container:hover which is otherwise more specific */
     cursor: grab;
+}
+
+
+.pl-model-alert-box-background {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* an alert box to inform user about a new model */
+.pl-model-alert-box-content {
+    overflow: hidden;
+    background-color: #fefefe;
+    margin: auto;
+    border-radius: 10px;
+    border: 2px solid #888;
+    width: 80%;
+
+    /* make all items unselectable */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+.pl-model-alert-box-header {
+    border: 0;
+    background-color: #d5d5d5;
+}
+
+.pl-model-alert-box-header-title {
+    width: 75%;
+    padding: 15px;
+    float: left;
+    font-size: 1.3em;
+    text-align: left;
+
+}
+
+.pl-model-alert-box-header-close {
+    font-size: 22px;
+    float: right;
+    margin: 0;
+    padding: 14px 16px 14px 16px;
+    border: 0;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.pl-model-alert-box-header-close:hover {
+    background-color: #f44336;
+    color: white;
+}
+
+.pl-model-alert-box-header:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.pl-model-alert-box-header-close:hover {
+    background-color: #f44336;
+    color: white;
+}
+
+.pl-model-alert-box-content ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    max-height: 75vh;
+    overflow-y: scroll;
+}
+
+.pl-model-alert-box-content ul li {
+    cursor: pointer;
+    position: relative;
+    padding: 12px 8px 12px 40px;
+    background: #eee;
+    font-size: 18px;
+    transition: 0.2s;
+}
+
+/* list items zebra-stripes */
+.pl-model-alert-box-content ul li:nth-child(odd) {
+    background: #f9f9f9;
+}
+
+/* Darker background-color on hover */
+.pl-model-alert-box-content ul li:hover {
+    background: #ddd;
 }
 
 

@@ -117,6 +117,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "color data": {type: "string"},
         }
       },
+      "data": {
+        type: "object",
+        format: "grid",
+        properties: {
+          "stroke color": {type: "string", format: "color"},
+          "stroke width": {type: "number"},
+          "fill opacity": {type: "number"},
+        }
+      },
+      "prediction": {
+        type: "object",
+        format: "grid",
+        properties: {
+          "stroke color": {type: "string", format: "color"},
+          "stroke width": {type: "number"},
+          "fill opacity": {type: "number"},
+        }
+      },
+
       "data local prediction": {
         type: "object",
         format: "grid",
@@ -204,21 +223,45 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         type: "object",
         format: "grid",
         properties: {
-          "single": {type: "string", format: "color"}
+          "single": {type: "string", format: "color"},
+          "marginal": {type: "string", format: "color"}
         }
       },
       "data": {
         type: "object",
         format: "grid",
         properties: {
-          "single": {type: "string", format: "color"}
+          "single": {type: "string", format: "color"},
+          "marginal": {type: "string", format: "color"}
+
         }
       },
       "testData": {
         type: "object",
         format: "grid",
         properties: {
-          "single": {type: "string", format: "color"}
+          "single": {type: "string", format: "color"},
+          "marginal": {type: "string", format: "color"}
+        }
+      },
+      "training data": {
+        type: "object",
+        format: "grid",
+        properties: {
+          "single": {type: "string", format: "color"},
+          "marginal": {type: "string", format: "color"},
+          "density": {type: "string", format: "color"},
+          "density_scale_Enum": {type: "string", enum: colorscalesKeys},
+        }
+      },
+      "modelSamples": {
+        type: "object",
+        format: "grid",
+        properties: {
+          "single": {type: "string", format: "color"},
+          "marginal": {type: "string", format: "color"},
+          "density": {type: "string", format: "color"},
+          "density_scale_Enum": {type: "string", enum: colorscalesKeys},
         }
       }
     }
@@ -266,8 +309,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     // },
 
     data: { //TODO: where is that used?
-      single: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
-      marginal: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      // single: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      // marginal: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      single: d3chromatic.schemeDark2[7], // d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      marginal: d3chromatic.schemeDark2[7], //  d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
       // marginal_scale_Enum: ,
       // single: d3chromatic.schemePaired[9],
     },
@@ -709,13 +754,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     biDensity: {
       line: {
-        width: 2,
+        width: 2.5,
         shape: 'spline', // only used for biqc plots at the moment
         fill: true,
         fillopacity: 0.06,
+        color: greys(0.7) // the line color of the contour lines (if contours.coloring is not set to 'line')
       },
       contour: {
-        width: 3,
+        width: 3, // set to 3 for non-filled lines
         levels: tweaksInitial.levels, // TODO: watches!
         coloring: "lines", // possible values are: "fill" | "heatmap" | "lines"
         opacity: 0.5,
