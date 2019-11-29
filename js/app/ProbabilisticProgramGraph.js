@@ -64,6 +64,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'text-outline-color': "#FFFFFF",
         'text-outline-opacity': 1,
         'text-outline-width': "1px",
+        'z-index': 1,
       }
     },
 
@@ -72,6 +73,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       style: {
         'border-width': config["border-width"],
         'border-style': 'solid',
+        'z-index': 2,
       }
     },
 
@@ -118,6 +120,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'line-style': 'dashed',
         'opacity': 0.8,
         'curve-style': 'straight',
+        'z-index': 1,
       }
     },
     
@@ -129,21 +132,26 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'mid-target-arrow-color': config["arrow-color"],
         'arrow-scale': 1.7,
         'target-endpoint': 'inside-to-node',
+        'z-index': 2,
       }
     },
 
     {
       selector: '.pl-forbidden-edge',
       style: {
-        'line-color': '#ffffff',
+        'line-color': '#FFFFFF',
         'width': "10px",
-        'line-style': 'solid',
-        'opacity': 0.8,
-        'mid-source-arrow-shape': 'vee',
-        'mid-source-arrow-color': '#ffd9e0',
-        'mid-target-arrow-shape': 'vee',
-        'mid-target-arrow-color': '#ffd9e0',
         'arrow-scale': 0.6,
+        // 'line-color': '#ff727c',
+        // 'width': "1px",
+        // 'arrow-scale': 3,
+        'line-style': 'solid',
+        'opacity': .8,
+        'mid-source-arrow-shape': 'vee',
+        'mid-source-arrow-color': '#ffc3cb',
+        'mid-target-arrow-shape': 'vee',
+        'mid-target-arrow-color': '#ffc3cb',
+        'z-index': 0,
       }
     },
 
