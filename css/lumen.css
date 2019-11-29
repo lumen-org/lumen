@@ -15,7 +15,8 @@
 /*** common element style ***/
 
 html, body {
-    height: 100%;
+    height: 100vh;
+    /* overflow: hidden; */
 }
 
 *, *:before, *:after {
@@ -100,7 +101,7 @@ div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, t
 
 .pl-field-name {
     font-family: Roboto Slab, serif;
-    font-size: 0.9em;
+    font-size: 0.8em;
 }
 
 .pl-field-value {
@@ -137,18 +138,21 @@ body {
 }
 
 .pl-layout-lower-left {
-    flex-grow: 1;
+    /* flex-grow: 1; */
+    height: 43vh;
     display: flex;
-    /* flex-direction: column; */
+    align-items: stretch;
+    flex-direction: row;
 }
 
 .pl-layout-upper-left {
     /*TODO: EUROVIS2020*/
-    max-height: 50vh;
+    min-height: 30vh;
+    height: 54vh;
     min-width: 200px;
     display: flex;
     flex-direction: row;
-    flex-grow: 4;
+    /* flex-grow: 4; */
     /*overflow: scroll;*/
     /*overflow-y: auto;*/
 }
@@ -210,6 +214,7 @@ body {
 
 .pl-schema {
     min-width: 175px;
+    /* max-height: 45vh; */
 }
 
 .pl-model-container {
@@ -219,6 +224,7 @@ body {
 .pl-spec {
     min-width: 200px; /* for constant minimal width*/
     /*overflow-y: scroll; /* always on scroll back to reduce flickering */
+    /* max-height: 45vh; */
 }
 
 .pl-spec-container {
@@ -268,7 +274,7 @@ body {
 .shelf, .shelf__item {
     border: solid 2px transparent;  /* a transparent border is required to make highlighting possible without flickering */
     position: relative;
-    margin: 0.2rem;
+    margin: 0.0rem;
 }
 
 .shelf + hr {
@@ -328,9 +334,31 @@ body {
     border-radius: 1em;
 }
 
+.pl-facetWidget__container {
+    display: grid;
+    grid-template-columns: 1.6em 5em 3em 3em;
+    grid-gap: 2px;
+    /* place-items: center; */
+    /* justify-content: center; */
+    align-items: center;
+}
+
+.pl-facetWidget__container .pl-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.pl-facet__checkbox {
+    margin: 0;
+    margin-top: 1px;
+    margin-left: 0.5rem;
+}
+
 .pl-facet__label {
     display: inline;
 }
+
+
 
 .pl-facet__onOff {
     display: grid;
@@ -349,17 +377,15 @@ body {
 }
 
 .pl-graph {
-    min-height: 400px;
-    /*flex-grow: 1;*/
-    min-width: 25vw;
     display: flex;
-    flex-direction: column;
+    width: 100%;
 }
 
 #pl-graph-container {
     box-sizing: border-box;
     flex-grow: 1;
     display: flex;
+    flex-direction: column;
 }
 
 .pl-graph-pane {
@@ -385,8 +411,8 @@ body {
 }
 
 #pl-config-container {
-    overflow: auto;
-    height: 100%;
+    overflow-y: auto;
+    height: 90vh;
 }
 
 /* css adaption to make layout more compact for the foundation layout option of the json-editor */
@@ -1033,6 +1059,9 @@ textarea.pl-survey__content {
     cursor: grab;
 }
 
+#pl-toolbar__container {
+    height: 3vh;
+}
 
 .pl-model-alert-box-background {
     display: none; /* Hidden by default */

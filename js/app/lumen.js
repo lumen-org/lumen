@@ -488,7 +488,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
         $('#pl-dashboard__container').append($visuals.visualization);
-        $('#pl-facet-container').append($visuals.facets);
+        //$('#pl-facet-container').append($visuals.facets);
+        $('#pl-facet-container').append($visuals.facets2);
       }
 
       /**
@@ -798,7 +799,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           .filter( what => context.facets[what].possible)
           .map(
             (what, idx) => {
-              // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
               let $checkBox = $('<input type="checkbox">')
                 .prop({
                   "checked": context.facets[what].active,
@@ -825,6 +825,74 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
+       * Creates and returns GUI to visible facets .
+       *
+       * An context update is triggered if the state of the config is changed.
+       *
+       * @param context
+       * @private
+       */
+      static _makeFacetWidget2 (context) {
+        let title = $('<div class="pl-h2 shelf__title">Facets</div>');
+        // create checkboxes
+        const name2iconMap = {
+          'aggregations': 'prediction',
+          'data aggregations': 'prediction',
+          'marginals': 'uniDensity',
+          'contour': 'contour',
+          'data density': 'contour',
+          'data': 'dataPoints',
+          'testData': 'dataPoints',
+          'model samples': 'dataPoints',
+          'predictionDataLocal': 'prediction',
+          'dataMarginals': 'uniDensity',  // TODO: make histogram icon
+        };
+
+        let makeCheckbox = (what) => {
+          let $checkBox = $('<input class="pl-facet__checkbox" type="checkbox">')
+              .prop({
+                "checked": context.facets[what].active,
+                "disabled": !context.facets[what].possible,
+                "id": _facetNameMap[what]})
+              .change( (e) => {
+                // update the config and ...
+                context.facets[what].active = e.target.checked;
+                // log user activity
+                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
+                // ... trigger an update
+                context.update('facets.changed');
+              });
+          // let $icon = VisUtils.icon(name2iconMap[what]);
+          // let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
+          // return $('<div class="pl-facet__onOff"></div>').append($icon, $label, $checkBox);
+          return $checkBox;
+        };
+
+        let makeRowLabel = (labelName) => $(`<div class="pl-label pl-facet__label pl-facet__rowLabel">${labelName}</div>`),
+          makeColumnLabel = (labelName) => $(`<div class="pl-label pl-facet__label pl-facet__columnLabel">${labelName}</div>`);
+
+        let items = [
+          $('<div></div>'), $('<div></div>'), makeColumnLabel('model'),  makeColumnLabel('data'),
+          VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction'), makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
+          VisUtils.icon(name2iconMap['data']), makeRowLabel('data'), makeCheckbox('model samples'), makeCheckbox('data'),
+          VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals'), makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
+          VisUtils.icon(name2iconMap['contour']), makeRowLabel('density'), makeCheckbox('contour'), makeCheckbox('data density'),
+        ];
+
+        let shelfContainer = $('<div class="pl-facetWidget__container"></div>').append(...items);
+
+        // let checkBoxes = Object.keys(context.facets)
+        //         .filter( what => context.facets[what].possible)
+        //         .map();
+
+        return $('<div class="pl-facet shelf vertical"></div>').append(
+            //$('<hr>'),
+            title,
+            shelfContainer
+        );
+      }
+
+      /**
        * Create and return GUI for shelves and models.
        *
        * Note: this is GUI stuff that is instantiated for each context. "Singleton" GUI elements
@@ -832,7 +900,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       static _makeVisuals(context) {
         let visuals = Context._makeShelvesGUI(context);
-        visuals.facets = Context._makeFacetWidget(context);
+        //visuals.facets = Context._makeFacetWidget(context);
+        visuals.facets2 = Context._makeFacetWidget2(context);
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
