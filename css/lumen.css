@@ -285,7 +285,7 @@ body {
 
 .pl-fu {
     border: 0 solid;
-    background-color: #F2E6D8;
+    /*background-color: #F2E6D8;*/
     max-width: 15rem;
 }
 
@@ -329,7 +329,6 @@ body {
     color: black;
 }
 
-/*TODO:CONTINUE_HERE*/
 .pl-shelf-quantitative .pl-field, .pl-field__quantitative {
     border-radius: 1em;
 }

@@ -19,8 +19,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   var logger = Logger.get('pl-visuals');
   logger.setLevel(Logger.WARN);
 
-
-
   /**
    * Enum for possible layout types of shelves.
    * @type {{vertical: String, horizontal: String, box: String}}
@@ -41,11 +39,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   var AttachStringT = {
     record: Object.freeze('recordAttachment'),
     shelf : Object.freeze('shelfAttachment')
-  };
-
-  let FieldDTypeToClassMap = {
-    'string': '.pl-field__quantitative',
-    'numerical': '.pl-field__categorical',
   };
 
   /// Mixins for Shelves
@@ -193,8 +186,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    //return $('<div class="pl-field pl-field-name">'+this.name+'</div>');
-    let typeClass = FieldDTypeToClassMap[this.dataType];
+    let typeClass = VisUtils.YieldTypeToClassMap[this.dataType];
     return $(`<div class="pl-field pl-field-name ${typeClass}">${this.name}</div>`);
   };
 
@@ -416,7 +408,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
 
   return {
-    AttachStringT: AttachStringT,
-    DirectionTypeT: DirectionTypeT,
+    AttachStringT,
+    DirectionTypeT,
   };
 });
