@@ -137,9 +137,9 @@ body {
 }
 
 .pl-layout-lower-left {
-    /*flex-grow: 1;*/
-    /*display: flex;*/
-    /*flex-direction: column;*/
+    flex-grow: 1;
+    display: flex;
+    /* flex-direction: column; */
 }
 
 .pl-layout-upper-left {
@@ -256,7 +256,7 @@ body {
 
 .shelf.vertical {
     flex-direction: column;
-    min-width: 130px;
+    min-width: 10.5vw;
 }
 
 .shelf__title {user-select: none;}
@@ -351,6 +351,7 @@ body {
 .pl-graph {
     min-height: 400px;
     /*flex-grow: 1;*/
+    min-width: 25vw;
     display: flex;
     flex-direction: column;
 }
@@ -1004,7 +1005,7 @@ textarea.pl-survey__content {
 
 .dg_tool-container .pl-label {
     max-width: 60%;
-    font-size: x-small;
+    font-size: xx-small;
 }
 
 .dg_slider__slider {
