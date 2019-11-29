@@ -1116,7 +1116,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     c.widget = {
       graph: {
-        enable: false,  // enable or disable the graph widget
+        enable: true,  // enable or disable the graph widget
       },
       userStudy: {
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
