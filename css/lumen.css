@@ -172,13 +172,13 @@ body {
 
 .pl-column__title {
     z-index: 1;
-    margin: 0;
-    padding: 0.2em 0 0;
+    margin: 0 0.5em 0 0.5em;
+    padding:0.2em 0 0 0;
     position: sticky;
     top: 0;
     text-align: center;
     background-color: white;
-    border-bottom: 2px solid #d5d5d5;
+    border-bottom: 1px solid #d5d5d5;
     filter: brightness(98.5%);
     user-select:  none;
 }
@@ -187,6 +187,7 @@ body {
     overflow-y: auto;
     padding: 0.5rem;
     margin: 0;
+    max-height: 10%;
 
 }
 
