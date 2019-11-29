@@ -1136,7 +1136,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // model density marginal
       marginals: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // training data marginals

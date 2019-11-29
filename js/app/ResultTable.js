@@ -62,6 +62,12 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         });
     }
 
+    function normalizeRT (rt, columnIdx, targetWeight=1) {
+        let currentWeight = d3.sum(rt, row => row[columnIdx]),
+            rescaleFactor = targetWeight/currentWeight;
+        rt.forEach( row => row[columnIdx] *= rescaleFactor);
+        return rt;
+    }
 
     function getEmptyCollection(size, enabled) {
         let collection = new Array(size.rows);
@@ -326,5 +332,6 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         biDensityCollection,
         getEmptyCollection,
         predictionDataLocalCollection,
+        normalizeRT,
     };
 });

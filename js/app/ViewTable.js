@@ -52,8 +52,8 @@
  * @copyright © 2017-2019 Philipp Lucas (philipp.lucas@uni-jena.de, philipp.lucas@dlr.de)
  */
 
-define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
-  function (Logger, Emitter, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
+define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
+  function (Logger, Emitter, d3, d3legend, RT, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -62,6 +62,38 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     function _invXY(xy) {
       return (xy === 'x' ? 'y' : 'x');
     }
+
+    function normalizeDensityOfRT(pRT, dataRT) {
+      if (pRT != undefined) {
+        // normalize pRT to 1 if no data marginals are given
+        let targetWeight = 1,
+            pIdx = pRT.idx2fu.findIndex(fu => PQL.isDensity(fu));
+        if (dataRT != undefined) {
+          // normalize pRT such that it sums to the sum of data1dRT
+          targetWeight = d3.sum(dataRT, row => row[pIdx]);
+        }
+        if (!PQL.isDensity(pRT.idx2fu[pIdx]))
+          throw RangeError("index of marginal density in result table do not match for data and model.")
+        // normalize to target
+        RT.normalizeRT(pRT, pIdx, targetWeight);
+        if (dataRT) console.log(d3.sum(dataRT, row => row[pIdx]));
+        if (pRT) console.log(d3.sum(pRT, row => row[pIdx]));
+      }
+    }
+
+    function _normalizeDensities(p1dRT, data1dRT, p2dRT, data2dRT) {
+      // marginals
+      if (p1dRT === undefined)
+        p1dRT = {};
+      if (data1dRT === undefined)
+        data1dRT = {};
+      for (const xy of ['x', 'y'] ) {
+        normalizeDensityOfRT(p1dRT[xy], data1dRT[xy]);
+      }
+      // 2d densities
+      normalizeDensityOfRT(p2dRT, data2dRT);
+    }
+
 
     /**
      * Builds and returns a formatter for this result table.
@@ -147,6 +179,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
           .concat(data1dRT === undefined ? [] : [data1dRT.x, data1dRT.y]))
         if (rt !== undefined)
           rt.formatter = resultTableFormatter(rt);
+
+      // Quick Fix of Normalization Problem, #issue ##
+      // TODO: fix this cleaner
+      _normalizeDensities(p1dRT, data1dRT, p2dRT, data2dRT);
 
       let traces = [],
         aest = vismel.layers[0].aesthetics,
@@ -422,7 +458,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
     /**
      * Normalize the extents, i.e.
-     *  * categorical extents: remove undefined if present (undefined may occur if no result could be generated for a particular query.
+     *  * categorical extents: remove undefined if present (undefined may occur if no result could be generated for a particular query.)
      *  * quantitative extents: make the range bit lager.
      *  *
      * @param fuExtent
