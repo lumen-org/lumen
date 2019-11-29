@@ -868,15 +868,31 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           return $checkBox;
         };
 
-        let makeRowLabel = (labelName) => $(`<div class="pl-label pl-facet__label pl-facet__rowLabel">${labelName}</div>`),
+        let makeRowLabel = (labelName) => $(`<div class="pl-label pl-facet__label">${labelName}</div>`),
           makeColumnLabel = (labelName) => $(`<div class="pl-label pl-facet__label pl-facet__columnLabel">${labelName}</div>`);
 
+        let items4firstColumn = [
+          $(`<div class="pl-facet__rowLabel"><div></div><div></div></div>`),
+          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction')),
+          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data')),
+          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
+          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
+        ];
+
+        // let items = [
+        //    $('<div></div>'), $('<div></div>'), makeColumnLabel('model'),  makeColumnLabel('evidence'),
+        //    VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction'), makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
+        //    VisUtils.icon(name2iconMap['data']), makeRowLabel('data'), makeCheckbox('model samples'), makeCheckbox('data'),
+        //    VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals'), makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
+        //    VisUtils.icon(name2iconMap['contour']), makeRowLabel('density'), makeCheckbox('contour'), makeCheckbox('data density'),
+        // ];
+
         let items = [
-          $('<div></div>'), $('<div></div>'), makeColumnLabel('model'),  makeColumnLabel('data'),
-          VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction'), makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
-          VisUtils.icon(name2iconMap['data']), makeRowLabel('data'), makeCheckbox('model samples'), makeCheckbox('data'),
-          VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals'), makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
-          VisUtils.icon(name2iconMap['contour']), makeRowLabel('density'), makeCheckbox('contour'), makeCheckbox('data density'),
+          items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('evidence'),
+          items4firstColumn[1], makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
+          items4firstColumn[2], makeCheckbox('model samples'), makeCheckbox('data'),
+          items4firstColumn[3], makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
+          items4firstColumn[4], makeCheckbox('contour'), makeCheckbox('data density'),
         ];
 
         let shelfContainer = $('<div class="pl-facetWidget__container"></div>').append(...items);

@@ -335,11 +335,12 @@ body {
 
 .pl-facetWidget__container {
     display: grid;
-    grid-template-columns: 1.6em 5em 3em 3em;
+    grid-template-columns: 5.5em 3em 3em;
     grid-gap: 2px;
-    /* place-items: center; */
-    /* justify-content: center; */
-    align-items: center;
+    place-items: center;
+    /* border: 1px solid darkgrey; */
+    /* border-radius: 0.3em; */
+    /* padding: 0.3rem; */
 }
 
 .pl-facetWidget__container .pl-icon {
@@ -349,15 +350,19 @@ body {
 
 .pl-facet__checkbox {
     margin: 0;
-    margin-top: 1px;
-    margin-left: 0.5rem;
+    /* margin-top: 1px; */
+    /* margin-left: 0.5rem; */
 }
 
 .pl-facet__label {
     display: inline;
 }
 
-
+.pl-facet__rowLabel {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
 
 .pl-facet__onOff {
     display: grid;
