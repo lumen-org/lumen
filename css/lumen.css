@@ -324,6 +324,11 @@ body {
     color: black;
 }
 
+/*TODO:CONTINUE_HERE*/
+.pl-shelf-quantitative .pl-field, .pl-field__quantitative {
+    border-radius: 1em;
+}
+
 .pl-facet__label {
     display: inline;
 }

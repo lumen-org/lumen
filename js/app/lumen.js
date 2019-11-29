@@ -727,10 +727,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
-        //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
+        shelves.meas.$visual.addClass('pl-shelf-quantitative');
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
-        // PL: SIGMOD: commend next line
+        shelves.dim.$visual.addClass('pl-shelf-categorical');
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
@@ -741,10 +741,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         shelves.row.beVisual({label: 'Y-Axis'}).beInteractable();
 
         let visual = {};
-
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
-          //shelves.modeldata.$visual, $('<hr>'),
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(

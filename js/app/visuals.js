@@ -43,6 +43,11 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     shelf : Object.freeze('shelfAttachment')
   };
 
+  let FieldDTypeToClassMap = {
+    'string': '.pl-field__quantitative',
+    'numerical': '.pl-field__categorical',
+  };
+
   /// Mixins for Shelves
 
   /**
@@ -88,8 +93,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     this.on(s.Shelf.Event.Add, record => record.beVisual());
     this.on(s.Shelf.Event.Remove, record => {
       return record.removeVisual();
-    }
-    );
+    });
 
     return this;
   };
@@ -189,7 +193,9 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    return $('<div class="pl-field pl-field-name">'+this.name+'</div>');
+    //return $('<div class="pl-field pl-field-name">'+this.name+'</div>');
+    let typeClass = FieldDTypeToClassMap[this.dataType];
+    return $(`<div class="pl-field pl-field-name ${typeClass}">${this.name}</div>`);
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record, $parent) {
