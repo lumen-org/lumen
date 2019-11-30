@@ -239,9 +239,11 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     },
     'circle': {
       name: 'circle',
-      nodeDimensionsIncludeLabels: false,
+      nodeDimensionsIncludeLabels: true,
+      // spacingFactor: 1.3,
       padding: 0,
-      animate: true,
+      spacingFactor: 0.6,
+      animate: false,
     }
   };
 
@@ -317,8 +319,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         wheelSensitivity: config.wheelSensitivity,
       });
       this._layout = this._cy.layout(layout[layoutmode]);
-      this._layout.run();
       let cy = this._cy;
+
+      this._layout.run();
+      // workaround to fit the graph after layout is finished. I dont konw why the other two lines below dont work.
+      setTimeout(() => this._cy.fit(), 1000);
+      // this._layout.one('layoutstop', () => this._cy.fit());
+      // this._cy.one('ready', () => this._cy.fit());
 
       // setup collection for each type and set class
       this.allNodes = cy.nodes();
@@ -350,7 +357,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this.remaining = cy.collection();
 
       this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
-
       // this._updateStylings();
 
       onDoubleClick(cy, ev => {
@@ -369,6 +375,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this._makeToolBar().appendTo(domDiv);
 
       this.$visual = $(domDiv);
+
       Emitter(this);
     }
 
