@@ -514,13 +514,15 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
      * Given the set of currently selected nodes in this.selected it recalculates and sets all stylings.
      * @private
      */
-    _updateStylings() {
+     _updateStylings() {
       this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
       this.allEdges.removeClass('pl-adjacent-edge pl-remaining-edge');
 
-      this.forbiddenEdges.removeClass('pl-hidden-edge');
-      if (!this._showForbiddenEdges)
-        this.forbiddenEdges.addClass('pl-hidden-edge');
+      if (this._showForbiddenEdges) {
+        this.allEdges.filter('.pl-forbidden-edge').removeClass('pl-hidden-edge');
+      } else {
+        this.allEdges.filter('.pl-forbidden-edge').addClass('pl-hidden-edge');
+      }
 
       // if (this.selected.size() !== 0) {
       //   this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
