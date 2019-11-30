@@ -36,13 +36,18 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     minEdgeWidth: 1,
     wheelSensitivity: 0.25,
 
-    'line-color': '#929292',
-    'arrow-color': '#d4d4d4',
     'line-width': '6px',
-    'border-color': '#717171',
-    //'border-color': '#232323',
-    'border-width': '4px',
 
+    'line-color': '#929292',
+    'line-color__hover': '#464646',
+    'arrow-color': '#d4d4d4',
+
+    'forbidden-line-color': '#ffbec4',
+    'forbidden-line-color__hover': '#ff797e',
+
+    'background-color': '#efefef',
+    'border-color': '#717171',
+    'border-width': '4px',
   };
 
   // default style sheet
@@ -50,7 +55,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     {
       selector: 'node',
       style: {
-        'background-color': '#efefef',
+        'background-color': config['background-color'],
         'label': 'data(id)',
         'border-width': config["border-width"],
         'border-style': 'dashed',
@@ -141,7 +146,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-forbidden-edge',
       style: {
         // 'line-color': '#ffFFFF',
-        'line-color': '#ffbec4',
+        'line-color': config['forbidden-line-color'],
         // 'line-color': '#ff9492',
         // 'width': "10px",
         // 'arrow-scale': 0.6,
@@ -180,23 +185,44 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'line-color': '#d6d6d6',
         'opacity': 0.4,
       }
+    },*/
+
+    {
+      selector: '.pl-adjacent-edge-to-hovered-node',
+      style: {
+        // 'line-color': d3color.color(config["line-color"]).darker(1).toString(),
+        'line-color': config["line-color__hover"],
+        'opacity': 1,
+        'z-index': 10,
+      }
+    },
+
+    {
+      selector: '.pl-adjacent-edge-to-hovered-node.pl-forbidden-edge',
+      style: {
+        // 'line-color': d3color.color(config["forbidden-line-color"]).darker(1).toString(),
+        'line-color': config["forbidden-line-color__hover"],
+        'opacity': 1,
+        'z-index': 10,
+      }
     },
 
     {
       selector: '.pl-node--hover',
       style: {
-        // 'background-color': '#d8d8d8',
-        'background-color': node => {
-          let stuff = node.scratch('_dg');
-          // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
-          if ( !stuff['hover'] ) {
-            stuff.hover = true;
-            return d3color.color(node.css('background-color')).brighter(0.4).toString();
-          }
-          return node.css('background-color');
-        }
+        'border-color':   d3color.color(config["border-color"]).darker(0.6).toString(),
+        'background-color':   d3color.color(config["background-color"]).darker(0.6).toString(),
+        // 'background-color': node => {
+        //   let stuff = node.scratch('_dg');
+        //   // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
+        //   if ( !stuff['hover'] ) {
+        //     stuff.hover = true;
+        //     return d3color.color(node.css('background-color')).brighter(0.4).toString();
+        //   }
+        //   return node.css('background-color');
+        // }
       }
-    }*/
+    }
   ];
 
   // defaults for layout
@@ -332,10 +358,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         this._layout.run(); // rerun layout!
       });
 
-      // this.allNodes
+      this.allNodes
       //     .on('select', this.onNodeSelect.bind(this))
       //     .on('unselect', this.onNodeUnselect.bind(this))
-      //     .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
+           .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
 
       $('<div class="dg_tool-container"></div>').append(
           this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
@@ -412,7 +438,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     _makeForbiddenEdgeToggle() {
       let $container = $('<div class="dg_edgeToggle-container"></div>');
 
-      $('<div class="pl-label">Forbidded Edges</div>')
+      $('<div class="pl-label">Forbidden Edges</div>')
           .appendTo($container);
       $('<input type="checkbox">')
           .prop({
@@ -479,17 +505,23 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this._updateStylings();
       // this._cy.batchEnd();
       this.emit('Node.Unselected', node.id());
-    }
+    } */
 
     _onNodeMouseInOut(ev, inOut) {
       let node = ev.target;
-      if (inOut === 'out')
+      if (inOut === 'out') {
         node.scratch('_dg').hover = false;
+      }
+
+      let adjacentEdges = node.connectedEdges();
+      adjacentEdges.toggleClass('pl-adjacent-edge-to-hovered-node');
+
       // (un)highlight node
       node.toggleClass('pl-node--hover');
+
       // indicate with mouse cursor that the node is draggable 'drag' or return to default cursor
       $(this._cy.container()).toggleClass('dg_graphCanvas-container--hover-on-node');
-    } */
+    }
 
     redraw () {
       this._cy.resize();
