@@ -276,14 +276,63 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }
   }
 
-  class ForbiddenEdgesInteraction extends WidgetInteraction {
+  class EnforcedEdgeInteraction extends WidgetInteraction {
 
     constructor (graphWidget) {
       super(graphWidget);
     }
 
     registerCallsbacks () {
-      throw " not implemented";
+      let that = this,
+          widget = this._widget;
+
+      // add additional scratchpad data
+      widget.enforcedEdges.map( ele => ele.scratch(_prefix).originallyEnforced = true);
+      widget.forbiddenEdges.map( ele => ele.scratch(_prefix).originallyForbidden = true);
+
+      function _toggleEdge (ev) {
+        if (!that._enabled)
+          return;
+        let edge = ev.target,
+            meta = edge.scratch(_prefix);
+
+        //TODO: Better toggling: automatic -> enforced ->forbidden -> automatic ... ???
+
+        // toggling:
+        //  automatic -> enforced ( -> automatic)
+        //  forbidden -> enforded ( -> forbidden)
+
+
+        if (!meta.enforcedEdge && !meta.forbiddenEdge) {
+          meta.enforcedEdge = true;
+          edge.addClass('pl-forced-edge');
+
+        } else if (meta.forbiddenEdge) {
+          meta.enforcedEdge = true;
+          meta.forbiddenEdge = false;
+          edge.addClass('pl-forced-edge')
+              .removeClass('pl-forbidden-edge');
+
+        } else if (meta.enforcedEdge) {
+          if (meta.originallyEnforced) {
+            meta.enforcedEdge = true;
+            meta.forbiddenEdge = false;
+            edge.addClass('pl-forced-edge')
+                .removeClass('pl-forbidden-edge');
+          } else if (meta.originallyForbidden) {
+            meta.enforcedEdge = false;
+            meta.forbiddenEdge = true;
+            edge.addClass('pl-forbidden-edge')
+                .removeClass('pl-forced-edge');
+          } else {
+            meta.enforcedEdge = false;
+            meta.forbiddenEdge = false;
+            edge.removeClass('pl-forbidden-edge pl-forced-edge');
+          }
+        }
+      }
+
+      widget.allEdges.on('tap', _toggleEdge);
     }
 
   }
@@ -306,7 +355,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           return;
         let node = ev.target,
             meta = node.scratch(_prefix);
-            // dtype = node.data('dtype');
 
         // toggling: automatic -> enforced string -> enforced numerical -> automatic ...
         if (!meta.enforcedCategorical && !meta.enforcedNumerical) {
@@ -452,6 +500,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
       // add interactions
       this._dataTypeToggle = new DataTypeToggleInteraction(this);
+      this._dataEnforcedEdgeToggle = new EnforcedEdgeInteraction(this);
 
       onDoubleClick(cy, ev => {
         this._cy.fit();
