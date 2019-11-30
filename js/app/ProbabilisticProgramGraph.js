@@ -50,6 +50,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     'border-width': '4px',
   };
 
+  const _prefix = "_dg";
+
   // default style sheet
   let style = [
     {
@@ -213,7 +215,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'border-color':   d3color.color(config["border-color"]).darker(0.6).toString(),
         'background-color':   d3color.color(config["background-color"]).darker(0.6).toString(),
         // 'background-color': node => {
-        //   let stuff = node.scratch('_dg');
+        //   let stuff = node.scratch(_prefix);
         //   // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
         //   if ( !stuff['hover'] ) {
         //     stuff.hover = true;
@@ -258,6 +260,75 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     });
   }
 
+  class WidgetInteraction {
+    constructor (graphWidget) {
+      this._enabled = true;
+      this._widget = graphWidget;
+      this.registerCallsbacks();
+    }
+
+    enable (onoff=true) {
+      this._enabled = enable;
+    }
+
+    registerCallsbacks () {
+      throw "Abstract method registerCallbacks not implemented";
+    }
+  }
+
+  class ForbiddenEdgesInteraction extends WidgetInteraction {
+
+    constructor (graphWidget) {
+      super(graphWidget);
+    }
+
+    registerCallsbacks () {
+      throw " not implemented";
+    }
+
+  }
+
+  class DataTypeToggleInteraction extends WidgetInteraction {
+
+    constructor (graphWidget) {
+      super(graphWidget);
+    }
+
+    registerCallsbacks() {
+      let that = this,
+          widget = this._widget;
+
+      // add additional scratchpad data
+      widget.allNodes.map( ele => ele.scratch(_prefix).originalDtype = ele.data('dtype'));
+
+      function _onNodeClick (ev) {
+        if (!that._enabled)
+          return;
+        let node = ev.target,
+            meta = node.scratch(_prefix);
+            // dtype = node.data('dtype');
+
+        // toggling: automatic -> enforced string -> enforced numerical -> automatic ...
+        if (!meta.enforcedCategorical && !meta.enforcedNumerical) {
+          meta.enforcedCategorical = true;
+          node.data('dtype', 'string');
+          node.addClass('pl-forced-node');
+        } else if (meta.enforcedCategorical) {
+          meta.enforcedCategorical = false;
+          meta.enforcedNumerical = true;
+          node.data('dtype', 'numerical')
+        } else {
+          meta.enforcedCategorical = false;
+          meta.enforcedNumerical = false;
+          node.data('dtype', meta.originalDtype);
+          node.removeClass('pl-forced-node');
+        }
+      }
+
+      widget.allNodes.on('tap', _onNodeClick);
+    }
+  }
+
   /**
    * This widget display a graph whose nodes represent dimensions. It:
    *  * represents the dimensions of a given remote model
@@ -295,25 +366,15 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           'enforced_node_dtypes': {}
         }
       }
-
-      this._originalNodes = convertNodenameDict(graph.nodes, dtypes);
-      this._originalEdges = convertEdgeList([...graph.edges, ...graph.forbidden_edges]);
+      // this._originalGraph = graph;
+      // this._originalNodes = convertNodenameDict(graph.nodes, dtypes);
+      // this._originalEdges = ;
       this._showForbiddenEdges = Settings.widgets.ppWidget.forbiddenEdges.showByDefault;
-
-      this._enforcedCategoricals = new Set();
-      this._enforcedNumericals = new Set();
-      for (const [name, dtype] of Object.entries(graph.enforced_node_dtypes)) {
-        if (dtype === 'string')
-          this._enforcedCategoricals.add(name);
-        else if (dtype === 'numerical')
-          this._enforcedNumericals.add(name);
-        else
-          throw RangeError();
-      }
 
       this._cy = cytoscape({
         container: graphContainer,
-        elements: [...this._originalNodes, ...this._originalEdges],
+        elements: [...convertNodenameDict(graph.nodes, dtypes),
+          ...convertEdgeList([...graph.edges, ...graph.forbidden_edges])],
         style: style,
         selectionType: 'additive',
         wheelSensitivity: config.wheelSensitivity,
@@ -327,7 +388,19 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       // this._layout.one('layoutstop', () => this._cy.fit());
       // this._cy.one('ready', () => this._cy.fit());
 
-      // setup collection for each type and set class
+      // build set of enforced nodes
+      this._enforcedCategoricals = new Set();
+      this._enforcedNumericals = new Set();
+      for (const [name, dtype] of Object.entries(graph.enforced_node_dtypes)) {
+        if (dtype === 'string')
+          this._enforcedCategoricals.add(name);
+        else if (dtype === 'numerical')
+          this._enforcedNumericals.add(name);
+        else
+          throw RangeError();
+      }
+
+      // setup collections
       this.allNodes = cy.nodes();
       this.allEdges = cy.edges();
 
@@ -346,35 +419,44 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
       }
 
+      // set meta data as scratch pad data
+      this.allNodes.map(ele => ele.scratch(_prefix, {'enforcedCategorical': false, 'enforcedNumerical': false}));
+      this.allEdges.map(ele => ele.scratch(_prefix, {'forbiddenEdge': false, 'enforcedEdge': false}));
+      this.enforcedCategoricalNodes.map(ele => ele.scratch(_prefix).enforcedCategorical = true);
+      this.enforcedNumericalNodes.map(ele => ele.scratch(_prefix).enforcedNumerical = true);
+      this.enforcedEdges.map(ele => ele.scratch(_prefix).enforcedEdge = true);
+      this.forbiddenEdges.map(ele => ele.scratch(_prefix).forbiddenEdge = true);
+
       // set styles
       this.forbiddenEdges.addClass('pl-forbidden-edge');
       this.enforcedEdges.addClass('pl-forced-edge');
       this.enforcedCategoricalNodes.addClass('pl-forced-node');
       this.enforcedNumericalNodes.addClass('pl-forced-node');
 
-      this.selected = cy.collection();
-      this.adjacent = cy.collection();
-      this.remaining = cy.collection();
-
-      this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
+      // this.selected = cy.collection();
+      // this.adjacent = cy.collection();
+      // this.remaining = cy.collection();
       // this._updateStylings();
+      // this.allNodes
+      //     .on('select', this.onNodeSelect.bind(this))
+      //     .on('unselect', this.onNodeUnselect.bind(this))
+      //      .map( ele => ele.scratch(_prefix, {}));  // create empty namespace scratch pad object for each node
+
+      // build UI
+      this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
+      $('<div class="dg_tool-container"></div>').append(
+          this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
+      ).prependTo(domDiv);
+      this._makeToolBar().appendTo(domDiv);
+      this.$visual = $(domDiv);
+
+      // add interactions
+      this._dataTypeToggle = new DataTypeToggleInteraction(this);
 
       onDoubleClick(cy, ev => {
         this._cy.fit();
         this._layout.run(); // rerun layout!
       });
-
-      this.allNodes
-      //     .on('select', this.onNodeSelect.bind(this))
-      //     .on('unselect', this.onNodeUnselect.bind(this))
-           .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
-
-      $('<div class="dg_tool-container"></div>').append(
-          this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
-      ).prependTo(domDiv);
-      this._makeToolBar().appendTo(domDiv);
-
-      this.$visual = $(domDiv);
 
       Emitter(this);
     }
@@ -391,16 +473,16 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       if (!this._showForbiddenEdges)
         this.forbiddenEdges.addClass('pl-hidden-edge');
 
-      if (this.selected.size() !== 0) {
-        this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
-            .addClass('pl-adjacent-node');
-        this.remaining = this.allNodes.subtract(this.adjacent).subtract(this.selected)
-            .addClass('pl-remaining-node');
-
-        let selectedEdges = this.selected.connectedEdges()
-            .addClass('pl-adjacent-edge');
-        this.allEdges.subtract(selectedEdges).addClass('pl-remaining-edge');
-      }
+      // if (this.selected.size() !== 0) {
+      //   this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
+      //       .addClass('pl-adjacent-node');
+      //   this.remaining = this.allNodes.subtract(this.adjacent).subtract(this.selected)
+      //       .addClass('pl-remaining-node');
+      //
+      //   let selectedEdges = this.selected.connectedEdges()
+      //       .addClass('pl-adjacent-edge');
+      //   this.allEdges.subtract(selectedEdges).addClass('pl-remaining-edge');
+      // }
     }
 
     _makeToolBar() {
@@ -517,7 +599,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     _onNodeMouseInOut(ev, inOut) {
       let node = ev.target;
       if (inOut === 'out') {
-        node.scratch('_dg').hover = false;
+        node.scratch(_prefix).hover = false;
       }
 
       let adjacentEdges = node.connectedEdges();
