@@ -1524,7 +1524,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 this.$visual.append($vis);
 
                 // make new graph widget
-                widget = new PPGraphWidget($vis[0], graph, context.model.fields);
+                widget = new PPGraphWidget($vis[0], graph, context.model.fields, Settings.widgets.ppWidget.layout);
                 //widget = new GraphWidget($vis[0], graph);
                 this._set(context, widget);
 

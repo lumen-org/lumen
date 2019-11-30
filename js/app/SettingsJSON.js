@@ -1049,6 +1049,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     // }
   };
 
+  let ppWidgetSchema = {
+    type: "object",
+    properties: {
+      "layout": {type: "string"},
+      "forbiddenEdges": {
+        type: "object",
+        properties: {
+          "showByDefault": {type: "boolean"},
+        },
+      },
+    }
+  };
+
+  let ppWidgetInitial = {
+    "layout": "circle", // circle or cola
+    "forbiddenEdges": {
+      "showByDefault": true
+    },
+  };
 
   let jsonSchema = {
     type: "object",
@@ -1058,12 +1077,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "map": {"$ref": "#/definitions/map"},
       "colors": {"$ref": "#/definitions/colors"},
       "plots": {"$ref": "#/definitions/plots"},
+      "widgets": {"$ref": "#/definitions/widgets"},
     },
     definitions: {
       "tweaks": tweaksSchema,
       "map": mapSchema,
       "colors": colorsSchema,
       "plots": plotsSchema,
+      "widgets": {
+        type: "object",
+        properties: {
+          ppWidget: ppWidgetSchema,
+        }
+      }
     }
   };
 
@@ -1073,6 +1099,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     colors: colorsInitial,
     shapes: shapesInitial,
     plots: plotsInitial,
+    widgets: {
+      ppWidget: ppWidgetInitial,
+    }
   };
 
 
@@ -1226,19 +1255,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       undo: {
-        active: false,
+        active: true,
       },
       redo: {
-        active: false,
+        active: true,
       },
       clear: {
         active: true,
       },
       details: {
-        active: true,
+        active: false,
       },
       graph: {
-        active: true,
+        active: false,
         graph: {
           active: true
         },

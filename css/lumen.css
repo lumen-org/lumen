@@ -1014,13 +1014,11 @@ textarea.pl-survey__content {
 .dg_slider-container, .dg_tool-container {
     display: flex;
     flex-direction: row;
-    /*justify-content: ;*/
-    margin: 0.3em;
 }
 
-.dg_tool-container .pl-label {
-    max-width: 60%;
-    font-size: xx-small;
+.dg_slider-container {
+    flex-grow: 1;
+    align-items: center;
 }
 
 .dg_slider__slider {
@@ -1038,6 +1036,17 @@ textarea.pl-survey__content {
 .dg_slider__label {
     margin-right: 0.5rem;
 }
+
+.dg_tool-container .pl-label {
+    max-width: 60%;
+    font-size: xx-small;
+}
+
+.dg_edgeToggle-container {
+    display: flex;
+    margin-left: 0.3rem;
+}
+
 
 .dg-drag-ghost {
     border-style: dotted;

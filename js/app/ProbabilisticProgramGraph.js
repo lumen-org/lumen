@@ -1,4 +1,4 @@
-define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtils'], function (Emitter, cytoscape, cola, d3color, VisUtils) {
+define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtils', './ViewSettings'], function (Emitter, cytoscape, cola, d3color, VisUtils, Settings) {
 
   cola(cytoscape); // register cola extension
 
@@ -29,6 +29,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }));
   }
 
+  // TODO: move whole config to SettingsJSON.js
   const config = {
     defaultNodeDiameter: 26,
     remainingNodeDiameterPrct: 25,
@@ -139,21 +140,29 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     {
       selector: '.pl-forbidden-edge',
       style: {
-        'line-color': '#ffFFFF',
-        // 'line-color': '#ffa5aa',
+        // 'line-color': '#ffFFFF',
+        'line-color': '#ffbec4',
+        // 'line-color': '#ff9492',
         // 'width': "10px",
         // 'arrow-scale': 0.6,
         // 'line-color': '#ff727c',
         // 'width': "1px",
         // 'arrow-scale': 3,
 
-        //'line-style': 'solid',
-        // 'opacity': .8,
+        // 'line-style': 'solid',
+        'opacity': .8,
         // 'mid-source-arrow-shape': 'vee',
         // 'mid-source-arrow-color': '#ffc3cb',
         // 'mid-target-arrow-shape': 'vee',
         // 'mid-target-arrow-color': '#ffc3cb',
         'z-index': 0,
+      }
+    },
+
+    {
+      selector: '.pl-hidden-edge',
+      style: {
+        'opacity': 0
       }
     },
 
@@ -237,6 +246,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
    *    Node.DragMoved: passes the id of the moved/dragged node to the event handler
    *    Node.Selected: passes the id of the selected node to the event handler
    *    Node.Unselected: passes the id of the unselected node to the event handler
+   *
+   * TODO: call GraphWidget.redraw() when ever the containing DOM element changes its size in order to redraw the graph accordingly
    */
   class GraphWidget {
     
@@ -259,6 +270,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
       this._originalNodes = convertNodenameDict(graph.nodes, dtypes);
       this._originalEdges = convertEdgeList([...graph.edges, ...graph.forbidden_edges]);
+      this._showForbiddenEdges = Settings.widgets.ppWidget.forbiddenEdges.showByDefault;
 
       this._enforcedCategoricals = new Set();
       this._enforcedNumericals = new Set();
@@ -325,7 +337,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       //     .on('unselect', this.onNodeUnselect.bind(this))
       //     .map( ele => ele.scratch('_dg', {}));  // create empty namespace scratch pad object for each node
 
-      this._prependRangeSlider(domDiv);
+      $('<div class="dg_tool-container"></div>').append(
+          this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
+      ).prependTo(domDiv);
       this._makeToolBar().appendTo(domDiv);
 
       this.$visual = $(domDiv);
@@ -340,6 +354,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this.allNodes.removeClass('pl-adjacent-node pl-remaining-node');
       this.allEdges.removeClass('pl-adjacent-edge pl-remaining-edge');
 
+      this.forbiddenEdges.removeClass('pl-hidden-edge');
+      if (!this._showForbiddenEdges)
+        this.forbiddenEdges.addClass('pl-hidden-edge');
+
       if (this.selected.size() !== 0) {
         this.adjacent = this.selected.openNeighborhood('node[!pl_selected]')
             .addClass('pl-adjacent-node');
@@ -353,12 +371,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }
 
     _makeToolBar() {
-
       let handleWithStopPropagation = handler => {return ev => {handler(); ev.stopPropagation();}};
 
       // make slider container
-      let $container = $('<div></div>')
-          .addClass('dg_tool-container');
+      let $container = $('<div class="dg_tool-container"></div>');
 
       let addEdgeHandler = () => {throw "not implemented"};
       VisUtils.button('Add Edge', 'plus')
@@ -393,40 +409,49 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       return $container;
     }
 
-    _prependRangeSlider(domDiv) {
+    _makeForbiddenEdgeToggle() {
+      let $container = $('<div class="dg_edgeToggle-container"></div>');
+
+      $('<div class="pl-label">Forbidded Edges</div>')
+          .appendTo($container);
+      $('<input type="checkbox">')
+          .prop({
+            "checked": Settings.widgets.ppWidget.forbiddenEdges.showByDefault,
+            "disabled": false,
+            "id": "dg_forbiddenEdgeToggle"})
+          .change( (e) => {
+            this._showForbiddenEdges = e.target.checked;
+            this._updateStylings();
+          }).appendTo($container);
+      return $container;
+    }
+
+    _makeRangeSlider() {
       // make slider container
-      let container = $('<div></div>')
-          .addClass('dg_slider-container')
-          .prependTo(domDiv);
+      let container = $('<div class="dg_slider-container"></div>').append(
+          $('<div class="pl-label dg_slider__label">threshold</div>'),
+          $('<div class="pl-label dg_slider__value"></div>').text(0),
+      );
 
-      $('<div>threshold </div>')
-          .addClass('pl-label dg_slider__label')
-          .appendTo(container);
-
-      let sliderDiv = $('<div></div>')
-          .addClass('dg_slider__slider')
-          .appendTo(container);
-
-      let valueDiv = $('<div></div>')
-          .addClass('pl-label dg_slider__value')
-          .text(0)
+      let sliderDiv = $('<div class="dg_slider__slider"></div>')
           .appendTo(container);
 
       // get maximum of graph weight
       let maxWeight = 1;
-
       // make slider
       sliderDiv.slider({
         range: "min",
         value: 0,
         min: 0,
-        step: maxWeight/200,
+        step: maxWeight/250,
         max: maxWeight,
         slide: (event, ui) => {
           valueDiv.text(ui.value.toPrecision(3));
           //this.edgeThreshhold(ui.value);
         }
       });
+
+      return container;
     }
   /*
 
