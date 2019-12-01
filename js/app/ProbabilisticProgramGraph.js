@@ -38,16 +38,21 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
     'line-width': '6px',
 
-    'line-color': '#929292',
+    'line-color': '#757575',
     'line-color__hover': '#464646',
     'arrow-color': '#d4d4d4',
 
     'forbidden-line-color': '#ffbec4',
     'forbidden-line-color__hover': '#ff797e',
 
-    'background-color': '#efefef',
-    'border-color': '#717171',
+    'background-color': '#e2e2e2',
+    'background-color__hover': '#ffffff',
+
+    'border-color': '#666666',
+    'border-color__hover': '#434343',
     'border-width': '4px',
+
+    'transition-duration': '150ms',
   };
 
   const _prefix = "_dg";
@@ -58,21 +63,22 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: 'node',
       style: {
         'background-color': config['background-color'],
-        'label': 'data(id)',
         'border-width': config["border-width"],
         'border-style': 'dashed',
         'border-color': config["border-color"],
         'width': config.defaultNodeDiameter,
         'height': config.defaultNodeDiameter,
         'shape': ele => (ele.data('dtype') === 'string' ? 'rectangle' : 'ellipse'),
+        'label': 'data(id)',
         'font-family': 'Roboto Slab, serif',
         'font-size': "larger",
-        'color': '#404040',
+        'color': '#404040',  // color of the label
         'min-zoomed-font-size': "8px",  //TODO: use min-zoomed-font-size ?
         'text-outline-color': "#FFFFFF",
         'text-outline-opacity': 1,
-        'text-outline-width': "1px",
+        'text-outline-width': "1.5px",
         'z-index': 1,
+        'transition-duration': config['transition-duration'],
       }
     },
 
@@ -82,6 +88,27 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'border-width': config["border-width"],
         'border-style': 'solid',
         'z-index': 2,
+      }
+    },
+
+    {
+      selector: '.pl-node--hover',
+      style: {
+        'border-color': '#434343',
+        'background-color': '#ffffff',
+        'transition-property': 'background-color border-color',
+        'transition-duration': config['transition-duration'],
+        // 'border-color':   d3color.color(config["border-color"]).darker(0.6).toString(),
+        // 'background-color':   d3color.color(config["background-color"]).darker(0.6).toString(),
+        // 'background-color': node => {
+        //   let stuff = node.scratch(_prefix);
+        //   // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
+        //   if ( !stuff['hover'] ) {
+        //     stuff.hover = true;
+        //     return d3color.color(node.css('background-color')).brighter(0.4).toString();
+        //   }
+        //   return node.css('background-color');
+        // }
       }
     },
 
@@ -129,6 +156,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'opacity': 0.8,
         'curve-style': 'straight',
         'z-index': 1,
+        'transition-duration': config['transition-duration'],
       }
     },
     
@@ -163,13 +191,17 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         // 'mid-target-arrow-shape': 'vee',
         // 'mid-target-arrow-color': '#ffc3cb',
         'z-index': 0,
+        'transition-property': 'opacity line-color',
+        'transition-duration': config['transition-duration'],
       }
     },
 
     {
       selector: '.pl-hidden-edge',
       style: {
-        'opacity': 0
+        'opacity': 0,
+        'transition-property': 'opacity',
+        'transition-duration': config['transition-duration'],
       }
     },
 
@@ -196,6 +228,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'line-color': config["line-color__hover"],
         'opacity': 1,
         'z-index': 10,
+        'transition-property': 'opacity line-color',
+        'transition-duration': config['transition-duration'],
       }
     },
 
@@ -206,25 +240,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'line-color': config["forbidden-line-color__hover"],
         'opacity': 1,
         'z-index': 10,
+        'transition-property': 'opacity line-color',
+        'transition-duration': config['transition-duration'],
       }
     },
-
-    {
-      selector: '.pl-node--hover',
-      style: {
-        'border-color':   d3color.color(config["border-color"]).darker(0.6).toString(),
-        'background-color':   d3color.color(config["background-color"]).darker(0.6).toString(),
-        // 'background-color': node => {
-        //   let stuff = node.scratch(_prefix);
-        //   // for some reason this function is triggered multiple times, even though it should not... we fix it by storing that we have brightened the color already
-        //   if ( !stuff['hover'] ) {
-        //     stuff.hover = true;
-        //     return d3color.color(node.css('background-color')).brighter(0.4).toString();
-        //   }
-        //   return node.css('background-color');
-        // }
-      }
-    }
   ];
 
   // defaults for layout
