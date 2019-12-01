@@ -29,6 +29,44 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }));
   }
 
+  function _makeEdgeForced(edge) {
+    edge.data('type', 'forced')
+        .addClass('pl-forced-edge')
+        .removeClass('pl-forbidden-edge pl-deleted-edge');
+  }
+
+  function _makeEdgeForbidden(edge) {
+    edge.data('type', 'forbidden')
+        .addClass('pl-forbidden-edge')
+        .removeClass('pl-forced-edge pl-deleted-edge');
+  }
+
+  function _makeEdgeAutomatic (edge) {
+    edge.data('type', 'automatic')
+        .removeClass('pl-forbidden-edge pl-forced-edge pl-deleted-edge');
+  }
+
+  function _makeEdgeDeleted(edge) {
+    edge.data('type', 'deleted')
+        .removeClass('pl-forbidden-edge pl-forced-edge');
+  }
+
+
+  function _makeNodeEnforcedCategorical (node) {
+    node.data({'type': 'enforcedCategorical', 'dtype': 'string'})
+        .addClass('pl-forced-node');
+  }
+
+  function _makeNodeEnforcedNumerical (node) {
+    node.data({'type': 'enforcedNumerical', 'dtype': 'numerical'})
+        .addClass('pl-forced-node');
+  }
+
+  function _makeNodeAutomatic (node) {
+    node.data({'type': 'automatic', 'dtype': node.scratch(_prefix).originalDtype})
+        .removeClass('pl-forced-node');
+  }
+
   // TODO: move whole config to SettingsJSON.js
   const config = {
     defaultNodeDiameter: 26,
@@ -251,7 +289,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-edge--hover',
       style: {
         'line-color': edge => {
-          if (edge.scratch(_prefix).forbiddenEdge)
+          if (edge.data('type') === 'forbidden')
             return config['forbidden-line-color__hover'];
           else
             return config['line-color__hover'];
@@ -299,14 +337,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     constructor (graphWidget) {
       this._enabled = true;
       this._widget = graphWidget;
-      this.registerCallsbacks();
+      this.registerCallbacks();
     }
 
     enable (onoff=true) {
       this._enabled = enable;
     }
 
-    registerCallsbacks () {
+    registerCallbacks () {
       throw "Abstract method registerCallbacks not implemented";
     }
   }
@@ -317,54 +355,40 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       super(graphWidget);
     }
 
-    registerCallsbacks () {
+    registerCallbacks () {
       let that = this,
           widget = this._widget;
-
-      // add additional scratchpad data
-      widget.enforcedEdges.map( ele => ele.scratch(_prefix).originallyEnforced = true);
-      widget.forbiddenEdges.map( ele => ele.scratch(_prefix).originallyForbidden = true);
 
       function _toggleEdge (ev) {
         if (!that._enabled)
           return;
         let edge = ev.target,
-            meta = edge.scratch(_prefix);
+            originalType = edge.data('originalType'),
+            edgeType = edge.data('type');
 
-        //TODO: Better toggling: automatic -> enforced ->forbidden -> automatic ... ???
+        if (originalType === 'forbidden' || originalType === 'forced') {
+          // toggle cycle: forbidden ->  forced one way -> forced other way ->  delete (white) ( -> forbidden)
+          if (edgeType === 'forbidden')
+            _makeEdgeForced(edge);
+          else if (edgeType === 'forced')
+              // PROBLEM: how to invert edge?!
+            _makeEdgeDeleted(edge);
+          else if (edgeType === 'deleted')
+            _makeEdgeForbidden(edge);
+          else
+            throw RangeError();
 
-        // toggling:
-        //  automatic -> enforced ( -> automatic)
-        //  forbidden -> enforded ( -> forbidden)
-
-
-        if (!meta.enforcedEdge && !meta.forbiddenEdge) {
-          meta.enforcedEdge = true;
-          edge.addClass('pl-forced-edge');
-
-        } else if (meta.forbiddenEdge) {
-          meta.enforcedEdge = true;
-          meta.forbiddenEdge = false;
-          edge.addClass('pl-forced-edge')
-              .removeClass('pl-forbidden-edge');
-
-        } else if (meta.enforcedEdge) {
-          if (meta.originallyEnforced) {
-            meta.enforcedEdge = true;
-            meta.forbiddenEdge = false;
-            edge.addClass('pl-forced-edge')
-                .removeClass('pl-forbidden-edge');
-          } else if (meta.originallyForbidden) {
-            meta.enforcedEdge = false;
-            meta.forbiddenEdge = true;
-            edge.addClass('pl-forbidden-edge')
-                .removeClass('pl-forced-edge');
-          } else {
-            meta.enforcedEdge = false;
-            meta.forbiddenEdge = false;
-            edge.removeClass('pl-forbidden-edge pl-forced-edge');
-          }
-        }
+        } else if (originalType === 'automatic') {
+           // toggle cycle: automatic -> forced one way -> forced other way -> forbidden ( -> automatic)
+          if (edgeType === 'automatic')
+            _makeEdgeForced(edge);
+          else if (edgeType === 'forced')
+            // TODO: PROBLEM: how to invert edge?!
+            _makeEdgeForbidden(edge);
+          else if (edgeType === 'forbidden')
+            _makeEdgeAutomatic(edge);
+        } else
+          throw RangeError()
       }
 
       widget.allEdges.on('tap', _toggleEdge);
@@ -378,7 +402,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       super(graphWidget);
     }
 
-    registerCallsbacks() {
+    registerCallbacks() {
       let that = this,
           widget = this._widget;
 
@@ -389,23 +413,16 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         if (!that._enabled)
           return;
         let node = ev.target,
-            meta = node.scratch(_prefix);
+            nodeType = node.data('type');
+            // meta = node.scratch(_prefix);
 
-        // toggling: automatic -> enforced string -> enforced numerical -> automatic ...
-        if (!meta.enforcedCategorical && !meta.enforcedNumerical) {
-          meta.enforcedCategorical = true;
-          node.data('dtype', 'string');
-          node.addClass('pl-forced-node');
-        } else if (meta.enforcedCategorical) {
-          meta.enforcedCategorical = false;
-          meta.enforcedNumerical = true;
-          node.data('dtype', 'numerical')
-        } else {
-          meta.enforcedCategorical = false;
-          meta.enforcedNumerical = false;
-          node.data('dtype', meta.originalDtype);
-          node.removeClass('pl-forced-node');
-        }
+        // toggling sequence: automatic -> forced string -> forced numerical -> automatic ...
+        if (nodeType === 'automatic')
+          _makeNodeEnforcedCategorical(node);
+        else if (nodeType === 'enforcedCategorical')
+          _makeNodeEnforcedNumerical(node);
+         else if (nodeType === 'enforcedNumerical')
+          _makeNodeAutomatic(node);
       }
 
       widget.allNodes.on('tap', _onNodeClick);
@@ -471,7 +488,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       // this._layout.one('layoutstop', () => this._cy.fit());
       // this._cy.one('ready', () => this._cy.fit());
 
-      // build set of enforced nodes
+      // build set of forced nodes
       this._enforcedCategoricals = new Set();
       this._enforcedNumericals = new Set();
       for (const [name, dtype] of Object.entries(graph.enforced_node_dtypes)) {
@@ -502,13 +519,19 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
       }
 
-      // set meta data as scratch pad data
-      this.allNodes.map(ele => ele.scratch(_prefix, {'enforcedCategorical': false, 'enforcedNumerical': false}));
-      this.allEdges.map(ele => ele.scratch(_prefix, {'forbiddenEdge': false, 'enforcedEdge': false}));
-      this.enforcedCategoricalNodes.map(ele => ele.scratch(_prefix).enforcedCategorical = true);
-      this.enforcedNumericalNodes.map(ele => ele.scratch(_prefix).enforcedNumerical = true);
-      this.enforcedEdges.map(ele => ele.scratch(_prefix).enforcedEdge = true);
-      this.forbiddenEdges.map(ele => ele.scratch(_prefix).forbiddenEdge = true);
+      // init empty scratch pad object
+      this.allNodes.map(ele => ele.scratch(_prefix, {}));
+      this.allEdges.map(ele => ele.scratch(_prefix, {}));
+
+      // set meta data
+      this.allNodes.data({'type': 'automatic', 'originalType': 'automatic'});
+      this.allEdges.data({'type': 'automatic', 'originalType': 'automatic'});
+
+      this.enforcedCategoricalNodes.data({'type': 'enforcedCategorical', 'originalType': 'enforcedCategorical'});
+      this.enforcedNumericalNodes.data({'type': 'enforcedNumerical', 'originalType': 'enforcedNumerical'});
+      this.enforcedEdges.data({'type': 'forced', 'originalType': 'forced'});
+      this.forbiddenEdges.data({'type': 'forbidden', 'originalType': 'forbidden'});
+
 
       // set styles
       this.forbiddenEdges.addClass('pl-forbidden-edge');
