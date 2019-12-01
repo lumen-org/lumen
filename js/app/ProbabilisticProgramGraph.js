@@ -344,8 +344,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
   }
 
   class WidgetInteraction {
-    constructor (graphWidget) {
-      this._enabled = true;
+    constructor (graphWidget, enabled=true) {
+      this._enabled = enabled;
       this._widget = graphWidget;
       this._graph = graphWidget._cy;
 
@@ -363,7 +363,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }
 
     enable (onoff=true) {
-      this._enabled = enable;
+      this._enabled = onoff;
     }
 
     registerCallbacks() {
@@ -402,9 +402,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         return;
       let edge = ev.target,
           edgeType = edge.data('originalType');
-      if (edgeType === 'forced' || edgeType === 'forbidden')
+      if (edgeType === 'forced' || edgeType === 'forbidden' || edgeType === 'deleted')
         _makeEdgeDeleted(edge);
-      else if (edgeType === 'automatic' || edgeType === 'deleted')
+      else if (edgeType === 'automatic')
         _makeEdgeForbidden(edge);
       else
         throw RangeError();
@@ -538,7 +538,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
   }
 
-  class EdgeToggleInteraction extends WidgetInteraction {
+  class ToggleInteraction extends WidgetInteraction {
 
     constructor (graphWidget) {
       super(graphWidget);
@@ -576,22 +576,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         throw RangeError()
     }
 
-    onNodeAddition(node, ev) {
-    }
-
-    onEdgeAddition(edge, ev) {
-      edge.on('tap', ev_ => this._toggleEdge(ev_));
-    }
-
-  }
-
-  class NodeToggleInteraction extends WidgetInteraction {
-
-    constructor (graphWidget) {
-      super(graphWidget);
-    }
-
-    _onNodeClick (ev) {
+    _onNodeToggle (ev) {
       if (!this._enabled)
         return;
       let node = ev.target,
@@ -609,11 +594,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
     onNodeAddition(node, ev) {
       node.map( ele => ele.scratch(_prefix).originalDtype = ele.data('dtype'));
-      node.on('tap', ev_ => this._onNodeClick(ev_));
+      node.on('tap', ev_ => this._onNodeToggle(ev_));
     }
 
     onEdgeAddition(edge, ev) {
+      edge.on('tap', ev_ => this._toggleEdge(ev_));
     }
+
   }
 
   /**
@@ -685,9 +672,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       //     .on('select', this.onNodeSelect.bind(this))
       //     .on('unselect', this.onNodeUnselect.bind(this))
       //      .map( ele => ele.scratch(_prefix, {}));  // create empty namespace scratch pad object for each node
-
-      this._initUI(domDiv);
+      
       this._initInteractions();
+      this._initUI(domDiv);
 
       Emitter(this);
     }
@@ -697,16 +684,16 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       $('<div class="dg_tool-container"></div>').append(
           this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
       ).prependTo(containerDiv);
-      this._makeToolBar().appendTo(containerDiv);
+      this._makeToolBar(this._interactions).appendTo(containerDiv);
       this.$visual = $(containerDiv);
     }
 
     _initInteractions () {
-      this._dataTypeToggleInteraction = new NodeToggleInteraction(this);
-      // this._edgeToggleInteraction = new EdgeToggleInteraction(this);
-      // this._edgeAdditionInteraction = new EdgeAdditionInteraction(this);
-      this._edgeRemoveInteraction = new EdgeRemoveInteraction(this);
-
+      this._interactions = {
+        'toggle': new ToggleInteraction(this, true),
+        'edgeAdd': new EdgeAdditionInteraction(this, false),
+        'edgeRemove': new EdgeRemoveInteraction(this, false)
+      };
 
       // listen to addition of nodes or edges to the core
       this._cy.on('add', (ev) => {
@@ -837,40 +824,43 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       // }
     }
 
-    _makeToolBar() {
+    _makeToolBar(interactions) {
       let handleWithStopPropagation = handler => {return ev => {handler(); ev.stopPropagation();}};
+
+      function enableTool (which) {
+        for (const id of Object.keys(button)) {
+          button[id].removeClass('dg_tool-button__active');
+          interactions[id].enable(false);
+        }
+        button[which].addClass('dg_tool-button__active');
+        interactions[which].enable(true);
+      }
 
       // make slider container
       let $container = $('<div class="dg_tool-container"></div>');
+      let button = {
+        'edgeAdd': VisUtils.button('Add Edge', 'plus'),
+        'edgeRemove': VisUtils.button('Remove Edge', 'minus'),
+        'toggle': VisUtils.button('Modify Type', 'categorical'),
+      };
 
-      let addEdgeHandler = () => {throw "not implemented"};
-      VisUtils.button('Add Edge', 'plus')
+      for (const id of Object.keys(button)) {
+        button[id]
+            .addClass('pl-fu__control-button')
+            .on('click', handleWithStopPropagation(() => enableTool(id)))
+            .appendTo($container);
+      }
+
+      let handler_apply = () => {throw "not implemented"};
+      let button_apply = VisUtils.button('Apply', 'confirm')
           .addClass('pl-fu__control-button')
-          .on('click', handleWithStopPropagation(addEdgeHandler))
+          .on('click', handleWithStopPropagation(handler_apply))
           .appendTo($container);
 
-      let removeEdgeHandler = () => {throw "not implemented"};
-      VisUtils.button('Remove Edge', 'minus')
+      let handler_reset = () => {throw "not implemented"};
+      let button_reset = VisUtils.button('Reset', 'revert')
           .addClass('pl-fu__control-button')
-          .on('click', handleWithStopPropagation(removeEdgeHandler))
-          .appendTo($container);
-
-      let modifyDTypeHandler = () => {throw "not implemented"};
-      VisUtils.button('Modify Type', 'categorical')
-          .addClass('pl-fu__control-button')
-          .on('click', handleWithStopPropagation(modifyDTypeHandler))
-          .appendTo($container);
-
-      let applyHandler = () => {throw "not implemented"};
-      VisUtils.button('Apply', 'confirm')
-          .addClass('pl-fu__control-button')
-          .on('click', handleWithStopPropagation(applyHandler))
-          .appendTo($container);
-
-      let resetHandler = () => {throw "not implemented"};
-      VisUtils.button('Reset', 'revert')
-          .addClass('pl-fu__control-button')
-          .on('click', handleWithStopPropagation(resetHandler))
+          .on('click', handleWithStopPropagation(handler_reset))
           .appendTo($container);
 
       return $container;
