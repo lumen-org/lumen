@@ -380,6 +380,92 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }
   }
 
+  /**
+   * remove edge
+   click on edges:
+       if its a forced edge -> white edge
+       if its a forbidden edge -> white edge
+       if its a automatic edge -> forbidden edge
+   click two nodes:
+     TODO: -> add forbidden edge
+   */
+  class EdgeRemoveInteraction extends WidgetInteraction {
+
+    constructor(graphWidget) {
+      super(graphWidget);
+      this._sourceNode = undefined;
+      this._stage = 'idle';
+    }
+
+    _removeEdge(ev) {
+      if (!this._enabled)
+        return;
+      let edge = ev.target,
+          edgeType = edge.data('originalType');
+      if (edgeType === 'forced' || edgeType === 'forbidden')
+        _makeEdgeDeleted(edge);
+      else if (edgeType === 'automatic' || edgeType === 'deleted')
+        _makeEdgeForbidden(edge);
+      else
+        throw RangeError();
+    }
+
+    _addForbiddenEdge(ev) {
+      if (!this._enabled)
+        return;
+      let node = ev.target;
+      if (this._stage === 'idle') {
+        // set a start node for a new edge
+        this._sourceNode = node;
+        this._stage = 'firstSelected';
+        // mark visually as selected
+      } else if (this._stage === 'firstSelected') {
+        //TODO: check if such an edge already exists, check that its not the firstSelected node, ...
+
+        // add edge
+        let newEdge = this._graph.add({
+          'group': 'edges',
+          'data': {
+            'source': this._sourceNode.data('id'),
+            'target': node.data('id'),
+            'type': 'forbidden',
+            'originalType': 'deleted',
+          }
+        });
+        _makeEdgeForced(newEdge);
+        this._stage = 'idle';
+      } else
+        throw RangeError();
+    }
+
+    _clickCoreToAbort(ev) {
+      if (!this._enabled)
+        return;
+      if (ev.target.isNode() || ev.target.isEdge())
+        return;
+      if (this._stage === 'firstSelected') {
+        this._stage = 'idle';
+        this._sourceNode = undefined;
+        console.log('aborded edge addition');
+      }
+    }
+
+    registerCallbacks() {
+      super.registerCallbacks();
+      //this._graph.on('tap', ev_ => this._clickCoreToAbort(ev_));
+    }
+
+    onNodeAddition(node, ev) {
+      node.on('tap', ev_ => this._addForbiddenEdge(ev_));
+    }
+
+    onEdgeAddition(edge, ev) {
+      edge.on('tap', ev_ => this._removeEdge(ev_));
+    }
+
+  }
+
+
   class EdgeAdditionInteraction extends WidgetInteraction {
 
     constructor(graphWidget) {
@@ -617,8 +703,10 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
     _initInteractions () {
       this._dataTypeToggleInteraction = new NodeToggleInteraction(this);
-      this._edgeToggleInteraction = new EdgeToggleInteraction(this);
-      this._edgeAdditionInteraction = new EdgeAdditionInteraction(this);
+      // this._edgeToggleInteraction = new EdgeToggleInteraction(this);
+      // this._edgeAdditionInteraction = new EdgeAdditionInteraction(this);
+      this._edgeRemoveInteraction = new EdgeRemoveInteraction(this);
+
 
       // listen to addition of nodes or edges to the core
       this._cy.on('add', (ev) => {
