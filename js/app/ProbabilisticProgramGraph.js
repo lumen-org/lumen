@@ -157,6 +157,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'curve-style': 'straight',
         'z-index': 1,
         'transition-duration': config['transition-duration'],
+        'target-endpoint': 'inside-to-node', // prevents flickering of edges when changing node shape interactively
+        'source-endpoint': 'inside-to-node',
       }
     },
     
