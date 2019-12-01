@@ -2,6 +2,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
   cola(cytoscape); // register cola extension
 
+  const NodeTypeT = ['enforcedCategorical', 'enforcedNumerical', 'automatic'];
+  const EdgeTypeT = ['forced', 'forbidden', 'deleted', 'automatic'];
+
   /**
    * Convert a 'standard' edge list to suitable format for cytoscape.
    * Each element of the edge list is a 2-element list, with first source and second target node of the edge.
@@ -30,39 +33,40 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
   }
 
   function _makeEdgeForced(edge) {
-    edge.data('type', 'forced')
+    return edge.data('type', 'forced')
         .addClass('pl-forced-edge')
         .removeClass('pl-forbidden-edge pl-deleted-edge');
   }
 
   function _makeEdgeForbidden(edge) {
-    edge.data('type', 'forbidden')
+    return edge.data('type', 'forbidden')
         .addClass('pl-forbidden-edge')
         .removeClass('pl-forced-edge pl-deleted-edge');
   }
 
   function _makeEdgeAutomatic (edge) {
-    edge.data('type', 'automatic')
+    return edge.data('type', 'automatic')
         .removeClass('pl-forbidden-edge pl-forced-edge pl-deleted-edge');
   }
 
   function _makeEdgeDeleted(edge) {
-    edge.data('type', 'deleted')
+    return edge.data('type', 'deleted')
+        .addClass('pl-deleted-edge')
         .removeClass('pl-forbidden-edge pl-forced-edge');
   }
 
   function _makeNodeEnforcedCategorical (node) {
-    node.data({'type': 'enforcedCategorical', 'dtype': 'string'})
+    return node.data({'type': 'enforcedCategorical', 'dtype': 'string'})
         .addClass('pl-forced-node');
   }
 
   function _makeNodeEnforcedNumerical (node) {
-    node.data({'type': 'enforcedNumerical', 'dtype': 'numerical'})
+    return node.data({'type': 'enforcedNumerical', 'dtype': 'numerical'})
         .addClass('pl-forced-node');
   }
 
   function _makeNodeAutomatic (node) {
-    node.data({'type': 'automatic', 'dtype': node.scratch(_prefix).originalDtype})
+    return node.data({'type': 'automatic', 'dtype': node.scratch(_prefix).originalDtype})
         .removeClass('pl-forced-node');
   }
 
@@ -195,7 +199,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'z-index': 1,
         'transition-duration': config['transition-duration'],
         'target-endpoint': 'inside-to-node', // prevents flickering of edges when changing node shape interactively
-        'source-endpoint': 'inside-to-node',
+        // 'source-endpoint': 'inside-to-node',
       }
     },
 
@@ -239,6 +243,15 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-hidden-edge',
       style: {
         'opacity': 0,
+        'transition-property': 'opacity',
+        'transition-duration': config['transition-duration'],
+      }
+    },
+
+    {
+      selector: '.pl-deleted-edge',
+      style: {
+        'opacity': 0.1,
         'transition-property': 'opacity',
         'transition-duration': config['transition-duration'],
       }
@@ -334,16 +347,109 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     constructor (graphWidget) {
       this._enabled = true;
       this._widget = graphWidget;
+      this._graph = graphWidget._cy;
+
       this.registerCallbacks();
+
+      // listen to addition of nodes or edges to the core
+      this._graph.on('add', (ev) => {
+        let ele = ev.target;
+        if (ele.isNode())
+          this.onNodeAddition(ele, ev);
+        else if (ele.isEdge())
+          this.onEdgeAddition(ele, ev);
+      });
+      //this._graph.on('remove', (ev) => console.log('element removed'));
     }
 
     enable (onoff=true) {
       this._enabled = enable;
     }
 
-    registerCallbacks () {
-      throw "Abstract method registerCallbacks not implemented";
+    registerCallbacks() {
+      this.onNodeAddition(this._widget.allNodes);
+      this.onEdgeAddition(this._widget.allEdges);
     }
+
+    onNodeAddition(node, ev) {
+      throw "Abstract method not implemented";
+    }
+
+    onEdgeAddition (edge, ev) {
+      throw "Abstract method not implemented";
+    }
+  }
+
+  class EdgeAdditionInteraction extends WidgetInteraction {
+
+    constructor(graphWidget) {
+      super(graphWidget);
+      this._sourceNode = undefined;
+      this._stage = 'idle';
+    }
+
+    _forcedEdge(ev) {
+      if (!this._enabled)
+        return;
+      let edge = ev.target,
+          edgeType = edge.data('type');
+      if (edgeType !== 'forced')
+        _makeEdgeForced(edge);
+    }
+
+    _addEdge(ev) {
+      if (!this._enabled)
+        return;
+      let node = ev.target;
+      if (this._stage === 'idle') {
+        // set a start node for a new edge
+        this._sourceNode = node;
+        this._stage = 'firstSelected';
+        // mark visually as selected
+      } else if (this._stage === 'firstSelected') {
+        //TODO: check if such an edge already exists, check that its not the firstSelected node, ...
+
+        // add edge
+        let newEdge = this._graph.add({
+          'group': 'edges',
+          'data': {
+            'source': this._sourceNode.data('id'),
+            'target': node.data('id'),
+            'type': 'forced',
+            'originalType': 'deleted',
+          }
+        });
+        _makeEdgeForced(newEdge);
+        this._stage = 'idle';
+      } else
+        throw RangeError();
+    }
+
+    _clickCoreToAbort(ev) {
+      if (!this._enabled)
+        return;
+      if (ev.target.isNode() || ev.target.isEdge())
+        return;
+      if (this._stage === 'firstSelected') {
+        this._stage = 'idle';
+        this._sourceNode = undefined;
+        console.log('aborded edge addition');
+      }
+    }
+
+    registerCallbacks() {
+      super.registerCallbacks();
+      //this._graph.on('tap', ev_ => this._clickCoreToAbort(ev_));
+    }
+
+    onNodeAddition(node, ev) {
+      node.on('tap', ev_ => this._addEdge(ev_));
+    }
+
+    onEdgeAddition(edge, ev) {
+      //edge.on('tap', ev_ => this._forcedEdge(ev_));
+    }
+
   }
 
   class EdgeToggleInteraction extends WidgetInteraction {
@@ -352,43 +458,43 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       super(graphWidget);
     }
 
-    registerCallbacks () {
-      let that = this,
-          widget = this._widget;
+    _toggleEdge (ev) {
+      if (!this._enabled)
+        return;
+      let edge = ev.target,
+          originalType = edge.data('originalType'),
+          edgeType = edge.data('type');
 
-      function _toggleEdge (ev) {
-        if (!that._enabled)
-          return;
-        let edge = ev.target,
-            originalType = edge.data('originalType'),
-            edgeType = edge.data('type');
+      if (originalType === 'forbidden' || originalType === 'forced' || originalType === 'deleted') {
+        // toggle cycle: forbidden ->  forced one way -> forced other way ->  delete (white) ( -> forbidden)
+        if (edgeType === 'forbidden')
+          _makeEdgeForced(edge);
+        else if (edgeType === 'forced')
+            // PROBLEM: how to invert edge?!
+          _makeEdgeDeleted(edge);
+        else if (edgeType === 'deleted')
+          _makeEdgeForbidden(edge);
+        else
+          throw RangeError();
 
-        if (originalType === 'forbidden' || originalType === 'forced') {
-          // toggle cycle: forbidden ->  forced one way -> forced other way ->  delete (white) ( -> forbidden)
-          if (edgeType === 'forbidden')
-            _makeEdgeForced(edge);
-          else if (edgeType === 'forced')
-              // PROBLEM: how to invert edge?!
-            _makeEdgeDeleted(edge);
-          else if (edgeType === 'deleted')
-            _makeEdgeForbidden(edge);
-          else
-            throw RangeError();
-
-        } else if (originalType === 'automatic') {
-           // toggle cycle: automatic -> forced one way -> forced other way -> forbidden ( -> automatic)
-          if (edgeType === 'automatic')
-            _makeEdgeForced(edge);
-          else if (edgeType === 'forced')
+      } else if (originalType === 'automatic') {
+        // toggle cycle: automatic -> forced one way -> forced other way -> forbidden ( -> automatic)
+        if (edgeType === 'automatic')
+          _makeEdgeForced(edge);
+        else if (edgeType === 'forced')
             // TODO: PROBLEM: how to invert edge?!
-            _makeEdgeForbidden(edge);
-          else if (edgeType === 'forbidden')
-            _makeEdgeAutomatic(edge);
-        } else
-          throw RangeError()
-      }
+          _makeEdgeForbidden(edge);
+        else if (edgeType === 'forbidden')
+          _makeEdgeAutomatic(edge);
+      } else
+        throw RangeError()
+    }
 
-      widget.allEdges.on('tap', _toggleEdge);
+    onNodeAddition(node, ev) {
+    }
+
+    onEdgeAddition(edge, ev) {
+      edge.on('tap', ev_ => this._toggleEdge(ev_));
     }
 
   }
@@ -399,30 +505,28 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       super(graphWidget);
     }
 
-    registerCallbacks() {
-      let that = this,
-          widget = this._widget;
+    _onNodeClick (ev) {
+      if (!this._enabled)
+        return;
+      let node = ev.target,
+          nodeType = node.data('type');
+      // meta = node.scratch(_prefix);
 
-      // add additional scratchpad data
-      widget.allNodes.map( ele => ele.scratch(_prefix).originalDtype = ele.data('dtype'));
+      // toggling sequence: automatic -> forced string -> forced numerical -> automatic ...
+      if (nodeType === 'automatic')
+        _makeNodeEnforcedCategorical(node);
+      else if (nodeType === 'enforcedCategorical')
+        _makeNodeEnforcedNumerical(node);
+      else if (nodeType === 'enforcedNumerical')
+        _makeNodeAutomatic(node);
+    }
 
-      function _onNodeClick (ev) {
-        if (!that._enabled)
-          return;
-        let node = ev.target,
-            nodeType = node.data('type');
-            // meta = node.scratch(_prefix);
+    onNodeAddition(node, ev) {
+      node.map( ele => ele.scratch(_prefix).originalDtype = ele.data('dtype'));
+      node.on('tap', ev_ => this._onNodeClick(ev_));
+    }
 
-        // toggling sequence: automatic -> forced string -> forced numerical -> automatic ...
-        if (nodeType === 'automatic')
-          _makeNodeEnforcedCategorical(node);
-        else if (nodeType === 'enforcedCategorical')
-          _makeNodeEnforcedNumerical(node);
-         else if (nodeType === 'enforcedNumerical')
-          _makeNodeAutomatic(node);
-      }
-
-      widget.allNodes.on('tap', _onNodeClick);
+    onEdgeAddition(edge, ev) {
     }
   }
 
@@ -463,9 +567,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           'enforced_node_dtypes': {}
         }
       }
-      // this._originalGraph = graph;
-      // this._originalNodes = convertNodenameDict(graph.nodes, dtypes);
-      // this._originalEdges = ;
       this._showForbiddenEdges = Settings.widgets.ppWidget.forbiddenEdges.showByDefault;
 
       this._cy = cytoscape({
@@ -477,64 +578,18 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         wheelSensitivity: config.wheelSensitivity,
       });
       this._layout = this._cy.layout(layout[layoutmode]);
-      let cy = this._cy;
-
       this._layout.run();
       // workaround to fit the graph after layout is finished. I dont konw why the other two lines below dont work.
       setTimeout(() => this._cy.fit(), 1000);
       // this._layout.one('layoutstop', () => this._cy.fit());
       // this._cy.one('ready', () => this._cy.fit());
 
-      // build set of forced nodes
-      this._enforcedCategoricals = new Set();
-      this._enforcedNumericals = new Set();
-      for (const [name, dtype] of Object.entries(graph.enforced_node_dtypes)) {
-        if (dtype === 'string')
-          this._enforcedCategoricals.add(name);
-        else if (dtype === 'numerical')
-          this._enforcedNumericals.add(name);
-        else
-          throw RangeError();
-      }
+      // setup empty collections
+      this.allNodes = this._cy.nodes();
+      this.allEdges = this._cy.edges();
 
-      // setup collections
-      this.allNodes = cy.nodes();
-      this.allEdges = cy.edges();
-
-      this.enforcedCategoricalNodes = this.allNodes.filter( node => this._enforcedCategoricals.has(node.id()) );
-      this.enforcedNumericalNodes = this.allNodes.filter( node => this._enforcedNumericals.has(node.id()) );
-
-      this.enforcedEdges = cy.collection();
-      for (const [source, target] of graph.enforced_edges) {
-        this.enforcedEdges.merge(
-          this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
-      }
-
-      this.forbiddenEdges = cy.collection();
-      for (const [source, target] of graph.forbidden_edges) {
-        this.forbiddenEdges.merge(
-          this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
-      }
-
-      // init empty scratch pad object
-      this.allNodes.map(ele => ele.scratch(_prefix, {}));
-      this.allEdges.map(ele => ele.scratch(_prefix, {}));
-
-      // set meta data
-      this.allNodes.data({'type': 'automatic', 'originalType': 'automatic'});
-      this.allEdges.data({'type': 'automatic', 'originalType': 'automatic'});
-
-      this.enforcedCategoricalNodes.data({'type': 'enforcedCategorical', 'originalType': 'enforcedCategorical'});
-      this.enforcedNumericalNodes.data({'type': 'enforcedNumerical', 'originalType': 'enforcedNumerical'});
-      this.enforcedEdges.data({'type': 'forced', 'originalType': 'forced'});
-      this.forbiddenEdges.data({'type': 'forbidden', 'originalType': 'forbidden'});
-
-
-      // set styles
-      this.forbiddenEdges.addClass('pl-forbidden-edge');
-      this.enforcedEdges.addClass('pl-forced-edge');
-      this.enforcedCategoricalNodes.addClass('pl-forced-node');
-      this.enforcedNumericalNodes.addClass('pl-forced-node');
+      this._initializeNodesFromInputGraph(graph);
+      this._initializeEdgesFromInputGraph(graph);
 
       // this.selected = cy.collection();
       // this.adjacent = cy.collection();
@@ -545,31 +600,127 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       //     .on('unselect', this.onNodeUnselect.bind(this))
       //      .map( ele => ele.scratch(_prefix, {}));  // create empty namespace scratch pad object for each node
 
-      // build UI
+      this._initUI(domDiv);
+      this._initInteractions();
+
+      Emitter(this);
+    }
+
+    _initUI (containerDiv) {
       this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
       $('<div class="dg_tool-container"></div>').append(
           this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
-      ).prependTo(domDiv);
-      this._makeToolBar().appendTo(domDiv);
-      this.$visual = $(domDiv);
+      ).prependTo(containerDiv);
+      this._makeToolBar().appendTo(containerDiv);
+      this.$visual = $(containerDiv);
+    }
 
-      // add interactions
-      this._dataTypeToggle = new NodeToggleInteraction(this);
-      this._dataEnforcedEdgeToggle = new EdgeToggleInteraction(this);
+    _initInteractions () {
+      this._dataTypeToggleInteraction = new NodeToggleInteraction(this);
+      this._edgeToggleInteraction = new EdgeToggleInteraction(this);
+      this._edgeAdditionInteraction = new EdgeAdditionInteraction(this);
 
-      this.allEdges
-          .on('mouseover', ev => this._onEdgeMouseInOut(ev))
-          .on('mouseout', ev => this._onEdgeMouseInOut(ev));
-      this.allNodes
-          .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
-          .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"));
+      // listen to addition of nodes or edges to the core
+      this._cy.on('add', (ev) => {
+        let ele = ev.target;
+        if (ele.isNode())
+          this.onNodeAddition(ele, ev);
+        else if (ele.isEdge())
+          this.onEdgeAddition(ele, ev);
+      });
 
-      onDoubleClick(cy, ev => {
+      onDoubleClick(this._cy, ev => {
         this._cy.fit();
         this._layout.run(); // rerun layout!
       });
+    }
 
-      Emitter(this);
+    _initializeEdgesFromInputGraph (graph) {
+      // prepare all edges for addition: set type and original type
+      this.enforcedEdges = this._cy.collection();
+      for (const [source, target] of graph.enforced_edges) {
+        this.enforcedEdges.merge(
+            this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
+      }
+      this.forbiddenEdges = this._cy.collection();
+      for (const [source, target] of graph.forbidden_edges) {
+        this.forbiddenEdges.merge(
+            this.allEdges.filter(`edge[source = "${source}"][target = "${target}"]`))
+      }
+      this.allEdges.data({'type': 'automatic', 'originalType': 'automatic'});
+      this.enforcedEdges.data({'type': 'forced', 'originalType': 'forced'});
+      this.forbiddenEdges.data({'type': 'forbidden', 'originalType': 'forbidden'});
+
+      this.onEdgeAddition(this.allEdges);
+    }
+
+    _initializeNodesFromInputGraph (graph) {
+      // build set of forced nodes
+      let enforcedCategoricals = new Set(),
+        enforcedNumericals = new Set();
+      for (const [name, dtype] of Object.entries(graph.enforced_node_dtypes)) {
+        if (dtype === 'string')
+          enforcedCategoricals.add(name);
+        else if (dtype === 'numerical')
+          enforcedNumericals.add(name);
+        else
+          throw RangeError();
+      }
+
+      this.allNodes
+          .data({'type': 'automatic', 'originalType': 'automatic'});
+      this.allNodes.filter( node => enforcedCategoricals.has(node.id()) )
+          .data({'type': 'enforcedCategorical', 'originalType': 'enforcedCategorical'});
+      this.allNodes.filter( node => enforcedNumericals.has(node.id()) )
+          .data({'type': 'enforcedNumerical', 'originalType': 'enforcedNumerical'});
+
+      // add all nodes
+      this.onNodeAddition(this.allNodes);
+    }
+
+    onEdgeAddition (edge, ev_) {
+      edge.on('mouseover', ev => this._onEdgeMouseInOut(ev, 'in'))
+          .on('mouseout', ev => this._onEdgeMouseInOut(ev, 'out'));
+
+      this.allEdges.add(edge);
+
+      edge.map(ele => ele.scratch(_prefix, {}));
+
+      edge.map(e => {
+        // make sure it has according type and original type set
+        for (const t of [e.data('type'), e.data('originalType')])
+          if (!EdgeTypeT.includes(t))
+            throw RangeError(`invalid type ${t}`);
+
+        // set styling
+        const t = e.data('type');
+        if (t === 'forbidden')
+          e.addClass('pl-forbidden-edge');
+        else if (t === 'forced')
+          e.addClass('pl-forced-edge');
+      });
+    }
+
+    onNodeAddition (node, ev_) {
+      node.on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
+          .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"));
+
+      this.allNodes.add(node);
+
+      // set empty scratch data
+      node.map(ele => ele.scratch(_prefix, {}));
+
+      node.map(n => {
+        // make sure it has according type and original type set
+        for (const t of [n.data('type'), n.data('originalType')])
+          if (!NodeTypeT.includes(t))
+            throw RangeError(`invalid type ${t}`);
+
+        // set styling
+        const t = n.data('type');
+        if (t === 'enforcedCategorical' || t === 'enforcedNumerical')
+          n.addClass('pl-forced-node');
+      });
     }
 
     /**
@@ -709,9 +860,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this.emit('Node.Unselected', node.id());
     } */
 
-    _onEdgeMouseInOut(ev, inout) {
+    _onEdgeMouseInOut(ev, inOut) {
       let edge = ev.target;
-      edge.toggleClass('pl-edge--hover');
+      if (inOut === 'in')
+        edge.addClass('pl-edge--hover')
+      else if (inOut === 'out')
+        edge.removeClass('pl-edge--hover')
+      else
+        throw RangeError();
     }
 
     _onNodeMouseInOut(ev, inOut) {
@@ -720,11 +876,16 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         node.scratch(_prefix).hover = false;
       }
 
-      let adjacentEdges = node.connectedEdges();
-      adjacentEdges.toggleClass('pl-adjacent-edge-to-hovered-node');
-
       // (un)highlight node
-      node.toggleClass('pl-node--hover');
+      let adjacentEdges = node.connectedEdges();
+      if (inOut === 'in') {
+        node.addClass('pl-node--hover')
+        adjacentEdges.addClass('pl-adjacent-edge-to-hovered-node');
+      } else if (inOut === 'out') {
+        node.removeClass('pl-node--hover')
+        adjacentEdges.removeClass('pl-adjacent-edge-to-hovered-node');
+      } else
+        throw RangeError();
 
       // indicate with mouse cursor that the node is draggable 'drag' or return to default cursor
       $(this._cy.container()).toggleClass('dg_graphCanvas-container--hover-on-node');
