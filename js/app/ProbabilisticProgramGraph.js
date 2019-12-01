@@ -161,7 +161,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'source-endpoint': 'inside-to-node',
       }
     },
-    
+
     {
       selector: '.pl-forced-edge',
       style: {
@@ -243,6 +243,20 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'opacity': 1,
         'z-index': 10,
         'transition-property': 'opacity line-color',
+        'transition-duration': config['transition-duration'],
+      }
+    },
+
+    {
+      selector: '.pl-edge--hover',
+      style: {
+        'line-color': edge => {
+          if (edge.scratch(_prefix).forbiddenEdge)
+            return config['forbidden-line-color__hover'];
+          else
+            return config['line-color__hover'];
+        },
+        'transition-property': 'line-color',
         'transition-duration': config['transition-duration'],
       }
     },
@@ -523,6 +537,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this._dataTypeToggle = new DataTypeToggleInteraction(this);
       this._dataEnforcedEdgeToggle = new EnforcedEdgeInteraction(this);
 
+      this.allEdges
+          .on('mouseover', ev => this._onEdgeMouseInOut(ev))
+          .on('mouseout', ev => this._onEdgeMouseInOut(ev));
+      this.allNodes
+          .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
+          .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"));
+
       onDoubleClick(cy, ev => {
         this._cy.fit();
         this._layout.run(); // rerun layout!
@@ -668,6 +689,11 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this.emit('Node.Unselected', node.id());
     } */
 
+    _onEdgeMouseInOut(ev, inout) {
+      let edge = ev.target;
+      edge.toggleClass('pl-edge--hover');
+    }
+
     _onNodeMouseInOut(ev, inOut) {
       let node = ev.target;
       if (inOut === 'out') {
@@ -765,9 +791,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
             });
           })
           .on('cxttapend', ev => this._reset_drag())
-          .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()))
-          .on('mouseover', ev => this._onNodeMouseInOut(ev, "in"))
-          .on('mouseout', ev => this._onNodeMouseInOut(ev, "out"))
+          .on('tapend', ev => this.emit("Node.DragMoved", ev.target.id()));
     }
   };
 
