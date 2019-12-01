@@ -300,9 +300,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       let trace_mode = (opts.facetName === 'predictionDataLocal' ? "" : "lines+") + "markers";
 
       // create and attach trace for each group, i.e. each leaf in the nested data
-      let attach_aggr_trace = (data) => {
+      let attach_aggr_trace = (data) => {       
+        let color_mapper = (opts.facetName === 'data aggregations' ? mapper.dataAggrFillColor : mapper.modelAggrFillColor),
+            shape_mapper = (opts.facetName === 'data aggregations' ? mapper.dataShape : mapper.aggrShape),
+            size_mapper  = (opts.facetName === 'data aggregations' ? mapper.dataSize : mapper.aggrSize);
 
-        let color_mapper = (opts.facetName === 'data aggregations' ? mapper.dataAggrFillColor : mapper.modelAggrFillColor);
         let trace = {
           name: traceName,
           type: 'scatter',
@@ -316,8 +318,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           opacity: cfg.fill.opacity,
           marker: {
             color: applyMap(data, color_mapper , aest.color.fu, fu2idx),
-            size: applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
-            symbol: applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
+            size: applyMap(data, size_mapper, aest.size.fu, fu2idx),
+            symbol: applyMap(data, shape_mapper, aest.shape.fu, fu2idx),
             line: { // configures the line bounding the marker points
               color: cfg.stroke["color prediction"],
               width: cfg.stroke.width
