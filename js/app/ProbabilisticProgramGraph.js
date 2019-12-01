@@ -51,7 +51,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         .removeClass('pl-forbidden-edge pl-forced-edge');
   }
 
-
   function _makeNodeEnforcedCategorical (node) {
     node.data({'type': 'enforcedCategorical', 'dtype': 'string'})
         .addClass('pl-forced-node');
@@ -264,7 +263,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     {
       selector: '.pl-adjacent-edge-to-hovered-node',
       style: {
-        // 'line-color': d3color.color(config["line-color"]).darker(1).toString(),
         'line-color': config["line-color__hover"],
         'opacity': 1,
         'z-index': 10,
@@ -276,7 +274,6 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     {
       selector: '.pl-adjacent-edge-to-hovered-node.pl-forbidden-edge',
       style: {
-        // 'line-color': d3color.color(config["forbidden-line-color"]).darker(1).toString(),
         'line-color': config["forbidden-line-color__hover"],
         'opacity': 1,
         'z-index': 10,
@@ -349,7 +346,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }
   }
 
-  class EnforcedEdgeInteraction extends WidgetInteraction {
+  class EdgeToggleInteraction extends WidgetInteraction {
 
     constructor (graphWidget) {
       super(graphWidget);
@@ -396,7 +393,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
   }
 
-  class DataTypeToggleInteraction extends WidgetInteraction {
+  class NodeToggleInteraction extends WidgetInteraction {
 
     constructor (graphWidget) {
       super(graphWidget);
@@ -557,8 +554,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this.$visual = $(domDiv);
 
       // add interactions
-      this._dataTypeToggle = new DataTypeToggleInteraction(this);
-      this._dataEnforcedEdgeToggle = new EnforcedEdgeInteraction(this);
+      this._dataTypeToggle = new NodeToggleInteraction(this);
+      this._dataEnforcedEdgeToggle = new EdgeToggleInteraction(this);
 
       this.allEdges
           .on('mouseover', ev => this._onEdgeMouseInOut(ev))
