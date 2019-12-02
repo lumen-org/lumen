@@ -252,6 +252,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-deleted-edge',
       style: {
         'opacity': 0.1,
+        'line-style': 'solid',
         'transition-property': 'opacity',
         'transition-duration': config['transition-duration'],
       }
@@ -885,13 +886,14 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
     _makeRangeSlider() {
       // make slider container
+      let sliderDiv = $('<div class="dg_slider__slider"></div>');
+      let valueDiv = $('<div class="pl-label dg_slider__value"></div>').text(0);
+
       let container = $('<div class="dg_slider-container"></div>').append(
           $('<div class="pl-label dg_slider__label">threshold</div>'),
-          $('<div class="pl-label dg_slider__value"></div>').text(0),
+          valueDiv,
+          sliderDiv,
       );
-
-      let sliderDiv = $('<div class="dg_slider__slider"></div>')
-          .appendTo(container);
 
       // get maximum of graph weight
       let maxWeight = 1;
