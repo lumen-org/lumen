@@ -10,11 +10,30 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
    * Each element of the edge list is a 2-element list, with first source and second target node of the edge.
    * @param edges
    */
+  function filterToUniqueUndirectedEdges(edges) {
+
+    let hasEdge = (edges, source, target) => {
+      for (const [s, t] of edges)
+        if (t === target && s === source)
+          return true;
+      return false;
+    };
+
+    // super slow algo ...
+    let unique_edges = [];
+    for (const [source, target] of edges) {
+      // add edge if inverse edge not already added
+      if (!hasEdge(unique_edges, target, source))
+        unique_edges.push([source, target]);
+    }
+    return unique_edges;
+  }
+
   function convertEdgeList(edges) {
     return edges.map( edge => ({
-          group: 'edges',
-          data: {'source': edge[0], 'target': edge[1], 'weight':1, 'originalWeight':1}
-        }));
+      group: 'edges',
+      data: {'source': edge[0], 'target': edge[1], 'weight':1, 'originalWeight':1}
+    }));
   }
 
   /**
@@ -403,9 +422,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         return;
       let edge = ev.target,
           edgeType = edge.data('originalType');
-      if (edgeType === 'forced' || edgeType === 'forbidden' || edgeType === 'deleted')
+      if (edgeType === 'forced' || edgeType === 'forbidden')
         _makeEdgeDeleted(edge);
-      else if (edgeType === 'automatic')
+      else if (edgeType === 'automatic' || edgeType === 'deleted')
         _makeEdgeForbidden(edge);
       else
         throw RangeError();
@@ -646,7 +665,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       this._cy = cytoscape({
         container: graphContainer,
         elements: [...convertNodenameDict(graph.nodes, dtypes),
-          ...convertEdgeList([...graph.edges, ...graph.forbidden_edges])],
+          ...convertEdgeList([...graph.edges, ...filterToUniqueUndirectedEdges(graph.forbidden_edges)])],
         style: style,
         selectionType: 'additive',
         wheelSensitivity: config.wheelSensitivity,

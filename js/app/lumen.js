@@ -995,7 +995,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       _filter_names(value){
-        return !value.startsWith("__")
+        return !value.startsWith("__") && !value.startsWith("emp");
       }
 
       _isSameList(datalist, model_list){
