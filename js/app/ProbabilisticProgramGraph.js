@@ -227,7 +227,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         // 'width': "1px",
         // 'arrow-scale': 3,
 
-        // 'line-style': 'solid',
+        'line-style': 'solid',
         'opacity': .8,
         // 'mid-source-arrow-shape': 'vee',
         // 'mid-source-arrow-color': '#ffc3cb',
