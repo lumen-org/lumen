@@ -1048,7 +1048,9 @@ textarea.pl-survey__content {
 }
 
 .dg_tool-button__active {
-    border: solid 1px #38ACDD;
+    border-color: #3b4043;
+    /*border: solid 1px #38ACDD;*/
+    background-color: white;
 }
 
 .dg-drag-ghost {

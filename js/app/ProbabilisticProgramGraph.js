@@ -100,10 +100,13 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
     'line-color': '#757575',
     'line-color__hover': '#464646',
-    'arrow-color': '#d4d4d4',
+    // 'arrow-color': '#d4d4d4',
+    'arrow-color': '#757575',
 
     'forbidden-line-color': '#ffbec4',
-    'forbidden-line-color__hover': '#ff797e',
+    'forbidden-line-width': '4px',
+    'forbidden-line-color__hover': '#ff796f',
+    // 'forbidden-line-color__hover': '#ff797e',
 
     'background-color': '#e2e2e2',
     'background-color__hover': '#ffffff',
@@ -217,7 +220,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'curve-style': 'straight',
         'z-index': 1,
         'transition-duration': config['transition-duration'],
-        'target-endpoint': 'inside-to-node', // prevents flickering of edges when changing node shape interactively
+        //'target-endpoint': 'inside-to-node', // prevents flickering of edges when changing node shape interactively
         // 'source-endpoint': 'inside-to-node',
       }
     },
@@ -226,10 +229,12 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-forced-edge',
       style: {
         'line-style': 'solid',
-        'mid-target-arrow-shape': 'triangle',
-        'mid-target-arrow-color': config["arrow-color"],
-        'arrow-scale': 1.7,
-        'target-endpoint': 'inside-to-node',
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': config["arrow-color"],
+        // 'mid-target-arrow-shape': 'triangle',
+        // 'mid-target-arrow-color': config["arrow-color"],
+        'arrow-scale': 1.6,
+        // 'target-endpoint': 'inside-to-node',
         'z-index': 2,
       }
     },
@@ -240,7 +245,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         // 'line-color': '#ffFFFF',
         'line-color': config['forbidden-line-color'],
         // 'line-color': '#ff9492',
-        // 'width': "10px",
+        'width': config['forbidden-line-width'],
         // 'arrow-scale': 0.6,
         // 'line-color': '#ff727c',
         // 'width': "1px",
@@ -308,7 +313,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-adjacent-edge-to-hovered-node.pl-forbidden-edge',
       style: {
         'line-color': config["forbidden-line-color__hover"],
-        'opacity': 1,
+        'opacity': 0.8,
         'z-index': 10,
         'transition-property': 'opacity line-color',
         'transition-duration': config['transition-duration'],
@@ -324,7 +329,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
           else
             return config['line-color__hover'];
         },
-        'transition-property': 'line-color',
+        'opacity': 1,
+        'transition-property': 'line-color opacity',
         'transition-duration': config['transition-duration'],
       }
     },

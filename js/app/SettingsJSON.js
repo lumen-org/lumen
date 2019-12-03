@@ -31,10 +31,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   let greys = x => c2h(d3chromatic.interpolateGreys(x));
   //let greys = x => d3chromatic.interpolateGreys(x);
 
-  function makeDensityScale(colorArray) {
+  function makeDensityScale(colorArray, dropSteps=0) {
+    colorArray = colorArray.slice(dropSteps);
     const threshhold = 0.000001;
     let colorScale = [[0, 'rgba(255,255,255,0)'], [threshhold, 'rgba(255,255,255,0)']];  // to make sure very small values are drawn in white
     // todo: this is ugly!
+    // let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
     let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
     split.push(1);
     split[0] = threshhold;
@@ -70,8 +72,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       greens: d3chromatic.schemeGreens[9],
       density_greens: makeDensityScale(d3chromatic.schemeGreens[9]),
       greys: d3chromatic.schemeGreys[9],
-      density_greys: makeDensityScale(d3chromatic.schemeGreys[9]),
-      density_pinks: makeDensityScale(d3chromatic.schemeRdPu[9]),
+      density_greys_old: makeDensityScale(d3chromatic.schemeGreys[9], 0),
+      density_pinks_old: makeDensityScale(d3chromatic.schemeRdPu[9], 0),
+      density_greys: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateGreys(i))),     
+      density_pinks: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateRdPu(i))),      
       oranges: d3chromatic.schemeOranges[9],
       reds: d3chromatic.schemeReds[9],
       rdBu: d3chromatic.schemeRdBu[11],
@@ -499,7 +503,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "fill": {
             type: "object", format: "grid",
             properties: {
-              "def": {type: "string", format: "color", watch: {_single: "colors.testData.single"}, template: "{{_single}}"},
+              "def": {type: "string", format: "color", watch: {_single: "colors.modelSamples.single"}, template: "{{_single}}"},
               opacity: {type: "number"},
             },
           },
