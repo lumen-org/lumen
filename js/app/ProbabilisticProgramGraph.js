@@ -98,7 +98,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
     'line-width': '6px',
 
-    'line-color': '#757575',
+    'line-color': '#868686',
     'line-color__hover': '#464646',
     // 'arrow-color': '#d4d4d4',
     'arrow-color': '#757575',
@@ -133,6 +133,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'height': config.defaultNodeDiameter,
         'shape': ele => (ele.data('dtype') === 'string' ? 'rectangle' : 'ellipse'),
         'label': 'data(id)',
+        'text-margin-y': "-2px",
         'font-family': 'Roboto Slab, serif',
         'font-size': "larger",
         'color': '#404040',  // color of the label
@@ -216,7 +217,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
         'width': config["line-width"],
         'line-color': config["line-color"],
         'line-style': 'dashed',
-        'opacity': 0.8,
+        'opacity': 1,
+        // 'opacity': 0.8,
         'curve-style': 'straight',
         'z-index': 1,
         'transition-duration': config['transition-duration'],
@@ -276,7 +278,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
       selector: '.pl-deleted-edge',
       style: {
         'opacity': 0.1,
-        'line-style': 'solid',
+        // 'line-style': 'solid',
         'transition-property': 'opacity',
         'transition-duration': config['transition-duration'],
       }
@@ -351,9 +353,9 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     'circle': {
       name: 'circle',
       nodeDimensionsIncludeLabels: true,
-      // spacingFactor: 1.3,
-      padding: 0,
-      spacingFactor: 0.6,
+      spacingFactor: 1,
+      padding: 10,
+      //spacingFactor: 0.6,
       animate: false,
     }
   };
@@ -417,8 +419,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
    */
   class EdgeRemoveInteraction extends WidgetInteraction {
 
-    constructor(graphWidget) {
-      super(graphWidget);
+    constructor(graphWidget, onoff) {
+      super(graphWidget, onoff);
       this._sourceNode = undefined;
       this._stage = 'idle';
     }
@@ -494,8 +496,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
   class EdgeAdditionInteraction extends WidgetInteraction {
 
-    constructor(graphWidget) {
-      super(graphWidget);
+    constructor(graphWidget, onoff) {
+      super(graphWidget, onoff);
       this._sourceNode = undefined;
       this._stage = 'idle';
     }
@@ -566,8 +568,8 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
 
   class ToggleInteraction extends WidgetInteraction {
 
-    constructor (graphWidget) {
-      super(graphWidget);
+    constructor (graphWidget, onoff) {
+      super(graphWidget, onoff);
     }
 
     _toggleEdge (ev) {
@@ -706,7 +708,7 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color', './VisUtil
     }
 
     _initUI (containerDiv) {
-      this._threshhold = 0;  // threshold for edge weights to be included in graph visualization
+      this._threshhold = 0.3;  // threshold for edge weights to be included in graph visualization
       $('<div class="dg_tool-container"></div>').append(
           this._makeRangeSlider(), this._makeForbiddenEdgeToggle()
       ).prependTo(containerDiv);

@@ -160,7 +160,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     resolution_1d: 25,
     resolution_2d: 25,
     opacity: 0.5,
-    levels: 12,
+    levels: 30,
     "number of samples": 200,
     splitCnts: {
       layout: 5,
@@ -1197,7 +1197,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data
       data: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // test data
@@ -1221,7 +1221,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data marginals
       dataMarginals: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // model density 'central' plot

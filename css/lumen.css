@@ -147,6 +147,8 @@ body {
     min-height: 30vh;
     height: 54vh;
     min-width: 200px;
+    /*height: 30vh;
+    min-width: 300px;*/
     display: flex;
     flex-direction: row;
 }
@@ -243,7 +245,8 @@ body {
 .shelf.horizontal {
     flex-direction: row;
     align-items: center;
-    min-height: 70px;
+    min-height: 43px;
+    /*min-height: 70px;*/
     min-width: 270px;
 }
 
@@ -347,6 +350,10 @@ body {
     display: flex;
     width: 100%;
     justify-content: space-between;
+}
+
+.pl-facet__columnLabel {
+    font-style: italic;
 }
 
 .pl-facet__onOff {

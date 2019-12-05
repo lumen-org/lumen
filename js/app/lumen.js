@@ -869,15 +869,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           makeColumnLabel = (labelName) => $(`<div class="pl-label pl-facet__label pl-facet__columnLabel">${labelName}</div>`);
 
         let items4firstColumn = [
-          $(`<div class="pl-facet__rowLabel"><div></div><div></div></div>`),
-          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction')),
-          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data')),
-          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
-          $(`<div class="pl-facet__rowLabel"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
+          $(`<div class="pl-facet__rowLabel pl-label"><div></div><div></div></div>`),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data points')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
         ];
 
         let items = [
-          items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('evidence'),
+          items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('data'),
           items4firstColumn[1], makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
           items4firstColumn[2], makeCheckbox('model samples'), makeCheckbox('data'),
           items4firstColumn[3], makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
