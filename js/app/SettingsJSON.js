@@ -1153,16 +1153,20 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     c.widget = {
       graph: {
-        enable: true,  // enable or disable the graph widget
+        enable: false,  // enable or disable the graph widget
+      },
+      ppGraph: {
+        // see issue #95: https://github.com/lumen-org/lumen/issues/95
+        enable: false, // enable or disable the pp graph widget
       },
       userStudy: {
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
       },
       details: {
-        enabled: false,
+        enabled: false,  // enable or disable the details view
       },
       posteriorPredictiveChecks: {
-        enabled: false,
+        enabled: false,  // enable or disable the ppc
       }
     };
 
@@ -1197,7 +1201,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data
       data: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // test data
@@ -1215,7 +1219,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // model density marginal
       marginals: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // training data marginals

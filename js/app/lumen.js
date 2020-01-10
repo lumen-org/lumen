@@ -1516,8 +1516,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             resolve();
           else if (widget === undefined && !hasContext) {
             // need to retrieve graph
-            //return context.model.pciGraph_get().then(
-            return context.model.ppGraph_get().then(
+            return context.model.pciGraph_get().then(
+            //return context.model.ppGraph_get().then(
               graph => {
                 // create a new div to draw on
                 let $vis = $('<div class=pl-graph-pane></div>').hide();
@@ -2053,6 +2053,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
     if (!Settings.widget.posteriorPredictiveChecks.enabled)
       $('#pl-ppc-column').hide();
+
+    if (Settings.widget.ppGraph.enable) {
+      throw "Not implemented. See issue #95";
+    }
 
     // dependency graph widget
     let graphWidgetManager = new GraphWidgetManager(undefined, document.getElementById('pl-graph-container'));
