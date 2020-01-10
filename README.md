@@ -62,6 +62,7 @@ For configuration of `modelbase` see its documentation.
 ### Using it
 
  * make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore.
+ * if DEFAULT_MODEL is set to "" all existing models are displayed.
  
 Open `<path>/index.html` in your browser. Using chrome is recommended, since it - by far - provides the best performance. 
 

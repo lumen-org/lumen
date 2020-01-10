@@ -703,10 +703,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
               ncontours: c.map.biDensity.contour.levels,
               //opacity: c.map.biDensity.contour.opacity,
               contours: {
-                coloring: c.map.biDensity.contour.coloring,
+                coloring: c.map.biDensity.contour.coloring,   // valid values: "fill" | "heatmap" | "lines"
               },
               line: {
                 width: c.map.biDensity.contour.width,
+                color: c.map.biDensity.line.color, // the color of the contour lines (if contours.coloring is not line)
               }
             },
             commonTrace,
