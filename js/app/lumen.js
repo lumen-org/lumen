@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './ProbabilisticProgramGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -363,7 +363,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 }),
                 c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
                   data_category: 'model samples',
-                  number_of_samples: 200, // TODO: make configurable
+                  number_of_samples: Settings.tweaks['number of samples'],
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
@@ -488,7 +488,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         $('#pl-layout-container').append($visuals.layout);
         $('#pl-mappings-container').append($visuals.mappings);
         $('#pl-dashboard__container').append($visuals.visualization);
-        $('#pl-facet-container').append($visuals.facets);
+        //$('#pl-facet-container').append($visuals.facets);
+        $('#pl-facet-container').append($visuals.facets2);
       }
 
       /**
@@ -727,10 +728,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
-        //shelves.modeldata.beVisual({label: 'Model vs Data'}).beInteractable();
         shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
+        shelves.meas.$visual.addClass('pl-shelf-quantitative');
         shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
-        // PL: SIGMOD: commend next line
+        shelves.dim.$visual.addClass('pl-shelf-categorical');
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
         shelves.filter.beVisual({label: 'Filter'}).beInteractable();
@@ -741,10 +742,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         shelves.row.beVisual({label: 'Y-Axis'}).beInteractable();
 
         let visual = {};
-
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
-          //shelves.modeldata.$visual, $('<hr>'),
           shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
@@ -800,7 +799,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           .filter( what => context.facets[what].possible)
           .map(
             (what, idx) => {
-              // TODO PL: much room for optimization, as often we simply need to redraw what we already have ...
               let $checkBox = $('<input type="checkbox">')
                 .prop({
                   "checked": context.facets[what].active,
@@ -827,6 +825,70 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
+       * Creates and returns GUI to visible facets .
+       *
+       * An context update is triggered if the state of the config is changed.
+       *
+       * @param context
+       * @private
+       */
+      static _makeFacetWidget2 (context) {
+        let title = $('<div class="pl-h2 shelf__title">Facets</div>');
+        // create checkboxes
+        const name2iconMap = {
+          'aggregations': 'prediction',
+          'data aggregations': 'prediction',
+          'marginals': 'uniDensity',
+          'contour': 'contour',
+          'data density': 'contour',
+          'data': 'dataPoints',
+          'testData': 'dataPoints',
+          'model samples': 'dataPoints',
+          'predictionDataLocal': 'prediction',
+          'dataMarginals': 'uniDensity',  // TODO: make histogram icon
+        };
+
+        let makeCheckbox = (what) => {
+          let $checkBox = $('<input class="pl-facet__checkbox" type="checkbox">')
+              .prop({
+                "checked": context.facets[what].active,
+                "disabled": !context.facets[what].possible,
+                "id": _facetNameMap[what]})
+              .change( (e) => {
+                // update the config and ...
+                context.facets[what].active = e.target.checked;
+                // log user activity
+                ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");
+                // ... trigger an update
+                context.update('facets.changed');
+              });
+          return $checkBox;
+        };
+
+        let makeRowLabel = (labelName) => $(`<div class="pl-label pl-facet__label">${labelName}</div>`),
+          makeColumnLabel = (labelName) => $(`<div class="pl-label pl-facet__label pl-facet__columnLabel">${labelName}</div>`);
+
+        let items4firstColumn = [
+          $(`<div class="pl-facet__rowLabel pl-label"><div></div><div></div></div>`),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data points')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
+        ];
+
+        let items = [
+          items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('data'),
+          items4firstColumn[1], makeCheckbox('aggregations'), makeCheckbox('data aggregations'),
+          items4firstColumn[2], makeCheckbox('model samples'), makeCheckbox('data'),
+          items4firstColumn[3], makeCheckbox('marginals'), makeCheckbox('dataMarginals'),
+          items4firstColumn[4], makeCheckbox('contour'), makeCheckbox('data density'),
+        ];
+
+        let shelfContainer = $('<div class="pl-facetWidget__container"></div>').append(...items);
+        return $('<div class="pl-facet shelf vertical"></div>').append(title, shelfContainer);
+      }
+
+      /**
        * Create and return GUI for shelves and models.
        *
        * Note: this is GUI stuff that is instantiated for each context. "Singleton" GUI elements
@@ -834,7 +896,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       static _makeVisuals(context) {
         let visuals = Context._makeShelvesGUI(context);
-        visuals.facets = Context._makeFacetWidget(context);
+        //visuals.facets = Context._makeFacetWidget(context);
+        visuals.facets2 = Context._makeFacetWidget2(context);
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
@@ -932,7 +995,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       _filter_names(value){
-        return !value.startsWith("__")
+        return !value.startsWith("__") && !value.startsWith("emp");
       }
 
       _isSameList(datalist, model_list){
@@ -1331,7 +1394,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     /**
      * A wrapper around a GraphWidget that manages GraphWidgets for contexts.
      *
-     * It always shows the GraphWidget for the active Context, creates them transparently if a not-seen-before context is set and remember previously set contexts. It automatically removes GraphWidgets for destroyed contexts.
+     * It always shows the GraphWidget for the active Context, creates them transparently if a not-seen-before context
+     * is set and remember previously set contexts. It automatically removes GraphWidgets for destroyed contexts.
      *
      * Visual consistency across contexts:
      *
@@ -1452,14 +1516,16 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             resolve();
           else if (widget === undefined && !hasContext) {
             // need to retrieve graph
-            return context.model.pciGraph_get().then(
+            //return context.model.pciGraph_get().then(
+            return context.model.ppGraph_get().then(
               graph => {
                 // create a new div to draw on
                 let $vis = $('<div class=pl-graph-pane></div>').hide();
                 this.$visual.append($vis);
 
                 // make new graph widget
-                widget = new GraphWidget($vis[0], graph);
+                widget = new PPGraphWidget($vis[0], graph, context.model.fields, Settings.widgets.ppWidget.layout);
+                //widget = new GraphWidget($vis[0], graph);
                 this._set(context, widget);
 
                 // register the widget with the context

@@ -300,9 +300,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       let trace_mode = (opts.facetName === 'predictionDataLocal' ? "" : "lines+") + "markers";
 
       // create and attach trace for each group, i.e. each leaf in the nested data
-      let attach_aggr_trace = (data) => {
+      let attach_aggr_trace = (data) => {       
+        let color_mapper = (opts.facetName === 'data aggregations' ? mapper.dataAggrFillColor : mapper.modelAggrFillColor),
+            shape_mapper = (opts.facetName === 'data aggregations' ? mapper.dataShape : mapper.aggrShape),
+            size_mapper  = (opts.facetName === 'data aggregations' ? mapper.dataSize : mapper.aggrSize);
 
-        let color_mapper = (opts.facetName === 'data aggregations' ? mapper.dataAggrFillColor : mapper.modelAggrFillColor);
         let trace = {
           name: traceName,
           type: 'scatter',
@@ -316,8 +318,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           opacity: cfg.fill.opacity,
           marker: {
             color: applyMap(data, color_mapper , aest.color.fu, fu2idx),
-            size: applyMap(data, mapper.aggrSize, aest.size.fu, fu2idx),
-            symbol: applyMap(data, mapper.aggrShape, aest.shape.fu, fu2idx),
+            size: applyMap(data, size_mapper, aest.size.fu, fu2idx),
+            symbol: applyMap(data, shape_mapper, aest.shape.fu, fu2idx),
             line: { // configures the line bounding the marker points
               color: cfg.stroke["color prediction"],
               width: cfg.stroke.width
@@ -642,7 +644,9 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         yIdx = rt.fu2idx.get(yFu),
         colorIdx = rt.fu2idx.get(colorFu);
 
-      let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
+      // EUROVIS2020: take square root of density values
+      let zdata = selectColumn(rt, colorIdx).map(Math.sqrt),
+      // let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
       
       let traces = [];
@@ -689,8 +693,9 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           z: zdata,
           zauto: false,
           zmin: 0,
-          // zmax: zmax,
-          zmax: colorFu.extent[1],
+          // zmax: zmax,          
+          //zmax: colorFu.extent[1], EUROVIS2020
+          zmax: Math.sqrt(colorFu.extent[1]),
         };
 
       if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {

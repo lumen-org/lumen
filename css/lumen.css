@@ -1,5 +1,4 @@
-/* copyright ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
-
+/* copyright 2016-2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
 /*** DEBUG STUFF ***/
 
@@ -15,7 +14,7 @@
 /*** common element style ***/
 
 html, body {
-    height: 100%;
+    height: 100vh;
 }
 
 *, *:before, *:after {
@@ -60,6 +59,7 @@ div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, t
     font-family: Roboto, sans-serif;
     font-weight: 400;
     font-size: small;
+    align-self: center;
     color: #515151;
 }
 
@@ -70,6 +70,7 @@ div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, t
     padding: 0;
     border: none;
     background-color: transparent;
+    align-self: center;
 }
 
 .pl-button {
@@ -98,7 +99,7 @@ div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, t
 
 .pl-field-name {
     font-family: Roboto Slab, serif;
-    font-size: 0.9em;
+    font-size: 0.8em;
 }
 
 .pl-field-value {
@@ -135,20 +136,21 @@ body {
 }
 
 .pl-layout-lower-left {
-    /*flex-grow: 1;*/
-    /*display: flex;*/
-    /*flex-direction: column;*/
+    min-height: 20vh;
+    height: 43vh;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
 }
 
 .pl-layout-upper-left {
-    max-height: 97vh;
+    min-height: 30vh;
+    height: 54vh;
     min-width: 200px;
+    /*height: 30vh;
+    min-width: 300px;*/
     display: flex;
     flex-direction: row;
-    flex-grow: 4;
-
-    /*overflow: scroll;*/
-    /*overflow-y: auto;*/
 }
 
 .pl-layout-right {
@@ -172,13 +174,13 @@ body {
 
 .pl-column__title {
     z-index: 1;
-    margin: 0;
-    padding: 0.2em 0 0;
+    margin: 0 0.5em 0 0.5em;
+    padding:0.2em 0 0 0;
     position: sticky;
     top: 0;
     text-align: center;
     background-color: white;
-    border-bottom: 2px solid #d5d5d5;
+    border-bottom: 1px solid #d5d5d5;
     filter: brightness(98.5%);
     user-select:  none;
 }
@@ -187,14 +189,11 @@ body {
     overflow-y: auto;
     padding: 0.5rem;
     margin: 0;
-
 }
-
 
 /* main widgets/elements of UI
  * roughly from left to right and top to bottom
  */
-
 
 #header-bar, #footer-bar {
     width: 100%;
@@ -217,7 +216,7 @@ body {
 
 .pl-spec {
     min-width: 200px; /* for constant minimal width*/
-    /*overflow-y: scroll; /* always on scroll back to reduce flickering */
+    overflow-y: scroll; /* always on scroll back to reduce flickering */
 }
 
 .pl-spec-container {
@@ -240,22 +239,20 @@ body {
 /* a shelf has a title and holds items in its list */
 
 .shelf {
-    /* margin: 0.5rem; */
-    /* padding-right: 0.2rem; */
     display: flex;
-    /* padding-left: 0.2rem; */
 }
 
 .shelf.horizontal {
     flex-direction: row;
     align-items: center;
-    min-height: 70px;
+    min-height: 43px;
+    /*min-height: 70px;*/
     min-width: 270px;
 }
 
 .shelf.vertical {
     flex-direction: column;
-    min-width: 130px;
+    min-width: 10.5vw;
 }
 
 .shelf__title {user-select: none;}
@@ -267,7 +264,7 @@ body {
 .shelf, .shelf__item {
     border: solid 2px transparent;  /* a transparent border is required to make highlighting possible without flickering */
     position: relative;
-    margin: 0.2rem;
+    margin: 0.0rem;
 }
 
 .shelf + hr {
@@ -278,7 +275,7 @@ body {
 
 .pl-fu {
     border: 0 solid;
-    background-color: #F2E6D8;
+    /*background-color: #F2E6D8;*/
     max-width: 15rem;
 }
 
@@ -322,8 +319,41 @@ body {
     color: black;
 }
 
+.pl-shelf-quantitative .pl-field, .pl-field__quantitative {
+    border-radius: 1em;
+}
+
+.pl-facetWidget__container {
+    display: grid;
+    grid-template-columns: 5.5em 3em 3em;
+    grid-gap: 2px;
+    place-items: center;
+    /* border: 1px solid darkgrey; */
+    /* border-radius: 0.3em; */
+    /* padding: 0.3rem; */
+}
+
+.pl-facetWidget__container .pl-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.pl-facet__checkbox {
+    margin: 0;
+}
+
 .pl-facet__label {
     display: inline;
+}
+
+.pl-facet__rowLabel {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.pl-facet__columnLabel {
+    font-style: italic;
 }
 
 .pl-facet__onOff {
@@ -343,16 +373,15 @@ body {
 }
 
 .pl-graph {
-    min-height: 400px;
-    /*flex-grow: 1;*/
     display: flex;
-    flex-direction: column;
+    width: 100%;
 }
 
 #pl-graph-container {
     box-sizing: border-box;
     flex-grow: 1;
     display: flex;
+    flex-direction: column;
 }
 
 .pl-graph-pane {
@@ -361,14 +390,25 @@ body {
     flex-grow: 1;
 }
 
+.pl-graph-container__message {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: larger;
+}
+
 .pl-config {
     width: 400px;
     height: 100%;
 }
 
 #pl-config-container {
-    overflow: auto;
-    height: 100%;
+    overflow-y: auto;
+    height: 90vh;
 }
 
 /* css adaption to make layout more compact for the foundation layout option of the json-editor */
@@ -721,6 +761,11 @@ textarea.pl-survey__content {
 .pl-fu__control-button {
     width: 25%;
     margin: 0 0.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
 }
 
 .pl-fu__popUp .pl-text {
@@ -973,11 +1018,14 @@ textarea.pl-survey__content {
     background-color: rgba(250,250,250,0.5);
 }
 
-.dg_slider-container {
+.dg_slider-container, .dg_tool-container {
     display: flex;
     flex-direction: row;
-    /*justify-content: ;*/
-    margin: 0.3em;
+}
+
+.dg_slider-container {
+    flex-grow: 1;
+    align-items: center;
 }
 
 .dg_slider__slider {
@@ -994,6 +1042,22 @@ textarea.pl-survey__content {
 
 .dg_slider__label {
     margin-right: 0.5rem;
+}
+
+.dg_tool-container .pl-label {
+    max-width: 60%;
+    font-size: xx-small;
+}
+
+.dg_edgeToggle-container {
+    display: flex;
+    margin-left: 0.3rem;
+}
+
+.dg_tool-button__active {
+    border-color: #3b4043;
+    /*border: solid 1px #38ACDD;*/
+    background-color: white;
 }
 
 .dg-drag-ghost {
@@ -1037,6 +1101,10 @@ textarea.pl-survey__content {
     justify-content: center;
     align-content: center;
     flex-direction: column;
+}
+
+#pl-toolbar__container {
+    height: 3vh;
 }
 
 .pl-model-alert-box-background {
@@ -1135,6 +1203,7 @@ textarea.pl-survey__content {
 .pl-model-alert-box-content ul li:hover {
     background: #ddd;
 }
+
 
 /* presents details of an model */
 

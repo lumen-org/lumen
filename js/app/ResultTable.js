@@ -28,7 +28,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                 if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.num)
                     extent[i] = d3.extent(resultTable, row => row[i]); // jshint ignore:line
                 else if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
-                    extent[i] = _.unique(_.map(resultTable, row => row[i]));
+                    extent[i] = _.unique(_.map(resultTable, row => row[i])).sort( );
                 else
                     throw new RangeError("invalid data type.");
             }
@@ -62,6 +62,23 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         });
     }
 
+    /**
+     * Normalize a column of a ResultTable in place.
+     * @param rt ResulTable
+     * @param columnIdx integer.
+     *    Index of Column to normalize.
+     * @param targetWeight see code.
+     * @param normalizationFactor see code.
+     * @returns {*}
+     */
+    function normalizeRT (rt, columnIdx, targetWeight=1, normalizationFactor=undefined) {
+        if (normalizationFactor === undefined) {
+            let currentWeight = d3.sum(rt, row => row[columnIdx]);
+            normalizationFactor = targetWeight / currentWeight;
+        }
+        rt.forEach( row => row[columnIdx] *= normalizationFactor);
+        return _attachExtent(rt);
+    }
 
     function getEmptyCollection(size, enabled) {
         let collection = new Array(size.rows);
@@ -326,5 +343,6 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
         biDensityCollection,
         getEmptyCollection,
         predictionDataLocalCollection,
+        normalizeRT,
     };
 });

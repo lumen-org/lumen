@@ -19,8 +19,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   var logger = Logger.get('pl-visuals');
   logger.setLevel(Logger.WARN);
 
-
-
   /**
    * Enum for possible layout types of shelves.
    * @type {{vertical: String, horizontal: String, box: String}}
@@ -88,8 +86,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     this.on(s.Shelf.Event.Add, record => record.beVisual());
     this.on(s.Shelf.Event.Remove, record => {
       return record.removeVisual();
-    }
-    );
+    });
 
     return this;
   };
@@ -189,7 +186,8 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    return $('<div class="pl-field pl-field-name">'+this.name+'</div>');
+    let typeClass = VisUtils.YieldTypeToClassMap[this.dataType];
+    return $(`<div class="pl-field pl-field-name ${typeClass}">${this.name}</div>`);
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record, $parent) {
@@ -296,8 +294,6 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
 
   //// in the following are utility / helper functions to create the GUI elements. I try to reuse as much as possible, but eventually there is naturally different GUI for different things...
-
-
   //
   // function argumentsEditField (fu) {
   //   function submitOnEnter(elem) {
@@ -410,7 +406,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
 
   return {
-    AttachStringT: AttachStringT,
-    DirectionTypeT: DirectionTypeT,
+    AttachStringT,
+    DirectionTypeT,
   };
 });

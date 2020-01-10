@@ -52,8 +52,8 @@
  * @copyright © 2017-2019 Philipp Lucas (philipp.lucas@uni-jena.de, philipp.lucas@dlr.de)
  */
 
-define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
-  function (Logger, Emitter, d3, d3legend, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
+define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotly-shapes', './PQL', './VisMEL', './ScaleGenerator', './MapperGenerator', './ViewSettings', './TraceGenerator', './VisualizationLegend', './AxesSynchronization', './utils', 'lib/deepmerge'],
+  function (Logger, Emitter, d3, d3legend, RT, plotlyShapes, PQL, VisMEL, ScaleGen, MapperGen, config, TraceGen, VisLegend, AxesSync, utils, merge) {
     "use strict";
 
     var logger = Logger.get('pl-ViewTable');
@@ -61,6 +61,116 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
     function _invXY(xy) {
       return (xy === 'x' ? 'y' : 'x');
+    }
+
+    /**
+     * Normalize the density values of given results tables such that they are on a common scale. Works in place.
+     * @param pRT: ResultTable
+     *   Density result table
+     * @param dataRT:ResultTable
+     *   Data result table
+     * @private
+     */
+    function _normalizeDensityOfRT(pRT, dataRT) {
+      if (pRT != undefined) {
+        // normalize pRT to 1 if no data marginals are given
+        let targetWeight = 1,
+            pIdx = pRT.idx2fu.findIndex(fu => PQL.isDensity(fu));
+        if (dataRT != undefined) {
+          // normalize pRT such that it sums to the sum of data1dRT
+          targetWeight = d3.sum(dataRT, row => row[pIdx]);
+        }
+        if (!PQL.isDensity(pRT.idx2fu[pIdx]))
+          throw RangeError("index of marginal density in result table do not match for data and model.")
+        // normalize to target
+        RT.normalizeRT(pRT, pIdx, targetWeight);
+      }
+    }
+
+    /**
+     * Like _normalizeDensityOfRT but does it for the marignal and non-marignal density result tables.
+     * @private
+     */
+    function _normalizeDensities(p1dRT, data1dRT, p2dRT, data2dRT) {
+      // marginals
+      if (p1dRT === undefined)
+        p1dRT = {};
+      if (data1dRT === undefined)
+        data1dRT = {};
+      for (const xy of ['x', 'y']) {
+        _normalizeDensityOfRT(p1dRT[xy], data1dRT[xy]);
+      }
+      // 2d densities
+      _normalizeDensityOfRT(p2dRT, data2dRT);
+    }
+
+    /**
+     * Normalize the density values of given facets such that they are on a common scale. Works in place.
+     * @param pFacet
+     * @param dataFacet
+     * @param xy string. optional. defaults to undefined.
+     *   If provided the string is used to access actual result tables within the collection.
+     */
+    function _normalizeDensityOfFacets(pFacet, dataFacet, xy=undefined) {
+      if (!pFacet.active)
+        return;
+      let pColl = pFacet.data,
+          dataColl = dataFacet.data;
+      let pSize = pColl.size,
+          dataSize = dataColl.size;
+      if (pSize.rows != dataSize.rows || pSize.cols != dataSize.cols)
+        throw RangeError("size of data and model result table do not match.");
+      if (pColl[0][0] === undefined || pColl[0][0][xy] === undefined)
+        return;
+
+      // index of density column. identical across all
+      let pIdx = (xy === undefined ? pColl[0][0] : pColl[0][0][xy])
+          .idx2fu.findIndex(fu => PQL.isDensity(fu));
+
+      /// get target weight. Its 1 if no data coll is given. else its the weight of the data coll.
+      let targetWeight = 1;
+      if (dataFacet.active) {
+        targetWeight = 0;
+        for (let rIdx = 0; rIdx < pSize.rows; ++rIdx)
+          for (let cIdx = 0; cIdx < pSize.cols; ++cIdx) {
+            let rt = dataColl[rIdx][cIdx];
+            rt = (xy === undefined ? rt : rt[xy]);
+            targetWeight += d3.sum(rt, row => row[pIdx]);
+          }
+      }
+
+      /// get current weight
+      let currentWeight = 0;
+      for (let rIdx = 0; rIdx < pSize.rows; ++rIdx)
+        for (let cIdx = 0; cIdx < pSize.cols; ++cIdx) {
+          let rt = pColl[rIdx][cIdx];
+          rt = (xy === undefined ? rt : rt[xy]);
+          currentWeight += d3.sum(rt, row => row[pIdx]);
+        }
+
+      /// apply normalization to density collection
+      let normalizationFactor = targetWeight/currentWeight;
+      for (let rIdx = 0; rIdx < pSize.rows; ++rIdx)
+        for (let cIdx = 0; cIdx < pSize.cols; ++cIdx) {
+          let rt = pColl[rIdx][cIdx];
+          rt = (xy === undefined ? rt : rt[xy]);
+          RT.normalizeRT(rt, pIdx, undefined, normalizationFactor);
+          //if (dataColl) console.log(d3.sum(dataColl, row => row[pIdx]));
+          //if (pColl) console.log(d3.sum(pColl, row => row[pIdx]));
+        }
+    }
+
+    /**
+     * Like _normalizeDensityOfFacets but does it for all of the four marignal and non-marignal density collections.
+     * @private
+     */
+    function _normalizeDensitiesGlobally(p1dColl, data1dColl, p2dColl, data2dColl) {
+      // marginals
+      for (const xy of ['x', 'y'] ) {
+        _normalizeDensityOfFacets(p1dColl, data1dColl, xy);
+      }
+      // 2d densities
+      _normalizeDensityOfFacets(p2dColl, data2dColl);
     }
 
     /**
@@ -422,7 +532,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
 
     /**
      * Normalize the extents, i.e.
-     *  * categorical extents: remove undefined if present (undefined may occur if no result could be generated for a particular query.
+     *  * categorical extents: remove undefined if present (undefined may occur if no result could be generated for a particular query.)
      *  * quantitative extents: make the range bit lager.
      *  *
      * @param fuExtent
@@ -1000,14 +1110,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
     class ViewTable {
 
       constructor(pane, legend, vismelColl, facets) {
-
         Emitter(this);
-
-        // this.aggrColl = aggrColl;
-        // this.dataColl = dataColl;
-        // this.uniColl = uniColl;
-        // this.biColl = biColl;
-        // this.testDataColl = testDataColl;
         this.facets = facets;
         this.vismel = vismelColl.base;
         this.vismelColl = vismelColl;  // is the collection of the base queries for each atomic plot, i.e. cell of the view table
@@ -1025,6 +1128,11 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './plotly-shapes', './PQL
         vismel.used = vismel.usages();
 
         let axesSyncManager = this.axesSyncManager;
+
+        // Quick Fix of Normalization Problem, #issue ##
+        // TODO: fix this cleaner.
+        // TODO: implement an iterator/map/apply over collections and resulttables. This would really reduce duplication :)
+        _normalizeDensitiesGlobally(facets.marginals, facets.dataMarginals, facets.contour, facets['data density']);
 
         // create global extent (i.e. across all result collections as far as it makes sense!)
         // globalExtent is a Map that maps FieldUsages to their extents

@@ -208,15 +208,23 @@ define(['lib/emitter', 'cytoscape', 'cytoscape-cola', 'lib/d3-color'], function 
    */
   class GraphWidget {
 
-    constructor(domDiv, graph, layoutmode='cola') {
-
-      this._originalNodes = convertNodenameDict(graph.nodes);
-      this._originalEdges = convertEdgeList(graph.edges);      
+    constructor(domDiv, graph, layoutmode='cola') {    
 
       let graphContainer = $('<div></div>')
         .addClass('dg_graphCanvas-container')
         .appendTo(domDiv);
+     
+      if (!graph) {
+        // no graph data avaiable - just show info message
+        graphContainer.append($('<div class=pl-graph-container__message>no graph available</div>'));       
+        this._originalNodes = convertNodenameDict([]);
+        this._originalEdges = convertEdgeList([]); 
 
+      } else {
+        this._originalNodes = convertNodenameDict(graph.nodes);
+        this._originalEdges = convertEdgeList(graph.edges); 
+      }  
+  
       this._cy = cytoscape({
         container: graphContainer,
         elements: [...this._originalNodes, ...this._originalEdges],

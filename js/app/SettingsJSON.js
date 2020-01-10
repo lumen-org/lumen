@@ -31,10 +31,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   let greys = x => c2h(d3chromatic.interpolateGreys(x));
   //let greys = x => d3chromatic.interpolateGreys(x);
 
-  function makeDensityScale(colorArray) {
+  function makeDensityScale(colorArray, dropSteps=0) {
+    colorArray = colorArray.slice(dropSteps);
     const threshhold = 0.000001;
     let colorScale = [[0, 'rgba(255,255,255,0)'], [threshhold, 'rgba(255,255,255,0)']];  // to make sure very small values are drawn in white
     // todo: this is ugly!
+    // let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
     let split = ss.Splitter.equidist(new Domain.Numeric([0,1]), true, colorArray.length-1); // -1 is a BUG!!
     split.push(1);
     split[0] = threshhold;
@@ -70,8 +72,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       greens: d3chromatic.schemeGreens[9],
       density_greens: makeDensityScale(d3chromatic.schemeGreens[9]),
       greys: d3chromatic.schemeGreys[9],
-      density_greys: makeDensityScale(d3chromatic.schemeGreys[9]),
-      density_pinks: makeDensityScale(d3chromatic.schemeRdPu[9]),
+      density_greys_old: makeDensityScale(d3chromatic.schemeGreys[9], 0),
+      density_pinks_old: makeDensityScale(d3chromatic.schemeRdPu[9], 0),
+      density_greys: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateGreys(i))),     
+      density_pinks: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateRdPu(i))),      
       oranges: d3chromatic.schemeOranges[9],
       reds: d3chromatic.schemeReds[9],
       rdBu: d3chromatic.schemeRdBu[11],
@@ -98,6 +102,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "levels": {type: "number"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
+      "number of samples": {type: "integer"},
       "splitCnts": {
         type: "object",
         format: "grid",
@@ -155,7 +160,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     resolution_1d: 25,
     resolution_2d: 25,
     opacity: 0.5,
-    levels: 16,
+    levels: 30,
+    "number of samples": 200,
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches
@@ -307,6 +313,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     // },
 
     data: { //TODO: where is that used?
+      // single: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
+      // marginal: d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
       single: d3chromatic.schemeDark2[7], // d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
       marginal: d3chromatic.schemeDark2[7], //  d3color.hsl(d3chromatic.schemePaired[9]).darker(4).rgb().toString(),
       // marginal_scale_Enum: ,
@@ -495,7 +503,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "fill": {
             type: "object", format: "grid",
             properties: {
-              "def": {type: "string", format: "color", watch: {_single: "colors.testData.single"}, template: "{{_single}}"},
+              "def": {type: "string", format: "color", watch: {_single: "colors.modelSamples.single"}, template: "{{_single}}"},
               opacity: {type: "number"},
             },
           },
@@ -757,7 +765,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         color: greys(0.7) // the line color of the contour lines (if contours.coloring is not set to 'line')
       },
       contour: {
-        width: 3, // set to 3 for non-filed lines
+        width: 3, // set to 3 for non-filled lines
         levels: tweaksInitial.levels, // TODO: watches!
         coloring: "lines", // possible values are: "fill" | "heatmap" | "lines"
         opacity: 0.5,
@@ -1045,6 +1053,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     // }
   };
 
+  let ppWidgetSchema = {
+    type: "object",
+    properties: {
+      "layout": {type: "string"},
+      "forbiddenEdges": {
+        type: "object",
+        properties: {
+          "showByDefault": {type: "boolean"},
+        },
+      },
+    }
+  };
+
+  let ppWidgetInitial = {
+    "layout": "circle", // circle or cola
+    "forbiddenEdges": {
+      "showByDefault": true
+    },
+  };
 
   let jsonSchema = {
     type: "object",
@@ -1054,12 +1081,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "map": {"$ref": "#/definitions/map"},
       "colors": {"$ref": "#/definitions/colors"},
       "plots": {"$ref": "#/definitions/plots"},
+      "widgets": {"$ref": "#/definitions/widgets"},
     },
     definitions: {
       "tweaks": tweaksSchema,
       "map": mapSchema,
       "colors": colorsSchema,
       "plots": plotsSchema,
+      "widgets": {
+        type: "object",
+        properties: {
+          ppWidget: ppWidgetSchema,
+        }
+      }
     }
   };
 
@@ -1069,6 +1103,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     colors: colorsInitial,
     shapes: shapesInitial,
     plots: plotsInitial,
+    widgets: {
+      ppWidget: ppWidgetInitial,
+    }
   };
 
 
@@ -1116,7 +1153,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     c.widget = {
       graph: {
-        enable: false,  // enable or disable the graph widget
+        enable: true,  // enable or disable the graph widget
       },
       userStudy: {
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
@@ -1149,12 +1186,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // }
       aggregations: {
         possible: true, // true iff the view should be made accessible to the user at all, false else
-        active: true, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
+        active: false, // true iff the view is active (i.e.. computed and visible) BY DEFAULT false if not
       },
 
       'data aggregations': {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // training data
@@ -1184,7 +1221,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data marginals
       dataMarginals: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // model density 'central' plot
@@ -1222,19 +1259,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         active: true,
       },
       undo: {
-        active: false,
+        active: true,
       },
       redo: {
-        active: false,
+        active: true,
       },
       clear: {
         active: true,
       },
       details: {
-        active: true,
+        active: false,
       },
       graph: {
-        active: true,
+        active: false,
         graph: {
           active: true
         },

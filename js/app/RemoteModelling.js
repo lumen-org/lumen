@@ -377,6 +377,20 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         });
     }
 
+    ppGraph_get() {
+      let query = {
+        'FROM': this.name,
+        'PP_GRAPH.GET': true,
+      };
+      return executeRemotely(query, this.url)
+          .then(jsonData => {
+            if (jsonData.model !== this.name)
+              throw RangeError("Received probabilistic program graph of wrong model: {1}  instead of  {2}".format(jsonData.model, this.name))
+            this.ppGraph = jsonData.graph;
+            return jsonData.graph;
+          });
+    }
+
     /**
      * Returns a copy of this object. This does not actually copy any model on the remote host.
      * It simply copies the local object and does not run any remote queries at all.
