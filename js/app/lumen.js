@@ -901,7 +901,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
-        visuals.ppc = new PPCWidget(context, infoBox);
+        //visuals.ppc = new PPCWidget(context, infoBox);
 
         context._busyIndicator = $('<div class="pl-busy-indicator"></div>')
           .append('<div class="pl-label"></div>')
