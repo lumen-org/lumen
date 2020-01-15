@@ -269,7 +269,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
-       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has truthy commit flag.
+       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has a truthy commit flag.
        *
        * Note that this function accesses the file scope, as it uses the infoBox variable.
        * @private
@@ -901,6 +901,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
+        visuals.ppc = new PPCWidget(context, infoBox);
 
         context._busyIndicator = $('<div class="pl-busy-indicator"></div>')
           .append('<div class="pl-label"></div>')

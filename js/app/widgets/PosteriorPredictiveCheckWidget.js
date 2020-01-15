@@ -7,6 +7,11 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
    */
   class PosteriorPredictiveCheckWidget {
 
+    /**
+     * Returns a new PPC widget. It UI is available at the `.$visual` attribute.
+     * @param context {@Context} The context of this widget.
+     * @param infobox The InfoBox to print information with.
+     */
     constructor(context, infobox) {
       let that = this;
       that._context = undefined;
@@ -29,7 +34,7 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
               '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
           );
 
-      // currently it's static, but may be dynamic in future:
+      // currently the possible test quantities are static but they may be dynamic in future:
       that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
       for (let q of test_quantities)
         that._$testQuantityList.append($("<option>").attr('value', q).text(q));
@@ -40,11 +45,12 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
           that._$testQuantityList
       );
 
+      // shelf where fields of a model may be dropped
       that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
       that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
 
+      // run ppc query whenever the shelf's content changes
       that.ppcShelf.on(Emitter.ChangedEvent, event => {
-        //infoBox.message("PPCs not implemented yet.");
         let fields = that.ppcShelf.content(),
             promise = that._context.model.ppc(fields, {k: 10, n: 3, TEST_QUANTITY: 'median'});
 
@@ -69,6 +75,7 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
      * @param context A context.
      */
     setContext(context) {
+      // TODO: add this check again once #75 is solved
       // if (!(context instanceof Context))
       //   throw TypeError("context must be an instance of Context");
       this._context = context;
