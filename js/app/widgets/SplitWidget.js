@@ -1,6 +1,6 @@
 /* copyright © 2018 Philipp Lucas (philipp.lucas@uni-jena.de) */
 
-define(['lib/emitter', './VisUtils'], function (Emitter, VisUtils) {
+define(['lib/emitter', '../VisUtils'], function (Emitter, VisUtils) {
 
   'use strict';
 

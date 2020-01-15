@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './ProbabilisticProgramGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './widgets/DependencyGraph', './ProbabilisticProgramGraph', './widgets/FilterWidget', './widgets/PosteriorPredictiveCheckWidget', './PQL', './VisualizationRecommendation'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPCWidget, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -1549,80 +1549,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
     }
 
-    /**
-     * A widget that lets you create Posterior Predictive Check visualizations.
-     *
-     *
-     */
-    class PosteriorPredictiveCheckWidget {
-
-      constructor (context) {
-        let that = this;
-        that._context = undefined;
-        if (context !== undefined)
-          that.setContext(context);
-
-        const test_quantities = ['min', 'max', 'average', 'median'];
-
-        // make visual context
-        that._$selectK = $('<div class="pl-ppc__section"></div>')
-            .append(
-                '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
-                '<input class="pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
-            );
-
-        that._$selectN = $('<div class="pl-ppc__section"></div>')
-            .append(
-                '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
-                '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
-            );
-
-        // currently it's static, but may be dynamic in future:
-        that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
-        for (let q of test_quantities)
-          that._$testQuantityList.append($("<option>").attr('value',q).text(q));
-
-        that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
-            ('<div class="pl-h2 pl-ppc__h2">test quantity</div>'),
-            ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median">'),
-            that._$testQuantityList
-        );
-
-        that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
-        that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
-
-        that.ppcShelf.on(Emitter.ChangedEvent, event => {
-          //infoBox.message("PPCs not implemented yet.");
-          let fields = that.ppcShelf.content(),
-            promise = that._context.model.ppc(fields, {k:10, n:3, TEST_QUANTITY:'median'});
-
-          promise.then(
-              res => {
-                infoBox.message("received PPC results!");
-                console.log(res.toString());
-              }
-          );
-        });
-
-        that.$visual = $('<div class="pl-ppc"></div>')
-//             .append('<div class="pl-h2"># of repetitions</div>')
-            .append(this._$selectK)
-            .append(this._$selectN)
-            .append(this._$selectTestQuantity)
-            .append(this.ppcShelf.$visual);
-      }
-
-      /**
-       * Sets the context that it controls.
-       * @param context A context.
-       */
-      setContext (context) {
-        if (!(context instanceof Context))
-          throw TypeError("context must be an instance of Context");
-        this._context = context;
-      }
-
-    }
 
     /**
      * A widget for user studies. It allow a subject to report feedback.
@@ -2022,7 +1948,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
     // posterior predictive check widget
-    let ppcWidget = new PosteriorPredictiveCheckWidget(undefined);
+    let ppcWidget = new PPCWidget(undefined);
     if (Settings.widget.posteriorPredictiveChecks.enabled) {
       ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
     }
