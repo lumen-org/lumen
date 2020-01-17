@@ -667,11 +667,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       static _makeVisualization(context) {
-        let $paneDiv = $('<div class="pl-visualization__pane"></div>'),
+        let $paneDiv = $('<div class="pl-visualization__pane"  id="dashboard-pl-zoomable-plot"></div>'),
           $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
           $legendDiv = $('<div class="pl-legend"></div>');
 
-        let $vis = $('<div class="pl-visualization pl-active-able"></div>')
+        let $vis = $('<div class="pl-visualization pl-active-able" id="dashboard-pl-zoomable-plot"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
           .mousedown( () => {
             if (contextQueue.first().uuid !== context.uuid) {
@@ -715,6 +715,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
+        $vis.zoomTarget();
+
         return $vis;
       }
 
