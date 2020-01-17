@@ -667,11 +667,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       static _makeVisualization(context) {
-        let $paneDiv = $('<div class="pl-visualization__pane"  id="dashboard-pl-zoomable-plot"></div>'),
+        let $paneDiv = $('<div class="pl-visualization__pane"></div>'),
           $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
           $legendDiv = $('<div class="pl-legend"></div>');
 
-        let $vis = $('<div class="pl-visualization pl-active-able" id="dashboard-pl-zoomable-plot"></div>')
+        let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
           .mousedown( () => {
             if (contextQueue.first().uuid !== context.uuid) {
@@ -715,7 +715,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
-        $vis.zoomTarget();
+        
+        
+         // zoom into the canvas when click on the plot
+        $vis.zoomTarget({
+      
+          closeclick: true,
+          root: $(document.getElementsByClassName("zoomContainer"))});
 
         return $vis;
       }
@@ -1911,7 +1917,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       let $draggedElements = undefined,
         initialMousePos = undefined,
         panning = false;
-
+      
       $c.on('mousedown', (ev, foo, bar) => {          
           panning = (ev.target === ev.currentTarget);
           if (!panning)
