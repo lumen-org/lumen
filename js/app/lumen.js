@@ -719,7 +719,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         
          // zoom into the canvas when click on the plot
         $vis.zoomTarget({
-      
+          targetsize:0.75, 
+          duration:600,
           closeclick: true,
           root: $(document.getElementsByClassName("zoomContainer"))});
 
