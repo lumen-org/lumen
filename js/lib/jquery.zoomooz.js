@@ -1519,14 +1519,14 @@ if(!$.zoomooz) {
 
             // FIXME: there could be many of these called simultaneously,
             // don't know what would happen then
-            $root.click();
+            $root.dblclick();
         }
 
-        clickTarget.on("click", function(evt) {
+        clickTarget.on("dblclick", function(evt) {
 
             // closeclick not available here...
             if(settings.closeclick && zoomTarget.hasClass("selectedZoomTarget")) {
-                settings.root.click();
+                settings.root.dblclick();
             } else {
                 zoomTarget.zoomTo(settings);
             }
@@ -1756,7 +1756,7 @@ if(!$.zoomooz) {
             };
         }());
 
-        clickTarget.on("click", function(evt) {
+        clickTarget.on("dblclick", function(evt) {
 
             var target;
             var performZoom = true;
@@ -1799,7 +1799,7 @@ if(!$.zoomooz) {
                 //target.zoomTo();
 
                 // FIXME: hacky...
-                target.click();
+                target.dblclick();
             } else {
                 // don't do anything if no wrap
                 // (would be great if the button was disabled)
