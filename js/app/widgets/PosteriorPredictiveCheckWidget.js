@@ -1,11 +1,11 @@
 /* copyright © 2020 Philipp Lucas (philipp.lucas@dlr.de) */
 
-define(['lib/emitter', '../shelves'], function (Emitter, sh) {
+define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function (Emitter, sh, VisUtils, config) {
 
   /**
-   * A widget that lets you create Posterior Predictive Check visualizations.
+   * A widget that lets you create Posterior Predictive Check (PPC) visualizations.
    */
-  class PosteriorPredictiveCheckWidget {
+  class PPCWidget {
 
     /**
      * Returns a new PPC widget. It UI is available at the `.$visual` attribute.
@@ -15,6 +15,7 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
     constructor(context, infobox) {
       let that = this;
       that._context = undefined;
+      that._model = undefined;
       that._infobox = infobox;
       if (context !== undefined)
         that.setContext(context);
@@ -51,13 +52,29 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
 
       // run ppc query whenever the shelf's content changes
       that.ppcShelf.on(Emitter.ChangedEvent, event => {
-        let fields = that.ppcShelf.content(),
-            promise = that._context.model.ppc(fields, {k: 10, n: 3, TEST_QUANTITY: 'median'});
+        let fields = that.ppcShelf.content();
+        if (fields.length === 0)
+          return;
 
+        if (fields.length === 1) {
+          that._model = fields[0].model;
+          console.log(`set new model: ${that._model.name}`);
+        }
+
+        // verify that all fields are of the same context
+        if (!_.all(fields, f => f.model.name == that._model.name)) {
+          that._infobox.message("Cannot mix different models in one PPC visualization.");
+          return;
+        }
+
+        // query ppc results
+        let promise = that._model.ppc(fields, {k: 20, n: 50, TEST_QUANTITY: 'median'});
         promise.then(
             res => {
               that._infobox.message("received PPC results!");
               console.log(res.toString());
+
+              visualize(res)
             }
         );
       });
@@ -79,9 +96,117 @@ define(['lib/emitter', '../shelves'], function (Emitter, sh) {
       // if (!(context instanceof Context))
       //   throw TypeError("context must be an instance of Context");
       this._context = context;
+      this._model = context.model;
     }
 
   }
 
-  return PosteriorPredictiveCheckWidget
+  function makeVisualization(onResize) {
+    let $paneDiv = $('<div class="pl-visualization__pane"></div>')
+        // $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
+        $removeButton = VisUtils.removeButton().click( () => $.remove($paneDiv) );
+        //$legendDiv = $('<div class="pl-legend"></div>');
+
+    let $vis = $('<div class="pl-visualization pl-active-able"></div>')
+        .append($paneDiv, $removeButton/*, $legendDiv*/)
+        // .mousedown( () => {
+        //   if (contextQueue.first().uuid !== context.uuid) {
+        //     activate(context, ['visualization', 'visPane', 'legendPane']);
+        //     ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
+        //   }
+        // })
+        .resizable({
+          ghost: true,
+          helper: "pl-resizing",
+          stop: onResize,
+          // stop: (event, ui) => {
+          //   // let c = context;
+          //   // ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
+          //   c.viewTable.onPaneResize(event);
+          // }
+        });
+
+    $vis.__is_dragging = false;
+    $vis.draggable(
+        {/* stop:
+              (event, ui) => {
+                ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
+              },*/
+          handle: '.pl-visualization__pane',
+          start: (ev, ui) => {
+            $vis.__is_dragging = true;
+          },
+
+          drag: (ev, ui) => {
+            // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
+            // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
+            if (ev.toElement && ev.toElement.className === 'dragcover') {
+              return false;
+            }
+                // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
+            // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it
+            else if (ev.originalEvent.target.getAttribute('class').includes('drag') && $vis.__is_dragging) {
+              return false;
+            }
+            $vis.__is_dragging = false;
+          }
+        }); // yeah, that was easy. just made it draggable!
+    $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
+    return $vis;
+  }
+
+  function visualize(ppcResult) {
+     // create new visualization container
+    let $vis = makeVisualization( ()=>console.warn("yet to implement on resize") );
+
+    // attach visualization
+    $('#pl-dashboard__container').append($vis);
+
+    // draw content
+    const len = ppcResult.reference.length;
+
+    // shapes in plotly: https://plot.ly/javascript/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axes
+    let referenceLines = ppcResult.reference.map( (ref, i) => ({
+        type: 'line',
+        xref: `x${i+1}`,
+        yref: 'paper',
+        x0: ref,
+        y0: 0,
+        x1: ref,
+        y1: 1,
+        line: {
+          color: 'rgb(255,0,0)',
+        }
+      }));
+
+    let histogramTraces = ppcResult.test.map( (test, i) => ({
+      x: test,
+      xaxis: `x${i+1}`,
+      yaxis: `y${i+1}`,
+      name: ppcResult.header[i],
+      type: 'histogram'
+    }));
+
+    let traces = [...histogramTraces],
+        // layout = Object.assign({ shapes: [...referenceLines]}, xAxes);
+        layout = {
+          shapes: [...referenceLines],
+          grid: {
+            rows: 1,
+            columns: len,
+            pattern: 'independent',
+          }
+        };
+
+    // DEBUG
+    console.log(traces);
+    console.log(layout);
+
+    Plotly.newPlot($vis.get(0), traces, layout, config.plotly);
+  }
+
+  return {
+    PPCWidget,
+    // visualize,
+  }
 });

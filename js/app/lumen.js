@@ -12,7 +12,7 @@
  */
 
 define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './widgets/DependencyGraph', './ProbabilisticProgramGraph', './widgets/FilterWidget', './widgets/PosteriorPredictiveCheckWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPCWidget, PQL, VisRec) {
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPC, PQL, VisRec) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -697,7 +697,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
               },
             handle: '.pl-visualization__pane',
             start: (ev, ui) => {
-                $vis.__is_dragging = true; // 
+                $vis.__is_dragging = true;
             },
     
             drag: (ev, ui) => {
@@ -901,7 +901,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
-        //visuals.ppc = new PPCWidget(context, infoBox);
+        //visuals.ppc = new PPC.PPCWidget(context, infoBox);
 
         context._busyIndicator = $('<div class="pl-busy-indicator"></div>')
           .append('<div class="pl-label"></div>')
@@ -1949,7 +1949,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
     // posterior predictive check widget
-    let ppcWidget = new PPCWidget(undefined);
+    let ppcWidget = new PPC.PPCWidget(undefined, infoBox);
     if (Settings.widget.posteriorPredictiveChecks.enabled) {
       ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
     }
