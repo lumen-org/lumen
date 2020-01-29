@@ -1105,7 +1105,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     plots: plotsInitial,
     widgets: {
       ppWidget: ppWidgetInitial,
-    }
+    },
   };
 
 
@@ -1168,6 +1168,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       posteriorPredictiveChecks: {
         enabled: true,  // enable or disable the ppc
       }
+    };
+
+    // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
+    c.plotly = {
+      edits: {
+        annotationPosition: true,
+        colorbarPosition: true,
+        legendPosition: true,
+      },
+      scrollZoom: true,
+      displaylogo: false,
+      // modeBarButtons: [
+      //   // can add custom functionality!
+      //   // see: https://github.com/plotly/plotly.js/blob/v1.3.0/src/components/modebar/buttons.js
+      //   // and: https://codepen.io/etpinard/pen/QyLbqY
+      //   ['pan2d','zoom2d','resetScale2d','sendDataToCloud',],
+      // ],
+      modeBarButtonsToRemove: ['toImage', 'zoomIn2d', 'zoomOut2d', 'boxSelect', 'lassoSelect', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
+      // modeBarButtonsToAdd: [],
     };
 
     return c;

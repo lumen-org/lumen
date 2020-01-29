@@ -1149,26 +1149,6 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
         // TODO: build mappers here!!
         // build mappers for visual channels: fill, size, shape, (but not positional)
 
-        // and global config options.
-        // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
-        let plConfig = {
-          edits: {
-            annotationPosition: true,
-            colorbarPosition: true,
-            legendPosition: true,
-          },
-          scrollZoom: true,
-          displaylogo: false,
-          // modeBarButtons: [
-          //   // can add custom functionality!
-          //   // see: https://github.com/plotly/plotly.js/blob/v1.3.0/src/components/modebar/buttons.js
-          //   // and: https://codepen.io/etpinard/pen/QyLbqY
-          //   ['pan2d','zoom2d','resetScale2d','sendDataToCloud',],
-          // ],
-          modeBarButtonsToRemove: ['toImage', 'zoomIn2d', 'zoomOut2d', 'boxSelect', 'lassoSelect', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
-          // modeBarButtonsToAdd: [],
-        };
-
         let [at, geometry, layout, axes, emptyTraces] = makeLayout(vismel, vismelColl, facets, pane, this.size, axesSyncManager);
 
         let traces = makeTraces(this.size, geometry, facets, vismelColl, axes.mainAxesIds, axes.marginalAxesIds, axes.catQuantAxesIds, axes.templAxesIds);
@@ -1176,7 +1156,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
         // plot everything
         this.plotlyTraces = [...emptyTraces, ...traces];
         this.plotlyLayout = layout;
-        this.plotlyConfig = plConfig;
+        this.plotlyConfig = config.plotly;
         this._plot();
       };
 
