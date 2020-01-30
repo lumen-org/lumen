@@ -69,14 +69,21 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
         // query ppc results
         let promise = that._model.ppc(fields, {k: 20, n: 50, TEST_QUANTITY: 'median'});
+
+        // create visualization
+        let vis = new PPCVisualization();
+        // TODO: set busy state?
+
         promise.then(
             res => {
               that._infobox.message("received PPC results!");
               console.log(res.toString());
-
-              visualize(res)
+              vis.render(res);
             }
-        );
+        ).catch( err => {
+              infobox.message(`PPC Query failed: ${err}", "warning`);
+              vis.remove();
+            });
       });
 
       that.$visual = $('<div class="pl-ppc"></div>')
@@ -101,72 +108,34 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
   }
 
-  function makeVisualization(onResize) {
-    let $paneDiv = $('<div class="pl-visualization__pane"></div>')
-        // $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
-        $removeButton = VisUtils.removeButton().click( () => $.remove($paneDiv) );
-        //$legendDiv = $('<div class="pl-legend"></div>');
+  class PPCVisualization {
 
-    let $vis = $('<div class="pl-visualization pl-active-able"></div>')
-        .append($paneDiv, $removeButton/*, $legendDiv*/)
-        // .mousedown( () => {
-        //   if (contextQueue.first().uuid !== context.uuid) {
-        //     activate(context, ['visualization', 'visPane', 'legendPane']);
-        //     ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
-        //   }
-        // })
-        .resizable({
-          ghost: true,
-          helper: "pl-resizing",
-          stop: onResize,
-          // stop: (event, ui) => {
-          //   // let c = context;
-          //   // ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
-          //   c.viewTable.onPaneResize(event);
-          // }
-        });
+    constructor ($parent=undefined) {
+      if ($parent === undefined)
+        $parent = $('#pl-dashboard__container');
 
-    $vis.__is_dragging = false;
-    $vis.draggable(
-        {/* stop:
-              (event, ui) => {
-                ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
-              },*/
-          handle: '.pl-visualization__pane',
-          start: (ev, ui) => {
-            $vis.__is_dragging = true;
-          },
+      this.$visual = this._makeVisual();
+      this._makeDraggable();
+      this._makeResizeable();
 
-          drag: (ev, ui) => {
-            // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
-            // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
-            if (ev.toElement && ev.toElement.className === 'dragcover') {
-              return false;
-            }
-                // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
-            // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it
-            else if (ev.originalEvent.target.getAttribute('class').includes('drag') && $vis.__is_dragging) {
-              return false;
-            }
-            $vis.__is_dragging = false;
-          }
-        }); // yeah, that was easy. just made it draggable!
-    $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
-    return $vis;
-  }
+      this._ppcResult = undefined;
 
-  function visualize(ppcResult) {
-     // create new visualization container
-    let $vis = makeVisualization( ()=>console.warn("yet to implement on resize") );
+      $parent.append(this.$visual);
+    }
 
-    // attach visualization
-    $('#pl-dashboard__container').append($vis);
+    render (ppcResult) {
 
-    // draw content
-    const len = ppcResult.reference.length;
+      if (ppcResult === undefined)
+        return;
 
-    // shapes in plotly: https://plot.ly/javascript/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axes
-    let referenceLines = ppcResult.reference.map( (ref, i) => ({
+      // save for later redraw
+      this._ppcResult = ppcResult;
+
+      // draw content
+      const len = ppcResult.reference.length;
+
+      // shapes in plotly: https://plot.ly/javascript/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axes
+      let referenceLines = ppcResult.reference.map( (ref, i) => ({
         type: 'line',
         xref: `x${i+1}`,
         yref: 'paper',
@@ -179,34 +148,117 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
         }
       }));
 
-    let histogramTraces = ppcResult.test.map( (test, i) => ({
-      x: test,
-      xaxis: `x${i+1}`,
-      yaxis: `y${i+1}`,
-      name: ppcResult.header[i],
-      type: 'histogram'
-    }));
+      let histogramTraces = ppcResult.test.map( (test, i) => ({
+        x: test,
+        xaxis: `x${i+1}`,
+        yaxis: `y${i+1}`,
+        name: ppcResult.header[i],
+        type: 'histogram'
+      }));
 
-    let traces = [...histogramTraces],
-        // layout = Object.assign({ shapes: [...referenceLines]}, xAxes);
-        layout = {
-          shapes: [...referenceLines],
-          grid: {
-            rows: 1,
-            columns: len,
-            pattern: 'independent',
-          }
-        };
+      let traces = [...histogramTraces],
+          // layout = Object.assign({ shapes: [...referenceLines]}, xAxes);
+          layout = {
+            shapes: [...referenceLines],
+            grid: {
+              rows: 1,
+              columns: len,
+              pattern: 'independent',
+            }
+          };
 
-    // DEBUG
-    console.log(traces);
-    console.log(layout);
+      // DEBUG
+      console.log(traces);
+      console.log(layout);
 
-    Plotly.newPlot($vis.get(0), traces, layout, config.plotly);
+      Plotly.newPlot(this.$visual.get(0), traces, layout, config.plotly);
+    }
+
+    redraw () {
+      //console.log("redraw not implemented");
+      this.render(this._ppcResult);
+    }
+
+    remove () {
+      console.log("removing PPC vis");
+      this.$visual.remove();
+    }
+
+    _makeDraggable() {
+      this.__is_dragging = false;
+      this.$visual.draggable(
+          {/* stop:
+              (event, ui) => {
+                ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
+              },*/
+//             handle: '.pl-visualization',
+            handle: '.pl-visualization__pane',
+            start: (ev, ui) => {
+              this.__is_dragging = true;
+            },
+
+            drag: (ev, ui) => {
+              // TODO: this is a rather dirty hack to prevent that the whole visualization widget is dragged when the user zooms using the plotly provided interaction.
+              // this is a reported change of behaviour, according to here: https://community.plot.ly/t/click-and-drag-inside-jquery-sortable-div-change-in-1-34-0/8396
+              if (ev.toElement && ev.toElement.className === 'dragcover') {
+                return false;
+              }
+                  // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
+              // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it
+              else if (ev.originalEvent.target.getAttribute('class').includes('drag') && this.__is_dragging) {
+                return false;
+              }
+              this.__is_dragging = false;
+            }
+          }); // yeah, that was easy. just made it draggable!
+    }
+
+    _makeResizeable() {
+      this.$visual.resizable({
+            ghost: true,
+            helper: "pl-resizing",
+            stop: (ev, ui) => this.redraw()
+            // stop: (event, ui) => {
+            //   // let c = context;
+            //   // ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
+            //   c.viewTable.onPaneResize(event);
+            // }
+          });
+    }
+
+    _makeVisual () {
+      let $paneDiv = $('<div class="pl-visualization__pane"></div>'),
+          $removeButton = VisUtils.removeButton().click( () => this.$visual.remove());
+      //$legendDiv = $('<div class="pl-legend"></div>');
+
+      let $vis = $('<div class="pl-visualization pl-active-able"></div>')
+          .append($paneDiv, $removeButton/*, $legendDiv*/)
+      // .mousedown( () => {
+      //   if (contextQueue.first().uuid !== context.uuid) {
+      //     activate(context, ['visualization', 'visPane', 'legendPane']);
+      //     ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
+      //   }
+      // })
+          .css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
+
+      return $vis;
+    }
+
+  }
+
+
+  function makeVisualization(onResize) {
+    let $paneDiv = $('<div class="pl-visualization__pane"></div>')
+        // $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
+        $removeButton = VisUtils.removeButton().click( () => $paneDiv.remove() );
+        //$legendDiv = $('<div class="pl-legend"></div>');
+
+
+    $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
+    return $vis;
   }
 
   return {
     PPCWidget,
-    // visualize,
   }
 });
