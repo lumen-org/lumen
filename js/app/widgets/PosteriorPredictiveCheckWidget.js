@@ -28,13 +28,13 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       this._$selectK = $('<div class="pl-ppc__section"></div>')
           .append(
               '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
-              '<input class="pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
+              '<input class="pl-input pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
           );
 
       this._$selectN = $('<div class="pl-ppc__section"></div>')
           .append(
               '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
-              '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
+              '<input class="pl-input pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
           );
 
       // currently the possible test quantities are static but they may be dynamic in future:
@@ -44,7 +44,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
       this._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
           ('<div class="pl-h2 pl-ppc__h2">test quantity</div>'),
-          ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median">'),
+          ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median" id="pl-ppc_test-quantity-input">'),
           this._$testQuantityList
       );
 
@@ -62,10 +62,9 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       this._$buttons = $('<div class="pl-ppc__button-bar"></div>').append($clearButton, $queryButton);
 
       // run ppc query whenever the shelf's content changes
-      this.ppcShelf.on(Emitter.ChangedEvent, event => this.query());
+      this.ppcShelf.on(Emitter.ChangedEvent, this.query.bind(this));
 
       this.$visual = $('<div class="pl-ppc"></div>')
-          //             .append('<div class="pl-h2"># of repetitions</div>')
           .append(this.ppcShelf.$visual)
           .append(this._$selectK)
           .append(this._$selectN)
@@ -79,6 +78,19 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
      */
     clear() {
       this.ppcShelf.clear();
+    }
+
+    getNumberOfRepetitions() {
+      return parseInt($('#pl-ppc_samples-input').val());
+      //return this._$selectN('.input').val(); // why does this not work?
+    }
+
+    getNumberOfSamples () {
+      return parseInt($('#pl-ppc_repetitions-input').val());
+    }
+
+    getTestQuantity () {
+      return $('#pl-ppc_test-quantity-input').val();
     }
 
     /**
@@ -100,8 +112,15 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
           return;
         }
 
+        // get parameter values
+        let params = {
+          k: this.getNumberOfSamples(),
+          n: this.getNumberOfRepetitions(),
+          TEST_QUANTITY: this.getTestQuantity()
+        };
+
         // query ppc results
-        let promise = this._model.ppc(fields, {k: 20, n: 50, TEST_QUANTITY: 'median'});
+        let promise = this._model.ppc(fields, params);
 
         // create visualization
         let vis = new PPCVisualization();
@@ -114,7 +133,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
               vis.render(res);
             }
         ).catch( err => {
-          infobox.message(`PPC Query failed: ${err}", "warning`);
+          this._infobox.message(`PPC Query failed: ${err}", "warning`);
           vis.remove();
         });
 
