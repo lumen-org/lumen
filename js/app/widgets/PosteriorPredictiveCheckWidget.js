@@ -53,6 +53,15 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
       that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
 
+      // buttons bar
+      let $clearButton = VisUtils.button('Clear', 'clear')
+          .addClass('pl-ppc__button')
+          .click( () => {})
+      let $queryButton = VisUtils.button('Query', 'geo-position2')
+          .addClass('pl-ppc__button')
+          .click( () => {});
+      this._$buttons = $('<div class="pl-ppc__button-bar"></div>').append($clearButton, $queryButton);
+
       // run ppc query whenever the shelf's content changes
       that.ppcShelf.on(Emitter.ChangedEvent, event => {
         let fields = that.ppcShelf.content();
@@ -91,10 +100,11 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
       that.$visual = $('<div class="pl-ppc"></div>')
           //             .append('<div class="pl-h2"># of repetitions</div>')
+          .append(this.ppcShelf.$visual)
           .append(this._$selectK)
           .append(this._$selectN)
           .append(this._$selectTestQuantity)
-          .append(this.ppcShelf.$visual);
+          .append(this._$buttons);
     }
 
     /**
