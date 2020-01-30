@@ -16,71 +16,92 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
      * @param infobox The InfoBox to print information with.
      */
     constructor(context, infobox) {
-      let that = this;
-      that._context = undefined;
-      that._model = undefined;
-      that._infobox = infobox;
+      this._context = undefined;
+      this._model = undefined;
+      this._infobox = infobox;
       if (context !== undefined)
-        that.setContext(context);
+        this.setContext(context);
 
       const test_quantities = ['min', 'max', 'average', 'median'];
 
       // make visual context
-      that._$selectK = $('<div class="pl-ppc__section"></div>')
+      this._$selectK = $('<div class="pl-ppc__section"></div>')
           .append(
               '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
               '<input class="pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
           );
 
-      that._$selectN = $('<div class="pl-ppc__section"></div>')
+      this._$selectN = $('<div class="pl-ppc__section"></div>')
           .append(
               '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
               '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
           );
 
       // currently the possible test quantities are static but they may be dynamic in future:
-      that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
+      this._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
       for (let q of test_quantities)
-        that._$testQuantityList.append($("<option>").attr('value', q).text(q));
+        this._$testQuantityList.append($("<option>").attr('value', q).text(q));
 
-      that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
+      this._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
           ('<div class="pl-h2 pl-ppc__h2">test quantity</div>'),
           ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median">'),
-          that._$testQuantityList
+          this._$testQuantityList
       );
 
       // shelf where fields of a model may be dropped
-      that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
-      that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
+      this.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
+      this.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
 
       // buttons bar
       let $clearButton = VisUtils.button('Clear', 'clear')
           .addClass('pl-ppc__button')
-          .click( () => {})
+          .click( this.clear.bind(this));
       let $queryButton = VisUtils.button('Query', 'geo-position2')
           .addClass('pl-ppc__button')
-          .click( () => {});
+          .click( this.query.bind(this));
       this._$buttons = $('<div class="pl-ppc__button-bar"></div>').append($clearButton, $queryButton);
 
       // run ppc query whenever the shelf's content changes
-      that.ppcShelf.on(Emitter.ChangedEvent, event => {
-        let fields = that.ppcShelf.content();
+      this.ppcShelf.on(Emitter.ChangedEvent, event => this.query());
+
+      this.$visual = $('<div class="pl-ppc"></div>')
+          //             .append('<div class="pl-h2"># of repetitions</div>')
+          .append(this.ppcShelf.$visual)
+          .append(this._$selectK)
+          .append(this._$selectN)
+          .append(this._$selectTestQuantity)
+          .append(this._$buttons);
+    }
+
+
+    /**
+     * Clear PPCs specifiction, i.e. remove all assigned fields and other custom config.
+     */
+    clear() {
+      this.ppcShelf.clear();
+    }
+
+    /**
+     * Run PPC with currently set specification.
+     */
+    query () {
+        let fields = this.ppcShelf.content();
         if (fields.length === 0)
           return;
 
         if (fields.length === 1) {
-          that._model = fields[0].model;
-          console.log(`set new model: ${that._model.name}`);
+          this._model = fields[0].model;
+          console.log(`set new model: ${this._model.name}`);
         }
 
-        // verify that all fields are of the same context
-        if (!_.all(fields, f => f.model.name == that._model.name)) {
-          that._infobox.message("Cannot mix different models in one PPC visualization.");
+        // verify this all fields are of the same context
+        if (!_.all(fields, f => f.model.name == this._model.name)) {
+          this._infobox.message("Cannot mix different models in one PPC visualization.");
           return;
         }
 
         // query ppc results
-        let promise = that._model.ppc(fields, {k: 20, n: 50, TEST_QUANTITY: 'median'});
+        let promise = this._model.ppc(fields, {k: 20, n: 50, TEST_QUANTITY: 'median'});
 
         // create visualization
         let vis = new PPCVisualization();
@@ -88,23 +109,15 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
         promise.then(
             res => {
-              that._infobox.message("received PPC results!");
+              this._infobox.message("received PPC results!");
               console.log(res.toString());
               vis.render(res);
             }
         ).catch( err => {
-              infobox.message(`PPC Query failed: ${err}", "warning`);
-              vis.remove();
-            });
-      });
+          infobox.message(`PPC Query failed: ${err}", "warning`);
+          vis.remove();
+        });
 
-      that.$visual = $('<div class="pl-ppc"></div>')
-          //             .append('<div class="pl-h2"># of repetitions</div>')
-          .append(this.ppcShelf.$visual)
-          .append(this._$selectK)
-          .append(this._$selectN)
-          .append(this._$selectTestQuantity)
-          .append(this._$buttons);
     }
 
     /**
