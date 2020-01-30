@@ -171,7 +171,8 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       console.log(traces);
       console.log(layout);
 
-      Plotly.newPlot(this.$visual.get(0), traces, layout, config.plotly);
+      let visPane = $('div.pl-visualization__pane', this.$visual).get(0);
+      Plotly.newPlot(visPane, traces, layout, config.plotly);
     }
 
     redraw () {
