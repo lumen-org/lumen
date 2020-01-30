@@ -2,6 +2,9 @@
 
 define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function (Emitter, sh, VisUtils, config) {
 
+
+  let _activePPCVis = undefined;
+
   /**
    * A widget that lets you create Posterior Predictive Check (PPC) visualizations.
    */
@@ -113,27 +116,21 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
     constructor ($parent=undefined) {
       if ($parent === undefined)
         $parent = $('#pl-dashboard__container');
-
       this.$visual = this._makeVisual();
       this._makeDraggable();
       this._makeResizeable();
-
+      this._makeActivetable();
       this._ppcResult = undefined;
-
       $parent.append(this.$visual);
     }
 
     render (ppcResult) {
-
       if (ppcResult === undefined)
         return;
-
       // save for later redraw
       this._ppcResult = ppcResult;
-
       // draw content
       const len = ppcResult.reference.length;
-
       // shapes in plotly: https://plot.ly/javascript/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axes
       let referenceLines = ppcResult.reference.map( (ref, i) => ({
         type: 'line',
@@ -157,7 +154,6 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       }));
 
       let traces = [...histogramTraces],
-          // layout = Object.assign({ shapes: [...referenceLines]}, xAxes);
           layout = {
             shapes: [...referenceLines],
             grid: {
@@ -168,15 +164,14 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
           };
 
       // DEBUG
-      console.log(traces);
-      console.log(layout);
+      // console.log(traces);
+      // console.log(layout);
 
       let visPane = $('div.pl-visualization__pane', this.$visual).get(0);
       Plotly.newPlot(visPane, traces, layout, config.plotly);
     }
 
     redraw () {
-      //console.log("redraw not implemented");
       this.render(this._ppcResult);
     }
 
@@ -188,12 +183,9 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
     _makeDraggable() {
       this.__is_dragging = false;
       this.$visual.draggable(
-          {/* stop:
-              (event, ui) => {
-                ActivityLogger.log({'context': context.getNameAndUUID()}, 'move');
-              },*/
-//             handle: '.pl-visualization',
+          {
             handle: '.pl-visualization__pane',
+
             start: (ev, ui) => {
               this.__is_dragging = true;
             },
@@ -219,44 +211,29 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
             ghost: true,
             helper: "pl-resizing",
             stop: (ev, ui) => this.redraw()
-            // stop: (event, ui) => {
-            //   // let c = context;
-            //   // ActivityLogger.log({'context': c.getNameAndUUID()}, 'resize');
-            //   c.viewTable.onPaneResize(event);
-            // }
           });
+    }
+
+    _makeActivetable() {
+      this.$visual.mousedown( () => {
+        if (this !== _activePPCVis)
+          return;
+        if (_activePPCVis !== undefined) {
+          _activePPCVis.$visual.toggleClass('pl-active', false);
+        }
+        _activePPCVis = this;
+        _activePPCVis.$visual.toggleClass('pl-active', true);
+      })
     }
 
     _makeVisual () {
       let $paneDiv = $('<div class="pl-visualization__pane"></div>'),
           $removeButton = VisUtils.removeButton().click( () => this.$visual.remove());
-      //$legendDiv = $('<div class="pl-legend"></div>');
-
       let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton/*, $legendDiv*/)
-      // .mousedown( () => {
-      //   if (contextQueue.first().uuid !== context.uuid) {
-      //     activate(context, ['visualization', 'visPane', 'legendPane']);
-      //     ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
-      //   }
-      // })
           .css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
-
       return $vis;
     }
-
-  }
-
-
-  function makeVisualization(onResize) {
-    let $paneDiv = $('<div class="pl-visualization__pane"></div>')
-        // $removeButton = VisUtils.removeButton().click( context.remove.bind(context) ),
-        $removeButton = VisUtils.removeButton().click( () => $paneDiv.remove() );
-        //$legendDiv = $('<div class="pl-legend"></div>');
-
-
-    $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
-    return $vis;
   }
 
   return {
