@@ -62,7 +62,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       this._$buttons = $('<div class="pl-ppc__button-bar"></div>').append($clearButton, $queryButton);
 
       // run ppc query whenever the shelf's content changes
-      this.ppcShelf.on(Emitter.ChangedEvent, this.query.bind(this));
+      //this.ppcShelf.on(Emitter.ChangedEvent, this.query.bind(this));
 
       this.$visual = $('<div class="pl-ppc"></div>')
           .append(this.ppcShelf.$visual)
@@ -258,7 +258,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
     _makeActivetable() {
       this.$visual.mousedown( () => {
-        if (this !== _activePPCVis)
+        if (this === _activePPCVis)
           return;
         if (_activePPCVis !== undefined) {
           _activePPCVis.$visual.toggleClass('pl-active', false);
