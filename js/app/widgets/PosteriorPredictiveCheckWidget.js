@@ -28,13 +28,13 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       this._$selectK = $('<div class="pl-ppc__section"></div>')
           .append(
               '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
-              '<input class="pl-input pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
+              '<input class="pl-input pl-ppc__input" type="number" id="pl-ppc_samples-input" value="' + config.widgets.ppc.numberOfRepetitions + '">'
           );
 
       this._$selectN = $('<div class="pl-ppc__section"></div>')
           .append(
               '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
-              '<input class="pl-input pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
+              '<input class="pl-input pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="' + config.widgets.ppc.numberOfSamples.toString()+ '">'
           );
 
       // currently the possible test quantities are static but they may be dynamic in future:
@@ -123,7 +123,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
         let promise = this._model.ppc(fields, params);
 
         // create visualization
-        let vis = new PPCVisualization();
+        let vis = new PPCVisualization(this);
         // TODO: set busy state?
 
         promise.then(
@@ -155,7 +155,9 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
   class PPCVisualization {
 
-    constructor ($parent=undefined) {
+    constructor (ppcWidget, $parent=undefined) {
+      this._modelName = ppcWidget._model.name;
+      this._testQuantity = ppcWidget.getTestQuantity();
       if ($parent === undefined)
         $parent = $('#pl-dashboard__container');
       this.$visual = this._makeVisual();
@@ -172,7 +174,9 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       // save for later redraw
       this._ppcResult = ppcResult;
       // draw content
-      const len = ppcResult.reference.length;
+      const len = ppcResult.reference.length,
+          histoConfig = config.map.ppc.modelHistogram,
+          refConfig = config.map.ppc.referenceValue;
       // shapes in plotly: https://plot.ly/javascript/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axes
       let referenceLines = ppcResult.reference.map( (ref, i) => ({
         type: 'line',
@@ -183,31 +187,72 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
         x1: ref,
         y1: 1,
         line: {
-          color: 'rgb(255,0,0)',
+          color: refConfig.lineColor,
+          width: refConfig.lineWidth,
         }
       }));
+
 
       let histogramTraces = ppcResult.test.map( (test, i) => ({
         x: test,
         xaxis: `x${i+1}`,
         yaxis: `y${i+1}`,
         name: ppcResult.header[i],
-        type: 'histogram'
+        type: 'histogram',
+        showlegend: false,
+        // opacity: ,
+        marker: {
+          color: histoConfig.color,
+          opacity: histoConfig.fillOpacity,
+          line: {
+            color: histoConfig.color,
+            opacity: histoConfig.lineOpacity,
+            width: histoConfig.lineWidth,
+          }
+        },
       }));
 
       let traces = [...histogramTraces],
           layout = {
+            title: {
+              text: `PPC of ${this._modelName} for ${this._testQuantity}`,
+            },
             shapes: [...referenceLines],
-            grid: {
-              rows: 1,
-              columns: len,
-              pattern: 'independent',
-            }
+            // Grid is much easier, however, it is impossible to set axis titles...
+            // grid: {
+            //   rows: 1,
+            //   columns: len,
+            //   pattern: 'independent',
+            // }
           };
 
-      // DEBUG
-      // console.log(traces);
-      // console.log(layout);
+      // add x axes
+      if (len === 1)
+        layout['xaxis1'] = {
+          anchor: 'y1',
+          domain: [0,1],
+          title: ppcResult.header[0],
+        };
+      else {
+        let xAxisWidth = 0.9/len,
+            xAxisMargin = 0.1/(len-1),
+            base = 0;
+        for (let i=0; i<len; i++) {
+          layout['xaxis'+(i+1)] = {
+            anchor: 'y' + (i+1),
+            domain: [base, base + xAxisWidth],
+            title: ppcResult.header[i],
+          };
+          base += xAxisWidth + xAxisMargin;
+        }
+      }
+
+      // add y axes
+      for (let i=0; i<len; i++) {
+        layout['yaxis'+(i+1)] = {
+          anchor: 'x' + (i+1),
+        }
+      }
 
       let visPane = $('div.pl-visualization__pane', this.$visual).get(0);
       Plotly.newPlot(visPane, traces, layout, config.plotly);
