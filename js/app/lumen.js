@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './widgets/DependencyGraph', './ProbabilisticProgramGraph', './widgets/FilterWidget', './widgets/PosteriorPredictiveCheckWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPC, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './widgets/DependencyGraph', './ProbabilisticProgramGraph', './widgets/FilterWidget', './widgets/PosteriorPredictiveCheckWidget', './PQL', './VisualizationRecommendation', './ZIndexManager'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPC, PQL,  VisRec, zIndex) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -47,12 +47,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     const _facetNames = [...Object.keys(_facetNameMap)];
 
     /**
-     * monotone z-index generator. used to push activated contexts visually to the front.
-     * Usage: zIndex = zIndexGenerator++;
-     */
-    let zIndexGenerator = 1;
-
-    /**
      * An info box receives messages that it shows.
      */
     class InfoBox {
@@ -78,7 +72,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let toAdd =  "pl-info-box_" + (type === "warning"?"warning":"information"),
           toRemove =  "pl-info-box_" + (type === "warning"?"information":"warning");
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
-        this._$visual.css("z-index", zIndexGenerator + 1);
+        this._$visual.css("z-index", zIndex.current()+1);
         this.show();
         let that = this;
         setTimeout( () => {
@@ -134,7 +128,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         } else {
           alertBoxHeaderTitle.text("Models found:")
         }
-        this._$visual.css("z-index", zIndexGenerator + 1);
+        this._$visual.css("z-index", zIndex.current()+1);
         this.show();
       }
 
@@ -674,6 +668,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
           .mousedown( () => {
+            context.$visuals.visualization.css("z-index",zIndex.inc());
             if (contextQueue.first().uuid !== context.uuid) {
               activate(context, ['visualization', 'visPane', 'legendPane']);
               ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
@@ -1768,13 +1763,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._first = elem;
       }
 
-      _reset_z_index(){
-        zIndexGenerator = this.length;
-        for(let i of this){
-          i.$visuals.visualization.css("z-index", zIndexGenerator--);
-        }
-        zIndexGenerator = this.length + 1;
-      }
+      // _reset_z_index(){
+      //   zIndexGenerator = this.length;
+      //   for(let i of this){
+      //     i.$visuals.visualization.css("z-index", zIndexGenerator--);
+      //   }
+      //   zIndexGenerator = this.length + 1;
+      // }
 
       /**
        * Adds the context as a new and as the first element to the context queue.
@@ -1782,24 +1777,23 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       add(context) {
         let elem = ContextQueue._makeElem(context);
-        let that = this;
-
         this._prepend(elem);
         this.length++;
 
         // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
+        // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
         context.on("ContextDeletedEvent", () => {
-          that._remove(elem);
-          that.length--;
-          that.activateFirst();
-          if(that.empty())
-            that.emit("ContextQueueEmpty");
-          that._reset_z_index()
+          this._remove(elem);
+          this.length--;
+          this.activateFirst();
+          if(this.empty())
+            this.emit("ContextQueueEmpty");
+          // this._reset_z_index()
         });
 
         // an element listens to a context being activated. it then is moved to the beginning of the queue
         context.on("ContextActivatedEvent", () => {
-          that._moveToFront(elem);
+          this._moveToFront(elem);
         })
       }
 
@@ -1894,7 +1888,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
         // move it to the front
-        _currentContext.$visuals.visualization.css("z-index",zIndexGenerator++);
+        _currentContext.$visuals.visualization.css("z-index",zIndex.inc());
 
         // set context in singelton widgets
         toolbar.setContext(context);

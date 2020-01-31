@@ -1,6 +1,6 @@
 /* copyright © 2020 Philipp Lucas (philipp.lucas@dlr.de) */
 
-define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function (Emitter, sh, VisUtils, config) {
+define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZIndexManager'], function (Emitter, sh, VisUtils, config, zIndex) {
 
 
   let _activePPCVis = undefined;
@@ -153,9 +153,9 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
   }
 
-
-
-
+  /**
+   * Visualization of a PPC.
+   */
   class PPCVisualization {
 
     constructor (ppcWidget, $parent=undefined) {
@@ -300,7 +300,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
               if (ev.toElement && ev.toElement.className === 'dragcover') {
                 return false;
               }
-                  // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
+              // this probably works for all browsers. It relies on plotly to have a foreground drag layer that receives the event and that has a class name that includes 'drag'
               // only apply on the very first drag, because we only want to cancel the drag if it originally started on the plotly canvas, but not if it moves onto it
               else if (ev.originalEvent.target.getAttribute('class').includes('drag') && this.__is_dragging) {
                 return false;
@@ -320,6 +320,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
     _makeActivetable() {
       this.$visual.mousedown( () => {
+        this.$visual.css("z-index", zIndex.inc());
         if (this === _activePPCVis)
           return;
         if (_activePPCVis !== undefined) {
