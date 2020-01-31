@@ -153,6 +153,9 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
 
   }
 
+
+
+
   class PPCVisualization {
 
     constructor (ppcWidget, $parent=undefined) {
@@ -168,17 +171,11 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
       $parent.append(this.$visual);
     }
 
-    render (ppcResult) {
-      if (ppcResult === undefined)
-        return;
-      // save for later redraw
-      this._ppcResult = ppcResult;
-      // draw content
-      const len = ppcResult.reference.length,
-          histoConfig = config.map.ppc.modelHistogram,
-          refConfig = config.map.ppc.referenceValue;
+    static
+    _makeReferenceLines (ppcResult) {
+      const refConfig = config.map.ppc.referenceValue;
       // shapes in plotly: https://plot.ly/javascript/shapes/#vertical-and-horizontal-lines-positioned-relative-to-the-axes
-      let referenceLines = ppcResult.reference.map( (ref, i) => ({
+      return ppcResult.reference.map( (ref, i) => ({
         type: 'line',
         xref: `x${i+1}`,
         yref: 'paper',
@@ -191,9 +188,12 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
           width: refConfig.lineWidth,
         }
       }));
+    }
 
-
-      let histogramTraces = ppcResult.test.map( (test, i) => ({
+    static
+    _makeHistogramTraces (ppcResult) {
+      const histoConfig = config.map.ppc.modelHistogram;
+      return ppcResult.test.map( (test, i) => ({
         x: test,
         xaxis: `x${i+1}`,
         yaxis: `y${i+1}`,
@@ -211,22 +211,11 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
           }
         },
       }));
+    }
 
-      let traces = [...histogramTraces],
-          layout = {
-            title: {
-              text: `PPC of ${this._modelName} for ${this._testQuantity}`,
-            },
-            shapes: [...referenceLines],
-            // Grid is much easier, however, it is impossible to set axis titles...
-            // grid: {
-            //   rows: 1,
-            //   columns: len,
-            //   pattern: 'independent',
-            // }
-          };
-
-      // add x axes
+    static
+    _addXAxes (layout, ppcResult) {
+      const len = ppcResult.reference.length;
       if (len === 1)
         layout['xaxis1'] = {
           anchor: 'y1',
@@ -246,13 +235,41 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings'], function
           base += xAxisWidth + xAxisMargin;
         }
       }
+      return layout;
+    }
 
-      // add y axes
-      for (let i=0; i<len; i++) {
-        layout['yaxis'+(i+1)] = {
-          anchor: 'x' + (i+1),
-        }
-      }
+    static
+    _addYAxes (layout, ppcResult) {
+      const len = ppcResult.reference.length;
+      for (let i=0; i<len; i++)
+        layout['yaxis'+(i+1)] = {anchor: 'x' + (i+1)};
+      return layout;
+    }
+
+    render (ppcResult) {
+      if (ppcResult === undefined)
+        return;
+
+      // save for later redraw
+      this._ppcResult = ppcResult;
+
+      // draw content
+      let traces = PPCVisualization._makeHistogramTraces(ppcResult),
+          layout = {
+            title: {
+              text: `PPC of ${this._modelName} for ${this._testQuantity}`,
+            },
+            shapes: PPCVisualization._makeReferenceLines(ppcResult),
+            // Grid is much easier, however, it is impossible to set axis titles...
+            // grid: {
+            //   rows: 1,
+            //   columns: len,
+            //   pattern: 'independent',
+            // }
+          };
+
+      PPCVisualization._addXAxes(layout, ppcResult);
+      PPCVisualization._addYAxes(layout, ppcResult);
 
       let visPane = $('div.pl-visualization__pane', this.$visual).get(0);
       Plotly.newPlot(visPane, traces, layout, config.plotly);
