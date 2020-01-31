@@ -4,7 +4,6 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
 
   const test_quantities = ['min', 'max', 'average', 'median', 'variance', 'most_frequent', 'least_frequent'];
 
-
   let _activePPCVis = undefined;
 
   /**
@@ -250,8 +249,26 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
       if (ppcResult === undefined)
         return;
 
+      ppcResult.len = ppcResult.reference.length;
+
       // save for later redraw
       this._ppcResult = ppcResult;
+
+      // for 2d plotting of test quantities ...
+      if (false && ppcResult.len === 2) {
+        // make a 2d ppc plot
+        let traces = [
+          {
+            x: ppcResult.test[0],
+            y: ppcResult.test[1],
+            type: 'histogram2d',
+          }
+        ];
+        let layout = {};
+        let visPane = $('div.pl-visualization__pane', this.$visual).get(0);
+        Plotly.newPlot(visPane, traces, layout, config.plotly);
+        return;
+      }
 
       // draw content
       let traces = PPCVisualization._makeHistogramTraces(ppcResult),
@@ -260,14 +277,13 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
               text: `PPC of ${this._modelName} for ${this._testQuantity}`,
             },
             shapes: PPCVisualization._makeReferenceLines(ppcResult),
-            // Grid is much easier, however, it is impossible to set axis titles...
+            // Grid is easier, however, it is impossible to set axis titles...
             // grid: {
             //   rows: 1,
             //   columns: len,
             //   pattern: 'independent',
             // }
           };
-
       PPCVisualization._addXAxes(layout, ppcResult);
       PPCVisualization._addYAxes(layout, ppcResult);
 
