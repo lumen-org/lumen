@@ -255,7 +255,7 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
       this._ppcResult = ppcResult;
 
       // for 2d plotting of test quantities ...
-      if (false && ppcResult.len === 2) {
+      if (ppcResult.len === 2) {
         // make a 2d ppc plot
         let traces = [
           {
@@ -264,7 +264,17 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
             type: 'histogram2d',
           }
         ];
-        let layout = {};
+        let layout = {
+          title: {
+            text: `PPC of ${this._modelName} for ${this._testQuantity}`,
+          },
+          xaxis: {
+            title: ppcResult.header[0],
+          },
+          yaxis: {
+            title: ppcResult.header[1],
+          }
+        };
         let visPane = $('div.pl-visualization__pane', this.$visual).get(0);
         Plotly.newPlot(visPane, traces, layout, config.plotly);
         return;
