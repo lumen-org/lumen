@@ -2,6 +2,8 @@
 
 define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZIndexManager'], function (Emitter, sh, VisUtils, config, zIndex) {
 
+  const test_quantities = ['min', 'max', 'average', 'median', 'variance', 'most_frequent', 'least_frequent'];
+
 
   let _activePPCVis = undefined;
 
@@ -21,8 +23,6 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
       this._infobox = infobox;
       if (context !== undefined)
         this.setContext(context);
-
-      const test_quantities = ['min', 'max', 'average', 'median'];
 
       // make visual context
       this._$selectK = $('<div class="pl-ppc__section"></div>')
