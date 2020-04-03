@@ -110,7 +110,7 @@ For any questions, feedback, bug reports, feature requests, spam, etc please con
 
 ### Copyright and Licence ###
 
-© 2016-2018 Philipp Lucas (philipp.lucas@dlr.de)
+© 2016-2020 Philipp Lucas (philipp.lucas@dlr.de)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
