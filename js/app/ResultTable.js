@@ -29,6 +29,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                     extent[i] = d3.extent(resultTable, row => row[i]); // jshint ignore:line
                 else if (resultTable.idx2fu[i].yieldDataType === PQL.FieldT.DataType.string)
                     extent[i] = _.unique(_.map(resultTable, row => row[i])).sort( );
+                    //extent[i] = _.unique(_.map(resultTable, row => row[i]));
                 else
                     throw new RangeError("invalid data type.");
             }
