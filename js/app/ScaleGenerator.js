@@ -71,7 +71,7 @@ define(['lib/logger', 'd3', './PQL', './ViewSettings'], function (Logger, d3, PQ
       let [l,h] = domain,
         size = h-l,
         ext_to_zero = size * 0.25,  // if 25% extension is enough to reach zero, then use sequential, "from-zero" scale
-        ext = size*0.05;  // if zero is included, and if less than 5% of range is on one side, then use "from-zero-scale"
+        ext = size*0.06;  // if zero is included, and if less than 5% of range is on one side, then use "from-zero-scale"
 
       // check if domain is (almost) exclusively negative or non-negative:
       if (h-ext < 0 || l+ext > 0) {

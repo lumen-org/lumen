@@ -145,6 +145,7 @@ body {
 
 .pl-layout-upper-left {
     min-height: 30vh;
+    max-height: 97vh;
     height: 54vh;
     min-width: 200px;
     /*height: 30vh;
@@ -160,7 +161,7 @@ body {
 
 /* columns are grouping elements in the UI */
 
-.pl-column {
+.pl-column { 
     margin: 0.3em;
     background-color: white;
     border: #dbdbdb 1px solid;
