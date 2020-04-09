@@ -80,7 +80,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       reds: d3chromatic.schemeReds[9],
       rdBu: d3chromatic.schemeRdBu[11],
       rdYlBu: d3chromatic.schemeRdYlBu[9],
-      ylOrBr: d3chromatic.schemeYlOrBr[9],
+      rdYlBu_lessBright: [...d3chromatic.schemeRdYlBu[11].slice(0,4), ...d3chromatic.schemeRdYlBu[11].slice(7)],
+      rdYlGn: d3chromatic.schemeRdYlGn[9],
+      ylOrBr: d3chromatic.schemeYlOrBr[9],      
+      ylOrBr_lessBright: d3chromatic.schemeYlOrBr[9].slice(2),
       set1: d3chromatic.schemeSet1,
       paired12: d3chromatic.schemePaired,
       discrete6light: d3.range(6).map(i => d3chromatic.schemePaired[i * 2]),
@@ -280,8 +283,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   let colorsInitial = {
     // abstract scales for certain data characteristics
     semanticScales: {
-      diverging_Enum: "rdYlBu",  // rdYlBu ?  // mit Nulldurchgang
-      sequential_Enum: "ylOrBr", // ohne Nulldurchgang / bis 0
+      diverging_Enum: "rdYlBu_lessBright",  // rdYlGn or rdYlBu ?  // mit Nulldurchgang
+      sequential_Enum: "ylOrBr_lessBright", // ohne Nulldurchgang / bis 0
       discrete9_Enum: "set1",
       discrete12_Enum: "paired12",
       discrete6light_Enum: "discrete6light",
