@@ -597,7 +597,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
      * @param extent
      * @param pct percentage to add/substract. See above.
      */
-    function normalizeContinuousExtent(extent, pct = 0.05) {
+    function normalizeContinuousExtent(extent, pct = 0.0) {
       if (extent[0] === extent[1]) { // if singular
         let singular = extent[0];
         if (singular === 0) {
@@ -997,8 +997,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
               used[xy]);
             id[xy] = idgen.main[xy]++;  // id of the current main y-axis
 
-            if (used[xy]) {
-              let xyYield = getFieldUsage(idx[xy], xy, vismelColl).yields;
+            if (used[xy]) {                
+              let xyFU = getFieldUsage(idx[xy], xy, vismelColl),
+                xyField = xyFU.yieldField,
+                xyYield = xyFU.yields;
               // store the mapping of yield-to-axis for later reuse
               let refAxis = getSetYield2Axis(xyYield, xy + id[xy]);
               axesSyncManager.linkAdd(xy + id[xy], refAxis);
@@ -1006,13 +1008,19 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
               // tick labels and title only for the first axis (tickmarks are always enabled anyway)
               if (idx[yx] === 0) {
                 let axisTitleAnno = config.annotationGenerator.axis_title(
-                  getFieldUsage(idx[xy], xy, vismelColl).yields, xy,
+                  xyYield, xy,
                   mainOffset[xy] + 0.5 * axisLength.padding[xy],
                   axisLength.main[xy] - 0.5 * axisLength.padding[xy],
                   paneOffset[yx]);
                 axisTitles.push(axisTitleAnno);
               } else {
                 axis[xy].showticklabels = false;
+              }
+
+              // use categorical ordering of the variable
+              if (xyField.isDiscrete()) {
+                axis[xy].categoryorder = 'array';
+                axis[xy].categoryarray = xyField.extent.values;
               }
             }
 
