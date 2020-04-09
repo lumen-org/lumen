@@ -1,4 +1,4 @@
-define(['./Domain', 'lib/emitter', './VisUtils'], function (Domain, Emitter, VisUtils) {
+define(['../Domain', 'lib/emitter', '../VisUtils'], function (Domain, Emitter, VisUtils) {
   "use strict";
 
   let plotConfig = {

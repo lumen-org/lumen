@@ -11,8 +11,8 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './ProbabilisticProgramGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './widgets/DependencyGraph', './ProbabilisticProgramGraph', './widgets/FilterWidget', './widgets/PosteriorPredictiveCheckWidget', './PQL', './VisualizationRecommendation', './ZIndexManager'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPC, PQL,  VisRec, zIndex) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
@@ -47,12 +47,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     const _facetNames = [...Object.keys(_facetNameMap)];
 
     /**
-     * monotone z-index generator. used to push activated contexts visually to the front.
-     * Usage: zIndex = zIndexGenerator++;
-     */
-    let zIndexGenerator = 1;
-
-    /**
      * An info box receives messages that it shows.
      */
     class InfoBox {
@@ -78,7 +72,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let toAdd =  "pl-info-box_" + (type === "warning"?"warning":"information"),
           toRemove =  "pl-info-box_" + (type === "warning"?"information":"warning");
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
-        this._$visual.css("z-index", zIndexGenerator + 1);
+        this._$visual.css("z-index", zIndex.current()+1);
         this.show();
         let that = this;
         setTimeout( () => {
@@ -134,7 +128,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         } else {
           alertBoxHeaderTitle.text("Models found:")
         }
-        this._$visual.css("z-index", zIndexGenerator + 1);
+        this._$visual.css("z-index", zIndex.current()+1);
         this.show();
       }
 
@@ -269,7 +263,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
-       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has truthy commit flag.
+       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has a truthy commit flag.
        *
        * Note that this function accesses the file scope, as it uses the infoBox variable.
        * @private
@@ -674,6 +668,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
           .mousedown( () => {
+            context.$visuals.visualization.css("z-index",zIndex.inc());
             if (contextQueue.first().uuid !== context.uuid) {
               activate(context, ['visualization', 'visPane', 'legendPane']);
               ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
@@ -697,7 +692,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
               },
             handle: '.pl-visualization__pane',
             start: (ev, ui) => {
-                $vis.__is_dragging = true; // 
+                $vis.__is_dragging = true;
             },
     
             drag: (ev, ui) => {
@@ -901,6 +896,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
+        //visuals.ppc = new PPC.PPCWidget(context, infoBox);
 
         context._busyIndicator = $('<div class="pl-busy-indicator"></div>')
           .append('<div class="pl-label"></div>')
@@ -1549,80 +1545,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
     }
 
-    /**
-     * A widget that lets you create Posterior Predictive Check visualizations.
-     *
-     *
-     */
-    class PosteriorPredictiveCheckWidget {
-
-      constructor (context) {
-        let that = this;
-        that._context = undefined;
-        if (context !== undefined)
-          that.setContext(context);
-
-        const test_quantities = ['min', 'max', 'average', 'median'];
-
-        // make visual context
-        that._$selectK = $('<div class="pl-ppc__section"></div>')
-            .append(
-                '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
-                '<input class="pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
-            );
-
-        that._$selectN = $('<div class="pl-ppc__section"></div>')
-            .append(
-                '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
-                '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
-            );
-
-        // currently it's static, but may be dynamic in future:
-        that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
-        for (let q of test_quantities)
-          that._$testQuantityList.append($("<option>").attr('value',q).text(q));
-
-        that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
-            ('<div class="pl-h2 pl-ppc__h2">test quantity</div>'),
-            ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median">'),
-            that._$testQuantityList
-        );
-
-        that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
-        that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
-
-        that.ppcShelf.on(Emitter.ChangedEvent, event => {
-          //infoBox.message("PPCs not implemented yet.");
-          let fields = that.ppcShelf.content(),
-            promise = that._context.model.ppc(fields, {k:10, n:3, TEST_QUANTITY:'median'});
-
-          promise.then(
-              res => {
-                infoBox.message("received PPC results!");
-                console.log(res.toString());
-              }
-          );
-        });
-
-        that.$visual = $('<div class="pl-ppc"></div>')
-//             .append('<div class="pl-h2"># of repetitions</div>')
-            .append(this._$selectK)
-            .append(this._$selectN)
-            .append(this._$selectTestQuantity)
-            .append(this.ppcShelf.$visual);
-      }
-
-      /**
-       * Sets the context that it controls.
-       * @param context A context.
-       */
-      setContext (context) {
-        if (!(context instanceof Context))
-          throw TypeError("context must be an instance of Context");
-        this._context = context;
-      }
-
-    }
 
     /**
      * A widget for user studies. It allow a subject to report feedback.
@@ -1841,13 +1763,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._first = elem;
       }
 
-      _reset_z_index(){
-        zIndexGenerator = this.length;
-        for(let i of this){
-          i.$visuals.visualization.css("z-index", zIndexGenerator--);
-        }
-        zIndexGenerator = this.length + 1;
-      }
+      // _reset_z_index(){
+      //   zIndexGenerator = this.length;
+      //   for(let i of this){
+      //     i.$visuals.visualization.css("z-index", zIndexGenerator--);
+      //   }
+      //   zIndexGenerator = this.length + 1;
+      // }
 
       /**
        * Adds the context as a new and as the first element to the context queue.
@@ -1855,24 +1777,23 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       add(context) {
         let elem = ContextQueue._makeElem(context);
-        let that = this;
-
         this._prepend(elem);
         this.length++;
 
         // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
+        // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
         context.on("ContextDeletedEvent", () => {
-          that._remove(elem);
-          that.length--;
-          that.activateFirst();
-          if(that.empty())
-            that.emit("ContextQueueEmpty");
-          that._reset_z_index()
+          this._remove(elem);
+          this.length--;
+          this.activateFirst();
+          if(this.empty())
+            this.emit("ContextQueueEmpty");
+          // this._reset_z_index()
         });
 
         // an element listens to a context being activated. it then is moved to the beginning of the queue
         context.on("ContextActivatedEvent", () => {
-          that._moveToFront(elem);
+          this._moveToFront(elem);
         })
       }
 
@@ -1967,7 +1888,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
         // move it to the front
-        _currentContext.$visuals.visualization.css("z-index",zIndexGenerator++);
+        _currentContext.$visuals.visualization.css("z-index",zIndex.inc());
 
         // set context in singelton widgets
         toolbar.setContext(context);
@@ -2022,7 +1943,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
     // posterior predictive check widget
-    let ppcWidget = new PosteriorPredictiveCheckWidget(undefined);
+    let ppcWidget = new PPC.PPCWidget(undefined, infoBox);
     if (Settings.widget.posteriorPredictiveChecks.enabled) {
       ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
     }

@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './FilterWidget', './SplitWidget', './AggregationWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, AggregationWidget, ModelUtils, VisUtils) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './widgets/FilterWidget', './widgets/SplitWidget', './widgets/AggregationWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, AggregationWidget, ModelUtils, VisUtils) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
