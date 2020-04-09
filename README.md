@@ -27,7 +27,7 @@ Clone this repository into a folder `<path>` of your choice. If you simply want 
 
 **Updating it** 
 
-Just pull the branch/verion you'd like.
+Just pull the branch/version you'd like.
 
 ### Configuring `lumen`
 
