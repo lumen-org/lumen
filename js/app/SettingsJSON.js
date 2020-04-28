@@ -1221,7 +1221,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         enabled: false,  // enable or disable the details view
       },
       posteriorPredictiveChecks: {
-        enabled: true,  // enable or disable the ppc
+        enabled: false,  // enable or disable the ppc
       }
     };
 
