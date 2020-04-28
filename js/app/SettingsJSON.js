@@ -161,9 +161,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     hideAggregations: false,
     hideAccuMarginals: true,
     resolution_1d: 25,
-    resolution_2d: 25,
+    resolution_2d: 15,
     opacity: 0.5,
-    levels: 30,
+    levels: 15,
     "number of samples": 200,
     splitCnts: {
       layout: 5,
@@ -171,14 +171,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       aggregation: 15,
     },
     data: {
-      "stroke color": greys(0.1),
+      "stroke color": greys(0.05),
       "stroke width": 1,
-      "fill opacity": 0.55,
+      "fill opacity": 0.30,
     },
     prediction: {
-      "stroke color": greys(0.9),
-      "stroke width": 1,
-      "fill opacity": 0.8,
+      "stroke color": greys(0.95),
+      "stroke width": 1.5,
+      "fill opacity": 1,
     },
     "data local prediction": {
       "point number maximum": 200,
@@ -677,14 +677,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         width: 1.5,
       },
       size: {
-        min: 6, // HACK: used to be 8.
+        min: 8, // HACK: used to be 8.
         max: 40,
-        def: 10,
+        def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
         //color: c.colors.aggregation.single,
-        color: greys(0.8),
+        color: greys(0.9),
       },
       shape: {
         def: shapesInitial.model,

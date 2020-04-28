@@ -865,7 +865,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         let items4firstColumn = [
           $(`<div class="pl-facet__rowLabel pl-label"><div></div><div></div></div>`),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('aggregation')),
           $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data points')),
           $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
           $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
@@ -971,7 +971,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         // fetch model
         let that = this;
         context._updateModels()
-          .then(() => that._clearInput())
+          //.then(() => that._clearInput())
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
           .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
