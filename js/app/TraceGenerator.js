@@ -302,8 +302,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       // create and attach trace for each group, i.e. each leaf in the nested data
       let attach_aggr_trace = (data) => {       
         let color_mapper = (opts.facetName === 'data aggregations' ? mapper.dataAggrFillColor : mapper.modelAggrFillColor),
-            shape_mapper = (opts.facetName === 'data aggregations' ? mapper.dataShape : mapper.aggrShape),
-            size_mapper  = (opts.facetName === 'data aggregations' ? mapper.dataSize : mapper.aggrSize);
+            shape_mapper = (opts.facetName === 'data aggregations' ? mapper.dataShape : mapper.aggrShape),            
+            size_mapper = mapper.aggrSize; // size does not differ depending on model vs data
 
         let trace = {
           name: traceName,
