@@ -242,9 +242,16 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let that = this;
         return that.model.update()
             .then(() => {
-                // set and update empirical model
-                that.emp_model = new Remote.Model(that.model.empirical_model_name, that.server);
-                return that.emp_model.update()
+                that.emp_model = new Remote.Model(that.model.empirical_model_name, that.server);  
+                // enable auto-creation for empirical models
+                let optsAutoCreate = {
+                  AUTO_CREATE_MODEL: {
+                    // MODEL_TYPE: "empirical", // "kde" or empirical"
+                    FOR_MODEL: that.model.name,
+                  }
+                };                
+                // set and update empirical model                
+                return that.emp_model.update(optsAutoCreate)
             });
       }
 

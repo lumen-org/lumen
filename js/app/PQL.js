@@ -752,12 +752,15 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
       };
     },
 
-    header : function (from) {
+    header : function (from, opts=undefined) {
       if (!_.isString(from)) throw new TypeError("'from' must be of type String");
-      return {
+      let json = {
         "SHOW": "HEADER",
         "FROM": from
       };
+      if (opts !== undefined)
+        json.OPTS = opts;
+      return json;  
     },
 
     models: () => ({"SHOW": "MODELS"}),

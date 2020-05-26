@@ -191,8 +191,8 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
      * Syncs the local view on the model with the remote model base.
      * @returns {*|Promise.<TResult>} A promise to operation.
      */
-    update() {
-      let jsonPQL = PQL.toJSON.header(this.name);
+    update(opts=undefined) {
+      let jsonPQL = PQL.toJSON.header(this.name, opts);
       return executeRemotely(jsonPQL, this.url)
         .then(this._updateHeader.bind(this));
     }

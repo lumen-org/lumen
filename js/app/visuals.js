@@ -155,9 +155,9 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
     // PAPER HACK / TODO for VAST 2020
     // filter those with "wrong" names
-    if (this.content.name !== undefined && !['sex','income','eastwest','happiness','age','educ'].includes(this.content.name)) 
+    //if (this.content.name !== undefined && !['sex','income','eastwest','happiness','age','educ'].includes(this.content.name)) 
     //if (this.content.name !== undefined && this.content.name.includes("_")) 
-      this.$visual.hide();
+    //  this.$visual.hide();
 
     // add visual of record to correct position in shelf
     _insertVisualInShelf(this);
