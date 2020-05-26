@@ -107,3 +107,5 @@ doc/
 # backup files
 *~
 
+.vscode/settings.json
+package-lock.json
