@@ -180,22 +180,22 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           this.shelves = sh.construct();
 
         // facet states and config
-        this.facets = utils.getFacetsFlags(Settings.views);        //this.facets = JSON.parse(JSON.stringify(Settings.views));
+        this.facets = utils.getFacetsFlags(Settings.views);
         this._discardFetchedFacets();
 
         // other per spec config
         this.config = {
           data: {
-            resolutionMarginal: 20,
-            resolutionDensity: 35,
-            kde_variance: 1,
-            emp_bin_width: 1,
+            marginalResolution: 20,
+            densityResolution: 35,
+            kdeVariance: 1,
+            empBinWidth: 1,
           },
           model: {
-            resolutionMarginal: 100,
-            resolutionDensity: 50,
-            kde_variance: 1,
-            emp_bin_width: 1,
+            marginalResolution: 100,
+            densityResolution: 50,
+            kdeVariance: 1,
+            empBinWidth: 1,
           }
         }
 
@@ -231,10 +231,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._commitFlag = false;
       }
 
-      _discardFetchedFacets () {
+      _discardFetchedFacets (what='all') {
         let facets = this.facets;
-        for (let facet of Object.keys(_facetNameMap)) {
-          facets[facet].fetchState = 'not fetched'; // current fetching state of facet. One of ['not fetched', 'pending', 'fetched']
+        if (what === 'all')
+          what = Object.keys(facets)                
+        
+        for (let facet of _facetNames) {
+          facets[facet].fetchState = 'not fetched'; // current fetching state of facet. One of ['not fetched', 'fetched']
           facets[facet].data = undefined; // the last fetched data collection
         }
       }
@@ -389,12 +392,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
                 // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.resolutionMarginal}), 
+                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.marginalResolution}), 
                 c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.resolutionMarginal}),
-                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.resolutionDensity}),
+                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.marginalResolution}),
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.densityResolution}),
                 c.updateFacetCollection('data density', RT.biDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.resolutionDensity}),
+                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.densityResolution}),
                 c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap,
                     undefined, c.predictionDataLocal_baseModelTable,
                     Settings.tweaks['data local prediction']),
@@ -513,6 +516,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         $('#pl-dashboard__container').append($visuals.visualization);
         //$('#pl-facet-container').append($visuals.facets);
         $('#pl-facet-container').append($visuals.facets2);
+        $('#pl-specConfig-container').append($visuals.config);
       }
 
       /**
@@ -795,6 +799,64 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return visual;
       }
 
+
+      /**
+       * Creates and returns GUI for the config of a context.
+       * @param {Context} context 
+       * @private
+       */
+      static _makeConfigWidget (context) {
+        let title = $('<div class="pl-h2 shelf__title">Config</div>'),
+          config = context.config;
+
+        let makeRowLabel = (labelName) => $(`<div class="pl-label pl-specConfig__label">${labelName}</div>`),
+          makeColumnLabel = (labelName) => $(`<div class="pl-label pl-specConfig__label pl-specConfig__columnLabel">${labelName}</div>`),
+          makeRowForFirstColumn = (...elems) => $(`<div class="pl-specConfig__rowLabel pl-label"></div>`).append(...elems);
+        /**
+         * Create a cell of the config grid for a numerical config value.
+         * @param {*} type String. One of 'model' or 'data'. This is the top level key for the Context config dict.
+         * @param {*} what String. This is the second level key for the Context config dict.
+         * @param {*} facetNames A list of facet names of facets that have to be recomputed when the config value changed.
+         */
+        function makeCell (type, what, facetNames) { 
+            return $(`<input class="pl-specConfig__input" type="number" min="1" value="${config[type][what]}">`)
+            .change( (e) => {
+              config[type][what] = +e.target.value;
+              // invalidate facet results / cache
+              context._discardFetchedFacets(facetNames);
+              // TODO: ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");                
+            })
+            .on('keyup', (e) => {
+              if (e.key === "Enter") {
+                  context.update('facets.changed');
+              }
+            });
+          }
+
+        let items4firstColumn = [
+          makeRowForFirstColumn($('<div> Resolution </div>'), $('<div></div>')),
+          makeRowForFirstColumn(VisUtils.icon(Context._name2iconMap['marginals']), makeRowLabel('marginals')),
+          makeRowForFirstColumn(VisUtils.icon(Context._name2iconMap['contour']), makeRowLabel('density')),
+          makeRowForFirstColumn($('<div> Precision </div>'), $('<div></div>')),
+          makeRowForFirstColumn($('<div></div>'), makeRowLabel('KDE Var')),
+          makeRowForFirstColumn($('<div></div>'), makeRowLabel('Bin Width')),
+        ];
+
+        let items = [
+          items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('data'),
+          items4firstColumn[1], makeCell('model', 'marginalResolution', ['marginals']), makeCell('data', 'marginalResolution', ['dataMarginals']),
+          items4firstColumn[2], makeCell('model', 'densityResolution', ['contour']), makeCell('data', 'densityResolution', ['data density']),
+          items4firstColumn[3], makeColumnLabel('model'),  makeColumnLabel('data'),
+          items4firstColumn[4], makeCell('model', 'kdeVariance', ['marginals', 'contour']), makeCell('data', 'kdeVariance', ['dataMarginals', 'data density']),
+          items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour']), makeCell('data', 'empBinWidth', ['dataMarginals', 'data density']),
+        ];
+
+        let shelfContainer = $('<div class="pl-specConfigWidget__container"></div>')
+          .append(...items);
+        return $('<div class="pl-specConfig shelf vertical"></div>')
+          .append($('<hr>'), title, shelfContainer);
+      }
+
       /**
        * Creates and returns GUI to visible facets .
        *
@@ -804,20 +866,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        * @private
        */
       static _makeFacetWidget (context) {
-        let title = $('<div class="pl-h2 shelf__title">Facets</div>');
-        // create checkboxes
-        const name2iconMap = {
-            'aggregations': 'prediction',
-            'data aggregations': 'prediction',
-            'marginals': 'uniDensity',
-            'contour': 'contour',
-            'data density': 'contour',
-            'data': 'dataPoints',
-            'testData': 'dataPoints',
-            'model samples': 'dataPoints',
-            'predictionDataLocal': 'prediction',
-            'dataMarginals': 'uniDensity',  // TODO: make histogram icon
-          };
+        let title = $('<div class="pl-h2 shelf__title">Facets</div>');        
         let checkBoxes = //['contour', 'marginals', 'aggregations', 'data', 'testData'] //, 'predictionOffset']
           Object.keys(context.facets)
           .filter( what => context.facets[what].possible)
@@ -836,7 +885,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   // ... trigger an update
                   context.update('facets.changed');
                 });
-              let $icon = VisUtils.icon(name2iconMap[what]);
+              let $icon = VisUtils.icon(Context._name2iconMap[what]);
               let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
               return $('<div class="pl-facet__onOff"></div>').append($icon, $label, $checkBox);
             }
@@ -859,19 +908,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       static _makeFacetWidget2 (context) {
         let title = $('<div class="pl-h2 shelf__title">Facets</div>');
         // create checkboxes
-        const name2iconMap = {
-          'aggregations': 'prediction',
-          'data aggregations': 'prediction',
-          'marginals': 'uniDensity',
-          'contour': 'contour',
-          'data density': 'contour',
-          'data': 'dataPoints',
-          'testData': 'dataPoints',
-          'model samples': 'dataPoints',
-          'predictionDataLocal': 'prediction',
-          'dataMarginals': 'uniDensity',  // TODO: make histogram icon
-        };
-
         let makeCheckbox = (what) => {
           let $checkBox = $('<input class="pl-facet__checkbox" type="checkbox">')
               .prop({
@@ -894,10 +930,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         let items4firstColumn = [
           $(`<div class="pl-facet__rowLabel pl-label"><div></div><div></div></div>`),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('aggregation')),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data points')),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['aggregations']), makeRowLabel('aggregation')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['data']), makeRowLabel('data points')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['marginals']), makeRowLabel('marginals')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['contour']), makeRowLabel('density')),
         ];
 
         let items = [
@@ -922,6 +958,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let visuals = Context._makeShelvesGUI(context);
         //visuals.facets = Context._makeFacetWidget(context);
         visuals.facets2 = Context._makeFacetWidget2(context);
+        visuals.config = Context._makeConfigWidget(context);
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
@@ -944,6 +981,19 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return this;
       }
     }
+
+    Context._name2iconMap = {
+        'aggregations': 'prediction',
+        'data aggregations': 'prediction',
+        'marginals': 'uniDensity',
+        'contour': 'contour',
+        'data density': 'contour',
+        'data': 'dataPoints',
+        'testData': 'dataPoints',
+        'model samples': 'dataPoints',
+        'predictionDataLocal': 'prediction',
+        'dataMarginals': 'uniDensity',  // TODO: make histogram icon
+      };
 
 
     /**

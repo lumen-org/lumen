@@ -324,9 +324,9 @@ body {
     border-radius: 1em;
 }
 
-.pl-facetWidget__container {
+.pl-facetWidget__container, .pl-specConfigWidget__container {
     display: grid;
-    grid-template-columns: 5.5em 3em 3em;
+    grid-template-columns:5.5em 3.5em 3.5em; 
     grid-gap: 2px;
     place-items: center;
     /* border: 1px solid darkgrey; */
@@ -334,7 +334,7 @@ body {
     /* padding: 0.3rem; */
 }
 
-.pl-facetWidget__container .pl-icon {
+.pl-facetWidget__container .pl-icon, .pl-specConfigWidget__container .pl-icon {
     width: 1.1rem;
     height: 1.1rem;
 }
@@ -343,17 +343,27 @@ body {
     margin: 0;
 }
 
-.pl-facet__label {
+.pl-specConfig__input {
+    margin: 0;
+    width: 90%;
+}
+
+.pl-facet__label, .pl-specConfig__label{
     display: inline;
 }
 
-.pl-facet__rowLabel {
+.pl-specConfig__label {
+    display: inline;
+    margin-right: 0.5em;
+}
+
+.pl-facet__rowLabel, .pl-specConfig__rowLabel {
     display: flex;
     width: 100%;
     justify-content: space-between;
 }
 
-.pl-facet__columnLabel {
+.pl-facet__columnLabel, .pl-specConfig__columnLabel {
     font-style: italic;
 }
 
