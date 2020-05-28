@@ -1199,7 +1199,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     let todayStr = today.getDate() + "-" + (today.getMonth()+1) + "-" + today.getFullYear();
 
     c.meta = {
-      activity_logging_mode: "remote", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_mode: "disabled", // one of ["disabled", "console.error", "console.log", "remote"]
       // activity_logging_filename: "user_log.json",
       activity_logging_filename: utils.todayString() + "_" + "activity.log",
       activity_logging_subdomain: '/activitylogger',
