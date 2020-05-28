@@ -235,7 +235,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param modelTable
      * @param fieldUsageCacheMap
      * @param enabled
-     * @param opts
+     * @param opts A dictionary of additional options passed to the VisMEL query constructor.
      * @return {Promise.<Array>}
      */
     function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled = true, opts = {}) {
@@ -252,7 +252,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                         model = modelTable.at[rIdx][cIdx];
                     try {
                         // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
-                        let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);
+                        let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, opts);
 
                         // unify identical field usages / maps!
                         vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
@@ -298,7 +298,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param fieldUsageCacheMap
      * @param facetName
      * @param enabled
-     * @param opts
+     * @param opts A dictionary of additional options passed to the VisMEL query constructor.
      * @return {Promise.<Array>}
      */
     function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled=true, opts={}) {
@@ -315,7 +315,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
 
                 try {
                     // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
-                    let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx]);
+                    let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx], opts);
                     // unify identical field usages / maps!
                     vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
 

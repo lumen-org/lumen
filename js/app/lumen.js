@@ -18,6 +18,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     var logger = Logger.get('pl-lumen-main');
     logger.setLevel(Logger.DEBUG);
 
+    // activity logger
+    ActivityLogger.logPath(Settings.meta.activity_logging_filename);
+    ActivityLogger.logServerUrl(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
+    ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
+    ActivityLogger.mode(Settings.meta.activity_logging_mode);
+
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
      */
@@ -174,9 +180,24 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           this.shelves = sh.construct();
 
         // facet states and config
-        this.facets = utils.getFacetsFlags(Settings.views);
-        //this.facets = JSON.parse(JSON.stringify(Settings.views));
+        this.facets = utils.getFacetsFlags(Settings.views);        //this.facets = JSON.parse(JSON.stringify(Settings.views));
         this._discardFetchedFacets();
+
+        // other per spec config
+        this.config = {
+          data: {
+            resolutionMarginal: 20,
+            resolutionDensity: 35,
+            kde_variance: 1,
+            emp_bin_width: 1,
+          },
+          model: {
+            resolutionMarginal: 100,
+            resolutionDensity: 50,
+            kde_variance: 1,
+            emp_bin_width: 1,
+          }
+        }
 
         // the stages of the pipeline in terms of queries
         this.query = {};  // vismel query
@@ -354,25 +375,26 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('data aggregations', RT.aggrCollection, fieldUsageCacheMap,
                     c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
-                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
+                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap,undefined,undefined,{
+                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, undefined,undefined,{
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
+                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
                   data_category: 'model samples',
                   number_of_samples: Settings.tweaks['number of samples'],
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
+                // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
+                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.resolutionMarginal}), 
                 c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
-                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, ),
+                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.resolutionMarginal}),
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.resolutionDensity}),
                 c.updateFacetCollection('data density', RT.biDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
+                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.resolutionDensity}),
                 c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap,
                     undefined, c.predictionDataLocal_baseModelTable,
                     Settings.tweaks['data local prediction']),
@@ -1124,12 +1146,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let $vismel_load = $('<div class="pl-details__body pl-button">load query</div>')
             .click( () => {
               return infoBox.message("loading of contexts not yet implemented");
-              let querystr = "";
-              Context.FromJSON( JSON.parse(querystr) ).then( context => {
-                contextQueue.add(context);
-                activate(context, ['visualization', 'visPane', 'legendPane']);
-                return context.update()
-              })
+              // let querystr = "";
+              // Context.FromJSON( JSON.parse(querystr) ).then( context => {
+              //   contextQueue.add(context);
+              //   activate(context, ['visualization', 'visPane', 'legendPane']);
+              //   return context.update()
+              // })
             });
         let $vismel_save = $('<div class="pl-details__body pl-button">save query </div>')
             .click(() => {
@@ -1918,12 +1940,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
     // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
     shInteract.asRemoveElem($(document.body).find('main'));
-
-    // activity logger
-    ActivityLogger.logPath(Settings.meta.activity_logging_filename);
-    ActivityLogger.logServerUrl(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
-    ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
-    ActivityLogger.mode(Settings.meta.activity_logging_mode);
 
     // create info box
     let infoBox = new InfoBox("info-box");

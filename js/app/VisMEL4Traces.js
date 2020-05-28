@@ -181,11 +181,15 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
    *
    * @param vismel A VisMEL query.
    * @param rowsOrCols Either 'rows' or 'cols'.
+   * @param opts An optional dictionary of options. Options are: 
+   *    resolution (int): the number of support points to query to represent the marginal distribution. Only for continuous dimensions.
    */
-  function uniDensity(vismel, rowsOrCols) {
+  function uniDensity(vismel, rowsOrCols, opts={}) {
     checkItIsRowsOrCols(rowsOrCols);
     let invRoC = invertRowsOrCols(rowsOrCols),
         axisFieldUsage = vismel.layout[rowsOrCols][0];
+
+    _.defaults(opts, {resolution: c.map.uniDensity.resolution});
 
     if (!PQL.isFieldUsage(axisFieldUsage))
       // nothing to do!
@@ -216,7 +220,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     // create new split for univariate density (always new splits!)
     let densitySplit = PQL.Split.FromFieldUsage(axisFieldUsage, 'probability');
     if (!PQL.hasDiscreteYield(densitySplit))
-      densitySplit.args[0] = c.map.uniDensity.resolution;
+      densitySplit.args[0] = opts.resolution;
 
     let layout = uniVismel.layout;
     layout[rowsOrCols].splice(0);
@@ -249,7 +253,9 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
    *   * replace layout shelf contents by new split over x and y dimensions, respectively
    *   * add a ColorMap for a Density FieldUsage over both, the x and y split
    */
-  function biDensity(vismel) {
+  function biDensity(vismel, opts={}) {
+
+    _.defaults(opts, {resolution: c.map.biDensity.resolution});
 
     if (!vismel.used)
       vismel.used = vismel.usages();
@@ -269,7 +275,7 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
     let ySplit = PQL.Split.FromFieldUsage(vismel.layout.rows[0], 'probability');
     for (let s of [xSplit, ySplit])
       if (!PQL.hasDiscreteYield(s))
-        s.args[0] = c.map.biDensity.resolution;
+        s.args[0] = opts.resolution;
 
     // should we generate the special trace biQC ?
     let posFu = [vismel.layout.cols[0], vismel.layout.rows[0]];
