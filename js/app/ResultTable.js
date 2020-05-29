@@ -260,8 +260,12 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                         // 2. convert this facet's atomic VisMEL query to PQL query
                         let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
-                        // 3. run this query and return promise to its result
-                        promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, xOrY);
+                        // 3. apply configuration to model 
+                        promise = model.setConfiguration(opts);
+
+                        // 4. run this query and return promise to its result
+                        promise = promise.then(
+                            () => _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, xOrY))
                         // .then(
                         // tbl => {
                         //   // TODO: Hack for Paper: simulate correct scaling of model probability queries
@@ -322,8 +326,12 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                     // 2. convert this facet's atomic VisMEL query to PQL query
                     let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
-                    // 3. run this query and return promise to its result
-                    promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName);
+                    // 3. apply configuration to model 
+                    promise = model.setConfiguration(opts);
+
+                    // 4. run this query and return promise to its result
+                    promise = promise.then(
+                        () => _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName));
 
                 } catch (e) {
                     if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)

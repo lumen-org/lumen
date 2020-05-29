@@ -357,6 +357,10 @@ body {
     margin-right: 0.5em;
 }
 
+.pl-specConfig__sectionHeader {
+    font-style: italic;
+}
+
 .pl-facet__rowLabel, .pl-specConfig__rowLabel {
     display: flex;
     width: 100%;

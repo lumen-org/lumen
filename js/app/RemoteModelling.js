@@ -383,12 +383,24 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         'PP_GRAPH.GET': true,
       };
       return executeRemotely(query, this.url)
-          .then(jsonData => {
-            if (jsonData.model !== this.name)
-              throw RangeError("Received probabilistic program graph of wrong model: {1}  instead of  {2}".format(jsonData.model, this.name))
-            this.ppGraph = jsonData.graph;
-            return jsonData.graph;
-          });
+        .then(jsonData => {
+          if (jsonData.model !== this.name)
+            throw RangeError("Received probabilistic program graph of wrong model: {1}  instead of  {2}".format(jsonData.model, this.name))
+          this.ppGraph = jsonData.graph;
+          return jsonData.graph;
+        });
+    }
+
+    /**
+     * Apply configuration on model.
+     * @param {*} config A JSON serializable configuration dictionary.
+     */
+    setConfiguration(config) {
+      let query = {
+        "CONFIGURE": this.name, 
+        "WITH": config,
+      }
+      return executeRemotely(query, this.url);
     }
 
     /**

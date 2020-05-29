@@ -188,13 +188,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           data: {
             marginalResolution: 20,
             densityResolution: 35,
-            kdeVariance: 1,
+            kdeBandwidth: 1,
             empBinWidth: 1,
           },
           model: {
             marginalResolution: 100,
             densityResolution: 50,
-            kdeVariance: 1,
+            kdeBandwidth: 1,
             empBinWidth: 1,
           }
         }
@@ -222,7 +222,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
-       *
        * @private
        */
       _resetChanges () {
@@ -373,7 +372,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           stages['update.facets'] = stages['new_query']
             .then(() => c._setBusyStatus('fetching facets'))
             .then(() => infoBox.hide())
-            .then(() => Promise.all([
+            .then(() => {
+              let confData = c.config.data,
+                confModel = c.config.model;
+              return Promise.all([
                 // query all facets in parallel
                 c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('data aggregations', RT.aggrCollection, fieldUsageCacheMap,
@@ -382,7 +384,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, undefined,undefined,{
+                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
@@ -391,17 +393,31 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   number_of_samples: Settings.tweaks['number of samples'],
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.marginalResolution}), 
-                c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.marginalResolution}),
-                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, undefined, undefined, {'resolution': c.config.model.densityResolution}),
+                // TODO: disable if one axis is empty and there is a quant dimension on the last field usage)
+                // i.e. emulate other meaning of marginal ?
+                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap, undefined, undefined, 
+                    {'resolution': confModel.marginalResolution,                  
+                    'empBinWidth': confModel.empBinWidth,
+                    'kdeBandwidth': confModel.kdeBandwidth}), 
+                c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap, c.emp_baseQueryTable, c.emp_baseModelTable, 
+                    {'model': 'empirical', 
+                     'resolution': confData.marginalResolution,
+                     'empBinWidth': confData.empBinWidth,
+                     'kdeBandwidth': confData.kdeBandwidth}),
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, undefined, undefined, 
+                    {'resolution': confModel.densityResolution,
+                    'empBinWidth': confModel.empBinWidth,
+                    'kdeBandwidth': confModel.kdeBandwidth}), 
                 c.updateFacetCollection('data density', RT.biDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical', 'resolution': c.config.data.densityResolution}),
+                    c.emp_baseQueryTable, c.emp_baseModelTable, 
+                    {'model': 'empirical',
+                     'resolution': confData.densityResolution,
+                     'empBinWidth': confData.empBinWidth,
+                     'kdeBandwidth': confData.kdeBandwidth}), 
                 c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap,
-                    undefined, c.predictionDataLocal_baseModelTable,
-                    Settings.tweaks['data local prediction']),
-              ]))
+                    undefined, c.predictionDataLocal_baseModelTable, Settings.tweaks['data local prediction']),
+              ]);
+            })
         } else {
           stages['update.facets'] = Promise.resolve();
         }
@@ -810,6 +826,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           config = context.config;
 
         let makeRowLabel = (labelName) => $(`<div class="pl-label pl-specConfig__label">${labelName}</div>`),
+          makeSectionHeader = (labelName) => $(`<div class="pl-label pl-specConfig__sectionHeader">${labelName}</div>`),
           makeColumnLabel = (labelName) => $(`<div class="pl-label pl-specConfig__label pl-specConfig__columnLabel">${labelName}</div>`),
           makeRowForFirstColumn = (...elems) => $(`<div class="pl-specConfig__rowLabel pl-label"></div>`).append(...elems);
         /**
@@ -834,10 +851,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           }
 
         let items4firstColumn = [
-          makeRowForFirstColumn($('<div> Resolution </div>'), $('<div></div>')),
+          makeRowForFirstColumn(makeSectionHeader("Resolution"), $('<div></div>')),
           makeRowForFirstColumn(VisUtils.icon(Context._name2iconMap['marginals']), makeRowLabel('marginals')),
           makeRowForFirstColumn(VisUtils.icon(Context._name2iconMap['contour']), makeRowLabel('density')),
-          makeRowForFirstColumn($('<div> Precision </div>'), $('<div></div>')),
+          makeRowForFirstColumn(makeSectionHeader("Precision"), $('<div></div>')),
           makeRowForFirstColumn($('<div></div>'), makeRowLabel('KDE Var')),
           makeRowForFirstColumn($('<div></div>'), makeRowLabel('Bin Width')),
         ];
@@ -846,8 +863,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('data'),
           items4firstColumn[1], makeCell('model', 'marginalResolution', ['marginals']), makeCell('data', 'marginalResolution', ['dataMarginals']),
           items4firstColumn[2], makeCell('model', 'densityResolution', ['contour']), makeCell('data', 'densityResolution', ['data density']),
-          items4firstColumn[3], makeColumnLabel('model'),  makeColumnLabel('data'),
-          items4firstColumn[4], makeCell('model', 'kdeVariance', ['marginals', 'contour']), makeCell('data', 'kdeVariance', ['dataMarginals', 'data density']),
+          items4firstColumn[3], $('<div></div>'), $('<div></div>'),
+          items4firstColumn[4], makeCell('model', 'kdeBandwidth', ['marginals', 'contour']), makeCell('data', 'kdeBandwidth', ['dataMarginals', 'data density']),
           items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour']), makeCell('data', 'empBinWidth', ['dataMarginals', 'data density']),
         ];
 
