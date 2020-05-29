@@ -105,6 +105,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "levels": {type: "number"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
+      "empBinWidth": {type: "number"},
+      "kdeBandwidth": {type: "number"},
       "number of samples": {type: "integer"},
       "splitCnts": {
         type: "object",
@@ -162,6 +164,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     hideAccuMarginals: true,
     resolution_1d: 25,
     resolution_2d: 15,
+    kdeBandwidth: 0.1,
+    empBinWidth: 1,
     opacity: 0.5,
     levels: 15,
     "number of samples": 200,

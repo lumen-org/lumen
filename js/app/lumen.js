@@ -184,18 +184,19 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._discardFetchedFacets();
 
         // other per spec config
+        let tw = Settings.tweaks;
         this.config = {
-          data: {
-            marginalResolution: 20,
-            densityResolution: 35,
-            kdeBandwidth: 1,
-            empBinWidth: 1,
+          data: {            
+            marginalResolution: tw.resolution_1d,
+            densityResolution: tw.resolution_2d,
+            kdeBandwidth: undefined,
+            empBinWidth: undefined,
           },
           model: {
-            marginalResolution: 100,
-            densityResolution: 50,
-            kdeBandwidth: 1,
-            empBinWidth: 1,
+            marginalResolution: tw.resolution_1d,
+            densityResolution: tw.resolution_2d,
+            kdeBandwidth: undefined,
+            empBinWidth: undefined,
           }
         }
 
@@ -835,8 +836,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
          * @param {*} what String. This is the second level key for the Context config dict.
          * @param {*} facetNames A list of facet names of facets that have to be recomputed when the config value changed.
          */
-        function makeCell (type, what, facetNames) { 
-            return $(`<input class="pl-specConfig__input" type="number" min="1" value="${config[type][what]}">`)
+        function makeCell (type, what, facetNames, placeholder="") { 
+            return $(`<input class="pl-specConfig__input" type="number" min="1" value="${config[type][what]}" placeholder="${placeholder}">`)
             .change( (e) => {
               config[type][what] = +e.target.value;
               // invalidate facet results / cache
@@ -864,8 +865,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           items4firstColumn[1], makeCell('model', 'marginalResolution', ['marginals']), makeCell('data', 'marginalResolution', ['dataMarginals']),
           items4firstColumn[2], makeCell('model', 'densityResolution', ['contour']), makeCell('data', 'densityResolution', ['data density']),
           items4firstColumn[3], $('<div></div>'), $('<div></div>'),
-          items4firstColumn[4], makeCell('model', 'kdeBandwidth', ['marginals', 'contour']), makeCell('data', 'kdeBandwidth', ['dataMarginals', 'data density']),
-          items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour']), makeCell('data', 'empBinWidth', ['dataMarginals', 'data density']),
+          items4firstColumn[4], makeCell('model', 'kdeBandwidth', ['marginals', 'contour'], 'auto'), 
+            makeCell('data', 'kdeBandwidth', ['dataMarginals', 'data density'], 'auto'),
+          items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour'], 'auto'), 
+            makeCell('data', 'empBinWidth', ['dataMarginals', 'data density'], 'auto'),
         ];
 
         let shelfContainer = $('<div class="pl-specConfigWidget__container"></div>')
