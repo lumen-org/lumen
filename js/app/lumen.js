@@ -171,7 +171,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // empirical model
         // TODO: make model configurable
-        this.emp_model = undefined;
+        this.dataModel = undefined;
 
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
@@ -266,16 +266,16 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let that = this;
         return that.model.update()
             .then(() => {
-                that.emp_model = new Remote.Model(that.model.empirical_model_name, that.server);  
+                that.dataModel = new Remote.Model(that.model.datamodel_name, that.server);  
                 // enable auto-creation for empirical models
                 let optsAutoCreate = {
                   AUTO_CREATE_MODEL: {
-                    // MODEL_TYPE: "empirical", // "kde" or empirical"
+                    MODEL_TYPE: "empirical", // "kde" or empirical"
                     FOR_MODEL: that.model.name,
                   }
                 };                
                 // set and update empirical model                
-                return that.emp_model.update(optsAutoCreate)
+                return that.dataModel.update(optsAutoCreate)
             });
       }
 
@@ -318,7 +318,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._setBusyStatus('getting base query');
           try {
             c.basemodel = c.model.localCopy();
-            c.emp_basemodel = c.emp_model.localCopy();
+            c.emp_basemodel = c.dataModel.localCopy();
 
             // get user query
             c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel);
@@ -885,8 +885,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           items4firstColumn[3], $('<div></div>'), $('<div></div>'),
           items4firstColumn[4], makeCell('model', 'kdeBandwidth', ['marginals', 'contour'], 'auto'), 
             makeCell('data', 'kdeBandwidth', ['dataMarginals', 'data density'], 'auto'),
-          items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour'], 'auto'), 
-            makeCell('data', 'empBinWidth', ['dataMarginals', 'data density'], 'auto'),
+          //TODO: implement empirical model that respects bin width as expected
+          //items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour'], 'auto'), 
+          //  makeCell('data', 'empBinWidth', ['dataMarginals', 'data density'], 'auto'),
         ];
 
         let shelfContainer = $('<div class="pl-specConfigWidget__container"></div>')

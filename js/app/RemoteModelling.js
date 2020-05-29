@@ -157,7 +157,7 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         this.byIndex.push(modelField);
       }
       this.name = json.name;
-      this.empirical_model_name = json['empirical model'];  // the name of the corresponding empirical model
+      this.datamodel_name = json['data-model name'];  // the name of the corresponding empirical model
       this.modelType = json['model type'];
       this.description = json.description;
       return this;
