@@ -775,7 +775,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           // TODO: add this line again. Atm does not work, because the modelType is not yet available. Only after fetching the header of the model.
           // <div class="pl-label pl-modelInfo__label">model type</div> <div class="pl-label">${model.modelType}</div>
         return $('<div class="pl-specConfig shelf vertical"></div>')
-          .append($('<hr>'), title, shelfContainer);
+          .append(title, shelfContainer);
       }
 
       /**
