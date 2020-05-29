@@ -764,6 +764,21 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
+       * @private
+       * @param {@Model} model 
+       */
+      static _makeModelInfoVisual (model) {
+        let title = $('<div class="pl-h2 shelf__title">Model</div>'),          
+          shelfContainer = $(`<div class="pl-modelInfo__container">
+              <div class="pl-label pl-modelInfo__label">name</div> <div class="pl-label">${model.name}</div>              
+            </div>`);
+          // TODO: add this line again. Atm does not work, because the modelType is not yet available. Only after fetching the header of the model.
+          // <div class="pl-label pl-modelInfo__label">model type</div> <div class="pl-label">${model.modelType}</div>
+        return $('<div class="pl-specConfig shelf vertical"></div>')
+          .append($('<hr>'), title, shelfContainer);
+      }
+
+      /**
        * Creates a visual, interactable representation of the shelves in the given context and returns this as an object with three attributes: models, mappings and  layout respectively. Each are a jQuery selection of the visual representation, respectively.
        * @param context
        * @private
@@ -789,7 +804,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let visual = {};
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
-          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+          Context._makeModelInfoVisual(context.model),
+          shelves.meas.$visual, $('<hr>'), 
+          shelves.dim.$visual, $('<hr>'), 
+          shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: comment next 2(!) items */ shelves.detail.$visual, $('<hr>'),  shelves.color.$visual,

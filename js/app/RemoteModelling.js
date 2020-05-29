@@ -158,6 +158,8 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
       }
       this.name = json.name;
       this.empirical_model_name = json['empirical model'];  // the name of the corresponding empirical model
+      this.modelType = json['model type'];
+      this.description = json.description;
       return this;
     }
 
@@ -413,6 +415,8 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         clone.fields.set(key, value.copy());
       }
       clone.byIndex = this.byIndex.map(f => f.copy());
+      clone.modelType = this.modelType;
+      clone.description = this.description;
       return clone;
     }
 

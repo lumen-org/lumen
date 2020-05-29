@@ -387,6 +387,17 @@ body {
     height: 1.3rem;
 }
 
+.pl-modelInfo__container {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.pl-modelInfo__label {
+    display: inline;
+    text-align: right;
+    margin-right: 1em;    
+}
+
 .pl-graph {
     display: flex;
     width: 100%;
