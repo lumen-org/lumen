@@ -11,12 +11,18 @@
  * @author Philipp Lucas
  */
 
-define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './DependencyGraph', './ProbabilisticProgramGraph', './FilterWidget', './PQL', './VisualizationRecommendation'],
-  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PQL, VisRec) {
+define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts', './VisMEL', './VisMEL4Traces', './VisMELShelfDropping', './VisMEL2Shelves', './shelves', './interaction', './ShelfInteractionMixin', './ShelfGraphConnector', './visuals', './VisUtils', './unredo', './QueryTable', './ModelTable', './ResultTable', './ViewTable', './RemoteModelling', './SettingsEditor', './ViewSettings', './ActivityLogger', './utils', './jsonUtils', 'd3', 'd3legend', './widgets/DependencyGraph', './ProbabilisticProgramGraph', './widgets/FilterWidget', './widgets/PosteriorPredictiveCheckWidget', './PQL', './VisualizationRecommendation', './ZIndexManager'],
+  function (RunConf, Logger, Emitter, init, InitialContexts, VisMEL, V4T, drop, V2S, sh, inter, shInteract, ShelfGraphConnector, vis, VisUtils, UnRedo, QueryTable, ModelTable, RT, ViewTable, Remote, SettingsEditor, Settings, ActivityLogger, utils, jsonutils, d3, d3legend, GraphWidget, PPGraphWidget, FilterWidget, PPC, PQL,  VisRec, zIndex) {
     'use strict';
 
     var logger = Logger.get('pl-lumen-main');
     logger.setLevel(Logger.DEBUG);
+
+    // activity logger
+    ActivityLogger.logPath(Settings.meta.activity_logging_filename);
+    ActivityLogger.logServerUrl(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
+    ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
+    ActivityLogger.mode(Settings.meta.activity_logging_mode);
 
     /**
      * Utility function. Do some drag and drops to start with some non-empty VisMEL query
@@ -47,12 +53,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     const _facetNames = [...Object.keys(_facetNameMap)];
 
     /**
-     * monotone z-index generator. used to push activated contexts visually to the front.
-     * Usage: zIndex = zIndexGenerator++;
-     */
-    let zIndexGenerator = 1;
-
-    /**
      * An info box receives messages that it shows.
      */
     class InfoBox {
@@ -78,7 +78,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let toAdd =  "pl-info-box_" + (type === "warning"?"warning":"information"),
           toRemove =  "pl-info-box_" + (type === "warning"?"information":"warning");
         this._$visual.text(str).addClass(toAdd).removeClass(toRemove);
-        this._$visual.css("z-index", zIndexGenerator + 1);
+        this._$visual.css("z-index", zIndex.current()+1);
         this.show();
         let that = this;
         setTimeout( () => {
@@ -134,7 +134,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         } else {
           alertBoxHeaderTitle.text("Models found:")
         }
-        this._$visual.css("z-index", zIndexGenerator + 1);
+        this._$visual.css("z-index", zIndex.current()+1);
         this.show();
       }
 
@@ -171,7 +171,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // empirical model
         // TODO: make model configurable
-        this.emp_model = undefined;
+        this.dataModel = undefined;
 
         // shelves configuration
         if (modelName !== undefined && server !== undefined && shelves !== undefined)
@@ -181,8 +181,24 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // facet states and config
         this.facets = utils.getFacetsFlags(Settings.views);
-        //this.facets = JSON.parse(JSON.stringify(Settings.views));
         this._discardFetchedFacets();
+
+        // other per spec config
+        let tw = Settings.tweaks;
+        this.config = {
+          data: {            
+            marginalResolution: tw.resolution_1d,
+            densityResolution: tw.resolution_2d,
+            kdeBandwidth: undefined,
+            empBinWidth: undefined,
+          },
+          model: {
+            marginalResolution: tw.resolution_1d,
+            densityResolution: tw.resolution_2d,
+            kdeBandwidth: undefined,
+            empBinWidth: undefined,
+          }
+        }
 
         // the stages of the pipeline in terms of queries
         this.query = {};  // vismel query
@@ -207,7 +223,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
-       *
        * @private
        */
       _resetChanges () {
@@ -216,10 +231,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._commitFlag = false;
       }
 
-      _discardFetchedFacets () {
+      _discardFetchedFacets (what='all') {
         let facets = this.facets;
-        for (let facet of Object.keys(_facetNameMap)) {
-          facets[facet].fetchState = 'not fetched'; // current fetching state of facet. One of ['not fetched', 'pending', 'fetched']
+        if (what === 'all')
+          what = Object.keys(facets)                
+        
+        for (let facet of _facetNames) {
+          facets[facet].fetchState = 'not fetched'; // current fetching state of facet. One of ['not fetched', 'fetched']
           facets[facet].data = undefined; // the last fetched data collection
         }
       }
@@ -248,9 +266,17 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let that = this;
         return that.model.update()
             .then(() => {
-                // set and update empirical model
-                that.emp_model = new Remote.Model(that.model.empirical_model_name, that.server);
-                return that.emp_model.update()
+                that.dataModel = new Remote.Model(that.model.datamodel_name, that.server);  
+                // enable auto-creation for empirical models
+                let optsAutoCreate = {
+                  AUTO_CREATE_MODEL: {
+                    //MODEL_TYPE: "empirical", // "kde" or empirical"
+                    MODEL_TYPE: Settings.tweaks.dataModelType, 
+                    FOR_MODEL: that.model.name,
+                  }
+                };                
+                // set and update empirical model                
+                return that.dataModel.update(optsAutoCreate)
             });
       }
 
@@ -269,7 +295,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
 
       /**
-       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has truthy commit flag.
+       * Update this context with respect to all due changes. Due changes are stored in this._changes. An update is committed, if any of the calls to `update` has a truthy commit flag.
        *
        * Note that this function accesses the file scope, as it uses the infoBox variable.
        * @private
@@ -293,7 +319,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           c._setBusyStatus('getting base query');
           try {
             c.basemodel = c.model.localCopy();
-            c.emp_basemodel = c.emp_model.localCopy();
+            c.emp_basemodel = c.dataModel.localCopy();
 
             // get user query
             c.query = VisMEL.VisMEL.FromShelves(c.shelves, c.basemodel);
@@ -348,34 +374,52 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           stages['update.facets'] = stages['new_query']
             .then(() => c._setBusyStatus('fetching facets'))
             .then(() => infoBox.hide())
-            .then(() => Promise.all([
+            .then(() => {
+              let confData = c.config.data,
+                confModel = c.config.model;
+              return Promise.all([
                 // query all facets in parallel
                 c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('data aggregations', RT.aggrCollection, fieldUsageCacheMap,
                     c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
-                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
+                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap,undefined,undefined,{
+                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap,undefined, undefined,{
+                c.updateFacetCollection('model samples', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
                   data_category: 'model samples',
                   number_of_samples: Settings.tweaks['number of samples'],
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap), // TODO: disable if one axis is empty and there is a quant dimension on the last field usage), i.e. emulate other meaning of marginal ?
-                c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
-                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, ),
+                // TODO: disable if one axis is empty and there is a quant dimension on the last field usage)
+                // i.e. emulate other meaning of marginal ?
+                c.updateFacetCollection('marginals', RT.uniDensityCollection, fieldUsageCacheMap, undefined, undefined, 
+                    {'resolution': confModel.marginalResolution,                  
+                    'empBinWidth': confModel.empBinWidth,
+                    'kdeBandwidth': confModel.kdeBandwidth}), 
+                c.updateFacetCollection('dataMarginals', RT.uniDensityCollection, fieldUsageCacheMap, c.emp_baseQueryTable, c.emp_baseModelTable, 
+                    {'model': 'empirical', 
+                     'resolution': confData.marginalResolution,
+                     'empBinWidth': confData.empBinWidth,
+                     'kdeBandwidth': confData.kdeBandwidth}),
+                c.updateFacetCollection('contour', RT.biDensityCollection, fieldUsageCacheMap, undefined, undefined, 
+                    {'resolution': confModel.densityResolution,
+                    'empBinWidth': confModel.empBinWidth,
+                    'kdeBandwidth': confModel.kdeBandwidth}), 
                 c.updateFacetCollection('data density', RT.biDensityCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
+                    c.emp_baseQueryTable, c.emp_baseModelTable, 
+                    {'model': 'empirical',
+                     'resolution': confData.densityResolution,
+                     'empBinWidth': confData.empBinWidth,
+                     'kdeBandwidth': confData.kdeBandwidth}), 
                 c.updateFacetCollection('predictionDataLocal', RT.predictionDataLocalCollection, fieldUsageCacheMap,
-                    undefined, c.predictionDataLocal_baseModelTable,
-                    Settings.tweaks['data local prediction']),
-              ]))
+                    undefined, c.predictionDataLocal_baseModelTable, Settings.tweaks['data local prediction']),
+              ]);
+            })
         } else {
           stages['update.facets'] = Promise.resolve();
         }
@@ -490,6 +534,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         $('#pl-dashboard__container').append($visuals.visualization);
         //$('#pl-facet-container').append($visuals.facets);
         $('#pl-facet-container').append($visuals.facets2);
+        $('#pl-specConfig-container').append($visuals.config);
       }
 
       /**
@@ -674,6 +719,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let $vis = $('<div class="pl-visualization pl-active-able"></div>')
           .append($paneDiv, $removeButton, $legendDiv)
           .mousedown( () => {
+            context.$visuals.visualization.css("z-index",zIndex.inc());
             if (contextQueue.first().uuid !== context.uuid) {
               activate(context, ['visualization', 'visPane', 'legendPane']);
               ActivityLogger.log({'context': context.getNameAndUUID()}, 'context.activate');
@@ -697,7 +743,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
               },
             handle: '.pl-visualization__pane',
             start: (ev, ui) => {
-                $vis.__is_dragging = true; // 
+                $vis.__is_dragging = true;
             },
     
             drag: (ev, ui) => {
@@ -716,6 +762,21 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
         return $vis;
+      }
+
+      /**
+       * @private
+       * @param {@Model} model 
+       */
+      static _makeModelInfoVisual (model) {
+        let title = $('<div class="pl-h2 shelf__title">Model</div>'),          
+          shelfContainer = $(`<div class="pl-modelInfo__container">
+              <div class="pl-label pl-modelInfo__label">name</div> <div class="pl-label">${model.name}</div>              
+            </div>`);
+          // TODO: add this line again. Atm does not work, because the modelType is not yet available. Only after fetching the header of the model.
+          // <div class="pl-label pl-modelInfo__label">model type</div> <div class="pl-label">${model.modelType}</div>
+        return $('<div class="pl-specConfig shelf vertical"></div>')
+          .append(title, shelfContainer);
       }
 
       /**
@@ -744,7 +805,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let visual = {};
         // shelves visuals
         visual.models = $('<div class="pl-model"></div>').append(
-          shelves.meas.$visual, $('<hr>'), shelves.dim.$visual, $('<hr>'), shelves.remove.$visual, $('<hr>'));
+          Context._makeModelInfoVisual(context.model),
+          shelves.meas.$visual, $('<hr>'), 
+          shelves.dim.$visual, $('<hr>'), 
+          shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
           shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: comment next 2(!) items */ shelves.detail.$visual, $('<hr>'),  shelves.color.$visual,
@@ -771,6 +835,68 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return visual;
       }
 
+
+      /**
+       * Creates and returns GUI for the config of a context.
+       * @param {Context} context 
+       * @private
+       */
+      static _makeConfigWidget (context) {
+        let title = $('<div class="pl-h2 shelf__title">Config</div>'),
+          config = context.config;
+
+        let makeRowLabel = (labelName) => $(`<div class="pl-label pl-specConfig__label">${labelName}</div>`),
+          makeSectionHeader = (labelName) => $(`<div class="pl-label pl-specConfig__sectionHeader">${labelName}</div>`),
+          makeColumnLabel = (labelName) => $(`<div class="pl-label pl-specConfig__label pl-specConfig__columnLabel">${labelName}</div>`),
+          makeRowForFirstColumn = (...elems) => $(`<div class="pl-specConfig__rowLabel pl-label"></div>`).append(...elems);
+        /**
+         * Create a cell of the config grid for a numerical config value.
+         * @param {*} type String. One of 'model' or 'data'. This is the top level key for the Context config dict.
+         * @param {*} what String. This is the second level key for the Context config dict.
+         * @param {*} facetNames A list of facet names of facets that have to be recomputed when the config value changed.
+         */
+        function makeCell (type, what, facetNames, placeholder="") { 
+            return $(`<input class="pl-specConfig__input" type="number" min="1" value="${config[type][what]}" placeholder="${placeholder}">`)
+            .change( (e) => {
+              config[type][what] = +e.target.value;
+              // invalidate facet results / cache
+              context._discardFetchedFacets(facetNames);
+              // TODO: ActivityLogger.log({'changedFacet': _facetNameMap[what], 'value': e.target.checked, 'facets': context._getFacetActiveState(), 'context': context.getNameAndUUID()}, "facet.change");                
+            })
+            .on('keyup', (e) => {
+              if (e.key === "Enter") {
+                  context.update('facets.changed');
+              }
+            });
+          }
+
+        let items4firstColumn = [
+          makeRowForFirstColumn(makeSectionHeader("Resolution"), $('<div></div>')),
+          makeRowForFirstColumn(VisUtils.icon(Context._name2iconMap['marginals']), makeRowLabel('marginals')),
+          makeRowForFirstColumn(VisUtils.icon(Context._name2iconMap['contour']), makeRowLabel('density')),
+          makeRowForFirstColumn(makeSectionHeader("Precision"), $('<div></div>')),
+          makeRowForFirstColumn($('<div></div>'), makeRowLabel('KDE Var')),
+          makeRowForFirstColumn($('<div></div>'), makeRowLabel('Bin Width')),
+        ];
+
+        let items = [
+          items4firstColumn[0], makeColumnLabel('model'),  makeColumnLabel('data'),
+          items4firstColumn[1], makeCell('model', 'marginalResolution', ['marginals']), makeCell('data', 'marginalResolution', ['dataMarginals']),
+          items4firstColumn[2], makeCell('model', 'densityResolution', ['contour']), makeCell('data', 'densityResolution', ['data density']),
+          items4firstColumn[3], $('<div></div>'), $('<div></div>'),
+          items4firstColumn[4], makeCell('model', 'kdeBandwidth', ['marginals', 'contour'], 'auto'), 
+            makeCell('data', 'kdeBandwidth', ['dataMarginals', 'data density'], 'auto'),
+          //TODO: implement empirical model that respects bin width as expected
+          //items4firstColumn[5], makeCell('model', 'empBinWidth', ['marginals', 'contour'], 'auto'), 
+          //  makeCell('data', 'empBinWidth', ['dataMarginals', 'data density'], 'auto'),
+        ];
+
+        let shelfContainer = $('<div class="pl-specConfigWidget__container"></div>')
+          .append(...items);
+        return $('<div class="pl-specConfig shelf vertical"></div>')
+          .append($('<hr>'), title, shelfContainer);
+      }
+
       /**
        * Creates and returns GUI to visible facets .
        *
@@ -780,20 +906,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        * @private
        */
       static _makeFacetWidget (context) {
-        let title = $('<div class="pl-h2 shelf__title">Facets</div>');
-        // create checkboxes
-        const name2iconMap = {
-            'aggregations': 'prediction',
-            'data aggregations': 'prediction',
-            'marginals': 'uniDensity',
-            'contour': 'contour',
-            'data density': 'contour',
-            'data': 'dataPoints',
-            'testData': 'dataPoints',
-            'model samples': 'dataPoints',
-            'predictionDataLocal': 'prediction',
-            'dataMarginals': 'uniDensity',  // TODO: make histogram icon
-          };
+        let title = $('<div class="pl-h2 shelf__title">Facets</div>');        
         let checkBoxes = //['contour', 'marginals', 'aggregations', 'data', 'testData'] //, 'predictionOffset']
           Object.keys(context.facets)
           .filter( what => context.facets[what].possible)
@@ -812,7 +925,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   // ... trigger an update
                   context.update('facets.changed');
                 });
-              let $icon = VisUtils.icon(name2iconMap[what]);
+              let $icon = VisUtils.icon(Context._name2iconMap[what]);
               let $label = $(`<label class="pl-label pl-facet__label" for="${_facetNameMap[what]}">${_facetNameMap[what]}</label>`);
               return $('<div class="pl-facet__onOff"></div>').append($icon, $label, $checkBox);
             }
@@ -835,19 +948,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       static _makeFacetWidget2 (context) {
         let title = $('<div class="pl-h2 shelf__title">Facets</div>');
         // create checkboxes
-        const name2iconMap = {
-          'aggregations': 'prediction',
-          'data aggregations': 'prediction',
-          'marginals': 'uniDensity',
-          'contour': 'contour',
-          'data density': 'contour',
-          'data': 'dataPoints',
-          'testData': 'dataPoints',
-          'model samples': 'dataPoints',
-          'predictionDataLocal': 'prediction',
-          'dataMarginals': 'uniDensity',  // TODO: make histogram icon
-        };
-
         let makeCheckbox = (what) => {
           let $checkBox = $('<input class="pl-facet__checkbox" type="checkbox">')
               .prop({
@@ -870,10 +970,10 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         let items4firstColumn = [
           $(`<div class="pl-facet__rowLabel pl-label"><div></div><div></div></div>`),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['aggregations']), makeRowLabel('prediction')),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['data']), makeRowLabel('data points')),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['marginals']), makeRowLabel('marginals')),
-          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(name2iconMap['contour']), makeRowLabel('density')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['aggregations']), makeRowLabel('aggregation')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['data']), makeRowLabel('data points')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['marginals']), makeRowLabel('marginals')),
+          $(`<div class="pl-facet__rowLabel pl-label"></div>`).append(VisUtils.icon(Context._name2iconMap['contour']), makeRowLabel('density')),
         ];
 
         let items = [
@@ -898,9 +998,11 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let visuals = Context._makeShelvesGUI(context);
         //visuals.facets = Context._makeFacetWidget(context);
         visuals.facets2 = Context._makeFacetWidget2(context);
+        visuals.config = Context._makeConfigWidget(context);
         visuals.visualization = Context._makeVisualization(context);
         visuals.visPane = $('div.pl-visualization__pane', visuals.visualization);
         visuals.legendPane = $('div.pl-legend', visuals.visualization);
+        //visuals.ppc = new PPC.PPCWidget(context, infoBox);
 
         context._busyIndicator = $('<div class="pl-busy-indicator"></div>')
           .append('<div class="pl-label"></div>')
@@ -919,6 +1021,19 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         return this;
       }
     }
+
+    Context._name2iconMap = {
+        'aggregations': 'prediction',
+        'data aggregations': 'prediction',
+        'marginals': 'uniDensity',
+        'contour': 'contour',
+        'data density': 'contour',
+        'data': 'dataPoints',
+        'testData': 'dataPoints',
+        'model samples': 'dataPoints',
+        'predictionDataLocal': 'prediction',
+        'dataMarginals': 'uniDensity',  // TODO: make histogram icon
+      };
 
 
     /**
@@ -975,7 +1090,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         // fetch model
         let that = this;
         context._updateModels()
-          .then(() => that._clearInput())
+          //.then(() => that._clearInput())
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
           .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
@@ -1121,12 +1236,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let $vismel_load = $('<div class="pl-details__body pl-button">load query</div>')
             .click( () => {
               return infoBox.message("loading of contexts not yet implemented");
-              let querystr = "";
-              Context.FromJSON( JSON.parse(querystr) ).then( context => {
-                contextQueue.add(context);
-                activate(context, ['visualization', 'visPane', 'legendPane']);
-                return context.update()
-              })
+              // let querystr = "";
+              // Context.FromJSON( JSON.parse(querystr) ).then( context => {
+              //   contextQueue.add(context);
+              //   activate(context, ['visualization', 'visPane', 'legendPane']);
+              //   return context.update()
+              // })
             });
         let $vismel_save = $('<div class="pl-details__body pl-button">save query </div>')
             .click(() => {
@@ -1549,80 +1664,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       }
     }
 
-    /**
-     * A widget that lets you create Posterior Predictive Check visualizations.
-     *
-     *
-     */
-    class PosteriorPredictiveCheckWidget {
-
-      constructor (context) {
-        let that = this;
-        that._context = undefined;
-        if (context !== undefined)
-          that.setContext(context);
-
-        const test_quantities = ['min', 'max', 'average', 'median'];
-
-        // make visual context
-        that._$selectK = $('<div class="pl-ppc__section"></div>')
-            .append(
-                '<div class="pl-h2 pl-ppc__h2"># of repetitions</div>',
-                '<input class="pl-ppc__input" type="number" id="pl-ppc_samples-input" value="50">'
-            );
-
-        that._$selectN = $('<div class="pl-ppc__section"></div>')
-            .append(
-                '<div class="pl-h2 pl-ppc__h2" ># of samples</div>',
-                '<input class="pl-ppc__input" type="number" id="pl-ppc_repetitions-input" value="50">'
-            );
-
-        // currently it's static, but may be dynamic in future:
-        that._$testQuantityList = $('<datalist id="ppc-test-quantities"></datalist>');
-        for (let q of test_quantities)
-          that._$testQuantityList.append($("<option>").attr('value',q).text(q));
-
-        that._$selectTestQuantity = $('<div class="pl-ppc__section"></div>').append(
-            ('<div class="pl-h2 pl-ppc__h2">test quantity</div>'),
-            ('<input class="pl-input pl-ppc__input" type="text" list="ppc-test-quantities" value="median">'),
-            that._$testQuantityList
-        );
-
-        that.ppcShelf = new sh.Shelf(sh.ShelfTypeT.single);
-        that.ppcShelf.beVisual({label: 'drop here for PPC'}).beInteractable();
-
-        that.ppcShelf.on(Emitter.ChangedEvent, event => {
-          //infoBox.message("PPCs not implemented yet.");
-          let fields = that.ppcShelf.content(),
-            promise = that._context.model.ppc(fields, {k:10, n:3, TEST_QUANTITY:'median'});
-
-          promise.then(
-              res => {
-                infoBox.message("received PPC results!");
-                console.log(res.toString());
-              }
-          );
-        });
-
-        that.$visual = $('<div class="pl-ppc"></div>')
-//             .append('<div class="pl-h2"># of repetitions</div>')
-            .append(this._$selectK)
-            .append(this._$selectN)
-            .append(this._$selectTestQuantity)
-            .append(this.ppcShelf.$visual);
-      }
-
-      /**
-       * Sets the context that it controls.
-       * @param context A context.
-       */
-      setContext (context) {
-        if (!(context instanceof Context))
-          throw TypeError("context must be an instance of Context");
-        this._context = context;
-      }
-
-    }
 
     /**
      * A widget for user studies. It allow a subject to report feedback.
@@ -1841,13 +1882,13 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         this._first = elem;
       }
 
-      _reset_z_index(){
-        zIndexGenerator = this.length;
-        for(let i of this){
-          i.$visuals.visualization.css("z-index", zIndexGenerator--);
-        }
-        zIndexGenerator = this.length + 1;
-      }
+      // _reset_z_index(){
+      //   zIndexGenerator = this.length;
+      //   for(let i of this){
+      //     i.$visuals.visualization.css("z-index", zIndexGenerator--);
+      //   }
+      //   zIndexGenerator = this.length + 1;
+      // }
 
       /**
        * Adds the context as a new and as the first element to the context queue.
@@ -1855,24 +1896,23 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       add(context) {
         let elem = ContextQueue._makeElem(context);
-        let that = this;
-
         this._prepend(elem);
         this.length++;
 
         // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
+        // an element listens to a context being deleted. it then deletes itself and makes the first element of the queue the active context
         context.on("ContextDeletedEvent", () => {
-          that._remove(elem);
-          that.length--;
-          that.activateFirst();
-          if(that.empty())
-            that.emit("ContextQueueEmpty");
-          that._reset_z_index()
+          this._remove(elem);
+          this.length--;
+          this.activateFirst();
+          if(this.empty())
+            this.emit("ContextQueueEmpty");
+          // this._reset_z_index()
         });
 
         // an element listens to a context being activated. it then is moved to the beginning of the queue
         context.on("ContextActivatedEvent", () => {
-          that._moveToFront(elem);
+          this._moveToFront(elem);
         })
       }
 
@@ -1967,7 +2007,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         _currentContext.$visuals.visualization.toggleClass('pl-active', true);
 
         // move it to the front
-        _currentContext.$visuals.visualization.css("z-index",zIndexGenerator++);
+        _currentContext.$visuals.visualization.css("z-index",zIndex.inc());
 
         // set context in singelton widgets
         toolbar.setContext(context);
@@ -1990,12 +2030,6 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
     // set the whole body as "remove element", i.e. dropping it anywhere there will remove the dragged element
     shInteract.asRemoveElem($(document.body).find('main'));
-
-    // activity logger
-    ActivityLogger.logPath(Settings.meta.activity_logging_filename);
-    ActivityLogger.logServerUrl(RunConf.DEFAULT_SERVER_ADDRESS + Settings.meta.activity_logging_subdomain);
-    ActivityLogger.additionalFixedContent({'userId':'NOT_SET'});
-    ActivityLogger.mode(Settings.meta.activity_logging_mode);
 
     // create info box
     let infoBox = new InfoBox("info-box");
@@ -2022,7 +2056,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
     }
 
     // posterior predictive check widget
-    let ppcWidget = new PosteriorPredictiveCheckWidget(undefined);
+    let ppcWidget = new PPC.PPCWidget(undefined, infoBox);
     if (Settings.widget.posteriorPredictiveChecks.enabled) {
       ppcWidget.$visual.appendTo(document.getElementById('pl-ppc-container'));
     }

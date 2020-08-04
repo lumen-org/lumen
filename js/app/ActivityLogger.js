@@ -63,6 +63,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
       throw RangeError("invalid mode. must be one of " + [...validModes]);
 
     this._mode = mode;
+    enable(mode !== 'disabled')
   }
 
   /**
@@ -117,7 +118,7 @@ define(['lib/logger', 'd3'], function (Logger, d3) {
    * @private
    */
   function log(jsonSerializableObj, activityType='NO_TYPE') {
-    if (!enabled)
+    if (!enabled())
       return;
 
     // add some more attributes to log

@@ -157,7 +157,9 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         this.byIndex.push(modelField);
       }
       this.name = json.name;
-      this.empirical_model_name = json['empirical model'];  // the name of the corresponding empirical model
+      this.datamodel_name = json['data-model name'];  // the name of the corresponding empirical model
+      this.modelType = json['model type'];
+      this.description = json.description;
       return this;
     }
 
@@ -191,8 +193,8 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
      * Syncs the local view on the model with the remote model base.
      * @returns {*|Promise.<TResult>} A promise to operation.
      */
-    update() {
-      let jsonPQL = PQL.toJSON.header(this.name);
+    update(opts=undefined) {
+      let jsonPQL = PQL.toJSON.header(this.name, opts);
       return executeRemotely(jsonPQL, this.url)
         .then(this._updateHeader.bind(this));
     }
@@ -383,12 +385,24 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         'PP_GRAPH.GET': true,
       };
       return executeRemotely(query, this.url)
-          .then(jsonData => {
-            if (jsonData.model !== this.name)
-              throw RangeError("Received probabilistic program graph of wrong model: {1}  instead of  {2}".format(jsonData.model, this.name))
-            this.ppGraph = jsonData.graph;
-            return jsonData.graph;
-          });
+        .then(jsonData => {
+          if (jsonData.model !== this.name)
+            throw RangeError("Received probabilistic program graph of wrong model: {1}  instead of  {2}".format(jsonData.model, this.name))
+          this.ppGraph = jsonData.graph;
+          return jsonData.graph;
+        });
+    }
+
+    /**
+     * Apply configuration on model.
+     * @param {*} config A JSON serializable configuration dictionary.
+     */
+    setConfiguration(config) {
+      let query = {
+        "CONFIGURE": this.name, 
+        "WITH": config,
+      }
+      return executeRemotely(query, this.url);
     }
 
     /**
@@ -401,6 +415,8 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
         clone.fields.set(key, value.copy());
       }
       clone.byIndex = this.byIndex.map(f => f.copy());
+      clone.modelType = this.modelType;
+      clone.description = this.description;
       return clone;
     }
 

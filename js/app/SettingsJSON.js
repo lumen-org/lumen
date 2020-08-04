@@ -99,12 +99,15 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     type: "object",
     //format: "grid",
     properties: {
+      "dataModelType": {type: "string", enum: ['kde', 'empirical']},
       "hideAggregations": {type: "boolean"},
       "hideAccuMarginals": {type: "boolean"},
       "opacity": {type: "number"},
       "levels": {type: "number"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
+      "empBinWidth": {type: "number"},
+      "kdeBandwidth": {type: "number"},
       "number of samples": {type: "integer"},
       "splitCnts": {
         type: "object",
@@ -158,12 +161,15 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   };
 
   let tweaksInitial = {
+    dataModelType: "empirical", // "kde"
     hideAggregations: false,
     hideAccuMarginals: true,
     resolution_1d: 25,
-    resolution_2d: 25,
+    resolution_2d: 15,
+    kdeBandwidth: 0.1,
+    empBinWidth: 1,
     opacity: 0.5,
-    levels: 30,
+    levels: 15,
     "number of samples": 200,
     splitCnts: {
       layout: 5,
@@ -171,14 +177,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       aggregation: 15,
     },
     data: {
-      "stroke color": greys(0.1),
+      "stroke color": greys(0.05),
       "stroke width": 1,
-      "fill opacity": 0.55,
+      "fill opacity": 0.30,
     },
     prediction: {
-      "stroke color": greys(0.9),
-      "stroke width": 1,
-      "fill opacity": 0.8,
+      "stroke color": greys(0.95),
+      "stroke width": 1.5,
+      "fill opacity": 1,
     },
     "data local prediction": {
       "point number maximum": 200,
@@ -628,6 +634,27 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "labelFormatterString": {type: "string"},
           "backgroundHeatMap": {type: "boolean"},
         }
+      },
+      "ppc": {
+        type: "object",
+        properties: {
+          modelHistogram: {
+            type: "object", format: "grid",
+            properties: {
+              "fillOpacity": {type: "number"},
+              "lineOpacity": {type: "number"},
+              "lineWidth": {type: "number"},
+              "color": {type: "string", format: "color", watch: {_single: "colors.modelSamples.density"}, template: "{{_single}}"} //{type: "string", format: "color"},
+            }
+          },
+          referenceValue: {
+            type: "object", format: "grid",
+            properties: {
+              "lineWidth": {type: "number"},
+              "lineColor":  {type: "string", format: "color", watch: {_single: "colors.data.single"}, template: "{{_single}}"} //{type: "string", format: "color"},
+            }
+          }
+        }
       }
     }
   };
@@ -656,14 +683,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         width: 1.5,
       },
       size: {
-        min: 6, // HACK: used to be 8.
+        min: 8, // HACK: used to be 8.
         max: 40,
-        def: 10,
+        def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
         //color: c.colors.aggregation.single,
-        color: greys(0.8),
+        color: greys(0.9),
       },
       shape: {
         def: shapesInitial.model,
@@ -767,17 +794,32 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         fillopacity: 0.06,
         color: greys(0.7) // the line color of the contour lines (if contours.coloring is not set to 'line')
       },
+
       contour: {
         width: 3, // set to 3 for non-filled lines
         levels: tweaksInitial.levels, // TODO: watches!
         coloring: "lines", // possible values are: "fill" | "heatmap" | "lines"
         opacity: 0.5,
       },
+
       colorscale_Enum: colorsInitial.density.scale_Enum, // color scale to use for heat maps / contour plots  // TODO: watches!
       resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
       backgroundHeatMap: false, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
     },
+
+    "ppc": {
+      modelHistogram: {
+        "fillOpacity": 0.2,
+        'lineOpacity': 1,
+        'lineWidth': 0,
+        "color": colorsInitial.modelSamples.density,
+      },
+      referenceValue: {
+        "lineWidth": 3,
+        "lineColor":  colorsInitial.data.single,
+      }
+    }
   };
 
   let plotsSchema = {
@@ -1076,6 +1118,20 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     },
   };
 
+  let ppcWidgetSchema = {
+    type: "object",
+    properties: {
+      "numberOfRepetitions": {type: "number"},
+      "numberOfSamples": {type: "number"},
+    }
+  };
+
+  let ppcWidgetInitial = {
+    "numberOfRepetitions": 40,
+    "numberOfSamples": 30,
+    // "numberOfBins": 10,
+  };
+
   let jsonSchema = {
     type: "object",
     //format: "grid",
@@ -1095,6 +1151,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         type: "object",
         properties: {
           ppWidget: ppWidgetSchema,
+          ppc: ppcWidgetSchema,
         }
       }
     }
@@ -1108,7 +1165,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     plots: plotsInitial,
     widgets: {
       ppWidget: ppWidgetInitial,
-    }
+      ppc: ppcWidgetInitial,
+    },
   };
 
 
@@ -1147,7 +1205,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     let todayStr = today.getDate() + "-" + (today.getMonth()+1) + "-" + today.getFullYear();
 
     c.meta = {
-      activity_logging_mode: "remote", // one of ["disabled", "console.error", "console.log", "remote"]
+      activity_logging_mode: "disabled", // one of ["disabled", "console.error", "console.log", "remote"]
       // activity_logging_filename: "user_log.json",
       activity_logging_filename: utils.todayString() + "_" + "activity.log",
       activity_logging_subdomain: '/activitylogger',
@@ -1171,6 +1229,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       posteriorPredictiveChecks: {
         enabled: false,  // enable or disable the ppc
       }
+    };
+
+    // See https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js#L22-L86
+    c.plotly = {
+      edits: {
+        annotationPosition: true,
+        colorbarPosition: true,
+        legendPosition: true,
+      },
+      scrollZoom: true,
+      displaylogo: false,
+      // modeBarButtons: [
+      //   // can add custom functionality!
+      //   // see: https://github.com/plotly/plotly.js/blob/v1.3.0/src/components/modebar/buttons.js
+      //   // and: https://codepen.io/etpinard/pen/QyLbqY
+      //   ['pan2d','zoom2d','resetScale2d','sendDataToCloud',],
+      // ],
+      modeBarButtonsToRemove: ['toImage', 'zoomIn2d', 'zoomOut2d', 'boxSelect', 'lassoSelect', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
+      // modeBarButtonsToAdd: [],
     };
 
     return c;

@@ -235,7 +235,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param modelTable
      * @param fieldUsageCacheMap
      * @param enabled
-     * @param opts
+     * @param opts A dictionary of additional options passed to the VisMEL query constructor.
      * @return {Promise.<Array>}
      */
     function uniDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled = true, opts = {}) {
@@ -252,7 +252,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                         model = modelTable.at[rIdx][cIdx];
                     try {
                         // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
-                        let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows);
+                        let vismel = V4T.uniDensity(queryCollection.at[rIdx][cIdx], colsOrRows, opts);
 
                         // unify identical field usages / maps!
                         vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
@@ -260,8 +260,12 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                         // 2. convert this facet's atomic VisMEL query to PQL query
                         let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
-                        // 3. run this query and return promise to its result
-                        promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, xOrY);
+                        // 3. apply configuration to model 
+                        promise = model.setConfiguration(opts);
+
+                        // 4. run this query and return promise to its result
+                        promise = promise.then(
+                            () => _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, xOrY))
                         // .then(
                         // tbl => {
                         //   // TODO: Hack for Paper: simulate correct scaling of model probability queries
@@ -298,7 +302,7 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
      * @param fieldUsageCacheMap
      * @param facetName
      * @param enabled
-     * @param opts
+     * @param opts A dictionary of additional options passed to the VisMEL query constructor.
      * @return {Promise.<Array>}
      */
     function biDensityCollection(queryCollection, modelTable, fieldUsageCacheMap, facetName, enabled=true, opts={}) {
@@ -315,15 +319,19 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
 
                 try {
                     // 1. convert atomic VisMEL query to suitable VisMEL query for this facet
-                    let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx]);
+                    let vismel = V4T.biDensity(queryCollection.at[rIdx][cIdx], opts);
                     // unify identical field usages / maps!
                     vismel = V4T.reuseIdenticalFieldUsagesAndMaps(vismel, fieldUsageCacheMap);
 
                     // 2. convert this facet's atomic VisMEL query to PQL query
                     let {query: pql, fu2idx: fu2idx, idx2fu: idx2fu} = vismel2pql.predict(vismel);
 
-                    // 3. run this query and return promise to its result
-                    promise = _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName);
+                    // 3. apply configuration to model 
+                    promise = model.setConfiguration(opts);
+
+                    // 4. run this query and return promise to its result
+                    promise = promise.then(
+                        () => _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName));
 
                 } catch (e) {
                     if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)

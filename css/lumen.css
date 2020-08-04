@@ -324,9 +324,9 @@ body {
     border-radius: 1em;
 }
 
-.pl-facetWidget__container {
+.pl-facetWidget__container, .pl-specConfigWidget__container {
     display: grid;
-    grid-template-columns: 5.5em 3em 3em;
+    grid-template-columns:5.5em 3.5em 3.5em; 
     grid-gap: 2px;
     place-items: center;
     /* border: 1px solid darkgrey; */
@@ -334,7 +334,7 @@ body {
     /* padding: 0.3rem; */
 }
 
-.pl-facetWidget__container .pl-icon {
+.pl-facetWidget__container .pl-icon, .pl-specConfigWidget__container .pl-icon {
     width: 1.1rem;
     height: 1.1rem;
 }
@@ -343,17 +343,31 @@ body {
     margin: 0;
 }
 
-.pl-facet__label {
+.pl-specConfig__input {
+    margin: 0;
+    width: 90%;
+}
+
+.pl-facet__label, .pl-specConfig__label{
     display: inline;
 }
 
-.pl-facet__rowLabel {
+.pl-specConfig__label {
+    display: inline;
+    margin-right: 0.5em;
+}
+
+.pl-specConfig__sectionHeader {
+    font-style: italic;
+}
+
+.pl-facet__rowLabel, .pl-specConfig__rowLabel {
     display: flex;
     width: 100%;
     justify-content: space-between;
 }
 
-.pl-facet__columnLabel {
+.pl-facet__columnLabel, .pl-specConfig__columnLabel {
     font-style: italic;
 }
 
@@ -371,6 +385,17 @@ body {
 .pl-facet__onOff .pl-icon {
     width: 1.3rem;
     height: 1.3rem;
+}
+
+.pl-modelInfo__container {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.pl-modelInfo__label {
+    display: inline;
+    text-align: right;
+    margin-right: 1em;    
 }
 
 .pl-graph {
@@ -1102,6 +1127,37 @@ textarea.pl-survey__content {
     justify-content: center;
     align-content: center;
     flex-direction: column;
+}
+
+.pl-ppc__button {
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    margin: 0 0.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+
+}
+
+.pl-ppc__button-bar {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin: 0.2rem;
+    margin-top: 0.5rem;
+}
+
+.pl-ppc__button .pl-icon {
+    height: 1.2rem;
+    width: auto;
+    margin-right: 0.3rem;
+}
+
+.pl-ppc .shelf {
+    margin-bottom: 0.5rem;
 }
 
 #pl-toolbar__container {
