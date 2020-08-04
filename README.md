@@ -1,12 +1,27 @@
-# README #
+`lumen` is a interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
-`lumen` is an interactive web-application for exploration, comparision and validation of data and/or machine learning models derived from the data.
+This web-application is part of the (equally named) [Lumen project](https://github.com/lumen-org/) which consists of two parts: the back-end [modelbase](https://github.com/lumen-org/modelbase) and (this one) the front-end [lumen](https://github.com/lumen-org/lumen).
 
-It is part of the (equally named) [Lumen project](https://github.com/lumen-org/) which consists of two parts: the back-end [modelbase](https://github.com/lumen-org/modelbase) and (this one) the front-end [lumen](https://github.com/lumen-org/lumen).
+(*currently not working - sorry:*) There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/) 
 
-There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/).
+It caters at least two use cases:
 
-## Setup and Configuration 
+### 1. Exploration of Tabluar Data
+You don't do any Machine Learning but simply would like to conveniently browser and explore data? That's the right place for you too!  Lumen can be used to easily browse, explore and compare *tabluar* data. This is not what Lumen was built for originally, but regard it as your 'free lunch' ;)
+
+## 2. Building and Exploration of Probabilistic Machine Learning Models: 
+Machine Learning is a wide field with many different types of models available. Lumen aims to make *probabilistic* models easily accessibly to humans. Such models model a set of target variables by means of a probability density function. That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
+
+Building machine learning models is an inherently incremental task. You start out with something simple, check whether if it seems right so far, and then make your model incremently more complicated until it solves your task sufficiently well. Lumen let's you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. In particular it let's you:
+
+ * plot any marginals of your model - not just 1d but also higher dimensinal marginals.
+ * plot model marginals together with data marginals: let's you compare the model behaviour to your test and training data
+ * plot almost any predictions possible of your model - let's you understand it's predictive behaviour and 
+ * create as many of these visualizations side by side on an virtually infinite canvas - let's you compare various stage of your model
+
+---
+
+## Setup, Configuration and Running 
 
 This explains how to get and configure `lumen` and it's dependencies.
 
@@ -14,16 +29,17 @@ This explains how to get and configure `lumen` and it's dependencies.
 
 * `lumen` is a webfrontend (web application) that requires access to a webservice instance of the `modelbase` backend. `lumen` allows a user to interactively compile queries and visualize the queries results, while `modelbase` does the heavy computation and actually answers the queries. You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
 
-* *`lumen` and `modelbase` need to be configured correctly with 'matching' settings*: 
+* *`lumen` and `modelbase` need to be configured correctly with 'matching' settings*:
   * hostname set in `lumen` must match the actual hostname of `modelbase` 
   * port must match
   * protocol must match (http or https)
+By default this is the case.
 
-* In order to do anything useful the backend needs to host the models that you want to explore. This is configured in `modelbase`
+* In order to do anything useful the backend needs to host some models that you want to explore. This is configured in `modelbase`.
 
-### Get it
+### Setup
 
-Clone this repository into a folder `<path>` of your choice. If you simply want to run it, you are done. For a development setup see below.
+Clone/download this repository into a folder `<path>` of your choice. If you simply want to run it, you are done. For a development setup see below.
 
 **Updating it** 
 
@@ -59,13 +75,13 @@ For configuration of `modelbase` see its documentation.
       }
     });
 
-### Using it
+### Running it
 
- * make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore.
- * if DEFAULT_MODEL is set to "" all existing models are displayed.
+ * Note: make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore. The modelbase is the backend part of this client-server project, see above.
+ * if DEFAULT_MODEL in config file is set to "" all existing models are displayed.
  
-Open `<path>/index.html` in your browser. Using chrome is recommended, since it - by far - provides the best performance. 
-
+Open `<path>/index.html` in your browser. 
+Using chrome is recommended, since it provides the best performance. 
 
 ---
 
@@ -102,7 +118,7 @@ Open `<path>/index.html` in your browser. Using chrome is recommended, since it 
  1. Confirm that the backend server is actually running
  2. Did the backend server load the particular model that you are trying to retrieve? Loaded models are listed in the terminal output of the backend server on its start up.
 
-------------
+---
 
 ### Contact ###
 
