@@ -14,10 +14,11 @@ Machine Learning is a wide field with many different types of models available. 
 
 Building machine learning models is an inherently incremental task. You start out with something simple, check whether if it seems right so far, and then make your model incremently more complicated until it solves your task sufficiently well. Lumen let's you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. In particular it let's you:
 
- * plot any marginals of your model - not just 1d but also higher dimensinal marginals.
- * plot model marginals together with data marginals: let's you compare the model behaviour to your test and training data
- * plot almost any predictions possible of your model - let's you understand it's predictive behaviour and 
- * create as many of these visualizations side by side on an virtually infinite canvas - let's you compare various stage of your model
+ * plot any marginals of your models. Here, marginal means not just 1d but also higher dimensional marginals.  This let's you understand your model by means of 'slices' of it. This helps you stop unexpected behaviour that may indicate a problem in your model specification or possibly a bug in the machine learning algorithm of your model.
+ * plot the model marginals together with data marginals. This let's you directly check the models fit to data.
+ * plot almost any predictions of your model. This let's you understand its predictive behaviour.
+ * create as many of these visualizations side by side on an virtually infinite canvas. This let's you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
+ * ... 
 
 ---
 
@@ -39,7 +40,9 @@ By default this is the case.
 
 ### Setup
 
-Clone/download this repository into a folder `<path>` of your choice. If you simply want to run it, you are done. For a development setup see below.
+Clone/download this repository into a folder `<path>` of your choice.
+If you simply want to run it, you are (almost) done. For a development setup see below.
+Before running it, you need to configure it, see below. No worries, it is simple.
 
 **Updating it** 
 
@@ -55,11 +58,11 @@ For configuration of `modelbase` see its documentation.
     
       // the model to be loaded on startup of the page
       /* this name must match the name of the model that the backend loaded */
-      const DEFAULT_MODEL = 'mcg_iris_map';
+      const DEFAULT_MODEL = '';
     
       // the model server to use for PQL queries
       /* Make sure that all aspects are correct:
-      
+  
            <protocol>://<ip/hostname>:<port>/<directory>
       
            * hostname/ip: e.g. 127.0.0.1
@@ -76,16 +79,17 @@ For configuration of `modelbase` see its documentation.
     });
 
 ### Running it
-
- * Note: make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore. The modelbase is the backend part of this client-server project, see above.
- * if DEFAULT_MODEL in config file is set to "" all existing models are displayed.
+Notes:
+ * make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore. The modelbase is the backend part of this client-server project, see above.
+ * if `DEFAULT_MODEL` in the config file is set to `""` all existing models are displayed. This is the default.
  
 Open `<path>/index.html` in your browser. 
-Using chrome is recommended, since it provides the best performance. 
+Using *chrome* is recommended, since it provides the best performance. 
 
 ---
 
-## Development Setup ###
+## Development
+
 1. Do the steps as described in the Setup section above.
 2. recommended IDE is [WebStorm](https://www.jetbrains.com/webstorm/download/)
 3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
@@ -122,7 +126,7 @@ Using chrome is recommended, since it provides the best performance.
 
 ### Contact ###
 
-For any questions, feedback, bug reports, feature requests, spam, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de).
+For any questions, feedback, bug reports, feature requests, spam, rants, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de).
 
 ### Copyright and Licence ###
 
