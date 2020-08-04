@@ -9,7 +9,7 @@ It caters at least two use cases:
 ### 1. Exploration of Tabluar Data
 You don't do any Machine Learning but simply would like to conveniently browser and explore data? That's the right place for you too!  Lumen can be used to easily browse, explore and compare *tabluar* data. This is not what Lumen was built for originally, but regard it as your 'free lunch' ;)
 
-## 2. Building and Exploration of Probabilistic Machine Learning Models: 
+### 2. Building and Exploration of Probabilistic Machine Learning Models: 
 Machine Learning is a wide field with many different types of models available. Lumen aims to make *probabilistic* models easily accessibly to humans. Such models model a set of target variables by means of a probability density function. That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
 
 Building machine learning models is an inherently incremental task. You start out with something simple, check whether if it seems right so far, and then make your model incremently more complicated until it solves your task sufficiently well. Lumen let's you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. In particular it let's you:
@@ -93,7 +93,7 @@ Using chrome is recommended, since it provides the best performance.
 5. Install all npm-dependencies as provided by the projects `package.json`:
     * run from `<path>`: `npm install`
 6. make sure you have the following packages installed (preferably) globally:
-    * TODO !?
+    * <none>
 
 ---
 
@@ -110,13 +110,13 @@ Using chrome is recommended, since it provides the best performance.
    * [problem description: answer 1, point 2 ](https://stackoverflow.com/questions/3595515/xmlhttprequest-error-origin-null-is-not-allowed-by-access-control-allow-origin)
  
  Solutions:
-  * serve it from a local webservice (preferred)
-  * [disable CORS control in chrome](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome) (kind of hacky)
+   * serve it from a local webservice (preferred)
+   * [disable CORS control in chrome](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome) (kind of hacky)
  
 
 #### I get the error message: "Could not load remote model 'XXXX' from server 'XXXX' !" ####
- 1. Confirm that the backend server is actually running
- 2. Did the backend server load the particular model that you are trying to retrieve? Loaded models are listed in the terminal output of the backend server on its start up.
+  1. Confirm that the backend server is actually running
+  2. Did the backend server load the particular model that you are trying to retrieve? Loaded models are listed in the terminal output of the backend server on its start up.
 
 ---
 
