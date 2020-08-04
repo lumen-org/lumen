@@ -99,6 +99,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     type: "object",
     //format: "grid",
     properties: {
+      "dataModelType": {type: "string", enum: ['kde', 'empirical']},
       "hideAggregations": {type: "boolean"},
       "hideAccuMarginals": {type: "boolean"},
       "opacity": {type: "number"},
@@ -160,6 +161,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   };
 
   let tweaksInitial = {
+    dataModelType: "empirical", // "kde"
     hideAggregations: false,
     hideAccuMarginals: true,
     resolution_1d: 25,

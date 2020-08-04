@@ -270,7 +270,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 // enable auto-creation for empirical models
                 let optsAutoCreate = {
                   AUTO_CREATE_MODEL: {
-                    MODEL_TYPE: "empirical", // "kde" or empirical"
+                    //MODEL_TYPE: "empirical", // "kde" or empirical"
+                    MODEL_TYPE: Settings.tweaks.dataModelType, 
                     FOR_MODEL: that.model.name,
                   }
                 };                
