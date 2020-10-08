@@ -1049,8 +1049,10 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
           // special case: quantitative-categorical: create additional axis for that.
           // it's an array of axes (along cat dimension): one for each possible value of that categorical dimension
           let catQuantAxisIds = [];
-          if (used.x && used.y && facets.contour.active /*biColl[0][0] !== undefined*/)
-            makeCategoricalQuantitativeAxis(facets.contour.data[idx.y][idx.x], axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout);
+          if (used.x && used.y && (facets.contour.active || facets['data density'].active) /*biColl[0][0] !== undefined*/) {
+              let catQuantData =  (facets.contour.active ? facets.contour : facets['data density']).data[idx.y][idx.x];
+              makeCategoricalQuantitativeAxis(catQuantData, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout);
+          }            
           catQuantAxesIds[idx.y][idx.x] = catQuantAxisIds;
         }
       }
