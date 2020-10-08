@@ -15,7 +15,7 @@ define([], function() {
    */
   function selectFirstValidValue () {
     for (let arg of arguments) 
-      if ( arg !== undefined && arg !== null) 
+      if ( typeof arg !== 'undefined' && arg !== null) 
         return arg;    
     return undefined;
   }
@@ -31,14 +31,14 @@ define([], function() {
     var nr = arguments.length;
     console.assert(nr % 2 === 0);
 
-    if (typeof valPref !== undefined && valPref !== null) {
+    if (typeof valPref !== 'undefined' && valPref !== null) {
       return valPref;
     }
 
     for (var i = 1; i < nr-1; i+=2) {
       var cond = arguments[i];
       var val = arguments[i+1];
-      if ( cond && typeof val !== undefined && val !== null) {
+      if ( cond && typeof val !== 'undefined' && val !== null) {
         return val;
       }
     }
