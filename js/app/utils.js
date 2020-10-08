@@ -10,6 +10,17 @@ define([], function() {
   //var logger = Logger.get('pl-utils');
 
   /**
+   * @returns the first value of the argument list that is non null and not undefined. If there is none, it returns undefined.  
+   * @alias module:utils.selectFirstValidValue
+   */
+  function selectFirstValidValue () {
+    for (let arg of arguments) 
+      if ( arg !== undefined && arg !== null) 
+        return arg;    
+    return undefined;
+  }
+
+  /**
    * @returns valPref if valPref is defined and not null, else:
    *    val_i if cond_i holds and val_i is defined and not null, else:
    *    etc..., else:
@@ -20,14 +31,14 @@ define([], function() {
     var nr = arguments.length;
     console.assert(nr % 2 === 0);
 
-    if (typeof valPref !== 'undefined' && valPref !== null) {
+    if (typeof valPref !== undefined && valPref !== null) {
       return valPref;
     }
 
     for (var i = 1; i < nr-1; i+=2) {
       var cond = arguments[i];
       var val = arguments[i+1];
-      if ( cond && typeof val !== 'undefined' && val !== null) {
+      if ( cond && typeof val !== undefined && val !== null) {
         return val;
       }
     }
@@ -227,6 +238,7 @@ define([], function() {
 
   return {
     selectValue,
+    selectFirstValidValue,
     listify,
     join,
     domain,

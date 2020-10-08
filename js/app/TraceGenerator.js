@@ -18,8 +18,8 @@
  * @copyright © 2017 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
 
-define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings'],
-  function (Logger, d3c, PQL, VisMEL, ScaleGen, c) {
+define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerator', './ViewSettings', './utils'],
+  function (Logger, d3c, PQL, VisMEL, ScaleGen, c, utils) {
     "use strict";
 
     let logger = Logger.get('pl-ViewTable');
@@ -827,13 +827,11 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
        */
       function uniTrace4biQC(data, i) {
 
-        //REMOVE: let color = mapper.modelMarginalColor;
-        let color = opts.facetName === 'data density' ? mapper.dataMarginalColor : mapper.modelMarginalColor;
-
-        // if (color === undefined) {  // this indicates that color is unused (see MapperGenerator)
-        //   // determine uniform fallback color
-        //   color = c.colors.density.adapt_to_color_usage ?  c.colors.density.secondary_single :  c.colors.density.primary_single;
-
+        // // BUG: biQC coloring depends on the coloring of other facets (marginal, points/samples, aggregations)... Hence we are looking for the first thing that has a set value. Otherwise we default a standard color.
+        let color = opts.facetName === 'model density' ? 
+            utils.selectFirstValidValue(mapper.modelMarginalColor, mapper.modelSampleFillColor, mapper.modelAggrFillColor, c.colors['modelSamples'].marginal) :
+            utils.selectFirstValidValue(mapper.dataMarginalColor, mapper.dataFillColor, mapper.dataAggrFillColor, c.colors['training data'].single);
+        
         if (_.isFunction(color))
           color = color(data[0][colorIdx]);
         // } else {
