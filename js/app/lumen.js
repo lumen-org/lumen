@@ -789,9 +789,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
-        shelves.meas.beVisual({label: 'Quantitative'}).beInteractable().beRecommendable(shelves);
+        shelves.meas.beVisual({label: 'Quantitative', direction: vis.DirectionTypeT.horizontal}).beInteractable().beRecommendable(shelves);
         shelves.meas.$visual.addClass('pl-shelf-quantitative');
-        shelves.dim.beVisual({label: 'Categorical'}).beInteractable().beRecommendable(shelves);
+        shelves.dim.beVisual({label: 'Categorical', direction: vis.DirectionTypeT.horizontal}).beInteractable().beRecommendable(shelves);
         shelves.dim.$visual.addClass('pl-shelf-categorical');
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
@@ -811,7 +811,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           shelves.remove.$visual, $('<hr>'));
 
         visual.mappings = $('<div class="pl-mappings"></div>').append(
-          shelves.filter.$visual, $('<hr>'), /*  PL: SIGMOD: comment next 2(!) items */ shelves.detail.$visual, $('<hr>'),  shelves.color.$visual,
+          shelves.filter.$visual, $('<hr>'), shelves.detail.$visual, $('<hr>'),  shelves.color.$visual,
           $('<hr>'), shelves.shape.$visual, $('<hr>'), shelves.size.$visual, $('<hr>'));
 
         visual.layout = $('<div class="pl-layout"></div>').append( shelves.column.$visual, $('<hr>'), shelves.row.$visual, $('<hr>'));
@@ -1258,8 +1258,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // Result Info
         that._$resultInfo = $('<div class="pl-text pl-details__body">');
+        that._$resultInfo.append($('<div>click to download ... </div>'));
         for (let facetName of _facetNames) {
-          let $facet_download = $(`<div class="pl-details__body pl-button">extract ${_facetNameMap[facetName]} facet</div>`)
+          let $facet_download = $(`<div class="pl-details__body pl-button">${_facetNameMap[facetName]} facet</div>`)
               .click(() => download_facet_data(facetName));
           that._$resultInfo.append($facet_download);
         }
@@ -1292,12 +1293,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         that.$visual = $('<div class>')
           .append('<div class="pl-h2 pl-details__heading">Model</div>')
           .append(this._$modelInfo)
-          .append('<div class="pl-h2 pl-details__heading">Query</div>')
-          .append(this._$queryInfo)
+          //.append('<div class="pl-h2 pl-details__heading">Query</div>')
+          //.append(this._$queryInfo)
           .append('<div class="pl-h2 pl-details__heading">Result</div>')
           .append(this._$resultInfo)
-          .append('<div class="pl-h2 pl-details__heading">Context</div>')
-          .append(this._$contextInfo);
+          //.append('<div class="pl-h2 pl-details__heading">Context</div>')
+          //.append(this._$contextInfo);
 
         that._context = undefined;
         if(context !== undefined) {
@@ -1329,7 +1330,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let model = this._context.model;
         this._$modelInfo.empty()
           .append('<div>Model name: ' + model.name + '</div>')
-          .append('<div>Model class: " + to come</div>');
+          .append('<div>Model type: ' + model.modelType + '</div>');
       }
 
       /**

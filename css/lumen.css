@@ -208,7 +208,8 @@ body {
 }
 
 .pl-schema {
-    min-width: 175px;
+    min-width: 15rem;
+    max-width: 25rem;
 }
 
 .pl-model-container {
