@@ -789,9 +789,9 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
 
         // make all shelves visual and interactable
         // i.e. creates DOM elements that are attach in .$visual of each shelf
-        shelves.meas.beVisual({label: 'Quantitative', direction: vis.DirectionTypeT.horizontal}).beInteractable().beRecommendable(shelves);
+        shelves.meas.beVisual({label: 'Quantitative', direction: vis.DirectionTypeT.vertical}).beInteractable().beRecommendable(shelves);
         shelves.meas.$visual.addClass('pl-shelf-quantitative');
-        shelves.dim.beVisual({label: 'Categorical', direction: vis.DirectionTypeT.horizontal}).beInteractable().beRecommendable(shelves);
+        shelves.dim.beVisual({label: 'Categorical', direction: vis.DirectionTypeT.vertical}).beInteractable().beRecommendable(shelves);
         shelves.dim.$visual.addClass('pl-shelf-categorical');
         shelves.detail.beVisual({label: 'Details'}).beInteractable();
         shelves.color.beVisual({label: 'Color'}).beInteractable();
