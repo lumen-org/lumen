@@ -381,12 +381,14 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                 // query all facets in parallel
                 c.updateFacetCollection('aggregations', RT.aggrCollection, fieldUsageCacheMap),
                 c.updateFacetCollection('data aggregations', RT.aggrCollection, fieldUsageCacheMap,
-                    c.emp_baseQueryTable, c.emp_baseModelTable,{'model': 'empirical'}),
-                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
+                  c.emp_baseQueryTable, c.emp_baseModelTable, {'model': 'empirical'}), // TODO: remove model empirical. it is not used at all
+                c.updateFacetCollection('data', RT.samplesCollection, fieldUsageCacheMap,
+                  c.emp_baseQueryTable, c.emp_baseModelTable, {
                   data_category: 'training data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
-                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap, undefined, undefined,{
+                c.updateFacetCollection('testData', RT.samplesCollection, fieldUsageCacheMap,
+                  c.emp_baseQueryTable, c.emp_baseModelTable, {
                   data_category: 'test data',
                   data_point_limit: Settings.tweaks.data_point_limit
                 }),
