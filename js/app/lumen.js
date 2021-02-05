@@ -198,7 +198,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             kdeBandwidth: undefined,
             empBinWidth: undefined,
           }
-        }
+        };
 
         // the stages of the pipeline in terms of queries
         this.query = {};  // vismel query
@@ -266,6 +266,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let that = this;
         return that.model.update()
             .then(() => {
+                // get data model for this model
                 that.dataModel = new Remote.Model(that.model.datamodel_name, that.server);  
                 // enable auto-creation for empirical models
                 let optsAutoCreate = {
@@ -773,11 +774,12 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
        */
       static _makeModelInfoVisual (model) {
         let title = $('<div class="pl-h2 shelf__title">Model</div>'),          
-          shelfContainer = $(`<div class="pl-modelInfo__container">
-              <div class="pl-label pl-modelInfo__label">name</div> <div class="pl-label">${model.name}</div>              
+          shelfContainer = $(`<div class="pl-modelInfo__container">            
+              <div class="pl-label pl-modelInfo__label">name</div> <div class="pl-label">${model.name}</div>
             </div>`);
-          // TODO: add this line again. Atm does not work, because the modelType is not yet available. Only after fetching the header of the model.
-          // <div class="pl-label pl-modelInfo__label">model type</div> <div class="pl-label">${model.modelType}</div>
+          // TODO: add this line again. Atm does not work, because the modelType is not yet available. Only after fetching the header of the model. And some refactoring is required to even access this part of the DOM again, since we don't save a direct reference to it in the $visuals of a context.
+          // <div class="pl-label pl-modelInfo__label">type</div> <div class="pl-label">${model.modelType}</div>
+          // <div class="pl-label">${model.description}</div>
         return $('<div class="pl-specConfig shelf vertical"></div>')
           .append(title, shelfContainer);
       }
@@ -1095,6 +1097,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         context._updateModels()
           //.then(() => that._clearInput())
           .then(() => sh.populate(context.model, context.shelves.dim, context.shelves.meas))
+          //.then(() => ())
           .then(() => activate(context, ['visualization', 'visPane', 'legendPane']))
           .then(() => infoBox.message("Drag'n'drop attributes onto the specification to create a visualization!", "info", 5000))
           .catch((err) => {
@@ -1333,7 +1336,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
         let model = this._context.model;
         this._$modelInfo.empty()
           .append('<div>Model name: ' + model.name + '</div>')
-          .append('<div>Model type: ' + model.modelType + '</div>');
+          .append('<div>Model type: ' + model.modelType + '</div>')
+          .append('<div>Description: ' + model.description + '</div>');
       }
 
       /**
