@@ -505,6 +505,8 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
      * @return {Map} The modified global extent maps.
      */
     function addCollectionExtents(coll, globalExtent, attr = undefined) {
+      if (coll === undefined)
+        return globalExtent
       let size = coll.size;
       for (let rIdx = 0; rIdx < size.rows; ++rIdx)
         for (let cIdx = 0; cIdx < size.cols; ++cIdx) {

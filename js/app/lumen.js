@@ -276,7 +276,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
                   }
                 };                
                 // set and update empirical model                
-                return that.dataModel.update(optsAutoCreate)
+                return that.dataModel.update(optsAutoCreate);
             });
       }
 
@@ -361,7 +361,8 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
           stages['new_query'] = Promise.all([
             c.baseModelTable.model(),
             c.emp_baseModelTable.model('dataMarginals'),
-            c.predictionDataLocal_baseModelTable.model('predictionDataLocal')]);
+            c.predictionDataLocal_baseModelTable.model('predictionDataLocal')
+            ]);
         } else {
           stages['new_query'] = Promise.resolve(); // because it is already there
         }

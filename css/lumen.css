@@ -289,8 +289,39 @@ body {
     background-color: #efefef;
     border: 1px solid #bdbdbd; /* Brightness +50*/
     display: flex;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: space-between;
     padding: 0.1rem;
+}
+
+.pl-field__modelingDetails {
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+}
+
+.pl-field__name {
+
+}
+
+.pl-field__latent {
+    border-style: dashed;
+}
+
+.pl-field__observed {
+    
+}
+
+.pl-field__obsType {
+    font-size:xx-small;
+}
+
+.pl-field__varType {
+    font-size:xx-small;
+}
+
+.pl-field__dataType {
+    font-size:xx-small;
 }
 
 .pl-fu--filter {

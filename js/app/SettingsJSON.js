@@ -1322,7 +1322,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // data-local model prediction
       // -> enable choosing between which data?
       predictionDataLocal: {
-        possible: true,
+        possible: false,
         active: false,
       },
 
