@@ -70,26 +70,27 @@ Lumen aims to improve accessibility for probabilistic machine learning models wi
 
 (3) Debugging: Spotting artifacs
 
-**architecture**
-Lumen takes care of all user facing aspects, such as visualizations and interactions.
-All computational aspects, that is any queries that need to be computed for a user-requested visualization, are delegated to a dedicated, python3/flask-based backend, namely `modelbase`.
-This follows a standard client-server architecture. While for the standard use-case you would install both client and server locally on the same machine, they can be separated and hosted as webservice (modelbase) and web-application (lumen). 
+**Architecture**
 
-extentionable architecture
+While Lumen takes care of all user facing aspects (such as visualizations and interactions) all computational aspects  (any model or data queries that are triggered by a user-defined visualization) are delegated to a dedicated, python3/flask-based backend.
+This backend is implemented in the `modelbase` project (TODO Link).
+Here we follow a classic client-server architecture where Lumen is web-client and modelbase the web-service backend. For the standard usage scenario you would install both client and server locally on the same machine, however, they can of course be separated and hosted/run on different machines.
 
 User interactions are translated into declarative query langauge for visualizations, which is then turned into SQL queries for data and alike statement for model queries.
 
+**Supported classes of probabilistic models**
 
-# Supported classes models
+Lumen is model-agnostic in the sense that it can be used with models of any class of probabilistic models as long as this model class implements a common abstract API *in the modelbase backend*. 
+In mathematical terms it essentially boils down to the following conditions that the supported model class
 
-Lumen is model-agnostic in the sense that it works with any class of probabilistic models that:
+ * contains only quantitative and/or categorical random variables, i.e. there is no native support for images, time series or vector values variables, 
+ * supports marginalization of random variables, i.e. the removal of any subset of a random variables of the model, 
+ * supports conditioning of random variables on values of its domain, i.e. , and
+ * supports density queries.
 
- * contains only quantitative and categorical random variables (i.e. no native support for images, time series or vector values variables)
- * supports marginalization of random variables
- * supports conditioning of random variables on values of its domain
- * supports density queries
+In fact Lumen makes no use of any specifity of a particular class of models, and we regard this genericity as one of its major features. Among the model classes that we have used Lumen with are Sum-Product-Networks, Condional-Gaussian Distributions, Probabilistic Progams based on PyMC3 and Kernel-Density-Estimators.
 
-# interface
+**Interface**
 
 Lumen's  web-interface is inspired by the Polaris project and its commercial successor Tableau.
 Note, however, that Lumen work for probabilistic models _and_ data, whereas Tableau is for the analysis of data only.
