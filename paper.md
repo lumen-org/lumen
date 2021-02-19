@@ -13,6 +13,9 @@ authors:
   - name: Philipp Lucas^[corresponding author]
     orcid: 0000-0002-6687-8209
     affiliation: 1
+  - name: Jonas Aaron Gütter
+    orcid: XXXX
+    affiliation: 1
   - name: Joachim Giesen
     affiliation: 2
 
@@ -38,15 +41,15 @@ bibliography: paper.bib
 
 # Summary
 
-*introduction: say what it does: accessibilty to humans for probabilistic models.*
+**introduction: say what it does: accessibilty to humans for probabilistic models.**
 Machine Learning is a broad field with a plethora of different types of models available.
 Lumen aims to make a specific, yet broad class of models, namely probabilistic models, more easily accessible to human analysts. 
 
-*add one or two more sentences about what it provides*
+**add one or two more sentences about what it provides**
 It does so by providing an interactive web application for the visual exploration, comparison and validation of probabilistic models together with its data. 
 As the main feature of the web-application a user can rapidly and incrementally build flexible and potentially complex visualizations of both the probabilistic machine learning model and the data that the model is trained on. 
 
-*what is a probabilistic model? explain by comparison to classic ML*
+**what is a probabilistic model? explain by comparison to classic ML**
 Many classic machine learning methods predict the value of some target variable(s) given the value of some input variable(s).
 Probabilistic models go beyond this 'point estimation' by instead of a particular value predicting a probability distribution over the target variable(s).
 This allows, for instance, to also provide an estimation of the uncertainty of a prediction. 
@@ -54,10 +57,10 @@ This allows, for instance, to also provide an estimation of the uncertainty of a
 While many classic Machine Learning methods can only predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
 This allows, for instance, to also provide an estimation of the prediction's uncertainty, a quanitity that is very relevant.
 
-*make an example*
+**make an example**
 Imagine a model predicted that some image of suspicious skin does _not_ show a malignant tumor, it is extremely value to aditionally know whether the model is sure to 99.99% or just 51%.
 
-*accessibility as key challenge*
+**accessibility as key challenge**
 A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and get a benefit of some method.
 Lumen aims to improve accessibility for probabilistic machine learning models with respect to multiple aspects as follows:
 
@@ -67,8 +70,7 @@ Lumen aims to improve accessibility for probabilistic machine learning models wi
 
 (3) Debugging: Spotting artifacs
 
-# architecture
-
+**architecture**
 Lumen takes care of all user facing aspects, such as visualizations and interactions.
 All computational aspects, that is any queries that need to be computed for a user-requested visualization, are delegated to a dedicated, python3/flask-based backend, namely `modelbase`.
 This follows a standard client-server architecture. While for the standard use-case you would install both client and server locally on the same machine, they can be separated and hosted as webservice (modelbase) and web-application (lumen). 
