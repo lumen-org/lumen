@@ -83,7 +83,7 @@ Visualization are interactive themselves, and also resizable and freely movable 
 **Architecture**
 
 While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as model or data queries that are triggered by a user interactions) are delegated to a dedicated, python3/flask-based backend.
-This backend is implemented in the ![`modelbase` project](https://github.com/lumen-org/modelbase).
+This backend is implemented in the modelbase project [@Lucas:2021:modelbase].
 Here we follow a classic client-server architecture where Lumen is the web-client and modelbase the web-service.
 For the standard usage scenario you would install both client and server locally on the same machine. 
 However, they can of course be separated and hosted/run on different machinent across a network.
@@ -95,31 +95,16 @@ In mathematical terms it essentially boils down to the following conditions that
 
  * contains only quantitative and/or categorical random variables, i.e. there is no native support for images, time series or vector-valued random variables, 
  * supports marginalization of random variables, i.e. the operation to remove of any subset of random variables of the model, 
- * supports conditioning of random variables on values of its domain, i.e. the operation to fix the value of random variables to particular values, and that it
+ * supports conditioning of random variables on values of its domain, i.e. the operation to fix the value of random variables to particular values, and
  * supports density queries.
 
 In fact Lumen makes no use of any specificity of a particular class of models and we regard this genericity as one of Lumens major features. 
-Among the model classes that we have used Lumen with are Sum-Product-Networks, Condional-Gaussian Distributions, Probabilistic Progams based on PyMC3 and Kernel-Density-Estimators.
+Among the model classes that we have used Lumen with are Sum-Product-Networks [@Poon:11; @Molina:2019:SPFlow], Condional-Gaussian Distributions [Olkin:1961:CG, Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
 
 # Acknowledgements
 
-We thank Frank Nussbaum and Jonas Aaron Gütter for their contributions. We also thank Julien Klaus and Andreas Goral for their early and steady interest in trying out Lumen as well as the helpful feedback they provided.
+We thank Jonas Aaron Gütter and Julien Klaus for their contributions.
+We also thank Andreas Goral for his early and steady interest in trying out Lumen as well as the helpful feedback he provided.
 Philipp Lucas was partially supported by Stiftung der Deutschen Wirtschaft (sdw). 
 
 # References
-
-
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
