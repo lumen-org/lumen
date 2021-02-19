@@ -47,7 +47,7 @@ Lumen aims to make a specific, yet broad class of models, namely probabilistic m
 
 **add one or two more sentences about what it provides**
 It does so by providing an interactive web application for the visual exploration, comparison and validation of probabilistic models together with its data. 
-As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic machine learning model and the data that the model is trained on. 
+As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic model and the data that the model is trained on. 
 
 **what is a probabilistic model? explain by comparison to classic ML**
 Many classic machine learning methods predict the value of some target variable(s) given the value of some input variable(s).
@@ -58,8 +58,8 @@ This allows, for instance, to also estimate the prediction's uncertainty, a quan
 For example, imagine a model predicts that some image of suspicious skin does _not_ show a malignant tumor. Here it is extremely valuable to aditionally know whether the model is sure to 99.99% or just 51%.
 
 **accessibility as key challenge**
-A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and benefit from some method.
-Lumen aims to improve accessibility for probabilistic machine learning models with respect to multiple aspects as follows:
+A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and benefit from it.
+Lumen aims to improve accessibility of probabilistic machine learning models with respect to multiple aspects as follows:
 
 (1) Education: By providing visual and intuitive representations of models Lumen may fosters understanding of the underlying modelling techniques. For instance
 
@@ -67,10 +67,23 @@ Lumen aims to improve accessibility for probabilistic machine learning models wi
 
 (3) Debugging: Spotting artifacs
 
+**Interface**
+
+Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau. 
+However, while Tableau is for *data-only*, Lumen provides a uniform visual langauge and interactions for data _and_ probabilitic models.
+Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen.
+The Schema (left) contains the random variables of a probabilistic model. 
+Users can drag'n'drop variables onto the visual channels of the Specification (middle).
+Doing so will reconfigure the currently active visualization, that is, it will trigger the fetching of respective data and model queries and finally update and rerender the visualization.
+To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows user to create as many visualizations of as many different models as they like.
+Visualization are interactive themselves, and also resizable and freely movable on the plotting canvas.
+
+![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=85% }
+
 **Architecture**
 
-While Lumen takes care of all user facing aspects (such as visualizations and interactions) all computational aspects  (such as model or data queries that are triggered by a user interactions) are delegated to a dedicated, python3/flask-based backend.
-This backend is implemented in the `modelbase` project (TODO Link).
+While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as model or data queries that are triggered by a user interactions) are delegated to a dedicated, python3/flask-based backend.
+This backend is implemented in the ![`modelbase` project](https://github.com/lumen-org/modelbase).
 Here we follow a classic client-server architecture where Lumen is the web-client and modelbase the web-service.
 For the standard usage scenario you would install both client and server locally on the same machine. 
 However, they can of course be separated and hosted/run on different machinent across a network.
@@ -88,22 +101,10 @@ In mathematical terms it essentially boils down to the following conditions that
 In fact Lumen makes no use of any specificity of a particular class of models and we regard this genericity as one of Lumens major features. 
 Among the model classes that we have used Lumen with are Sum-Product-Networks, Condional-Gaussian Distributions, Probabilistic Progams based on PyMC3 and Kernel-Density-Estimators.
 
-**Interface**
-
-Lumen's web-interface is inspired by the academic Polaris project and its commercial successor Tableau. 
-However, while Tableau is for *data-only*, Lumen provides a uniform visual langauge and interactions for data _and_ probabilitic models.
-Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen.
-The Schema (left) contains the random variables of a probabilistic model. 
-Users can drag'n'drop variables onto the visual channels of the Specification (middle).
-Doing so will reconfigure the currently active visualization, that is, it will trigger the fetching of respective data and model queries from the modelbase backend and finally update and rerender the visualization.
-To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows user to create as many visualizations of as many different models as they like.
-Visualization are interactive themselves, and also resizable and freely movable on the plotting canvas.
-
-![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=85% }
-
 # Acknowledgements
 
-....
+We thank Frank Nussbaum and Jonas Aaron Gütter for their contributions. We also thank Julien Klaus and Andreas Goral for their early and steady interest in trying out Lumen as well as the helpful feedback they provided.
+Philipp Lucas was partially supported by Stiftung der Deutschen Wirtschaft (sdw). 
 
 # References
 
@@ -122,7 +123,3 @@ For a quick reference, the following citation commands can be used:
 - `@author:2001`  ->  "Author et al. (2001)"
 - `[@author:2001]` -> "(Author et al., 2001)"
 - `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Acknowledgements
-
-# References
