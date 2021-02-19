@@ -1,6 +1,5 @@
 ---
-title: 'Lumen: A visual-interactive framework for probabilistic models'
-title: 'Lumen: An extensible Framework for interactive visual exploration of probabilistic models together with data'
+title: 'Lumen: An interactive tool for the visual exploration of probabilistic models together with data'
 
 tags:
   - Python
@@ -27,37 +26,32 @@ affiliations:
 
 date: 19 February 2021
 bibliography: paper.bib
-
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-# aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-# aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
-
-# old stuff
-
-//Probability distributions are fundamental mathematical objects that are used for systematically describing random phenomena in a plethora of methods in statistical modelling and machine learning.
-//A probabilistic model describes a set of target variables by means of a probability density function.
 
 # Summary
 
 **introduction: say what it does: accessibilty to humans for probabilistic models.**
+
 Research in Machine Learning has led to the development of a plethora of different types of models.
-Lumen aims to make a specific, yet broad class of models, namely probabilistic models, more easily accessible to human analysts. 
+Lumen aims to make a particular yet broad class of models, namely probabilistic models, more easily accessible to human analysts. 
 
 **add one or two more sentences about what it provides**
+
 It does so by providing an interactive web application for the visual exploration, comparison and validation of probabilistic models together with its data. 
-As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic model and the data that the model is trained on. 
+As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic model and the data that the model was trained on. 
 
 **what is a probabilistic model? explain by comparison to classic ML**
+
 Many classic machine learning methods predict the value of some target variable(s) given the value of some input variable(s).
-*Probabilistic* models go beyond this 'point estimation' by instead of a particular value predicting a probability distribution over the target variable(s).
+*Probabilistic* models go beyond this 'point estimation' by instead of a particular value predicting  a probability distribution over the target variable(s).
 This allows, for instance, to also estimate the prediction's uncertainty, a quanitity that is very relevant.
 
 **make an example**
-For example, imagine a model predicts that some image of suspicious skin does _not_ show a malignant tumor. Here it is extremely valuable to aditionally know whether the model is sure to 99.99% or just 51%.
+
+For example imagine a model predicts that an image of a suspicious skin area does _not_ show a malignant tumor. Here it is extremely valuable to aditionally know whether the model is sure to 99.99% or just 51%.
 
 **accessibility as key challenge**
+
 A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and benefit from it.
 Lumen aims to improve accessibility of probabilistic machine learning models with respect to multiple aspects as follows:
 
@@ -70,13 +64,14 @@ Lumen aims to improve accessibility of probabilistic machine learning models wit
 **Interface**
 
 Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau. 
-However, while Tableau is for *data-only*, Lumen provides a uniform visual langauge and interactions for data _and_ probabilitic models.
+However, while Tableau is for _data only_, Lumen provides a uniform visual langauge and interactions for data _and_ probabilistic models.
 Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen.
 The Schema (left) contains the random variables of a probabilistic model. 
 Users can drag'n'drop variables onto the visual channels of the Specification (middle).
-Doing so will reconfigure the currently active visualization, that is, it will trigger the fetching of respective data and model queries and finally update and rerender the visualization.
-To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows user to create as many visualizations of as many different models as they like.
-Visualization are interactive themselves, and also resizable and freely movable on the plotting canvas.
+Doing so will reconfigure the currently active visualization on the dashboard (right).
+This triggers the fetching of respective data and model queries and finally update and rerender the visualization.
+To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows user to create as many visualizations of as many models as they like.
+All visualization are interactive themselves, as well as resizable and freely movable on the plotting canvas.
 
 ![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=85% }
 
@@ -99,7 +94,7 @@ In mathematical terms it essentially boils down to the following conditions that
  * supports density queries.
 
 In fact Lumen makes no use of any specificity of a particular class of models and we regard this genericity as one of Lumens major features. 
-Among the model classes that we have used Lumen with are Sum-Product-Networks [@Poon:11; @Molina:2019:SPFlow], Condional-Gaussian Distributions [Olkin:1961:CG, Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
+Among the model classes that we have used Lumen with are Sum-Product-Networks [@Poon:11; @Molina:2019:SPFlow], Condional-Gaussian Distributions [Olkin:1961:CG; Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
 
 # Acknowledgements
 
