@@ -28,7 +28,7 @@ bibliography: paper.bib
 
 # Summary
 
-**introduction: say what it does: accessibilty to humans for probabilistic models.**
+[comment]: # (**introduction: say what it does: accessibilty to humans for probabilistic models.**)
 
 Research in Machine Learning has led to the development of a plethora of different types of models.
 Lumen aims to make a particular yet broad class of models, namely probabilistic models, more easily accessible to human analysts. 
