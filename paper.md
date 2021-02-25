@@ -3,8 +3,7 @@ title: 'Lumen: An interactive tool for the visual exploration of probabilistic m
 
 tags:
   - Probabilistic Modeling
-  - Model Criticism
-  - Model Validation
+  - Model Criticism, Model Validation
   - Model Understanding
   - Visual-Interactive Exploration
   - Web-Interface
@@ -33,22 +32,24 @@ bibliography: paper.bib
 Research in Machine Learning has led to the development of a plethora of different types of models.
 Lumen aims to make a particular yet broad class of models, namely probabilistic models, more easily accessible to human analysts. 
 
-**add one or two more sentences about what it provides**
+[comment]: # (**add one or two more sentences about what it provides**)
 
 It does so by providing an interactive web application for the visual exploration, comparison and validation of probabilistic models together with its data. 
 As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic model and the data that the model was trained on. 
 
-**what is a probabilistic model? explain by comparison to classic ML**
+[comment]: # (**what is a probabilistic model? explain by comparison to classic ML**)
 
 Many classic machine learning methods predict the value of some target variable(s) given the value of some input variable(s).
 *Probabilistic* models go beyond this 'point estimation' by instead of a particular value predicting  a probability distribution over the target variable(s).
 This allows, for instance, to also estimate the prediction's uncertainty, a quanitity that is very relevant.
 
-**make an example**
+[comment]: # (**make an example**)
 
 For example imagine a model predicts that an image of a suspicious skin area does _not_ show a malignant tumor. Here it is extremely valuable to aditionally know whether the model is sure to 99.99% or just 51%.
 
-**accessibility as key challenge**
+[comment]: # (**accessibility as key challenge**)
+
+# Statement of need
 
 A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and benefit from it.
 Lumen aims to improve accessibility of probabilistic machine learning models with respect to multiple aspects as follows:
@@ -63,12 +64,14 @@ Visual inspection of the probabilistic model provides an alternative approach to
 It enables the analyst to literally spot model artifacts that may cause degrading performance. 
 
 Model Building/Validation: 
-Building a statistical/machine learning model for a given task is often an iterative, analyst-driven process [cit€].
-This is particularly true for the field of probabilistic programming, a modelling approach where the analyst explicitely and mathematically declares the likelihood of the observed data as a probability density function. The analyst typically starts with little data and a simple model, subsequently making it more powerful and more complex in an iterative manner.
+Building a statistical/machine learning model for a given task is often an iterative, analyst-driven process.
+This is particularly true for the field of probabilistic programming, a modelling approach where the analyst explicitely and mathematically declares the likelihood of the observed data as a probability density function. The analyst typically starts with little data and a simple model, subsequently making it more powerful and more complex in an iterative manner [@Gelman:2013; @Gabry:2019].
 At each step the model has to validated.
 Lumen supports this validation and also a comparison to previous model iterates as it can plot many views of models side-by-side the data they are trained on.
 
-**Interface**
+# Tool
+
+[comment]: # (**Interface**)
 
 Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau. 
 However, while Tableau is for _data only_, Lumen provides a uniform visual langauge and interactions for data _and_ probabilistic models.
@@ -82,7 +85,7 @@ All visualization are interactive themselves, as well as resizable and freely mo
 
 ![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=85% }
 
-**Architecture**
+[comment]: # (**Architecture**)
 
 While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as model or data queries that are triggered by a user interactions) are delegated to a dedicated, python3/flask-based backend.
 This backend is implemented in the modelbase project [@Lucas:2021:modelbase].
@@ -90,7 +93,7 @@ In this separation we follow a classic client-server architecture where Lumen is
 For the standard usage scenario you would install both client and server locally on the same machine. 
 However, they can of course be separated and hosted/run on different machinent across a network.
 
-**Supported classes of probabilistic models**
+[comment]: # (**Supported classes of probabilistic models**)
 
 Lumen is model-agnostic in the sense that it can be used with models of any class of probabilistic models as long as this model class implements a common API *in the modelbase backend*. 
 In mathematical terms it essentially boils down to the following conditions that the supported model class
