@@ -53,16 +53,20 @@ For example imagine a model predicts that an image of a suspicious skin area doe
 A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and benefit from it.
 Lumen aims to improve accessibility of probabilistic machine learning models with respect to multiple aspects as follows:
 
-Learning: By providing visual and intuitive representations of models Lumen aims to foster understanding of the underlying modelling techniques. For instance, the effect of varying the value of a paramter for some modeling method can be studied and seen visually instead of remaining an abstract description in a text book. Likewise the differences between models can been demonstrated visually by plotting them side by side. Also, difficult to grasp concepts like conditioning or marginalization can be tried out interactively, providing immediate feedback on ones expectations.
+Learning: 
+By providing visual and intuitive representations of models Lumen aims to foster understanding of the underlying modelling techniques. For instance, the effect of varying the value of a paramter for some modeling method can be studied and seen visually instead of remaining an abstract description in a text book. Likewise the differences between models can been demonstrated visually by plotting them side by side. Also, difficult to grasp concepts like conditioning or marginalization can be tried out interactively, providing immediate feedback on ones expectations.
 
-Debugging: Even for a machine learning expert it may be hard to know whether a model has been trained on the data as expected.
+Debugging: 
+Even for a machine learning expert it may be hard to know whether a model has been trained on the data as expected.
 The reasons for artifacts in a model may include implementation bugs in the ML method, inappropriate application of the method, and issues in the training data. 
-#Aggregating performance score such as information criterions or predictive scores like the RMSE (root mean square error) only provide a _relative_ check.
 Visual inspection of the probabilistic model provides an alternative approach to model debugging.
-It enable the analyst to literally spot model artifacts that may cause degrading performance. 
+It enables the analyst to literally spot model artifacts that may cause degrading performance. 
 
 Model Building/Validation: 
-Building a statistical/machine learning model for a given task is often an iterative, analyst-driven process. This is particularly true for the field of probabilistic programming, a modelling approach where the analyst explicitely and mathematically declares a likelihood model of the observed data as a probability density function. The analyst starts with little data and a simple model, incrementally making it more powerful and more complex. At each step the model has to validated. Lumen supports this validation and also a comparison to previous model iterates as it enable to plot the many views of models side-by-side the data they are trained on.
+Building a statistical/machine learning model for a given task is often an iterative, analyst-driven process [cit€].
+This is particularly true for the field of probabilistic programming, a modelling approach where the analyst explicitely and mathematically declares the likelihood of the observed data as a probability density function. The analyst typically starts with little data and a simple model, subsequently making it more powerful and more complex in an iterative manner.
+At each step the model has to validated.
+Lumen supports this validation and also a comparison to previous model iterates as it can plot many views of models side-by-side the data they are trained on.
 
 **Interface**
 
