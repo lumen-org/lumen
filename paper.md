@@ -2,18 +2,16 @@
 title: 'Lumen: An interactive tool for the visual exploration of probabilistic models together with data'
 
 tags:
-  - Python
-  - Probabilistic Modelling
+  - Probabilistic Modeling
   - Model Criticism
+  - Model Validation
+  - Model Understanding
   - Visual-Interactive Exploration
   - Web-Interface
 
 authors:
   - name: Philipp Lucas^[corresponding author]
     orcid: 0000-0002-6687-8209
-    affiliation: 1
-  - name: Jonas Aaron Gütter
-    orcid: XXXX
     affiliation: 1
   - name: Joachim Giesen
     affiliation: 2
@@ -24,7 +22,7 @@ affiliations:
  - name: Friedrich-Schiller-University Jena
    index: 2
 
-date: 19 February 2021
+date: 25th February 2021
 bibliography: paper.bib
 ---
 
@@ -55,11 +53,12 @@ For example imagine a model predicts that an image of a suspicious skin area doe
 A major challenge for both the development and application of Machine Learning methods is their accessibility to a human analyst, that is, the amount of hurdles that one has to take in order to practically make use and benefit from it.
 Lumen aims to improve accessibility of probabilistic machine learning models with respect to multiple aspects as follows:
 
-(1) Education: By providing visual and intuitive representations of models Lumen may fosters understanding of the underlying modelling techniques. For instance
+Education: By providing visual and intuitive representations of models Lumen aims to foster understanding of the underlying modelling techniques. For instance
 
-(2) Usage: 
+Debugging: Spotting artifacs
 
-(3) Debugging: Spotting artifacs
+Usage: 
+
 
 **Interface**
 
@@ -79,7 +78,7 @@ All visualization are interactive themselves, as well as resizable and freely mo
 
 While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as model or data queries that are triggered by a user interactions) are delegated to a dedicated, python3/flask-based backend.
 This backend is implemented in the modelbase project [@Lucas:2021:modelbase].
-Here we follow a classic client-server architecture where Lumen is the web-client and modelbase the web-service.
+In this separation we follow a classic client-server architecture where Lumen is the web-client and modelbase the web-service.
 For the standard usage scenario you would install both client and server locally on the same machine. 
 However, they can of course be separated and hosted/run on different machinent across a network.
 
@@ -91,14 +90,14 @@ In mathematical terms it essentially boils down to the following conditions that
  * contains only quantitative and/or categorical random variables, i.e. there is no native support for images, time series or vector-valued random variables, 
  * supports marginalization of random variables, i.e. the operation to remove of any subset of random variables of the model, 
  * supports conditioning of random variables on values of its domain, i.e. the operation to fix the value of random variables to particular values, and
- * supports density queries.
+ * supports density queries, i.e. the operation to ask for the value of the models probability density function at any point of its domain.
 
 In fact Lumen makes no use of any specificity of a particular class of models and we regard this genericity as one of Lumens major features. 
 Among the model classes that we have used Lumen with are Sum-Product-Networks [@Poon:11; @Molina:2019:SPFlow], Condional-Gaussian Distributions [Olkin:1961:CG; Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
 
 # Acknowledgements
 
-We thank Jonas Aaron Gütter and Julien Klaus for their contributions.
+We thank Jonas Aaron Gütter, Julien Klaus and Christian Lengert for their contributions to the `modelbase` backend.
 We also thank Andreas Goral for his early and steady interest in trying out Lumen as well as the helpful feedback he provided.
 Philipp Lucas was partially supported by Stiftung der Deutschen Wirtschaft (sdw). 
 
