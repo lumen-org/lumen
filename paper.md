@@ -73,8 +73,8 @@ Lumen supports this validation and also a comparison to previous model iterates.
 
 [comment]: # (**Interface**)
 
-Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau. 
-However, while Tableau is for _data only_, Lumen provides a uniform visual language and interactions for data _and_ probabilistic models.
+Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau [@Stolte:2002]. 
+However, while Polaris/Tableau is for _data only_, Lumen provides a uniform visual language and interactions for data _and_ probabilistic models.
 Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen.
 The Schema (left) contains the random variables of a probabilistic model. 
 Users can drag'n'drop variables onto the visual channels of the Specification (middle).
@@ -83,7 +83,7 @@ This triggers the fetching of respective data and model queries, and finally upd
 To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows users to create as many visualizations of as many models as they like.
 All visualization are interactive themselves (panning, zoom, selections), as well as resizable and freely movable on the dashboard.
 
-![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=90% }
+![The web-based interface of Lumen \label{fig:example}](example.png){ width=90% }
 
 [comment]: # (**Architecture**)
 
