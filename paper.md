@@ -91,8 +91,7 @@ Again, data are shown as histograms and model densities as line plots.
 (4) Connected dots show model predictions of `income` given `age` and `sex`.
 Marks in the backgrond as well as the marginal plots at the side represent observed data.
 (5) Similar to (4) but visualizing a model predictions of `income` as well as `happiness` based on `age` and place of origin (`eastwest`). 
-Again, the background marks show observed data.]
-(example.png){ width=90% }
+Again, the background marks show observed data.](example.png){ width=90% }
 
 [comment]: # (**Architecture**)
 
