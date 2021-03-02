@@ -75,15 +75,22 @@ Lumen supports this validation and also a comparison to previous model iterates.
 
 Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau [@Stolte:2002]. 
 However, while Polaris/Tableau is for _data only_, Lumen provides a uniform visual language and interactions for data _and_ probabilistic models.
-Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen.
-The Schema (left) contains the random variables of a probabilistic model. 
+Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen in order to illustrate the user interface. 
+The Schema (left) contains the random variables of a selected probabilistic model. 
 Users can drag'n'drop variables onto the visual channels of the Specification (middle).
 Doing so reconfigures the currently active visualization on the dashboard (right).
 This triggers the fetching of respective data and model queries, and finally updates and re-renders the visualization.
 To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows users to create as many visualizations of as many models as they like.
 All visualization are interactive themselves (panning, zoom, selections), as well as resizable and freely movable on the dashboard.
 
-![The web-based interface of Lumen \label{fig:example}](example.png){ width=90% }
+![The web-based interface of Lumen displaying a variety of visualizatons as created in the process of incrementally building a probabilistic model on the socio-economic ALLBUS data set [@Allbus:2016]: 
+(1) Marginal data histograms. 
+(2) Marginal model density (pink) versus observed data counts (grey). 
+(3) Both plots show the same queries but from (a) to (b) the underlying model was improved to better capture the correlation of 'income' with 'sex'.
+Again, data are shown as histograms and model densities as line plots. 
+(4) Connected dots show model predictions of 'income' given 'age' and 'sex'. Marks in the backgrond as well as the marginal plots at the side represent training data.
+(5) Similar to (4) but visualizing a prediction of 'income' as well as 'happiness' given 'age' and place of origin ('eastwest'). Again, the background marks show observed data.
+\label{fig:LumenUI}](example.png){width=90%}
 
 [comment]: # (**Architecture**)
 
