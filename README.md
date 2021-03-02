@@ -2,7 +2,7 @@
 
 This web-application is part of the (equally named) [Lumen project](https://github.com/lumen-org/) which consists of two parts: the back-end [modelbase](https://github.com/lumen-org/modelbase) and (this one) the front-end [lumen](https://github.com/lumen-org/lumen).
 
-(*currently not working - sorry:*) There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/) 
+[comment]: # ((*currently not working - sorry:*) There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/))
 
 It caters at least two use cases:
 
