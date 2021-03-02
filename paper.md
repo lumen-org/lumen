@@ -31,7 +31,9 @@ bibliography: paper.bib
 
 Research in machine learning has led to the development of a plethora of different types of models.
 Lumen aims to make a particular yet broad class of models, namely probabilistic models, more easily accessible to human analysts. 
+
 [comment]: # (**add one or two more sentences about what it provides**)
+
 It does so by providing an interactive web application for the visual exploration, comparison, and validation of probabilistic models together with its data. 
 As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic model and the data that the model was trained on. 
 
@@ -40,7 +42,9 @@ As the main feature of Lumen a user can rapidly and incrementally build flexible
 Many classic machine learning methods learn models that predict the value of some target variable(s) given the value of some input variable(s).
 *Probabilistic* models go beyond this _point estimation_ by predicting instead of a particular value a probability distribution over the target variable(s).
 This allows, for instance, to also estimate the prediction's uncertainty, a quantity that is very relevant.
+
 [comment]: # (**make an example**)
+
 For a demonstrative example imagine a model predicts that an image of a suspicious skin area does _not_ show a malignant tumor. Here it is extremely valuable to additionally know whether the model is sure to 99.99% or just 51%.
 
 [comment]: # (**accessibility as key challenge**)
@@ -65,7 +69,7 @@ This is particularly true for the field of probabilistic programming, a modellin
 At each iteration the model has to validated.
 Lumen supports this validation and also a comparison to previous model iterates. For instance, it can plot many views of models side-by-side the data they are trained on.
 
-# Tool
+# Software
 
 [comment]: # (**Interface**)
 
@@ -79,7 +83,7 @@ This triggers the fetching of respective data and model queries, and finally upd
 To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows users to create as many visualizations of as many models as they like.
 All visualization are interactive themselves (panning, zoom, selections), as well as resizable and freely movable on the dashboard.
 
-![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=85% }
+![The web-interface of Lumen with (1) t .\label{fig:example}](LumenUI.png){ width=90% }
 
 [comment]: # (**Architecture**)
 
