@@ -86,11 +86,13 @@ All visualization are interactive themselves (panning, zoom, selections), as wel
 ![The web-based interface of Lumen displaying a variety of visualizatons as created in the process of incrementally building a probabilistic model on the socio-economic ALLBUS data set [@Allbus:2016]: 
 (1) Marginal data histograms. 
 (2) Marginal model density (pink) versus observed data counts (grey). 
-(3) Both plots show the same queries but from (a) to (b) the underlying model was improved to better capture the correlation of 'income' with 'sex'.
+(3) Both plots show the same queries but from (a) to (b) the underlying model was improved to better capture the correlation of `income` with `sex`.
 Again, data are shown as histograms and model densities as line plots. 
-(4) Connected dots show model predictions of 'income' given 'age' and 'sex'. Marks in the backgrond as well as the marginal plots at the side represent training data.
-(5) Similar to (4) but visualizing a prediction of 'income' as well as 'happiness' given 'age' and place of origin ('eastwest'). Again, the background marks show observed data.
-\label{fig:LumenUI}](example.png){width=90%}
+(4) Connected dots show model predictions of `income` given `age` and `sex`.
+Marks in the backgrond as well as the marginal plots at the side represent observed data.
+(5) Similar to (4) but visualizing a model predictions of `income` as well as `happiness` based on `age` and place of origin (`eastwest`). 
+Again, the background marks show observed data.]
+(example.png){ width=90% }
 
 [comment]: # (**Architecture**)
 
