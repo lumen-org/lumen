@@ -1,8 +1,5 @@
-`lumen` is a interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
+`lumen` is an interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
-This web-application is part of the (equally named) [Lumen project](https://github.com/lumen-org/) which consists of two parts: the back-end [modelbase](https://github.com/lumen-org/modelbase) and (this one) the front-end [lumen](https://github.com/lumen-org/lumen).
-
-(*currently not working - sorry:*) There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/) 
 
 It caters at least two use cases:
 
@@ -24,36 +21,30 @@ Building machine learning models is an inherently incremental task. You start ou
 
 ## Setup, Configuration and Running 
 
-This explains how to get and configure `lumen` and it's dependencies.
+This explains how to get and configure `lumen` and its dependencies.
 
 ### Requirements
 
-* `lumen` is a webfrontend (web application) that requires access to a webservice instance of the `modelbase` backend. `lumen` allows a user to interactively compile queries and visualize the queries results, while `modelbase` does the heavy computation and actually answers the queries. You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
+* `lumen` is a web application that requires access to a webservice instance of the Python3-based `modelbase` backend.
+`lumen` allows a user to interactively compile queries and visualize the queries results, however, `modelbase` does the heavy computation and actually answers the queries. 
+You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
 
-* *`lumen` and `modelbase` need to be configured correctly with 'matching' settings*:
-  * hostname set in `lumen` must match the actual hostname of `modelbase` 
+* `lumen` and `modelbase` need to be configured correctly with 'matching' settings:
+  * hostname set in the configuration of `lumen` must match the actual hostname of `modelbase`.
   * port must match
   * protocol must match (http or https)
-By default this is the case.
+By default this is the case and you do not need to change these settings.
 
-* In order to do anything useful the backend needs to host some models that you want to explore. This is configured in `modelbase`.
+* In order to do anything useful the backend needs to host some probabilistic model that you want to explore. 
+Models can be created and trained from data using the `modelbase` Python package. See the documentation.
+A number of example models are created during the setup process of modelbase for your convenience.
 
 ### Setup
 
-Clone/download this repository into a folder `<path>` of your choice.
-If you simply want to run it, you are (almost) done. For a development setup see below.
-Before running it, you need to configure it, see below. No worries, it is simple.
+1. Clone/download this repository into a folder `<path>` of your choice.
+2. Save these contents in a new text file with name `run.conf.js` at directory `<path>/js/`:
 
-**Updating it** 
 
-Just pull the branch/version you'd like.
-
-### Configuring `lumen`
-
-For configuration of `modelbase` see its documentation.
-
-`lumen` requires a configuration file `run.conf.js` which is *NOT* part of the repository. In the future this file will probably be created automatically, but at the moment you have to do it manually. Adapt and save this in a new file under `<path>/js/run.conf.js`:
-  
     define([], function () {
     
       // the model to be loaded on startup of the page
@@ -66,7 +57,7 @@ For configuration of `modelbase` see its documentation.
            <protocol>://<ip/hostname>:<port>/<directory>
       
            * hostname/ip: e.g. 127.0.0.1
-           * protocol: https or http ??
+           * protocol: https or http ?
            * port: e.g. 8080
            * directory on host (if any)
        */  
@@ -78,26 +69,31 @@ For configuration of `modelbase` see its documentation.
       }
     });
 
+
+**Updating it** 
+
+Just pull/download the lasted branch/version you'd like.
+
+
 ### Running it
+
+1. make sure the `modelbase` backend is running and hosting the models that you'd like to explore. 
+2. it's dead simple: Open `<path>/index.html` in your browser. 
+
 Notes:
- * make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore. The modelbase is the backend part of this client-server project, see above.
- * if `DEFAULT_MODEL` in the config file is set to `""` all existing models are displayed. This is the default.
- 
-Open `<path>/index.html` in your browser. 
-Using *chrome* is recommended, since it provides the best performance. 
+ * Using *chrome/chromium* as a browser is recommended, since it provides the best performance from our experience. 
 
 ---
 
-## Development
+## Development Setup
+
+This is only for you, if you want to contribute to the project.
 
 1. Do the steps as described in the Setup section above.
-2. recommended IDE is [WebStorm](https://www.jetbrains.com/webstorm/download/)
-3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
-4. Update npm (part of node-js): `sudo npm install -g npm`
-5. Install all npm-dependencies as provided by the projects `package.json`:
+2. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
+3. Update npm (part of node-js): `sudo npm install -g npm`
+4. Install all npm-dependencies as provided by the projects `package.json`:
     * run from `<path>`: `npm install`
-6. make sure you have the following packages installed (preferably) globally:
-    * <none>
 
 ---
 
@@ -130,7 +126,7 @@ For any questions, feedback, bug reports, feature requests, spam, rants, etc ple
 
 ### Copyright and Licence ###
 
-© 2016-2020 Philipp Lucas (philipp.lucas@dlr.de)
+© 2016-2021 Philipp Lucas (philipp.lucas@dlr.de)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
