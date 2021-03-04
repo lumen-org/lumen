@@ -29,11 +29,10 @@ This explains how to get and configure `lumen` and its dependencies.
 `lumen` allows a user to interactively compile queries and visualize the queries results, however, `modelbase` does the heavy computation and actually answers the queries. 
 You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
 
-* `lumen` and `modelbase` need to be configured correctly with 'matching' settings:
+* `lumen` and `modelbase` need to be configured correctly with 'matching' settings. By default this is the case and you do not need to change these settings.
   * hostname set in the configuration of `lumen` must match the actual hostname of `modelbase`.
   * port must match
   * protocol must match (http or https)
-By default this is the case and you do not need to change these settings.
 
 * In order to do anything useful the backend needs to host some probabilistic model that you want to explore. 
 Models can be created and trained from data using the `modelbase` Python package. See the documentation.
@@ -44,36 +43,33 @@ A number of example models are created during the setup process of modelbase for
 1. Clone/download this repository into a folder `<path>` of your choice.
 2. Save these contents in a new text file with name `run.conf.js` at directory `<path>/js/`:
 
+       define([], function () {
 
-    define([], function () {
-    
-      // the model to be loaded on startup of the page
-      /* this name must match the name of the model that the backend loaded */
-      const DEFAULT_MODEL = '';
-    
-      // the model server to use for PQL queries
-      /* Make sure that all aspects are correct:
-  
-           <protocol>://<ip/hostname>:<port>/<directory>
-      
-           * hostname/ip: e.g. 127.0.0.1
-           * protocol: https or http ?
-           * port: e.g. 8080
-           * directory on host (if any)
-       */  
-      const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:52104';
-    
-      return {
-        DEFAULT_MODEL,
-        DEFAULT_SERVER_ADDRESS
-      }
-    });
+          // the model to be loaded on startup of the page
+          /* this name must match the name of the model that the backend loaded */
+          const DEFAULT_MODEL = '';
 
+          // the model server to use for PQL queries
+          /* Make sure that all aspects are correct:
+
+               <protocol>://<ip/hostname>:<port>/<directory>
+
+               * hostname/ip: e.g. 127.0.0.1
+               * protocol: https or http ?
+               * port: e.g. 8080
+               * directory on host (if any)
+           */  
+          const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:52104';
+
+          return {
+            DEFAULT_MODEL,
+            DEFAULT_SERVER_ADDRESS
+          }
+       });
 
 **Updating it** 
 
 Just pull/download the lasted branch/version you'd like.
-
 
 ### Running it
 
