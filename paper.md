@@ -78,10 +78,10 @@ Also, probabilistic concepts that often are difficult to grasp for students like
 
 Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau [@Stolte:2002]. 
 However, while Polaris/Tableau is for _data only_, Lumen provides a uniform visual language and interactions for both data and probabilistic models.
-Figure \autoref{fig:LumenUI} shows an example screenshot of Lumen to illustrate the user interface. 
-The Schema (left) contains the random variables of the probabilistic model that the user has currently selected.
-Users can drag'n'drop variables onto the visual channels of the Specification (middle).
-Doing so reconfigures the currently active visualization on the dashboard (right).
+Figure \ref{fig:LumenUI} shows an example screenshot of Lumen to illustrate the user interface. 
+The Schema (left column) contains the random variables of the probabilistic model that the user has currently selected.
+Users can drag'n'drop variables onto the visual channels of the Specification (middle-left column).
+Doing so reconfigures the currently active visualization on the dashboard (right column).
 This triggers the fetching of respective data and model queries, and finally updates and re-renders the visualization.
 To foster comparison of multiple models (for instance stemming from different classes of models, or from iterates of an incremental model building process) Lumen allows users to create as many visualizations of as many models as they like.
 All visualization are interactive themselves (panning, zoom, selections), as well as resizable and freely movable on the dashboard.
