@@ -1,9 +1,9 @@
 `lumen` is an interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
-### Building and Exploration of Probabilistic Machine Learning Models: 
+### Augment the process of building and exploring Probabilistic Machine Learning Models: 
 
 Machine Learning is a wide field with many different types of models available. 
-`lumen` aims to make *probabilistic* models easily accessibly to humans. 
+`lumen` aims to make *probabilistic* models more easily accessibly to humans. 
 Such models model a set of target variables by means of a probability density function.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
 Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
@@ -83,7 +83,7 @@ A number of example models are created during the setup process of modelbase for
           }
        });
 
-**Updating it** 
+### Updating it
 
 Just pull/download the lasted branch/version you'd like.
 
@@ -109,9 +109,9 @@ This is only for you, if you want to contribute to the project.
 
 ---
 
-### Trouble Shooting ###
+### Trouble Shooting
 
-#### When open `lumen` in my browser I get the error message: "Could not load remote model from server!" ####
+#### When open `lumen` in my browser I get the error message: "Could not load remote model from server!"
  
  1. Confirm that the backend server actually running
  2. Check the developer console log of the browser where you are loading the front-end. If it shows something like:
@@ -126,17 +126,17 @@ This is only for you, if you want to contribute to the project.
    * [disable CORS control in chrome](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome) (kind of hacky)
  
 
-#### I get the error message: "Could not load remote model 'XXXX' from server 'XXXX' !" ####
+#### I get the error message: "Could not load remote model 'XXXX' from server 'XXXX' !"
   1. Confirm that the backend server is actually running
   2. Did the backend server load the particular model that you are trying to retrieve? Loaded models are listed in the terminal output of the backend server on its start up.
 
 ---
 
-### Contact ###
+### Contact
 
-For any questions, feedback, bug reports, feature requests, spam, rants, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de).
+For any questions, feedback, bug reports, feature requests, spam, rants, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de)
 
-### Copyright and Licence ###
+### Copyright and Licence
 
 © 2016-2021 Philipp Lucas (philipp.lucas@dlr.de)
 
