@@ -26,7 +26,7 @@ This lets you understand its predictive behaviour, and also compare it observed 
  * create as many of these visualizations side by side on an virtually infinite canvas. 
 This lets you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
  
-### Exploration of Tabluar Data
+### Exploration of Tabular Data
 
 You don't do any Machine Learning but simply would like to conveniently browse and explore data? 
 `lumen` is the right place for you too!
