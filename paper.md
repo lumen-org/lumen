@@ -27,27 +27,17 @@ bibliography: paper.bib
 
 # Summary
 
-[comment]: # (**introduction: say what it does: accessibility to humans for probabilistic models.**)
-
 Research in machine learning has led to the development of a plethora of different types of models.
 Lumen aims to make a particular yet broad class of models, namely probabilistic models, more easily accessible to humans. 
 
-[comment]: # (**add one or two more sentences about what it provides**)
-
 It does so by providing an interactive web application for the visual exploration, comparison, and validation of probabilistic models together with its data. 
 As the main feature of Lumen a user can rapidly and incrementally build flexible and potentially complex interactive visualizations of both the probabilistic model and the data that the model was trained on. 
-
-[comment]: # (**what is a probabilistic model? explain by comparison to classic ML**)
 
 Many classic machine learning methods learn models that predict the value of some target variable(s) given the value of some input variable(s).
 *Probabilistic* models go beyond this point estimation by predicting instead of a particular value a probability distribution over the target variable(s).
 This allows, for instance, to also estimate the prediction's uncertainty, a highly relevant quantity.
 
-[comment]: # (**make an example**)
-
 For a demonstrative example imagine a model predicts that an image of a suspicious skin area does _not_ show a malignant tumor. Here it would be extremely valuable to additionally know whether the model is sure to 99.99% or just 51%.
-
-[comment]: # (**accessibility as key challenge**)
 
 # Statement of need
 
@@ -74,8 +64,6 @@ Also, probabilistic concepts that often are difficult to grasp for students like
 
 # Software
 
-[comment]: # (**Interface**)
-
 Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau [@Stolte:2002]. 
 However, while Polaris/Tableau is for _data only_, Lumen provides a uniform visual language and interactions for both data and probabilistic models.
 Figure \ref{fig:LumenUI} shows an example screenshot of Lumen to illustrate the user interface. 
@@ -96,15 +84,11 @@ Marks in the backgrond as well as the marginal plots at the side represent obser
 (5) Similar to (4) but visualizing a model predictions of `income` as well as `happiness` based on `age` and place of origin (`eastwest`). 
 Again, the background marks show observed data.](joss/example.png){ width=90% }
 
-[comment]: # (**Architecture**)
-
 While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as execution of model or data queries that are triggered by a user interaction) are delegated to a dedicated back-end.
 This back-end is implemented in the modelbase project [@Lucas:2021:modelbase].
 With this separation we follow a classic client-server architecture, where Lumen is the web-client and modelbase the web-service.
 For the standard usage scenario you would install both client and server locally on the same machine. 
 However, they can of course be separated and hosted/run on different machine across a network.
-
-[comment]: # (**Supported classes of probabilistic models**)
 
 Lumen is model-agnostic in the sense that it can be used with models of any class of probabilistic models as long as this model class implements a common API in the modelbase back end. 
 In mathematical terms it essentially boils down to the following conditions that the supported model class 
