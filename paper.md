@@ -66,7 +66,7 @@ Also, probabilistic concepts that often are difficult to grasp for students like
 
 Lumen's interface is inspired by the academic Polaris project and its commercial successor Tableau [@Stolte:2002]. 
 However, while Polaris/Tableau is for _data only_, Lumen provides a uniform visual language and interactions for both data and probabilistic models.
-Figure \ref{fig:LumenUI} shows an example screenshot of Lumen to illustrate the user interface. 
+\autoref{fig:LumenUI} shows an example screenshot of Lumen to illustrate the user interface. 
 The Schema (left column) contains the random variables of the probabilistic model that the user has currently selected.
 Users can drag'n'drop variables onto the visual channels of the Specification (middle-left column).
 Doing so reconfigures the currently active visualization on the dashboard (right column).
@@ -82,7 +82,7 @@ Again, data are shown as histograms and model densities as line plots.
 (4) Connected dots show model predictions of `income` given `age` and `sex`.
 Marks in the backgrond as well as the marginal plots at the side represent observed data.
 (5) Similar to (4) but visualizing a model predictions of `income` as well as `happiness` based on `age` and place of origin (`eastwest`). 
-Again, the background marks show observed data.](joss/example.png){ width=90% }
+Again, the background marks show observed data.\label{fig:LumenUI}](joss/example.png){ width=90% }
 
 While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as execution of model or data queries that are triggered by a user interaction) are delegated to a dedicated back-end.
 This back-end is implemented in the modelbase project [@Lucas:2021:modelbase].
@@ -99,7 +99,7 @@ In mathematical terms it essentially boils down to the following conditions that
  * supports density queries, i.e. the operation to ask for the value of the models probability density function at any point of its domain.
 
 In fact Lumen does not depend on any specificity of a particular class of models and we regard this genericity as one of Lumens major features. 
-Among the model classes that we have used Lumen with are Sum-Product-Networks [@Poon:11; @Molina:2019:SPFlow], Condional-Gaussian Distributions [Olkin:1961:CG; Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
+Among the model classes that we have used Lumen with are Sum-Product-Networks [@Poon:2011; @Molina2019:SPFlow], Condional-Gaussian Distributions [@Olkin:1961:CG; @Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [@Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
 
 # Acknowledgments
 
