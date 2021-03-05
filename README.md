@@ -1,21 +1,37 @@
 `lumen` is an interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
+### Building and Exploration of Probabilistic Machine Learning Models: 
 
-It caters at least two use cases:
+Machine Learning is a wide field with many different types of models available. 
+`lumen` aims to make *probabilistic* models easily accessibly to humans. 
+Such models model a set of target variables by means of a probability density function.
+That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
+Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
 
-### 1. Exploration of Tabluar Data
-You don't do any Machine Learning but simply would like to conveniently browser and explore data? That's the right place for you too!  Lumen can be used to easily browse, explore and compare *tabluar* data. This is not what Lumen was built for originally, but regard it as your 'free lunch' ;)
+Building machine learning models is an inherently incremental task. 
+You start out with something simple, check whether if it seems right so far, and then make your model incremently more complex until it solves your task sufficiently well. 
+`lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. 
+In particular it lets you:
 
-### 2. Building and Exploration of Probabilistic Machine Learning Models: 
-Machine Learning is a wide field with many different types of models available. Lumen aims to make *probabilistic* models easily accessibly to humans. Such models model a set of target variables by means of a probability density function. That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
+ * plot any marginals of your models. 
+Here, marginal means not just 1d but also higher dimensional marginals.
+This lets you understand your model by studying 'slices' of it. 
+We beliebe it helps you to fix model degrading artifacts that may indicate a problem in your model specification, model paramterization or possibly a bug in the machine learning algorithm of your model.
+ * plot the model marginals together with data marginals. 
+This lets you directly check the models fit to data.
+ * plot predictions of your model along side corresponding data aggregations. 
+This lets you understand its predictive behaviour, and also compare it observed quantities.
+ * combine any of the above 'layers' into a single visualization.
+ * change visualizations by flexibly assigning variables/data attributes to visual channels.
+ * create as many of these visualizations side by side on an virtually infinite canvas. 
+This lets you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
+ 
+### Exploration of Tabluar Data
 
-Building machine learning models is an inherently incremental task. You start out with something simple, check whether if it seems right so far, and then make your model incremently more complicated until it solves your task sufficiently well. Lumen let's you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. In particular it let's you:
-
- * plot any marginals of your models. Here, marginal means not just 1d but also higher dimensional marginals.  This let's you understand your model by means of 'slices' of it. This helps you stop unexpected behaviour that may indicate a problem in your model specification or possibly a bug in the machine learning algorithm of your model.
- * plot the model marginals together with data marginals. This let's you directly check the models fit to data.
- * plot almost any predictions of your model. This let's you understand its predictive behaviour.
- * create as many of these visualizations side by side on an virtually infinite canvas. This let's you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
- * ... 
+You don't do any Machine Learning but simply would like to conveniently browse and explore data? 
+`lumen` is the right place for you too!
+It can be used to easily browse, explore and compare *tabluar* data.
+This is not what `lumen` was built for originally, but regard it as your 'free lunch' ;)
 
 ---
 
@@ -95,7 +111,7 @@ This is only for you, if you want to contribute to the project.
 
 ### Trouble Shooting ###
 
-#### When open lumen in my browser I get the error message: "Could not load remote model from server!" ####
+#### When open `lumen` in my browser I get the error message: "Could not load remote model from server!" ####
  
  1. Confirm that the backend server actually running
  2. Check the developer console log of the browser where you are loading the front-end. If it shows something like:
