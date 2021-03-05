@@ -82,7 +82,7 @@ Again, data are shown as histograms and model densities as line plots.
 (4) Connected dots show model predictions of `income` given `age` and `sex`.
 Marks in the backgrond as well as the marginal plots at the side represent observed data.
 (5) Similar to (4) but visualizing a model predictions of `income` as well as `happiness` based on `age` and place of origin (`eastwest`). 
-Again, the background marks show observed data.\label{fig:LumenUI}](joss/example.png){ width=90% }
+Again, the background marks show observed data.\label{fig:LumenUI}](joss/example.png){ width=85% }
 
 While Lumen takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as execution of model or data queries that are triggered by a user interaction) are delegated to a dedicated back-end.
 This back-end is implemented in the modelbase project [@Lucas:2021:modelbase].
