@@ -1,109 +1,117 @@
-`lumen` is a interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
+`lumen` is an interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
-This web-application is part of the (equally named) [Lumen project](https://github.com/lumen-org/) which consists of two parts: the back-end [modelbase](https://github.com/lumen-org/modelbase) and (this one) the front-end [lumen](https://github.com/lumen-org/lumen).
+### Building and Exploration of Probabilistic Machine Learning Models: 
 
-(*currently not working - sorry:*) There is a online demo version available [here](http://lumen.inf-i2.uni-jena.de/) 
+Machine Learning is a wide field with many different types of models available. 
+`lumen` aims to make *probabilistic* models easily accessibly to humans. 
+Such models model a set of target variables by means of a probability density function.
+That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
+Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
 
-It caters at least two use cases:
+Building machine learning models is an inherently incremental task. 
+You start out with something simple, check whether if it seems right so far, and then make your model incremently more complex until it solves your task sufficiently well. 
+`lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. 
+In particular it lets you:
 
-### 1. Exploration of Tabluar Data
-You don't do any Machine Learning but simply would like to conveniently browser and explore data? That's the right place for you too!  Lumen can be used to easily browse, explore and compare *tabluar* data. This is not what Lumen was built for originally, but regard it as your 'free lunch' ;)
+ * plot any marginals of your models. 
+Here, marginal means not just 1d but also higher dimensional marginals.
+This lets you understand your model by studying 'slices' of it. 
+We beliebe it helps you to fix model degrading artifacts that may indicate a problem in your model specification, model paramterization or possibly a bug in the machine learning algorithm of your model.
+ * plot the model marginals together with data marginals. 
+This lets you directly check the models fit to data.
+ * plot predictions of your model along side corresponding data aggregations. 
+This lets you understand its predictive behaviour, and also compare it observed quantities.
+ * combine any of the above 'layers' into a single visualization.
+ * change visualizations by flexibly assigning variables/data attributes to visual channels.
+ * create as many of these visualizations side by side on an virtually infinite canvas. 
+This lets you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
+ 
+### Exploration of Tabular Data
 
-### 2. Building and Exploration of Probabilistic Machine Learning Models: 
-Machine Learning is a wide field with many different types of models available. Lumen aims to make *probabilistic* models easily accessibly to humans. Such models model a set of target variables by means of a probability density function. That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
-
-Building machine learning models is an inherently incremental task. You start out with something simple, check whether if it seems right so far, and then make your model incremently more complicated until it solves your task sufficiently well. Lumen let's you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. In particular it let's you:
-
- * plot any marginals of your models. Here, marginal means not just 1d but also higher dimensional marginals.  This let's you understand your model by means of 'slices' of it. This helps you stop unexpected behaviour that may indicate a problem in your model specification or possibly a bug in the machine learning algorithm of your model.
- * plot the model marginals together with data marginals. This let's you directly check the models fit to data.
- * plot almost any predictions of your model. This let's you understand its predictive behaviour.
- * create as many of these visualizations side by side on an virtually infinite canvas. This let's you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
- * ... 
+You don't do any Machine Learning but simply would like to conveniently browse and explore data? 
+`lumen` is the right place for you too!
+It can be used to easily browse, explore and compare *tabluar* data.
+This is not what `lumen` was built for originally, but regard it as your 'free lunch' ;)
 
 ---
 
 ## Setup, Configuration and Running 
 
-This explains how to get and configure `lumen` and it's dependencies.
+This explains how to get and configure `lumen` and its dependencies.
 
 ### Requirements
 
-* `lumen` is a webfrontend (web application) that requires access to a webservice instance of the `modelbase` backend. `lumen` allows a user to interactively compile queries and visualize the queries results, while `modelbase` does the heavy computation and actually answers the queries. You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
+* `lumen` is a web application that requires access to a webservice instance of the Python3-based `modelbase` backend.
+`lumen` allows a user to interactively compile queries and visualize the queries results, however, `modelbase` does the heavy computation and actually answers the queries. 
+You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
 
-* *`lumen` and `modelbase` need to be configured correctly with 'matching' settings*:
-  * hostname set in `lumen` must match the actual hostname of `modelbase` 
+* `lumen` and `modelbase` need to be configured correctly with 'matching' settings. By default this is the case and you do not need to change these settings.
+  * hostname set in the configuration of `lumen` must match the actual hostname of `modelbase`.
   * port must match
   * protocol must match (http or https)
-By default this is the case.
 
-* In order to do anything useful the backend needs to host some models that you want to explore. This is configured in `modelbase`.
+* In order to do anything useful the backend needs to host some probabilistic model that you want to explore. 
+Models can be created and trained from data using the `modelbase` Python package. See the documentation.
+A number of example models are created during the setup process of modelbase for your convenience.
 
 ### Setup
 
-Clone/download this repository into a folder `<path>` of your choice.
-If you simply want to run it, you are (almost) done. For a development setup see below.
-Before running it, you need to configure it, see below. No worries, it is simple.
+1. Clone/download this repository into a folder `<path>` of your choice.
+2. Save these contents in a new text file with name `run.conf.js` at directory `<path>/js/`:
+
+       define([], function () {
+
+          // the model to be loaded on startup of the page
+          /* this name must match the name of the model that the backend loaded */
+          const DEFAULT_MODEL = '';
+
+          // the model server to use for PQL queries
+          /* Make sure that all aspects are correct:
+
+               <protocol>://<ip/hostname>:<port>/<directory>
+
+               * hostname/ip: e.g. 127.0.0.1
+               * protocol: https or http ?
+               * port: e.g. 8080
+               * directory on host (if any)
+           */  
+          const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:52104';
+
+          return {
+            DEFAULT_MODEL,
+            DEFAULT_SERVER_ADDRESS
+          }
+       });
 
 **Updating it** 
 
-Just pull the branch/version you'd like.
-
-### Configuring `lumen`
-
-For configuration of `modelbase` see its documentation.
-
-`lumen` requires a configuration file `run.conf.js` which is *NOT* part of the repository. In the future this file will probably be created automatically, but at the moment you have to do it manually. Adapt and save this in a new file under `<path>/js/run.conf.js`:
-  
-    define([], function () {
-    
-      // the model to be loaded on startup of the page
-      /* this name must match the name of the model that the backend loaded */
-      const DEFAULT_MODEL = '';
-    
-      // the model server to use for PQL queries
-      /* Make sure that all aspects are correct:
-  
-           <protocol>://<ip/hostname>:<port>/<directory>
-      
-           * hostname/ip: e.g. 127.0.0.1
-           * protocol: https or http ??
-           * port: e.g. 8080
-           * directory on host (if any)
-       */  
-      const DEFAULT_SERVER_ADDRESS = 'http://127.0.0.1:52104';
-    
-      return {
-        DEFAULT_MODEL,
-        DEFAULT_SERVER_ADDRESS
-      }
-    });
+Just pull/download the lasted branch/version you'd like.
 
 ### Running it
+
+1. make sure the `modelbase` backend is running and hosting the models that you'd like to explore. 
+2. it's dead simple: Open `<path>/index.html` in your browser. 
+
 Notes:
- * make sure the `modelbase` backend is running and hosting the correct models that you'd like to explore. The modelbase is the backend part of this client-server project, see above.
- * if `DEFAULT_MODEL` in the config file is set to `""` all existing models are displayed. This is the default.
- 
-Open `<path>/index.html` in your browser. 
-Using *chrome* is recommended, since it provides the best performance. 
+ * Using *chrome/chromium* as a browser is recommended, since it provides the best performance from our experience. 
 
 ---
 
-## Development
+## Development Setup
+
+This is only for you, if you want to contribute to the project.
 
 1. Do the steps as described in the Setup section above.
-2. recommended IDE is [WebStorm](https://www.jetbrains.com/webstorm/download/)
-3. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
-4. Update npm (part of node-js): `sudo npm install -g npm`
-5. Install all npm-dependencies as provided by the projects `package.json`:
+2. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
+3. Update npm (part of node-js): `sudo npm install -g npm`
+4. Install all npm-dependencies as provided by the projects `package.json`:
     * run from `<path>`: `npm install`
-6. make sure you have the following packages installed (preferably) globally:
-    * <none>
 
 ---
 
 ### Trouble Shooting ###
 
-#### When open lumen in my browser I get the error message: "Could not load remote model from server!" ####
+#### When open `lumen` in my browser I get the error message: "Could not load remote model from server!" ####
  
  1. Confirm that the backend server actually running
  2. Check the developer console log of the browser where you are loading the front-end. If it shows something like:
@@ -130,7 +138,7 @@ For any questions, feedback, bug reports, feature requests, spam, rants, etc ple
 
 ### Copyright and Licence ###
 
-© 2016-2020 Philipp Lucas (philipp.lucas@dlr.de)
+© 2016-2021 Philipp Lucas (philipp.lucas@dlr.de)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
