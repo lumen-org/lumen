@@ -2,8 +2,7 @@
 
 ### Augment the process of building and exploring Probabilistic Machine Learning Models: 
 
-Machine Learning is a wide field with many different types of models available. 
-`lumen` aims to make *probabilistic* models more easily accessibly to humans. 
+`lumen` aims to make a particular class of machine learning models, namely *probabilistic* models,  more easily accessible to humans. 
 Such models model a set of target variables by means of a probability density function.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
 Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
