@@ -9,6 +9,11 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     'string': 'pl-field__categorical',
   };
 
+  const ObsTypeToClassMap = {
+    'observed': 'pl-field__observed',
+    'latent': 'pl-field__latent',
+  };
+
   /**
    * Make DOM node `modalNode` pop-up in front if it is clicked on parentNode. This is, modelNode will be like a modal dialog always in front, until it is clicked anywhere outside of it or the close handler is called. The close handler is returned.
    *
@@ -254,6 +259,7 @@ define(['lib/emitter', './PQL', './VisMEL'], function (Emitter, PQL, VisMEL) {
     button,
     removeButton,
     YieldTypeToClassMap,
+    ObsTypeToClassMap,
   };
 
 });

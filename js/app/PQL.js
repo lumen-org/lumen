@@ -90,6 +90,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
      * @param domain {Domain} The domain of the Field, i.e. the values it may take
      * @param extent {Domain} A finite range/set of values, that it typical.
      * @param varType {String} The desired variable type. Either 'distributed' or 'independent'. For convenience use FieldT.
+     * @param obsType {String} Whether the variable is 'observerd' or 'latent'. For convenience use FieldT.ObsType.
      * @param model {Model} Optional. The model this field belongs to.
      */
     constructor (name, dataType, domain, extent, varType, obsType, model=undefined) {

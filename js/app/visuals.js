@@ -193,7 +193,24 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
 
   PQL.Field.prototype.makeVisual = function () {
     let typeClass = VisUtils.YieldTypeToClassMap[this.dataType];
-    return $(`<div class="pl-field pl-field-name ${typeClass}">${this.name}</div>`);
+    let obsClass = VisUtils.ObsTypeToClassMap[this.obsType];
+
+    let $modelingDetails = $(`<div class="pl-field__modelingDetails"></div>`)
+      .append(`<div class="pl-field__obsType pl-label">${this.obsType}</div>`)
+      .append(`<div class="pl-field__varType pl-label">${this.varType}</div>`);
+
+    let $visual = $(`<div class="pl-field ${typeClass} ${obsClass}"></div>`)
+      .append([
+        `<div class="pl-field__dataType pl-label">${this.dataType}</div>`,
+        `<div class="pl-field__name pl-field-name pl-label">${this.name}</div>`,
+        $modelingDetails,
+      ]);
+
+    
+
+    //return $(`<div class="pl-field pl-field-name ${typeClass}">${this.name}</div>`);
+    return $visual;
+
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record, $parent) {

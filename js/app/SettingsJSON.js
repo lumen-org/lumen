@@ -641,6 +641,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           modelHistogram: {
             type: "object", format: "grid",
             properties: {
+              "nbins": {type: "number"},
               "fillOpacity": {type: "number"},
               "lineOpacity": {type: "number"},
               "lineWidth": {type: "number"},
@@ -810,6 +811,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     "ppc": {
       modelHistogram: {
+        "nbins": 20,
         "fillOpacity": 0.2,
         'lineOpacity': 1,
         'lineWidth': 0,
@@ -1227,7 +1229,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         enabled: true,  // enable or disable the details view
       },
       posteriorPredictiveChecks: {
-        enabled: false,  // enable or disable the ppc
+        enabled: true,  // enable or disable the ppc
       }
     };
 
@@ -1322,7 +1324,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // data-local model prediction
       // -> enable choosing between which data?
       predictionDataLocal: {
-        possible: true,
+        possible: false,
         active: false,
       },
 
