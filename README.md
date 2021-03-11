@@ -1,8 +1,8 @@
 `lumen` is an interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
-### Augment the process of building and exploring Probabilistic Machine Learning Models: 
+### Augmenting the process of building and exploring Probabilistic Models:
 
-`lumen` aims to make a particular class of machine learning models, namely *probabilistic* models,  more easily accessible to humans. 
+`lumen` aims to make a particular class of machine learning/statistical models, namely *probabilistic* models,  more easily accessible to humans. 
 Such models model a set of target variables by means of a probability density function.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
 Since all the modelling and model querying is done in the [modelbase backend](https://github.com/lumen-org/modelbase), please see there for more information.
@@ -25,7 +25,6 @@ This lets you understand its predictive behaviour, and also compare it observed 
  * create as many of these visualizations side by side on an virtually infinite canvas. 
 This lets you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
  
-### Exploration of Tabular Data
 
 You don't do any Machine Learning but simply would like to conveniently browse and explore data? 
 `lumen` is the right place for you too!
