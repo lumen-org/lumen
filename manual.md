@@ -81,6 +81,8 @@ This model has five variables, four of them quantitative (`sepal_lenght`, `sepal
 This model has no latent (non-observed) variables, hence all variables are labelled as 'observed'.
 Also, all of the listed variables are actually modelled by the model, hence they have the label 'distributed'. 
 
+---
+
 ## Specification
 
 The specification consists of a number of so-called shelves (top), the semantic facet selector (middle), and some advanced configurations (buttom).
@@ -141,6 +143,23 @@ As a rule of thumb:
 
 Note that many of the defaults can be overridden by using the specification. 
 
+### Facets
+
+Facets act as 'semantic layers', that is, they represent different aspects.
+Lumen provides eight facets organizes in two columns and four rows:
+
+Columms:
+ 
+ * model column: facets here represent aspects of the _model_
+ * data column: facets here represent aspects of the _data_ that the model was trained on
+
+Rows:
+
+ * aggregation: 
+ * data points:
+ * marginals:
+ * density:
+ 
 
 ![Schema in Lumen's UI](doc/img/Specification.png)
 
