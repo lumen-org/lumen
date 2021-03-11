@@ -88,11 +88,11 @@ Marks in the background as well as the marginal plots at the side represent obse
 (5) Similar to (4) but visualizing a model predictions of `income` as well as `happiness` based on `age` and place of origin (`eastwest`). 
 Again, the background marks show observed data.\label{fig:LumenUI}](joss/example.png){ width=85% }
 
-While *Lumen* takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as execution of model or data queries that are triggered by a user interaction) are delegated to a dedicated back-end.
-This back-end is implemented in the *modelbase* project [@Lucas:2021:modelbase].
-This separation follows a classic client-server architecture, where *Lumen* is the front-end web-client and *modelbase* the back-end web-service.
+While *Lumen* takes care of all user facing aspects (such as visualizations and interactions) most computational aspects (such as execution of model or data queries that are triggered by a user interaction) are delegated to a dedicated back-end. 
+The back-end is implemented in the *modelbase* project [@Lucas:2021:modelbase].
+This separation follows a classic client-server architecture where *Lumen* is the web-client and *modelbase* the web-service.
 For the standard usage scenario you would install both client and server locally on the same machine. 
-However, they can of course be separated and hosted/run on different machine across a network.
+However, they can of course be separated and hosted/run on different machines across a network.
 
 *Lumen* is model-agnostic in the sense that it can be used with models of any class of probabilistic models as long as this model class implements a common API in the *modelbase* back end. 
 In mathematical terms it essentially boils down to the following conditions that the supported model class ...
