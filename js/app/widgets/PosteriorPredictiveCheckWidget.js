@@ -199,8 +199,8 @@ define(['lib/emitter', '../shelves', '../VisUtils', '../ViewSettings', '../ZInde
         name: ppcResult.header[i],
         type: 'histogram',
         showlegend: false,
-        nbinsx: histoConfig.nbins,
-        nbinsy: histoConfig.nbins,
+        //nbinsx: histoConfig.nbins,
+        //nbinsy: histoConfig.nbins,
         // opacity: ,
         marker: {
           color: histoConfig.color,
