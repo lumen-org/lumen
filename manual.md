@@ -13,29 +13,35 @@ These are the five main components and their most important function
 
  1. Toolbar: Load models and create new visualizations
  2. Schema panel: Shows the data attributes / variables of the model shown in the active visualization.
- 3. Specification panel: Lets you modify the assignment of data attributes  / variables of the model to visual variables in order to change the active visualization.
- 4. Dashboard: A pannable container that holds all the visualizations that you have created. 
- 5. Visualization (contained in the dashboard): The visualization as configured in the specifcation. 
+ 3. Specification panel: Lets you modify the assignment of data attributes  / variables of the model to visual variables in order to change the active visualization. Also lets you choose which facets to enable. Facets are layers in a visualization that show a particular aspect of model and its data.
+ 4. Dashboard: A pannable container that holds all the visualizations that you have created on an virtually infinite canvas.
+ 5. Visualization (contained in the dashboard): The visualization as configured in the specifcation. No limits on how many visualizations you can have at once.
 
 To keep things simple each visualization is associated to exactly one model and its data.
 Put differently: you cannot mix multiple models in one visualization.
-However, of course, you can create multiple visulizations and each visulization parts of a different model!
+However, of course, you can create multiple visulizations, each of a different model.
 
-Also, at several points above it said 'active'. 
+At several points above it said 'active': 
 At any point there is exactly one 'active' visualization.
-You can recognize the active visualization by its darker frame around it. 
+You can recognize the active visualization by its darker frame around it, compared to the rest of the visualizations.
 The specification always shows the visual configuration of the active visualization.
 And the schema shows the variables / attribtues of the single model that is associated with a visualization, hence, it shows the variables / attributes for the _active_ model.
+As a user you can change the active visualization and corresponding active model by simply clicking on the desired visualization in the dashboard.
 
-And as a user you can change the active visualization and corresponding active model by simply clicking on the desired visualization in the dashboard.
+
+## Contents
+
+
 
 ---
+
+# UI Components
 
 ## Toolbar
 
 The toolbar is located on the top edge of the UI.
 
-![Toolbar in Lumen's UI](doc/img/Toolbar.png)
+![Toolbar in Lumen's UI](doc/img/toolbar.png)
 
 ### Loading models / creating new visualizations
 
@@ -73,7 +79,7 @@ Toggles another panel that shows advanced configurations to change colors, opaci
 The schema lists all variables of the model's variables / data attributes.
 It groups them by their scale type, here simplified to 'quantitative' and 'categorical'.
 
-![Schema in Lumen's UI](doc/img/Schema.png)
+![Schema in Lumen's UI](doc/img/schema.png)
 
 Here, the schems lists the variables for a model with name 'Iris_cond_gauss'. 
 
@@ -161,6 +167,13 @@ Lumen provides eight facets organizes in two columns and four rows:
  * data points: Adds marks for data points (data) and samples (drawn from the model) to the visualization.
  * marginals: Adds marginal distribution plots to the visualization. 
  * density: Adds density distribution plots to the visualization
+
+For an illustration, see this 2 by 4 arrangement of eight inidividual visualizations. 
+All have the identical specfication, however, each has exactly one facet only  activated.
+Rows are data and model, and columns are aggregation, data points, marginals and density facets, respectively.
+
+![Schema in Lumen's UI](doc/img/facets.png)
+
  
 ### X-Axis and Y-Axis shelves revisited
  
@@ -172,20 +185,21 @@ Let's have a look at an example:
 
 ![Schema in Lumen's UI](doc/img/positional_shelves_revisited_01.png)
 
-For the left visualization left we created a scatter plot of model samples drawn from the probailistic model by dropping `sepal_lenght` on the x-axis shelf and `petal_length` on the y-axis shelf.
+For the left visualization left we created a scatter plot of model samples drawn from the probabilistic model by dropping `sepal_lenght` on the x-axis shelf and `petal_length` on the y-axis shelf.
 For the right visualization, we cloned the visualization, dragged the `species` variable from the schema, and dropped it on the x-axis shelf. 
-The visualization now contains thres scatter plot, namely one for each values of species, instead of only one.
+The visualization now contains three scatter plots, namely one for each value of `species`, instead of only one.
 Note how all individual plots share both the x and y-axis.
-Here, `species` is used to group split the single plot into individual ones, creating an additional hierarchical x-axis on the bottom.
+Here, `species` is used to group split the single plot into individual ones, creating an additional hierarchical x-axis for `species` on the bottom.
 
-Instead of a creating a hierarhcy you can also just 'add' an another variable to the horizontal or vertical layout.
+Instead of a creating a hierarchy you can also just 'add' (concatenate) another variable to the horizontal or vertical layout.
 For the following visualization we dropped `petal_width` to the y-axis shelf (and resized the plot).
-Notice how there is _no_ hierarchical axis, and instead `petal_width` is just added next to `petal_length`.
+Notice how there is _no_ hierarchical axis and instead `petal_width` is just added next to `petal_length`.
 
 ![Schema in Lumen's UI](doc/img/positional_shelves_revisited_02.png)
 
+How do you specify whether to do the one or the other? 
 In short, "blue" shelf items create hierarchies and "yellow" shelf items concatenate axis. 
-You can swap between "blue" and "yellow" by hovering on a shelf item and clicking the yellow/blue button
+You can swap between "blue" and "yellow" by hovering on a shelf item and clicking the yellow/blue button.
 
 There is no explicit limit on how many variables you may add to the positional shelves. 
 Here is two more examples that illustrate useful applications.
@@ -197,3 +211,17 @@ This visualization shows sevaral facets for `age` over `fare` for all combinatio
 In visualization this kind of a plot is often referred to as 'small multiples'.
 
 ![Schema in Lumen's UI](doc/img/positional_shelves_revisited_04.png)
+
+---
+
+# Interaction
+
+In Lumen the mouse is the primary interaction device:
+
+You can 
+
+  * ... drag and drop variables of a model / attributes of the data between the various shelves in the Schema and the Specification.
+  * ... drag the edges of a visualization to resize it
+  * ... drag the title of a visualizatino to move it
+  * ... select areas in plots to zoom
+
