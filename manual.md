@@ -1,5 +1,5 @@
 
-This document is intended as a user manual explaining the structure of the user interface (UI) of *Lumen* and the interactions that users can do.
+This document is intended as a user manual explaining *Lumen's* user interface (UI) and the interactions it provides.
 
 In a few sentences it could be summarized as follows:
 
@@ -99,13 +99,13 @@ In short these two things are done as follows
  * _what_: by assigning variables to the specification at all. Variables that are not in the specification will be removed from a model before the model is visualized (--> marginalization and conditioning of models)
  * _how_: by assigning variables to specific shelves. Each shelf has its own semantic, as explained in the following.
 
-#### X-Axis and Y-Axis
+#### X-Axis and Y-Axis shelf
 
 These two shelves represent the positional channels. 
 In the above example `sepal_width` is assigned to x-axis, hence, in the visualization the x-axis encodes the values of `sepal_width`. Quite simple, eh?
 Not suprisingly, it works the same for y-axis.
 
-#### Color, Shape and Size
+#### Color, Shape and Size shelf
 
 This is quite straight forward too: 
 Assigning a variable here, will cause the visualization to use color/shape/size to encode the value of this variable.
@@ -117,7 +117,7 @@ Have a look at the following 5-dimensional (!) visualization:
 It encodes all of the information in the iris data. 
 Obvisously, some information is easier to recognize than other, but that's a trade-off we always have to deal with.
 
-#### Filter
+#### Filter shelf
 
 Using the filter shelf you can specialize the data and model to show.
 It allows you to restrict the values that variables/have may have. 
@@ -127,6 +127,8 @@ Here, you can restrict the interval (for quantitative) and set (for categorical)
 ![Schema in Lumen's UI](doc/img/filter.png)
 
 Here, the value of `petal_width` is restricted to values small than 1.85 (as shown in the modal dialog), and the values for `species` are restricted to 'setosa' and 'verginica' only excluding 'versicolor'. As you can see in the visualization, under these conditions, 'setosa'  and 'virginica' can be separated almost perfectly just using `sepal_length`.
+
+#### Defaults shelf
 
 ### Visual Defaults
 
@@ -148,22 +150,50 @@ Note that many of the defaults can be overridden by using the specification.
 Facets act as 'semantic layers', that is, they represent different aspects.
 Lumen provides eight facets organizes in two columns and four rows:
 
-Columms:
+**Columms:**
  
  * model column: facets here represent aspects of the _model_
  * data column: facets here represent aspects of the _data_ that the model was trained on
 
-Rows:
+**Rows:**
 
- * aggregation: 
- * data points:
- * marginals:
- * density:
+ * aggregation: Adds marks for aggregated (summarized) values to the visualization.
+ * data points: Adds marks for data points (data) and samples (drawn from the model) to the visualization.
+ * marginals: Adds marginal distribution plots to the visualization. 
+ * density: Adds density distribution plots to the visualization
  
+### X-Axis and Y-Axis shelves revisited
+ 
+The above description of the x-axis and y-axis shelves only told half the story,
+because you can actually assign multiple variables to these shelves.
+This allows you to create 'tabular arrangments' of plots within a single visualization.
 
-![Schema in Lumen's UI](doc/img/Specification.png)
+Let's have a look at an example:
 
-![Schema in Lumen's UI](doc/img/Visualization.png)
+![Schema in Lumen's UI](doc/img/positional_shelves_revisited_01.png)
 
-Htere
+For the left visualization left we created a scatter plot of model samples drawn from the probailistic model by dropping `sepal_lenght` on the x-axis shelf and `petal_length` on the y-axis shelf.
+For the right visualization, we cloned the visualization, dragged the `species` variable from the schema, and dropped it on the x-axis shelf. 
+The visualization now contains thres scatter plot, namely one for each values of species, instead of only one.
+Note how all individual plots share both the x and y-axis.
+Here, `species` is used to group split the single plot into individual ones, creating an additional hierarchical x-axis on the bottom.
 
+Instead of a creating a hierarhcy you can also just 'add' an another variable to the horizontal or vertical layout.
+For the following visualization we dropped `petal_width` to the y-axis shelf (and resized the plot).
+Notice how there is _no_ hierarchical axis, and instead `petal_width` is just added next to `petal_length`.
+
+![Schema in Lumen's UI](doc/img/positional_shelves_revisited_02.png)
+
+In short, "blue" shelf items create hierarchies and "yellow" shelf items concatenate axis. 
+You can swap between "blue" and "yellow" by hovering on a shelf item and clicking the yellow/blue button
+
+There is no explicit limit on how many variables you may add to the positional shelves. 
+Here is two more examples that illustrate useful applications.
+This visualization contains all data and model marginals of the `iris_cond_gauss` model in one visualization:
+
+![Schema in Lumen's UI](doc/img/positional_shelves_revisited_03.png)
+
+This visualization shows sevaral facets for `age` over `fare` for all combinations of the four variables `sex`, `embarked`, `passanger class(Pclass)`, and `Survived`. 
+In visualization this kind of a plot is often referred to as 'small multiples'.
+
+![Schema in Lumen's UI](doc/img/positional_shelves_revisited_04.png)
