@@ -172,20 +172,21 @@ Let's have a look at an example:
 
 ![Schema in Lumen's UI](doc/img/positional_shelves_revisited_01.png)
 
-For the left visualization left we created a scatter plot of model samples drawn from the probailistic model by dropping `sepal_lenght` on the x-axis shelf and `petal_length` on the y-axis shelf.
+For the left visualization left we created a scatter plot of model samples drawn from the probabilistic model by dropping `sepal_lenght` on the x-axis shelf and `petal_length` on the y-axis shelf.
 For the right visualization, we cloned the visualization, dragged the `species` variable from the schema, and dropped it on the x-axis shelf. 
-The visualization now contains thres scatter plot, namely one for each values of species, instead of only one.
+The visualization now contains three scatter plots, namely one for each value of `species`, instead of only one.
 Note how all individual plots share both the x and y-axis.
-Here, `species` is used to group split the single plot into individual ones, creating an additional hierarchical x-axis on the bottom.
+Here, `species` is used to group split the single plot into individual ones, creating an additional hierarchical x-axis for `species` on the bottom.
 
-Instead of a creating a hierarhcy you can also just 'add' an another variable to the horizontal or vertical layout.
+Instead of a creating a hierarchy you can also just 'add' (concatenate) another variable to the horizontal or vertical layout.
 For the following visualization we dropped `petal_width` to the y-axis shelf (and resized the plot).
-Notice how there is _no_ hierarchical axis, and instead `petal_width` is just added next to `petal_length`.
+Notice how there is _no_ hierarchical axis and instead `petal_width` is just added next to `petal_length`.
 
 ![Schema in Lumen's UI](doc/img/positional_shelves_revisited_02.png)
 
+How do you specify whether to do the one or the other? 
 In short, "blue" shelf items create hierarchies and "yellow" shelf items concatenate axis. 
-You can swap between "blue" and "yellow" by hovering on a shelf item and clicking the yellow/blue button
+You can swap between "blue" and "yellow" by hovering on a shelf item and clicking the yellow/blue button.
 
 There is no explicit limit on how many variables you may add to the positional shelves. 
 Here is two more examples that illustrate useful applications.
