@@ -35,7 +35,7 @@ And as a user you can change the active visualization and corresponding active m
 
 The toolbar is located on the top edge of the UI.
 
-![Toolbar in Lumen's UI](doc/img/Toolbar.png)
+![Toolbar in Lumen's UI](doc/img/toolbar.png)
 
 ### Loading models / creating new visualizations
 
@@ -73,7 +73,7 @@ Toggles another panel that shows advanced configurations to change colors, opaci
 The schema lists all variables of the model's variables / data attributes.
 It groups them by their scale type, here simplified to 'quantitative' and 'categorical'.
 
-![Schema in Lumen's UI](doc/img/Schema.png)
+![Schema in Lumen's UI](doc/img/schema.png)
 
 Here, the schems lists the variables for a model with name 'Iris_cond_gauss'. 
 
