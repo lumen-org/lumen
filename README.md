@@ -1,4 +1,5 @@
-`lumen` is an interactive web-application for the visualization of probabilistic machine learning models. Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
+`lumen` is an interactive web-application for the visualization of probabilistic machine learning models. 
+Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
 
 ### Augmenting the process of building and exploring Probabilistic Models:
 
