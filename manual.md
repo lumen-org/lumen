@@ -13,23 +13,29 @@ These are the five main components and their most important function
 
  1. Toolbar: Load models and create new visualizations
  2. Schema panel: Shows the data attributes / variables of the model shown in the active visualization.
- 3. Specification panel: Lets you modify the assignment of data attributes  / variables of the model to visual variables in order to change the active visualization.
- 4. Dashboard: A pannable container that holds all the visualizations that you have created. 
- 5. Visualization (contained in the dashboard): The visualization as configured in the specifcation. 
+ 3. Specification panel: Lets you modify the assignment of data attributes  / variables of the model to visual variables in order to change the active visualization. Also lets you choose which facets to enable. Facets are layers in a visualization that show a particular aspect of model and its data.
+ 4. Dashboard: A pannable container that holds all the visualizations that you have created on an virtually infinite canvas.
+ 5. Visualization (contained in the dashboard): The visualization as configured in the specifcation. No limits on how many visualizations you can have at once.
 
 To keep things simple each visualization is associated to exactly one model and its data.
 Put differently: you cannot mix multiple models in one visualization.
-However, of course, you can create multiple visulizations and each visulization parts of a different model!
+However, of course, you can create multiple visulizations, each of a different model.
 
-Also, at several points above it said 'active'. 
+At several points above it said 'active': 
 At any point there is exactly one 'active' visualization.
-You can recognize the active visualization by its darker frame around it. 
+You can recognize the active visualization by its darker frame around it, compared to the rest of the visualizations.
 The specification always shows the visual configuration of the active visualization.
 And the schema shows the variables / attribtues of the single model that is associated with a visualization, hence, it shows the variables / attributes for the _active_ model.
+As a user you can change the active visualization and corresponding active model by simply clicking on the desired visualization in the dashboard.
 
-And as a user you can change the active visualization and corresponding active model by simply clicking on the desired visualization in the dashboard.
+
+## Contents
+
+
 
 ---
+
+# UI Components
 
 ## Toolbar
 
@@ -161,6 +167,13 @@ Lumen provides eight facets organizes in two columns and four rows:
  * data points: Adds marks for data points (data) and samples (drawn from the model) to the visualization.
  * marginals: Adds marginal distribution plots to the visualization. 
  * density: Adds density distribution plots to the visualization
+
+For an illustration, see this 2 by 4 arrangement of eight inidividual visualizations. 
+All have the identical specfication, however, each has exactly one facet only  activated.
+Rows are data and model, and columns are aggregation, data points, marginals and density facets, respectively.
+
+![Schema in Lumen's UI](doc/img/facets.png)
+
  
 ### X-Axis and Y-Axis shelves revisited
  
@@ -198,3 +211,17 @@ This visualization shows sevaral facets for `age` over `fare` for all combinatio
 In visualization this kind of a plot is often referred to as 'small multiples'.
 
 ![Schema in Lumen's UI](doc/img/positional_shelves_revisited_04.png)
+
+---
+
+# Interaction
+
+In Lumen the mouse is the primary interaction device:
+
+You can 
+
+  * ... drag and drop variables of a model / attributes of the data between the various shelves in the Schema and the Specification.
+  * ... drag the edges of a visualization to resize it
+  * ... drag the title of a visualizatino to move it
+  * ... select areas in plots to zoom
+
