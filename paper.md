@@ -2,7 +2,7 @@
 title: 'Lumen: A software for the interactive visualization of probabilistic models together with data'
 
 tags:  
-  - Probabilistic Modeling
+  - Probabilistic Modelling
   - Model Criticism, Model Validation
   - Model Understanding  
   - Visual-Interactive Exploration
@@ -94,7 +94,7 @@ This separation follows a classic client-server architecture where *Lumen* is th
 For the standard usage scenario you would install both client and server locally on the same machine. 
 However, they can of course be separated and hosted/run on different machines across a network.
 
-*Lumen* is model-agnostic in the sense that it can be used with models of any class of probabilistic models as long as this model class implements an API in the *modelbase* back end. 
+*Lumen* is model-agnostic in the sense that it can be used with models of any class of probabilistic models as long as this model class implements the common, abstract API in the *modelbase* back end. 
 The API essentially requires that a model class 
 
  * contains only quantitative and categorical random variables, i.e. Lumen has no native support for images, time series, or vector-valued random variables, 
