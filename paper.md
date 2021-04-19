@@ -105,10 +105,9 @@ The API essentially requires that a model class
 In fact *Lumen* does not depend on any specificity of a particular class of models and we regard this genericity as one of *Lumens* major features. 
 Among the model classes that we have used *Lumen* with are Sum-Product-Networks [@Poon:2011; @Molina2019:SPFlow], Condional-Gaussian Distributions [@Olkin:1961:CG; @Nussbaum:2020:paper], Probabilistic Progams based on PyMC3 [@Salvatier:2016:PyMC3], and Kernel-Density-Estimators [@Parzen:1962:KDE; @SciPy:2020].
 
-# Acknowledgments
+# Acknowledgements
 
-We thank Jonas Aaron Gütter, Laines Schmalwasser, Julien Klaus and Christian Lengert for their contributions.
-We also thank Andreas Goral for his early and steady interest in trying out *Lumen* as well as the helpful feedback he provided.
+We thank Andreas Goral, Jonas Aaron Gütter, Laines Schmalwasser, Julien Klaus and Christian Lengert for their steady and patient interest in trying out Lumen, for their valuable feedback and our discussions, as well as for the features they contributed to Lumen.
 Philipp Lucas was partially supported by Stiftung der Deutschen Wirtschaft (sdw). 
 
 # References
