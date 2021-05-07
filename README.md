@@ -120,26 +120,19 @@ Just pull/download the lasted branch/version you'd like.
 ## Running it
 
 1. make sure the `modelbase` backend is running and hosting the models that you'd like to explore. 
-2. it's dead simple: Open `<path>/index.html` in your browser. 
+2. it's dead simple: Open `<path>/index.html` in your browser. If everything is fine you should now see a model dialog that lists the available models. Select one and start exploring it!
 
 Notes:
  * Using *chrome/chromium* as a browser is recommended, since it provides the best performance from our experience. 
 
 ---
 
-## Development Setup
-
-This is only for you, if you want to contribute to the project.
-
-1. Do the steps as described in the Setup section above.
-2. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
-3. Update npm (part of node-js): `sudo npm install -g npm`
-4. Install all npm-dependencies as provided by the projects `package.json`:
-    * run from `<path>`: `npm install`
-
----
-
 # Trouble Shooting
+
+If you have any trouble using `lumen`, need some additional explanation, or even just want to provide some feedback, please don't hesitate to contact us at [philipp.lucas@dlr.de](philipp.lucas@dlr.de).
+If you encounter any bugs you can also [submit an issue](https://github.com/lumen-org/lumen/issues/new/choose).
+
+## Typical Issues
 
 #### When open `lumen` in my browser I get the error message: "Could not load remote model from server!"
  
@@ -162,11 +155,26 @@ This is only for you, if you want to contribute to the project.
 
 ---
 
-## Contact
+# Contributing
+
+You wanna contribute? Awesome! Let's get in touch: [philipp.lucas@dlr.de](philipp.lucas@dlr.de) !
+
+### Development Setup
+
+This is only for you, if you want to contribute to the project.
+
+1. Do the steps as described in the Setup section above.
+2. Install [node-js](https://nodejs.org/en/download/). For questions refer to the [getting started guide](https://docs.npmjs.com/getting-started/what-is-npm).
+3. Update npm (part of node-js): `sudo npm install -g npm`
+4. Install all npm-dependencies as provided by the projects `package.json`:
+    * run from `<path>`: `npm install`
+---
+
+# Contact
 
 For any questions, feedback, bug reports, feature requests, spam, rants, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de)
 
-## Copyright and Licence
+# Copyright and Licence
 
 © 2016-2021 Philipp Lucas (philipp.lucas@dlr.de)
 
