@@ -8,15 +8,17 @@ Its main feature is the ability to rapidly and incrementally build flexible and 
 `lumen` aims to make a particular class of machine learning/statistical models, namely *probabilistic* models,  more easily accessible to humans. 
 A probabilistic model models a set of target variables by means of a probability density function.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of the target variables. 
-
 `lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous versions of the model or alternative models. 
+
+![`lumens` user interface displaying a variety of visualizatons of a probabilistic model on a socio-economic data set](/images/example.png)
 
 In particular `lumen`  lets you:
 
  * plot any marginals of your models. 
-Here, marginal means not just 1d but also higher dimensional marginals.
-This lets you understand your model by studying 'slices' of it. 
-We believe it helps you to fix model degrading artifacts that may indicate a problem in your model specification, model paramterization or possibly a bug in the machine learning algorithm of your model.
+Here, marginal means not just 1d but also higher dimensional marginals. 
+Studying multiple multi-variate 'slices' of a model may help to understand the interactions between the variables.
+We believe this also helps you to fix model degrading artifacts. 
+Such artifacts may indicate a problem in your model specification, model paramterization or possibly a bug in the machine learning algorithm of your model.
  * plot the model marginals together with data marginals. 
 This lets you directly check the models fit to data.
  * plot predictions of your model along side corresponding data aggregations. 
