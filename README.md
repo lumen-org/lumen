@@ -6,12 +6,11 @@ Its main feature is the ability to rapidly and incrementally build flexible and 
 `lumen` aims to make a particular class of machine learning/statistical models, namely *probabilistic* models,  more easily accessible to humans. 
 Such models model a set of target variables by means of a probability density function.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
-
-Note, that all the modelling and model querying is delegated to the [modelbase backend](https://github.com/lumen-org/modelbase).
+Note, that all model training and model querying is delegated to the [modelbase backend](https://github.com/lumen-org/modelbase).
 
 Building machine learning models is an inherently incremental task. 
 You start out with a simple model, check whether it seems right so far, and then make your model incremently more complex until it solves your modelling goal sufficiently well. 
-Here, `lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. 
+`lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. 
 
 In particular it lets you:
 
