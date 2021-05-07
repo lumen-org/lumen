@@ -66,7 +66,7 @@ This is not what `lumen` was built for originally, but regard it as your 'free l
 
 This explains how to install and configure `lumen` and its dependencies.
 
-Note that `lumen` is build on top of the modelbase back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data [@Lucas:2021:modelbase].
+Note that `lumen` is build on top of the modelbase back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data.
 
 ## Requirements
 
