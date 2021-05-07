@@ -1,18 +1,17 @@
-`lumen` is an interactive web-application for the visualization of probabilistic machine learning models. 
-Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both machine learning models and the data these models are trained on.
+# What is `lumen`?
 
-### Augmenting the process of building and exploring Probabilistic Models:
+`lumen` is an interactive web-application for the visualization and exploration of probabilistic machine learning models. 
+Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both probabilistic machine learning models and the data these models were trained on.
+
+# Using Lumen
 
 `lumen` aims to make a particular class of machine learning/statistical models, namely *probabilistic* models,  more easily accessible to humans. 
-Such models model a set of target variables by means of a probability density function.
-That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of values of the target variables. 
-Note, that all model training and model querying is delegated to the [modelbase backend](https://github.com/lumen-org/modelbase).
+A probabilistic model models a set of target variables by means of a probability density function.
+That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of the target variables. 
 
-Building machine learning models is an inherently incremental task. 
-You start out with a simple model, check whether it seems right so far, and then make your model incremently more complex until it solves your modelling goal sufficiently well. 
-`lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous or alternative models. 
+`lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous versions of the model or alternative models. 
 
-In particular it lets you:
+In particular `lumen`  lets you:
 
  * plot any marginals of your models. 
 Here, marginal means not just 1d but also higher dimensional marginals.
@@ -26,27 +25,54 @@ This lets you understand its predictive behaviour, and also compare it observed 
  * change visualizations by flexibly assigning variables/data attributes to visual channels.
  * create as many of these visualizations side by side on an virtually infinite canvas. 
 This lets you compare various stages of a model, compare different modelling approaches, and get a better overall understanding by combining many different visualizations of the same model.
- 
-### Using Lumen for data exploration only
 
-You don't do any Machine Learning but simply would like to conveniently browse and explore data? 
+## Augmenting Probabilistic Programming
+
+Probabilistic programming language (PPLs), such as PyMC3, BLOG, or Stan, provide a framework to define probabilistic models by explicitly declaring the likelihood of the observed data as a probability density function.
+The analyst typically starts with an exploration of the data.
+Based on insights gained from data exploration and on the analyst's domain knowledge, the analyst creates an initial simple model involving only some data.
+Subsequently, this model is iteratively made more complex until it meets the expert's goals.
+In particular, the model must be validated after each iteration.
+`lumen` supports this model building process by 
+(i) enabling visual-interactive data exploration, 
+(ii) supporting model validation by means of a visual comparison of data queries to semantically equivalent model queries, and 
+(iii) enabling a direct comparison of model iterates.
+
+## Model Debugging
+
+Even for a machine learning expert it may be hard to know whether a model has been trained on the data as expected. 
+Possible reasons for artifacts in a model include an inappropriate application of the machine learning method, implementation bugs in the machine learning method, and issues in the training data. 
+Direct visual inspection of the probabilistic model provides an approach to model debugging that enables the analyst to literally spot model artifacts that may cause degrading performance.
+Classical approaches to validation would rely on aggregating measures like information criterions or preditictive accuracy scores.
+
+## Education / Teaching
+
+By its intuitive visual representations of models, Lumen aims to promote understanding of the underlying modelling techniques.
+For instance, the effect of varying a parameter value for a modelling method on the probabilistic model can be observed visually rather than remaining an abstract description in a textbook.
+Similarily, the differences between models/model types can be visually illustrated by plotting them side by side.
+Also, probabilistic concepts such as conditioning or marginalization, which are often difficult to grasp, can be tried out interactively, providing immediate feedback.
+
+## Data-only exploration
+
+You don't do any Machine Learning but simply would like to conveniently browse, explore, and compare tabluar data? 
 `lumen` is the right place for you too!
-It can be used to easily browse, explore, and compare *tabluar* data.
-This is not what `lumen` was built for originally, but regard it as your 'free lunch' ;)
+This is not what `lumen` was built for originally, but regard it as your 'free lunch'.
 
 ---
 
-## Setup, Configuration and Running 
+# Installing `lumen`
 
-This explains how to get and configure `lumen` and its dependencies.
+This explains how to install and configure `lumen` and its dependencies.
 
-### Requirements
+Note that `lumen` is build on top of the modelbase back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data [@Lucas:2021:modelbase].
+
+## Requirements
 
 * `lumen` is a web application that requires access to a webservice instance of the Python3-based `modelbase` backend.
 `lumen` allows a user to interactively compile data/model queries and visualize the queries results. `modelbase` does the computation and actually answers the queries. 
 You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
 
-* `lumen` and `modelbase` need to be configured correctly with 'matching' settings. By default (both run locally on the same physical machie) this is the case and you do not need to change these settings:
+* `lumen` and `modelbase` need to be configured correctly with 'matching' settings. By default (both run locally on the same physical machine) this is the case and you do not need to change these settings:
   * hostname set in the configuration of `lumen` must match the actual hostname of `modelbase`.
   * port must match
   * protocol must match (http or https)
@@ -56,7 +82,7 @@ You can use the `modelbase` Python package to (1) train/create models from data,
 See the [documentation and introductory jupyter notebooks](https://github.com/lumen-org/modelbase) for more information. 
 Also, a number of example models are created during the setup process of `modelbase` for your convenience.
 
-### Setup
+## Setup
 
 1. Clone/download this repository into a folder `<path>` of your choice.
 2. Save these contents in a new text file with name `run.conf.js` at directory `<path>/js/`:
@@ -85,11 +111,11 @@ Also, a number of example models are created during the setup process of `modelb
           }
        });
 
-### Updating it
+## Updating it
 
 Just pull/download the lasted branch/version you'd like.
 
-### Running it
+## Running it
 
 1. make sure the `modelbase` backend is running and hosting the models that you'd like to explore. 
 2. it's dead simple: Open `<path>/index.html` in your browser. 
@@ -111,7 +137,7 @@ This is only for you, if you want to contribute to the project.
 
 ---
 
-### Trouble Shooting
+# Trouble Shooting
 
 #### When open `lumen` in my browser I get the error message: "Could not load remote model from server!"
  
@@ -134,11 +160,11 @@ This is only for you, if you want to contribute to the project.
 
 ---
 
-### Contact
+## Contact
 
 For any questions, feedback, bug reports, feature requests, spam, rants, etc please contact: [philipp.lucas@dlr.de](philipp.lucas@dlr.de)
 
-### Copyright and Licence
+## Copyright and Licence
 
 © 2016-2021 Philipp Lucas (philipp.lucas@dlr.de)
 
