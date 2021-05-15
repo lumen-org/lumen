@@ -8,7 +8,7 @@ Its main feature is the ability to rapidly and incrementally build flexible and 
 # Using Lumen
 
 `lumen` aims to make a particular class of machine learning/statistical models, namely *probabilistic* models,  more easily accessible to humans. 
-A probabilistic model models a set of target variables by means of a probability density function.
+A probabilistic model models a set of target variables by means of a probability distribution.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of the target variables. 
 `lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous versions of the model or alternative models. 
 
