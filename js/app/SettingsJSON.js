@@ -684,7 +684,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         width: 1.5,
       },
       size: {
-        min: 8, // HACK: used to be 8.
+        min: 8, 
         max: 40,
         def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]

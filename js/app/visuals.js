@@ -153,7 +153,7 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
     // create appropriate container for view on record content
     this.$visual = _createVisualRecordContainer(this);
 
-    // PAPER HACK / TODO for VAST 2020
+    // PAPER HACK
     // filter those with "wrong" names
     //if (this.content.name !== undefined && !['sex','income','eastwest','happiness','age','educ'].includes(this.content.name)) 
     //if (this.content.name !== undefined && this.content.name.includes("_")) 
