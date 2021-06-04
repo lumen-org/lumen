@@ -23,17 +23,17 @@ Note that the dashboard may hold many visualizations at once.
 
 # 01: Start Up Applications
 
- 1. Start the`modelbase` webservice by executing `webservice.py` of the `modelbase` backend.
+ 1. Start the`modelbase` web-service by executing `webservice.py` of the `modelbase` backend.
  2. Run `lumen` by opening the `index.html` in your browser (best is chrome-based). 
  You should see a list of available model (the models provided by the backend) as follows:
 
- ![`lumens` user interface](doc/img/walkthrough-01-startup.png)
+ ![walkthrough 01 - startup](doc/img/walkthrough-01-startup.png)
 
  3. Click on `mpg_cond_gauss` to load that model. 
  An empty specification and empty visualization is now shown and we can start to create our visualizations.
  However, lets first have a look at the Schema panel on the left:
 
-![`lumens` user interface](doc/img/walkthrough-02-schema.png)
+![walkthrough 02 - schema](doc/img/walkthrough-02-schema.png)
 
  As we can see the model contains a total of 7 random variables, and since we use a Conditional Gaussian (CG) model all of them are backed by observed data and all are 'distributed' that is model by the probabilistic model.
 
@@ -54,28 +54,28 @@ Let's have a look at the uni-variate marginal distributions of `mpg_highway`.
 To do so, we the variables onto the X-Axis shelf. 
 Since by default only data facets are activated, this results in a visualization of the data only. To also show model marginals, we check the respective  facet `model - marginals`.
 
-![`lumens` user interface](doc/img/walkthrough-03-marginals.png)
+![walkthrough 03 - marginals](doc/img/walkthrough-03-marginals.png)
 
 The visualizations shows that the data (grey) and the model (pink) fit quite neatly (for this marginal).
 In particular, the CG model succeeded in capturing the multi-model structure of the data (here two modes, that is local maxima, are visible).
 
 A CG model effective models the joint distribution over all variables (both quantitative and categorical) by fitting a multivariate Gaussian distribution for each combination of categorical values. 
 Hence, the CG distribution could help us to explain the structure of the data and potentially identify semantic clusters. 
-Here, the question is which of the categorical attributes are linked to the multimodality.
+Here, the question is which of the categorical attributes are linked to the multi-modality.
 
 We can simply try it out. Let's assign the categorical variable transmission to X-Axis too. 
 This creates a hierarchical axis and we get a marginal distribution for each of the values of transmission:
 
-![`lumens` user interface](doc/img/walkthrough-04-explaining_modality.png)
+![walkthrough 04 - modality](doc/img/walkthrough-04-explaining_modality.png)
 
-We can see that there is a strong correlation between transmission and displacement, as the three marginal plots, especially the one for manual transmision, are quite different. 
+We can see that there is a strong correlation between transmission and displacement, as the three marginal plots, especially the one for manual transmission, are quite different. 
 However, it does not yet explain the modality of the marginals.
 
 Hence, we also add the variable `cylinder` to our specification and drag in onto the Y-Axis shelf. 
 Also, we enable the facet `model - density` and `data - density` but disable the `data points` facet.
 This results in a table-like visualization: 
 
-![`lumens` user interface](doc/img/walkthrough-05-explaining_modality.png)
+![walkthrough 05 - modality](doc/img/walkthrough-05-explaining_modality.png)
 
 There is a number of interesting observations here:
 
@@ -90,7 +90,7 @@ Let's create a new plot (select the model in the toolbar -> Load Model -> Go!).
 This time we encode cylinder as color but plot two quantitative variables (`mpg_city` and `displacement`) on the positional channels.
 Also, enable the `data-aggregation` facet. It will indicate the average displacement and miles per gallon.
 
-![`lumens` user interface](doc/img/walkthrough-06-exploring_further.png)
+![walkthrough 06 - exploration](doc/img/walkthrough-06-exploring_further.png)
 
 Note that this is a visualization of the *data* only. 
 Yet, we see a very clustering according to the value of `cylinder`.
@@ -99,5 +99,5 @@ Let us activate the model facets for aggregation, marginals and density.
 The resulting visualization shows a very good fit of the models distribution (pink contour plot in the background) of `displacement` and `mpg_city` to the observed data (marks with white strokes).
 Additionally, the marks of the aggregation facets (marks with black stroke) are very close, confirming the good fit also on a higher level of aggregation.
 
-![`lumens` user interface](doc/img/walkthrough-07-exploring_further.png)
+![walkthrough 07 - exploration](doc/img/walkthrough-07-exploring_further.png)
 

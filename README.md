@@ -5,14 +5,14 @@
 `lumen` is an interactive web-application for the visualization and exploration of probabilistic machine learning models. 
 Its main feature is the ability to rapidly and incrementally build flexible and potentially complex visualizations of both probabilistic machine learning models and the data these models were trained on.
 
-# Using Lumen
+# Using `lumen`
 
 `lumen` aims to make a particular class of machine learning/statistical models, namely *probabilistic* models,  more easily accessible to humans. 
 A probabilistic model models a set of target variables by means of a probability distribution.
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of the target variables. 
 `lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous versions of the model or alternative models. 
 
-![`lumens` user interface displaying a variety of visualizatons of a probabilistic model on a socio-economic data set](/doc/img/example_raw_processed.png)
+![`lumens` user interface displaying a variety of visualizations of a probabilistic model on a socio-economic data set](/doc/img/example_raw_processed.png)
 
 In particular `lumen`  lets you:
 
@@ -20,7 +20,7 @@ In particular `lumen`  lets you:
 Here, marginal means not just 1d but also higher dimensional marginals. 
 Studying multiple multi-variate 'slices' of a model may help to understand the interactions between the variables.
 We believe this also helps you to fix model degrading artifacts. 
-Such artifacts may indicate a problem in your model specification, model paramterization or possibly a bug in the machine learning algorithm of your model.
+Such artifacts may indicate a problem in your model specification, model parameterization or possibly a bug in the machine learning algorithm of your model.
  * plot the model marginals together with data marginals. 
 This lets you directly check the models fit to data.
  * plot predictions of your model along side corresponding data aggregations. 
@@ -47,18 +47,18 @@ In particular, the model must be validated after each iteration.
 Even for a machine learning expert it may be hard to know whether a model has been trained on the data as expected. 
 Possible reasons for artifacts in a model include an inappropriate application of the machine learning method, implementation bugs in the machine learning method, and issues in the training data. 
 Direct visual inspection of the probabilistic model provides an approach to model debugging that enables the analyst to literally spot model artifacts that may cause degrading performance.
-Classical approaches to validation would rely on aggregating measures like information criterions or preditictive accuracy scores.
+Classical approaches to validation would rely on aggregating measures like information criterions or predictive accuracy scores.
 
 ## Education / Teaching
 
 By its intuitive visual representations of models, Lumen aims to promote understanding of the underlying modelling techniques.
 For instance, the effect of varying a parameter value for a modelling method on the probabilistic model can be observed visually rather than remaining an abstract description in a textbook.
-Similarily, the differences between models/model types can be visually illustrated by plotting them side by side.
+Similarly, the differences between models/model types can be visually illustrated by plotting them side by side.
 Also, probabilistic concepts such as conditioning or marginalization, which are often difficult to grasp, can be tried out interactively, providing immediate feedback.
 
 ## Data-only exploration
 
-You don't do any Machine Learning but simply would like to conveniently browse, explore, and compare tabluar data? 
+You don't do any Machine Learning but simply would like to conveniently browse, explore, and compare tabular data? 
 `lumen` is the right place for you too!
 This is not what `lumen` was built for originally, but regard it as your 'free lunch'.
 
@@ -68,13 +68,13 @@ This is not what `lumen` was built for originally, but regard it as your 'free l
 
 This explains how to install and configure `lumen` and its dependencies.
 
-Note that `lumen` is build on top of the modelbase back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data.
+Note that `lumen` is build on top of the `modelbase` back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data.
 
 ## Requirements
 
-* `lumen` is a web application that requires access to a webservice instance of the Python3-based `modelbase` backend.
+* `lumen` is a web application that requires access to a web-service instance of the Python3-based `modelbase` backend.
 `lumen` allows a user to interactively compile data/model queries and visualize the queries results. `modelbase` does the computation and actually answers the queries. 
-You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a webservice.
+You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you also find information on how to set it up and run it as a web-service.
 
 * `lumen` and `modelbase` need to be configured correctly with 'matching' settings. By default (both run locally on the same physical machine) this is the case and you do not need to change these settings:
   * hostname set in the configuration of `lumen` must match the actual hostname of `modelbase`.
@@ -82,7 +82,7 @@ You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you
   * protocol must match (http or https)
 
 * `lumen` allows you to explore the models and data that are hosted by the `modelbase` backend. 
-You can use the `modelbase` Python package to (1) train/create models from data, and then (2) host them by an instance of the `modelbase` webservice.
+You can use the `modelbase` Python package to (1) train/create models from data, and then (2) host them by an instance of the `modelbase` web-service.
 See the [documentation and introductory jupyter notebooks](https://github.com/lumen-org/modelbase) for more information. 
 Also, a number of example models are created during the setup process of `modelbase` for your convenience.
 
@@ -141,13 +141,13 @@ If you encounter any bugs you can also [submit an issue](https://github.com/lume
  1. Confirm that the backend server actually running
  2. Check the developer console log of the browser where you are loading the front-end. If it shows something like:
  
-     ```Failed to load http://127.0.0.1:5000/webservice: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Origin 'null' is therefore not allowed access.```
+     ```Failed to load http://127.0.0.1:5000/web-service: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Origin 'null' is therefore not allowed access.```
  
  Then your probably run into some CORS issue because you serve the file directly from the file system, instead from a webserver running locally. See here for the issues:
    * [problem description: answer 1, point 2 ](https://stackoverflow.com/questions/3595515/xmlhttprequest-error-origin-null-is-not-allowed-by-access-control-allow-origin)
  
  Solutions:
-   * serve it from a local webservice (preferred)
+   * serve it from a local web-service (preferred)
    * [disable CORS control in chrome](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome) (kind of hacky)
  
 

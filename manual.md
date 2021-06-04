@@ -115,7 +115,7 @@ For instance, it shows the textual description associated to it and allows you t
 ## Config
 
 The Config button toggles  a panel that shows advanced configurations to change colors, opacity, strokes and much more.
-While it is safe to use, it is more of a developer tool due to its complexity and mostly missing detailes documentation.
+While it is safe to use, it is more of a developer tool due to its complexity and mostly missing details documentation.
 
 ---
 
@@ -125,10 +125,10 @@ The schema lists all variables of the model's variables / data attributes.
 It groups the variables by their scale type, here into 'quantitative' and 'categorical'.
 Additionally, it provides information whether it is a observed or latent variable, and whether it is a distributed (a variate, a variable modeled by model) or a independent variable (a covariate, a variate that just serves as a required input to the model).
 
-![Schema in Lumen's UI](doc/img/schema.png)
+![Schema panel of Lumen's UI](doc/img/schema.png)
 
 In this example, the schema lists the variables for a model with name 'Iris_cond_gauss'. 
-The model has five variables, four of them quantitative (`sepal_lenght`, `sepal_width`,`petal_lenght`,`petal_width`) and one categorical (`species`).
+The model has five variables, four of them quantitative (`sepal_length`, `sepal_width`,`petal_length`,`petal_width`) and one categorical (`species`).
 As the the model does not have any latent (non-observed) variables, all variables are labelled as 'observed'.
 Also, all of the listed variables are actually modelled by the model, hence they have the label 'distributed'. 
 
@@ -166,7 +166,7 @@ Assigning a variable here, will cause the visualization to use color/shape/size 
 
 Have a look at the following 5-dimensional (!) visualization:
 
-![Schema in Lumen's UI](doc/img/advanced_example.png)
+![Advanced Example for Specification](doc/img/advanced_example.png)
 
 It encodes all of the information in the iris data. 
 Obviously, some information is easier to recognize than other, but that's a trade-off we always have to deal with.
@@ -178,7 +178,7 @@ It allows you to restrict the values that variables/have may have.
 After assigning a variable to the shelf, you can click on the shelf item to open a modal dialog.
 Here, you can restrict the interval (for quantitative) and set (for categorical) of allowed values. 
 
-![Schema in Lumen's UI](doc/img/filter.png)
+![Filter Shelf in Detail](doc/img/filter.png)
 
 In the shown example the value of `petal_width` is restricted to values small than 1.85 (see the modal dialog), and the values for `species` are restricted to 'setosa' and 'virginica' only excluding 'versicolor' (not shown explicitly, but note that green *species* field in the filter shelf). 
 As you can see in the visualization, under these conditions, 'setosa'  and 'virginica' can be separated almost perfectly just using the single variable `sepal_length`.
@@ -219,7 +219,7 @@ The screenshot below shows an arrangement of 2x3 visualizations.
 
 To change wether a variable is grouped by or aggregated/predicted simply click on the tiny icon that shows up on the right when hovering on a variable in a shelf.
 
-![Schema in Lumen's UI](doc/img/roles_of_variables.png)
+![Roles of Variables in Lumen](doc/img/roles_of_variables.png)
 
 ## Visual Defaults
 
@@ -242,7 +242,7 @@ Note that many of the defaults can be overridden by using the specification.
 Facets act as 'semantic layers', that is, they represent different aspects.
 *Lumen* provides eight facets organizes in two columns and four rows:
 
-### Columms
+### Columns
  
  * model column: facets here represent aspects of the _model_
  * data column: facets here represent aspects of the _data_ that the model was trained on
@@ -258,7 +258,7 @@ For an illustration, see this 2 by 4 arrangement of eight individual visualizati
 All have the identical specification, however, each has exactly one facet only  activated.
 Rows are data and model, and columns are aggregation, data points, marginals and density facets, respectively.
 
-![Schema in Lumen's UI](doc/img/facets.png)
+![Semantic Facets](doc/img/facets.png)
 
  
 ## Tabular visualizations: X-Axis and Y-Axis shelves revisited
@@ -269,7 +269,7 @@ This allows you to create 'tabular arrangements' of plots within a single visual
 
 Let's have a look at an example:
 
-![Schema in Lumen's UI](doc/img/positional_shelves_revisited_01.png)
+![Positional Shelves Revisited 01](doc/img/positional_shelves_revisited_01.png)
 
 For the left visualization left we created a scatter plot of model samples drawn from the probabilistic model by dropping `sepal_length` on the x-axis shelf and `petal_length` on the y-axis shelf.
 For the right visualization, we cloned the visualization, dragged the `species` variable from the schema, and dropped it on the x-axis shelf. 
@@ -281,7 +281,7 @@ Instead of a creating a hierarchy you can also just 'add' (concatenate) another 
 For the following visualization we dropped `petal_width` to the y-axis shelf (and resized the plot).
 Notice how there is _no_ hierarchical axis and instead `petal_width` is just added next to `petal_length`.
 
-![Schema in Lumen's UI](doc/img/positional_shelves_revisited_02.png)
+![Positional Shelves Revisited 02](doc/img/positional_shelves_revisited_02.png)
 
 How do you specify whether to create an hierarchical axis or just concatenate?
 Here, we reuse the assignment of variables usage to 'aggregating' or 'grouping', see the Section *Aggregating and Grouping of Variables*.
@@ -292,12 +292,12 @@ There is no explicit limit on how many variables you may add to the positional s
 Here is two more examples that illustrate useful applications.
 This visualization contains all data and model marginals of the `iris_cond_gauss` model in one visualization:
 
-![Schema in Lumen's UI](doc/img/positional_shelves_revisited_03.png)
+![Positional Shelves Revisited 03](doc/img/positional_shelves_revisited_03.png)
 
-This visualization shows sevaral facets for `age` over `fare` for all combinations of the four variables `sex`, `embarked`, `passanger class(Pclass)`, and `Survived`. 
+This visualization shows several facets for `age` over `fare` for all combinations of the four variables `sex`, `embarked`, `passenger class(Pclass)`, and `Survived`. 
 In visualization this kind of a plot is often referred to as 'small multiples'.
 
-![Schema in Lumen's UI](doc/img/positional_shelves_revisited_04.png)
+![Positional Shelves Revisited 04](doc/img/positional_shelves_revisited_04.png)
 
 ---
 
@@ -314,7 +314,7 @@ Anyway, here is a list of what you can do:
 * reorder variables within a shelf by dragging and dropping them
 * open modal dialog to further configure a variable usage in the specification by clicking on it
 ## Facets
-* enable and disable a facet by checking or unchecking it in the specification panel
+* enable and disable a facet by checking or un-checking it in the specification panel
 ## Handling Visualizations in the Dashboard
 * resize visualizations by dragging the edges of it
 * move visualization on the Dashboard by dragging the background of a visualization
