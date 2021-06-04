@@ -96,7 +96,6 @@ ENV/
 .Rhistory
 
 node_modules/
-doc/
 
 # ignore Intellij stuff
 *.iml

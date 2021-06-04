@@ -684,7 +684,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         width: 1.5,
       },
       size: {
-        min: 8, // HACK: used to be 8.
+        min: 8, 
         max: 40,
         def: 12,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
@@ -858,7 +858,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "main": {
         type: "object",
         //format: "grid",
-        properties: {
+        properties: {          
           "background": {
             type: "object",
             format: "grid",
@@ -883,7 +883,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "zerolinecolor": {type: "string", format: "color"},
             }
           },
-          "label_style": {type: "string"},
           "text": {
             type: "object",
             format: "grid",
@@ -892,7 +891,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "color": {type: "string", format: "color"},
               "size": {type: "integer"},
             }
-          }
+          },
+          "label_style": {type: "string"},
+          "title": {type: "boolean"},
         }
       },
       "marginal": {
@@ -1017,6 +1018,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // },
     },
     main: {
+      title: {
+        show: true,
+      },
       background: {
         fill: 'white', //unused
       },
@@ -1226,7 +1230,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         enabled: false && (c.meta.activity_logging_mode !== "disabled"), // note: always keep the latter part, the former may change to true and false and back...
       },
       details: {
-        enabled: true,  // enable or disable the details view
+        enabled: false,  // enable or disable the details view
       },
       posteriorPredictiveChecks: {
         enabled: false,  // enable or disable the ppc

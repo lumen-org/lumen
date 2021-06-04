@@ -266,22 +266,22 @@ define(['lib/logger', 'lib/d3-collection', 'd3', './PQL', './VisMEL2PQL', './Vis
                         // 4. run this query and return promise to its result
                         promise = promise.then(
                             () => _runAndaddRTtoCollection(model, pql, vismel, idx2fu, fu2idx, collection, rIdx, cIdx, facetName, xOrY))
-                        // .then(
-                        // tbl => {
-                        //   // TODO: Hack for Paper: simulate correct scaling of model probability queries
-                        //   let nester = d3c.nest();
-                        //   nester.key(e => e[0]);
-                        //   for (let _key of ["$model", "$data"]) {
-                        //     let probs = nester.map(tbl)[_key];
-                        //     if (probs != undefined) {
-                        //       let prob_sum = probs.reduce((s, e) => s + e[2], 0);
-                        //       probs.map(e => e[2] = e[2] / prob_sum);
-                        //     }
-                        //   }
-                        //   // rerun attachExtent
-                        //   _attachExtent(tbl);
-                        //   return tbl;
-                        // });
+                        .then(
+                        tbl => {
+                          // TODO: Hack for Paper: simulate correct scaling of model probability queries
+                          let nester = d3c.nest();
+                          nester.key(e => e[0]);
+                          for (let _key of ["$model", "$data"]) {
+                            let probs = nester.map(tbl)[_key];
+                            if (probs != undefined) {
+                              let prob_sum = probs.reduce((s, e) => s + e[2], 0);
+                              probs.map(e => e[2] = e[2] / prob_sum);
+                            }
+                          }
+                          // rerun attachExtent
+                          _attachExtent(tbl);
+                          return tbl;
+                        });
                     } catch (e) {
                         if (e instanceof vismel2pql.ConversionError || e instanceof V4T.ConversionError)
                             promise = Promise.resolve(undefined);
