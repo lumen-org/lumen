@@ -12,6 +12,12 @@ A probabilistic model models a set of target variables by means of a probability
 That is, different to many classic ML methods which predict a particular value of the target variable(s), probabilistic models instead capture the distribution of the target variables. 
 `lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous versions of the model or alternative models. 
 
+## Manual
+A manual-style description of features and interactions of `lumen` is available ![here](/doc/manual.md).
+
+## Walk-Through
+A walk-through-style introduction to `lumen` is available [here](/doc/walkthrough.md). It demonstrates some of the feature for exploration of probabilistic models in `lumen`.
+
 ![`lumens` user interface displaying a variety of visualizations of a probabilistic model on a socio-economic data set](/doc/img/example_raw_processed.png)
 
 In particular `lumen`  lets you:
