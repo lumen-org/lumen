@@ -858,7 +858,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "main": {
         type: "object",
         //format: "grid",
-        properties: {
+        properties: {          
           "background": {
             type: "object",
             format: "grid",
@@ -883,7 +883,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "zerolinecolor": {type: "string", format: "color"},
             }
           },
-          "label_style": {type: "string"},
           "text": {
             type: "object",
             format: "grid",
@@ -892,7 +891,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "color": {type: "string", format: "color"},
               "size": {type: "integer"},
             }
-          }
+          },
+          "label_style": {type: "string"},
+          "title": {type: "boolean"},
         }
       },
       "marginal": {
@@ -1017,6 +1018,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // },
     },
     main: {
+      title: {
+        show: true,
+      },
       background: {
         fill: 'white', //unused
       },

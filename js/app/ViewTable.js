@@ -1073,8 +1073,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
 
       // add 'global' layout options
       Object.assign(layout, {
-        //title: "",
-        title: vismel.sources[0].name,
+        title: config.plots.main.title ? vismel.sources[0].name : "", 
         barmode: 'group',
         bargroupgap: 0.05,
         margin: config.plots.layout.margin,
