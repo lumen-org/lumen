@@ -13,12 +13,12 @@ That is, different to many classic ML methods which predict a particular value o
 `lumen` lets you 'see' your model, understand how it performs, where it 'fails', and compare this to previous versions of the model or alternative models. 
 
 ## Manual
-A manual-style description of features and interactions of `lumen` is available ![here](/doc/manual.md).
+A manual-style description of the UI, the visual encodings, `lumens` usage, its features, and available interactions is available [here](doc/manual.md).
 
 ## Walk-Through
-A walk-through-style introduction to `lumen` is available [here](/doc/walkthrough.md). It demonstrates some of the feature for exploration of probabilistic models in `lumen`.
+A walk-through-style introduction to `lumen` is available [here](doc/walkthrough.md). It demonstrates some of the feature for exploration of probabilistic models in `lumen`.
 
-![`lumens` user interface displaying a variety of visualizations of a probabilistic model on a socio-economic data set](/doc/img/example_raw_processed.png)
+![`lumens` user interface displaying a variety of visualizations of a probabilistic model on a socio-economic data set](doc/img/example_raw_processed.png)
 
 In particular `lumen`  lets you:
 
@@ -74,7 +74,7 @@ This is not what `lumen` was built for originally, but regard it as your 'free l
 
 This explains how to install and configure `lumen` and its dependencies.
 
-Note that `lumen` is build on top of the `modelbase` back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data.
+Note that `lumen` is build on top of the `modelbase` [back-end](https://github.com/lumen-org/modelbase), which provides a SQL-like interface for querying models and its data.
 
 ## Requirements
 
@@ -89,7 +89,7 @@ You can get `modelbase` [here](https://github.com/lumen-org/modelbase) where you
 
 * `lumen` allows you to explore the models and data that are hosted by the `modelbase` backend. 
 You can use the `modelbase` Python package to (1) train/create models from data, and then (2) host them by an instance of the `modelbase` web-service.
-See the [documentation and introductory jupyter notebooks](https://github.com/lumen-org/modelbase) for more information. 
+See the [documentation and introductory jupyter notebooks](https://github.com/lumen-org/modelbase) in the `doc` folder for more information. 
 Also, a number of example models are created during the setup process of `modelbase` for your convenience.
 
 ## Setup
