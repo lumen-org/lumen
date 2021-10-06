@@ -322,6 +322,12 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
         mapper.dataMarginalColor = MapperGen.marginalColor(pvismel, 'training data');
       }
 
+      // additional opacity
+      let addOpacity = (p2dRT !== undefined || data2dRT !== undefined) ?
+      config.tweaks['additional opacity'] :
+      0;
+      mapper.sampleAdditionalOpacity = addOpacity;
+
       // if (testData1dRT !== undefined) {
       //   let pvismel = ('x' in testData1dRT ? testData1dRT.x : testData1dRT.y).vismel;
       //   mapper.testDataMarginalColor = MapperGen.marginalColor(pvismel, 'test data');
@@ -696,7 +702,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
     function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout) {
       // build up helper variables needed later and to check if we are in the quant-categorical case     
      if (rt === undefined)
-        return
+      return;
 
       let fu = {x: rt.vismel.layout.cols[0], y: rt.vismel.layout.rows[0]},
         catXY = PQL.hasDiscreteYield(fu.x) ? 'x' : (PQL.hasDiscreteYield(fu.y) ? 'y' : undefined),
@@ -719,7 +725,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
           pIdx = rt.fu2idx.get(pFu),
           pExtent = rt.extent[pIdx];
 
-        // build additional axes along categorial dimension, i.e. the axes that will encode density
+        // build additional axes along categorical dimension, i.e. the axes that will encode density
         // need as many axis as there is categories!
         for (let i = 0; i < n; ++i) {
           const r = 2.0; // sets position of axis
@@ -731,7 +737,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
 
           // set axis labels and tick marks
           Object.assign(axis, getRangeAndTickMarks(pExtent, catXY));
-          //axis.showticklabels = false;
+          axis.showticklabels = config.map.biDensity.biqc.showticklabels;
           //axis.tickcolor
           //axis.ticklen = -210;
           let cd = config.colors.density;

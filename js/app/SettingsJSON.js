@@ -74,8 +74,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       greys: d3chromatic.schemeGreys[9],
       density_greys_old: makeDensityScale(d3chromatic.schemeGreys[9], 0),
       density_pinks_old: makeDensityScale(d3chromatic.schemeRdPu[9], 0),
-      density_greys: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateGreys(i))),     
-      density_pinks: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateRdPu(i))),      
+      density_greys_cut: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateGreys(i))),     
+      density_pinks_cut: makeDensityScale(d3.range(0.2,1.1,0.1).map(i => d3chromatic.interpolateRdPu(i))),      
+      density_greys: makeDensityScale(d3.range(0,1.1,0.1).map(i => d3chromatic.interpolateGreys(i))),     
+      //density_pinks: makeDensityScale(d3.range(0,1.1,0.1).map(i => d3chromatic.interpolateRdPu(i))),      
+      density_pinks: makeDensityScale( 
+        ['rgb(255, 255, 255)'].concat(d3.range(0,1.05,0.05).map(i => d3chromatic.interpolateRdPu(i))) ),
       oranges: d3chromatic.schemeOranges[9],
       reds: d3chromatic.schemeReds[9],
       rdBu: d3chromatic.schemeRdBu[11],
@@ -103,12 +107,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "hideAggregations": {type: "boolean"},
       "hideAccuMarginals": {type: "boolean"},
       "opacity": {type: "number"},
+      "additional opacity": {type: "number"},
       "levels": {type: "number"},
       "resolution_1d": {type: "integer"},
       "resolution_2d": {type: "integer"},
       "empBinWidth": {type: "number"},
       "kdeBandwidth": {type: "number"},
       "number of samples": {type: "integer"},
+      "data_point_limit": {type: "integer"},      
       "splitCnts": {
         type: "object",
         format: "grid",
@@ -145,7 +151,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "fill opacity": {type: "number"},
         }
       },
-
       "data local prediction": {
         type: "object",
         format: "grid",
@@ -155,8 +160,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "point percentage": {type: "integer"},
           "category": {type: "string"},
         }
-      },
-      "data_point_limit": {type: "integer"},
+      },      
     },
   };
 
@@ -168,23 +172,25 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     resolution_2d: 15,
     kdeBandwidth: 0.1,
     empBinWidth: 1,
-    opacity: 0.5,
+    opacity: 0.35,
+    "additional opacity": 0.25,
     levels: 15,
     "number of samples": 200,
+    data_point_limit: 2000,
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches
       aggregation: 15,
-    },
+    },    
     data: {
-      "stroke color": greys(0.05),
+      "stroke color": greys(0.00),
       "stroke width": 1,
-      "fill opacity": 0.30,
+      "fill opacity": 0.50,
     },
     prediction: {
-      "stroke color": greys(0.95),
+      "stroke color": greys(1.00),
       "stroke width": 1.5,
-      "fill opacity": 1,
+      "fill opacity": 0.9,
     },
     "data local prediction": {
       "point number maximum": 200,
@@ -192,7 +198,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "point percentage target": 5,
       "data category": "training data", // or "training data" or "test data"
     },
-    data_point_limit: 2000,
   };
   tweaksInitial.splitCnts.density = tweaksInitial.resolution_1d;
 
@@ -281,7 +286,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   };
 
   let shapesInitial= {
-      model:  'square',
+      "model":  'square',
       "training data": 'circle',
       "test data": 'cross',
   };
@@ -302,19 +307,15 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
     density: {
       adapt_to_color_usage: true,
-
       //primary_single: greys(0.7),
       //primary_scale_Enum: "density_greys", // todo: debug
       //primary_single: d3color.hsl(d3chromatic.schemeDark2[3]).brighter(3).rgb().toString(),
       primary_single: d3chromatic.schemeDark2[3],
       primary_scale_Enum: "density_greys", // todo: debug
-
       secondary_single: c2h(d3chromatic.interpolateBlues(0.7)),
       secondary_scale_Enum: "density_blues",
       //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
     },
-
-
 
     // not used at the moment
     // marginal: {
@@ -613,7 +614,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             type: "object", format: "grid",
             properties: {
               "width": {type: "number"},
-              "coloring": {type: "string"}, // possible values are: "fill" | "heatmap" | "lines"
+              "coloring": {type: "string"}, // possible values are: "area" | "lines"
               "levels": {type: "integer", watch: {_levels: "tweaks.levels"}, template: "{{_levels}}"},
               "opacity": {type: "number"}, // opacity of the contour trace
             },
@@ -626,6 +627,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "fill": {type: "boolean"},
               "fillopacity": {type: "number"}
             }
+          },
+          biqc: {
+            type: "object", format: "grid",
+            properties: {
+              "showticklabels": {type: "boolean"}
+            }            
           },
           // TODO: make subgroup and  format: "grid",
           // "colorscale_Enum": { TODO: link to colors.density. ... },
@@ -797,10 +804,14 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       },
 
       contour: {
-        width: 3, // set to 3 for non-filled lines
+        width: 0.1, // set to 3 for non-filled lines
         levels: tweaksInitial.levels, // TODO: watches!
-        coloring: "lines", // possible values are: "fill" | "heatmap" | "lines"
+        coloring: "area", // possible values are: "fill" | "heatmap" | "lines"
         opacity: 0.5,
+      },
+
+      biqc: {
+        showticklabels: false,
       },
 
       colorscale_Enum: colorsInitial.density.scale_Enum, // color scale to use for heat maps / contour plots  // TODO: watches!
@@ -1019,7 +1030,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     },
     main: {
       title: {
-        show: true,
+        show: false,
       },
       background: {
         fill: 'white', //unused

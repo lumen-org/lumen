@@ -32,7 +32,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
     function makeOpaque(hexColorString, opacity) {
       let clr = d3.rgb(hexColorString);
-      return "rgba(" + clr.r + "," + clr.g + "," + clr.b + "," + opacity + ")"
+      return "rgba(" + clr.r + "," + clr.g + "," + clr.b + "," + opacity + ")";
     }
 
     /**
@@ -315,7 +315,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           y: selectColumn(data, fu2idx.get(yfu)),
           xaxis: axisId.x,
           yaxis: axisId.y,
-          opacity: cfg.fill.opacity,
+          opacity: cfg.fill.opacity + mapper.sampleAdditionalOpacity,
           marker: {
             color: applyMap(data, color_mapper , aest.color.fu, fu2idx),
             size: applyMap(data, size_mapper, aest.size.fu, fu2idx),
@@ -898,27 +898,30 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         xfu = vismel.layout.cols[0],
         yfu = vismel.layout.rows[0],
         cfg;
-
+      
       if (mode === 'training data') {
         cfg = c.map.sampleMarker;
         mapper = {
           fillColor: mapper.dataFillColor,
           shape: mapper.dataShape,
           size: mapper.samplesSize,
+          opacity: cfg.fill.opacity + mapper.sampleAdditionalOpacity,
         };
       } else if (mode === 'test data') {
         cfg = c.map.testDataMarker;
         mapper = {
           fillColor: mapper.testDataFillColor,
           shape: mapper.testDataShape,
-          size: mapper.samplesSize
+          size: mapper.samplesSize,
+          opacity: cfg.fill.opacity + mapper.sampleAdditionalOpacity,
         };
       } else if (mode === 'model samples') {
         cfg = c.map.modelSampleMarker;
         mapper = {
           fillColor: mapper.modelSampleFillColor,
           shape: mapper.modelSampleShape,
-          size: mapper.modelSampleSize
+          size: mapper.modelSampleSize,
+          opacity: cfg.fill.opacity + mapper.sampleAdditionalOpacity,
         };
       } else {
         throw RangeError("invalid mode: " + mode.toString());
@@ -934,14 +937,13 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         x: selectColumn(rt, xIdx),
         y: selectColumn(rt, yIdx),
         xaxis: axisId.x,
-        yaxis: axisId.y,
-        // opacity: cfg.fill.opacity,
+        yaxis: axisId.y,    
         hoverinfo: "text",
         text: rt.formatter(rt),
       };
       trace.marker = {
         color: applyMap(rt, mapper.fillColor, aest.color.fu, fu2idx),
-        opacity: cfg.fill.opacity,
+        opacity: mapper.opacity,
         size: applyMap(rt, mapper.size, aest.size.fu, fu2idx),
         sizemode: 'diameter', // 'area' or 'diameter'
         symbol: applyMap(rt, mapper.shape, aest.shape.fu, fu2idx),
