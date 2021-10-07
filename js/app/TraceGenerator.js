@@ -645,8 +645,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         colorIdx = rt.fu2idx.get(colorFu);
 
       // EUROVIS2020: take square root of density values
-      let zdata = selectColumn(rt, colorIdx).map(Math.sqrt),
-      // let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
+      //let zdata = selectColumn(rt, colorIdx).map(Math.sqrt),
+      let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
         ztext = zdata.map(c.map.biDensity.labelFormatter);
       
       let traces = [];
@@ -694,8 +694,8 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           zauto: false,
           zmin: 0,
           // zmax: zmax,          
-          //zmax: colorFu.extent[1], EUROVIS2020
-          zmax: Math.sqrt(colorFu.extent[1]),
+          zmax: colorFu.extent[1], 
+          //zmax: Math.sqrt(colorFu.extent[1]), // EUROVIS2020
         };
 
       if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {
