@@ -60,6 +60,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     return obj;
   }
 
+  // https://plot.ly/javascript/reference/#scatterternary-marker-symbol
+  let shapesEnum = ['circle',  'cross', 'square', 'x', 'diamond', 'star', 'triangle-up', 'triangle-down', 'triangle-left', 'triangle-right'];
 
   /**
    * An enumeration of all available color schemes.
@@ -285,6 +287,17 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     }
   };
 
+  let shapesSchema = {
+    type: "object",
+    //title: "shapes",
+    properties: {
+      //'square','circle', 'cross'
+      "model": {type: "string", enum: shapesEnum},
+      "training data": {type: "string", enum: shapesEnum},
+      "test data": {type: "string", enum: shapesEnum},
+    },
+  }
+
   let shapesInitial= {
       "model":  'square',
       "training data": 'circle',
@@ -444,8 +457,9 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "stroke": {
             type: "object", format: "grid",
             properties: {
-              "color": {type: "string", format: "color"},
               "width": {type: "number"},
+              "color": {type: "string", format: "color"},              
+              "color prediction": {type: "string", format: "color"},
             }
           },
           "size": {
@@ -461,12 +475,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             properties: {
               "color": {type: "string", format: "color"},
             }
-          }
+          },
+          "shape": {
+            type: "object",
+            properties: {
+              "def": {type: "string", enum: shapesEnum},
+            },
+          },
         }
       },
       "sampleMarker": {
         type: "object",
         properties: {
+          "maxDisplayed": {type: "integer"},
           "size": {
             type: "object", format: "grid",
             properties: {
@@ -489,7 +510,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               opacity: {type: "number"},
             }
           },
-          "maxDisplayed": {type: "integer"},
+          "shape": {
+            type: "object",
+            properties: {
+              "def": {type: "string", enum: shapesEnum},
+            },
+          },          
         }
       },
       "modelSampleMarker": {
@@ -515,6 +541,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             properties: {
               "def": {type: "string", format: "color", watch: {_single: "colors.modelSamples.single"}, template: "{{_single}}"},
               opacity: {type: "number"},
+            },
+          },
+          "shape": {
+            type: "object",
+            properties: {
+              "def": {type: "string", enum: shapesEnum},
             },
           },
         }
@@ -544,6 +576,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               opacity: {type: "number"}
             },
           },
+          "shape": {
+            type: "object",
+            properties: {
+              "def": {type: "string", enum: shapesEnum},
+            },
+          },    
         }
       },
       "predictionOffset": {
@@ -610,6 +648,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "biDensity": {
         type: "object",
         properties: {
+          "colorscale_Enum": {type: "string", enum: colorscalesKeys}, // TODO: link to colors.density. ... },
+          "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
+          "labelFormatterString": {type: "string"},
+          "backgroundHeatMap": {type: "boolean"},
           contour: {
             type: "object", format: "grid",
             properties: {
@@ -623,7 +665,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             type: "object", format: "grid",
             properties: {
               "width": {type: "number"},
-              // "color": { TODO: link to colors.density. ... },
+              "color": {type: "string", format: "color"}, // TODO: link to colors.density. ... 
+              "shape": {type: "string"},
               "fill": {type: "boolean"},
               "fillopacity": {type: "number"}
             }
@@ -634,12 +677,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "showticklabels": {type: "boolean"}
             }            
           },
-          // TODO: make subgroup and  format: "grid",
-          // "colorscale_Enum": { TODO: link to colors.density. ... },
-
-          "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
-          "labelFormatterString": {type: "string"},
-          "backgroundHeatMap": {type: "boolean"},
         }
       },
       "ppc": {
@@ -687,7 +724,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       stroke: {
         color: tweaksInitial.prediction["stroke color"],
         "color prediction": tweaksInitial.prediction["stroke color"],
-        // color: x,
         width: 1.5,
       },
       size: {
@@ -868,8 +904,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       },
       "main": {
         type: "object",
-        //format: "grid",
-        properties: {          
+        properties: {    
+          "title": {type: "boolean"},     
           "background": {
             type: "object",
             format: "grid",
@@ -903,8 +939,16 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
               "size": {type: "integer"},
             }
           },
-          "label_style": {type: "string"},
-          "title": {type: "boolean"},
+          "label": {
+            type: "object",
+            format: "grid",
+            properties: {
+              "family": {type: "string"},
+              "size": {type: "integer"},
+              "color": {type: "string", format: "color"},
+              "style": {type: "string"},              
+            }
+          },
         }
       },
       "marginal": {
@@ -934,7 +978,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
             }
           },
           "label_style": {type: "string"},
-          "text": {
+          //"text": {
+          "label": {
             type: "object",
             format: "grid",
             properties: {
@@ -1001,18 +1046,6 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
 
   let plotsInitial = {
     axis: {
-      // title_style: "em",
-      // title_font: {
-      //   family: "Droid Sans",
-      //   size: 16,
-      //   color: "#b3b3b3",
-      // },
-      // label_style: "",
-      // label_font: {
-      //   family: "Droid Sans",
-      //   size: 11,
-      //   color: "#232323",
-      // },
       title_style: "",
       title_font: {
         family: "Roboto Slab, serif",
@@ -1029,9 +1062,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // },
     },
     main: {
-      title: {
-        show: false,
-      },
+      title: false,
       background: {
         fill: 'white', //unused
       },
@@ -1043,12 +1074,12 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         width: 1,
         zerolinewidth: 1.5,
         zerolinecolor: greys(0.3),
-      },
-      label_style: "",
+      },      
       label: {
         family: "Roboto, sans-serif",
         color: greys(0.6),
         size: 13,
+        style: "",
       }
     },
 
@@ -1059,16 +1090,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       grid: {
         color: greys(0.3),
       },
-      // prepaper
-      // axis: {
-      //   color: greys(0.4),
-      //   width: 2,
-      // },
       axis: {
         color: greys(0.6),
         width: 1,
       },
-      test_style: "",
       label: {
         color: greys(0.5),
         size: 10,
@@ -1156,6 +1181,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "tweaks": {"$ref": "#/definitions/tweaks"},
       "map": {"$ref": "#/definitions/map"},
       "colors": {"$ref": "#/definitions/colors"},
+      "shapes": {"$ref": "#/definitions/shapes"},
       "plots": {"$ref": "#/definitions/plots"},
       "widgets": {"$ref": "#/definitions/widgets"},
     },
@@ -1163,6 +1189,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "tweaks": tweaksSchema,
       "map": mapSchema,
       "colors": colorsSchema,
+      "shapes": shapesSchema,
       "plots": plotsSchema,
       "widgets": {
         type: "object",
@@ -1175,8 +1202,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
   };
 
   let jsonInitial = {
-    map: mapInitial,
     tweaks: tweaksInitial,
+    map: mapInitial,    
     colors: colorsInitial,
     shapes: shapesInitial,
     plots: plotsInitial,
@@ -1206,7 +1233,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // filled: _.range(44),
       // KEEP SYNCHRONIZED!
       filled: [0 /*circle*/,  3/*cross*/, 1 /*square*/, 4 /*X*/, 2 /*diamond*/, 17 /*star*/, 5,6,7,8 /*triangles...*/],
-      filledName: ['circle',  'cross', 'square', 'x', 'diamond', 'star', 'triangle-up', 'triangle-down', 'triangle-left', 'triangle-right'],
+      filledName: shapesEnum, 
     };
     c.shapes.open = c.shapes.filled.map(n => n+100);
     // precompute svg paths for shapes. unfortunately I cannot access plotly shape svg paths directly...
