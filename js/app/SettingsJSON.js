@@ -651,7 +651,13 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
           "colorscale_Enum": {type: "string", enum: colorscalesKeys}, // TODO: link to colors.density. ... },
           "resolution": {type: "integer", watch: {_res2d: "tweaks.resolution_2d"}, template: "{{_res2d}}"},
           "labelFormatterString": {type: "string"},
-          "backgroundHeatMap": {type: "boolean"},
+          "biCatMode": {type: "string", enum:['scatter', 'heatmap', 'scatter+heatmap']},
+          scatter: {
+            type: "object", format: "grid",
+            properties: {
+              "width": {type: "number"},
+            },
+          },
           contour: {
             type: "object", format: "grid",
             properties: {
@@ -839,6 +845,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         color: greys(0.7) // the line color of the contour lines (if contours.coloring is not set to 'line')
       },
 
+      scatter: {
+        width: 1,
+      },
+
       contour: {
         width: 0.1, // set to 3 for non-filled lines
         levels: tweaksInitial.levels, // TODO: watches!
@@ -853,7 +863,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       colorscale_Enum: colorsInitial.density.scale_Enum, // color scale to use for heat maps / contour plots  // TODO: watches!
       resolution: tweaksInitial.resolution_2d, // the number computed points along one axis // TODO: watches!
       labelFormatterString: ".3f",
-      backgroundHeatMap: false, // enable/disable a background heatmap in addition to the scatter trace (with circles) representing cat-cat densities
+      biCatMode: 'scatter', // choose what to show for the bivariate categorical case: bubbles only, heatmap only, or both 
     },
 
     "ppc": {

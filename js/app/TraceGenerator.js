@@ -722,7 +722,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
       else if (PQL.hasDiscreteYield(xFu) && PQL.hasDiscreteYield(yFu)) {
 
         // additional heatmap background trace
-        if (c.map.biDensity.backgroundHeatMap) {
+
+        let mode = c.map.biDensity.biCatMode;
+
+        if (mode.includes('heatmap')) {
           traces.push(
             Object.assign(
               {
@@ -736,40 +739,43 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
             ));
         }
 
-        // compute maximum shape diameter
-        let cellSize = opts.geometry.cellSizePx,
-          maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length)*0.45;
+        if (mode.includes('scatter')) {
+          // compute maximum shape diameter
+          let cellSize = opts.geometry.cellSizePx,
+            maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length) * 0.45;
 
-        let scatterTrace = {
-          type: 'scatter',
-          visible: true,
-          // mode: 'markers+text',
-          mode: 'markers',
-          opacity: 1,
-          marker: {
-            //symbol: "circle",
-            symbol: c.shapes.model,
-            sizemin: 0,
-            sizemode: 'area',
-            size: zdata,
-            color: zdata,
-            colorscale: colorscale,
-            cmin: 0,
-            cmax: colorFu.extent[1],
-            cauto: false,
-            line: {
-              color: c.map.sampleMarker.stroke.color, // todo: zdata.map(d => d * 1.1), // slightly darker
-              width: c.map.sampleMarker.stroke.width,
+          let scatterTrace = {
+            type: 'scatter',
+            visible: true,
+            // mode: 'markers+text',
+            mode: 'markers',
+            opacity: 0.8,
+            marker: {
+              //symbol: "circle",
+              symbol: c.shapes.model,
+              sizemin: 0,
+              sizemode: 'area',
+              size: zdata,
+              color: zdata,
+              colorscale: colorscale,
+              cmin: 0,
+              cmax: colorFu.extent[1],
+              cauto: false,
+              line: {
+                color: c.map.aggrMarker.stroke.color, // todo: zdata.map(d => d * 1.1), // slightly darker
+                width: c.map.biDensity.scatter.width,
+              },
             },
-          },
-        };
-        scatterTrace.marker.sizeref = Math.pow(
-          colorFu.extent[1] / maxShapeDiameter / 0.5,
-          (scatterTrace.marker.sizemode === 'area' ? 2 : 1));
+          };
+          scatterTrace.marker.sizeref = Math.pow(
+            colorFu.extent[1] / maxShapeDiameter / 0.5,
+            (scatterTrace.marker.sizemode === 'area' ? 2 : 1));
 
-        traces.push(
-          Object.assign(scatterTrace, commonTrace)
-        );
+          traces.push(
+            Object.assign(scatterTrace, commonTrace)
+          );
+        }
+
       }
 
       return traces;
