@@ -699,7 +699,7 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
       return [axes, annotations, emtpyTraces];
     }
 
-    function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout) {
+   function makeCategoricalQuantitativeAxis(rt, axisLength, mainOffset, idgen, mainAxesIds, idx, catQuantAxisIds, layout) {
       // build up helper variables needed later and to check if we are in the quant-categorical case     
      if (rt === undefined)
       return;

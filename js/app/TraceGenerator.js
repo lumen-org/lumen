@@ -742,7 +742,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         if (mode.includes('scatter')) {
           // compute maximum shape diameter
           let cellSize = opts.geometry.cellSizePx,
-            maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length) * 0.45;
+            maxShapeDiameter = Math.min(cellSize.x / xFu.extent.length, cellSize.y / yFu.extent.length) * 0.8;
 
           let scatterTrace = {
             type: 'scatter',
