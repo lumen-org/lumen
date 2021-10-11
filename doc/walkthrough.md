@@ -37,7 +37,7 @@ Note that the dashboard in Lumen may hold many visualizations at once.
 
 ![walkthrough 02 - schema](img/walkthrough-02-schema.png)
 
- As we can see the model contains a total of 7 random variables, and since we use a Conditional Gaussian (CG) model all of them are backed by observed data and all are 'distributed', i.e. modeled by the probabilistic model.
+ As we can see the model contains a total of 7 random variables, and since we use a Conditional Gaussian (CG) model all of them are backed by observed data and all are 'random' variables modeled by the probabilistic model.
 
  
  Here is what the variables mean:

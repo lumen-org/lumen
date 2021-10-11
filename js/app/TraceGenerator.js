@@ -644,11 +644,20 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         yIdx = rt.fu2idx.get(yFu),
         colorIdx = rt.fu2idx.get(colorFu);
 
-      // EUROVIS2020: take square root of density values
-      //let zdata = selectColumn(rt, colorIdx).map(Math.sqrt),
-      let zdata = selectColumn(rt, colorIdx), //.map(Math.sqrt),
-        ztext = zdata.map(c.map.biDensity.labelFormatter);
       
+      let zdata = selectColumn(rt, colorIdx)
+      if (c.tweaks.rescale['model density fct'] != "")
+        zdata = zdata.map(Math[c.tweaks.rescale['model density fct']]); // EUROVIS2020: take square root of density values
+      // hack to manually optimize visualization of data and model by adapting der scales to each other
+      if (opts.facetName === 'data density') {
+        let factor = c.tweaks.rescale['data density factor'];
+        if (factor != 1) {
+          zdata = zdata.map(d => factor*d);
+        }
+      }
+
+      let ztext = zdata.map(c.map.biDensity.labelFormatter);
+
       let traces = [];
 
       // TODO: this is a bigger issue: sometimes we may not want to draw / or actually even query a particular trace from the server
@@ -669,6 +678,10 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
 
       // let cd = c.colors.modelSamples.density_scale;
       // colorscale = (cd.adapt_to_color_usage && !vismel.used.color) ? cd.secondary_scale : cd.primary_scale;
+
+      let zmax = colorFu.extent[1];
+      if (c.tweaks.rescale['model density fct'] != "")
+        zmax = Math[c.tweaks.rescale['model density fct']](zmax); // EUROVIS2020: take square root of density values
 
       let colorscale = (opts.facetName === 'data density' ?
           c.colors['training data'].density_scale : c.colors.modelSamples.density_scale);
@@ -693,9 +706,7 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
           z: zdata,
           zauto: false,
           zmin: 0,
-          // zmax: zmax,          
-          zmax: colorFu.extent[1], 
-          //zmax: Math.sqrt(colorFu.extent[1]), // EUROVIS2020
+          zmax: zmax          
         };
 
       if (PQL.hasNumericYield(xFu) && PQL.hasNumericYield(yFu)) {

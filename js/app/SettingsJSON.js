@@ -116,7 +116,16 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "empBinWidth": {type: "number"},
       "kdeBandwidth": {type: "number"},
       "number of samples": {type: "integer"},
-      "data_point_limit": {type: "integer"},      
+      "data_point_limit": {type: "integer"},
+      'rescale': {
+        type: "object",
+        format: "grid",
+        properties: {
+          'data marginal factor': {type: "number"},
+          'data density factor':  {type: "number"},
+          'model density fct': {type: "string", enum:["", "sqrt"]},          
+        }
+      },
       "splitCnts": {
         type: "object",
         format: "grid",
@@ -179,6 +188,11 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     levels: 15,
     "number of samples": 200,
     data_point_limit: 2000,
+    rescale: {
+      'data marginal factor': 1,
+      'data density factor': 1, 
+      'model density fct': "",
+    },
     splitCnts: {
       layout: 5,
       density: undefined, // TODO: watches
