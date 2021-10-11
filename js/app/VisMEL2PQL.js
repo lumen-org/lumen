@@ -23,13 +23,13 @@ define(['lib/logger', './utils', './PQL', './VisMEL', './ViewSettings'], functio
   class ConversionError extends utils.ExtendableError {}
 
   /**
-   * A density query may only be issued for distributed variables. This function will throw if this rule is violated and
+   * A density query may only be issued for random variables. This function will throw if this rule is violated and
    * return the aggregation otherwise.
    * @param aggr
    * @private
    */
   function _validateDensityFU (aggr) {
-    if (!aggr.fields.every(f => f.varType === 'distributed'))
+    if (!aggr.fields.every(f => f.varType === PQL.FieldT.VarType.random))
       throw new ConversionError("Density may not be queried on independent variables.");
     return aggr;
   }

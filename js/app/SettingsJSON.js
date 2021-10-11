@@ -170,8 +170,8 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     dataModelType: "empirical", // "kde"
     hideAggregations: false,
     hideAccuMarginals: true,
-    resolution_1d: 25,
-    resolution_2d: 15,
+    resolution_1d: 50, //25
+    resolution_2d: 50,  //15
     kdeBandwidth: 0.1,
     empBinWidth: 1,
     opacity: 0.35,
@@ -1072,7 +1072,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // },
     },
     main: {
-      title: false,
+      title: true,
       background: {
         fill: 'white', //unused
       },
@@ -1335,7 +1335,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // training data
       data: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // test data
@@ -1353,19 +1353,19 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // model density marginal
       marginals: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       // training data marginals
       dataMarginals: {
         possible: true,
-        active: true,
+        active: false,
       },
 
       // model density 'central' plot
       contour: {
         possible: true,
-        active: false,
+        active: true,
       },
 
       'data density': {

@@ -82,9 +82,9 @@ define(['lib/logger', 'd3', './utils', './jsonUtils', './Domain', './PQL', './Mo
    */
   function varType_from_fieldJSON(field) {
     if (field.hasOwnProperty('independent'))
-      return (field.independent ? PQL.FieldT.VarType.independent : PQL.FieldT.VarType.distributed);
+      return (field.independent ? PQL.FieldT.VarType.independent : PQL.FieldT.VarType.random);
     else
-      return PQL.FieldT.VarType.distributed;
+      return PQL.FieldT.VarType.random;
   }
 
   /**

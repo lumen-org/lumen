@@ -130,7 +130,7 @@ While it is generally safe to use, it is more of a developer tool due to its com
 
 The schema lists all variables of the model's variables / data attributes.
 It groups the variables by their scale type, namely into 'quantitative' and 'categorical'.
-Additionally, it provides information whether it is a observed or latent variable, and whether it is a distributed (a variate, a variable modeled by model) or a independent variable (a covariate, a variate that just serves as a required input to the model).
+Additionally, it provides information whether it is a observed or latent variable, and whether it is a random variable (a variate variable modeled as being randomly distributed by model) or a independent variable (a covariate, a variate that just serves as a required input to the model).
 See also [Random Variables and Data Attributes](##Random-Variables-and-Data-Attributes).
 
 ![Schema panel of Lumen's UI](img/schema.png)
@@ -138,7 +138,7 @@ See also [Random Variables and Data Attributes](##Random-Variables-and-Data-Attr
 In this example, the schema panel lists the variables for a model with name 'Iris_cond_gauss'. 
 The model has five variables, four of them quantitative (`sepal_length`, `sepal_width`,`petal_length`,`petal_width`) and one categorical (`species`).
 As the the model does not have any latent (non-observed) variables, all variables are labelled as 'observed'.
-Also, all of the listed variables are actually modelled by the model, hence they have the label 'distributed'. 
+Also, all of the listed variables are actually modelled by the model, hence they have the label 'random'. 
 
 ---
 

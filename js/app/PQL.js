@@ -71,7 +71,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
   var FieldT = Object.freeze({
     DataType: {string: 'string', num: 'numerical'},
     Role: {measure: 'measure', dimension: 'dimension'},
-    VarType: {independent: 'independent', distributed: 'distributed'},
+    VarType: {independent: 'independent', random: 'random'},
     ObsType: {latent: 'latent', observed: 'observed'}
   });
 
@@ -89,7 +89,7 @@ define(['lib/emitter', 'lib/logger', './Domain', './utils', './jsonUtils', './Vi
      * @param dataType {String} The desired data type. Either 'string' or 'numerical'. For convenience use FieldT.
      * @param domain {Domain} The domain of the Field, i.e. the values it may take
      * @param extent {Domain} A finite range/set of values, that it typical.
-     * @param varType {String} The desired variable type. Either 'distributed' or 'independent'. For convenience use FieldT.
+     * @param varType {String} The desired variable type. Either 'random' or 'independent'. For convenience use FieldT.
      * @param obsType {String} Whether the variable is 'observerd' or 'latent'. For convenience use FieldT.ObsType.
      * @param model {Model} Optional. The model this field belongs to.
      */

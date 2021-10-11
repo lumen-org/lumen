@@ -860,12 +860,12 @@ define(['lib/logger', 'lib/emitter', 'd3', 'd3legend', './ResultTable', './plotl
       //  * we need a marginal plot, iff the opposite letter axis is used
       //  * but only if it is generally enabled in the config
       //  * and if there was any data passed in for marginals
-      //  * and if the variable encoded by the axis is distributed
+      //  * and if the variable encoded by the axis is a random variable
       let marginal = {
         // the stuff after "//" detect if we do not want marginal distribution plots. but detecting it here, comes with many
         // issues, e.g. data histograms may anyway be drawn
-        x: (facets.marginals.active || facets.dataMarginals.active) && used.y, // && (!used.x || (used.x && qx.last().fields[0].varType === 'distributed')),
-        y: (facets.marginals.active || facets.dataMarginals.active) && used.x, // && (!used.y || (used.y && qy.last().fields[0].varType === 'distributed')),
+        x: (facets.marginals.active || facets.dataMarginals.active) && used.y, // && (!used.x || (used.x && qx.last().fields[0].varType === PQL.FieldT.VarType.random)),
+        y: (facets.marginals.active || facets.dataMarginals.active) && used.x, // && (!used.y || (used.y && qy.last().fields[0].varType === PQL.FieldT.VarType.random)),
       };
 
       // get absolute pane size [in px]
