@@ -13,7 +13,7 @@
  * @author Philipp Lucas
  * @copyright © 2016 Philipp Lucas (philipp.lucas@uni-jena.de)
  */
-define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './widgets/FilterWidget', './widgets/SplitWidget', './widgets/AggregationWidget', './ModelUtils', './VisUtils'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, AggregationWidget, ModelUtils, VisUtils) {
+define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL', './widgets/FilterWidget', './widgets/SplitWidget', './widgets/AggregationWidget', './ModelUtils', './VisUtils', './ViewSettings'], function(Logger, util, Emitter, s, VisMEL, PQL, FilterWidget, SplitWidget, AggregationWidget, ModelUtils, VisUtils, config) {
 
   'use strict';
   var logger = Logger.get('pl-visuals');
@@ -192,25 +192,24 @@ define(['lib/logger','./utils', 'lib/emitter', './shelves', './VisMEL', './PQL',
   /// Mixins for PQL Fields and FieldUsages
 
   PQL.Field.prototype.makeVisual = function () {
-    let typeClass = VisUtils.YieldTypeToClassMap[this.dataType];
-    let obsClass = VisUtils.ObsTypeToClassMap[this.obsType];
+    let typeClass = VisUtils.YieldTypeToClassMap[this.dataType],
+      sEI = config.tweaks.showExtendedDimensionInfo;
+    
+    let obsClass = sEI ? VisUtils.ObsTypeToClassMap[this.obsClass] : " ",
+      obsType = sEI ? this.obsType : " ",
+      varType = sEI ? this.varType : " ",
+      dataType = sEI ? this.dataType : " ";
 
     let $modelingDetails = $(`<div class="pl-field__modelingDetails"></div>`)
-      .append(`<div class="pl-field__obsType pl-label">${this.obsType}</div>`)
-      .append(`<div class="pl-field__varType pl-label">${this.varType}</div>`);
+      .append(`<div class="pl-field__obsType pl-label">${obsType}</div>`)
+      .append(`<div class="pl-field__varType pl-label">${varType}</div>`);      
 
     let $visual = $(`<div class="pl-field ${typeClass} ${obsClass}"></div>`)
       .append([
-        `<div class="pl-field__dataType pl-label">${this.dataType}</div>`,
+        `<div class="pl-field__dataType pl-label">${dataType}</div>`,
         `<div class="pl-field__name pl-field-name pl-label">${this.name}</div>`,
-        $modelingDetails,
-      ]);
-
-    
-
-    //return $(`<div class="pl-field pl-field-name ${typeClass}">${this.name}</div>`);
-    return $visual;
-
+        $modelingDetails]);
+    return $visual;   
   };
 
   PQL.Aggregation.prototype.makeVisual = function (record, $parent) {

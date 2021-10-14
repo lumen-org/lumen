@@ -117,6 +117,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       "kdeBandwidth": {type: "number"},
       "number of samples": {type: "integer"},
       "data_point_limit": {type: "integer"},
+      "showExtendedDimensionInfo": {type: "boolean"},
       'rescale': {
         type: "object",
         format: "grid",
@@ -188,6 +189,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     levels: 15,
     "number of samples": 200,
     data_point_limit: 2000,
+    "showExtendedDimensionInfo": false,
     rescale: {
       'data marginal factor': 1,
       'data density factor': 1, 
@@ -338,7 +340,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       //primary_scale_Enum: "density_greys", // todo: debug
       //primary_single: d3color.hsl(d3chromatic.schemeDark2[3]).brighter(3).rgb().toString(),
       primary_single: d3chromatic.schemeDark2[3],
-      primary_scale_Enum: "density_greys", // todo: debug
+      primary_scale_Enum: "density_greys",
       secondary_single: c2h(d3chromatic.interpolateBlues(0.7)),
       secondary_scale_Enum: "density_blues",
       //let reducedGreyScale = d3chromatic.schemeGreys[9].slice(0, 7);  // todo: debug
@@ -841,7 +843,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         opacity: 0.7,
       },
       line: {
-        width: 2,
+        width: 1.5,
         opacity: 0.7, // line opacity
         fill: true,
         fillopacity: 0.06,
@@ -1086,7 +1088,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       // },
     },
     main: {
-      title: true,
+      title: false,
       background: {
         fill: 'white', //unused
       },
@@ -1096,7 +1098,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       axis: {
         color: greys(0.6), //"#a4a4a4",
         width: 1,
-        zerolinewidth: 1.5,
+        zerolinewidth: 1,
         zerolinecolor: greys(0.3),
       },      
       label: {

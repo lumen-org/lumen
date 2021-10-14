@@ -786,7 +786,6 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
             Object.assign(scatterTrace, commonTrace)
           );
         }
-
       }
 
       return traces;
