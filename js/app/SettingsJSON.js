@@ -122,8 +122,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
         type: "object",
         format: "grid",
         properties: {
-          'data marginal factor': {type: "number"},
+          'data marginal normalization': {type: "number"},
           'data density factor':  {type: "number"},
+          'model marginal normalization': {type: "number"},
+          'model density factor':  {type: "number"},
           'model density fct': {type: "string", enum:["", "sqrt"]},          
         }
       },
@@ -191,8 +193,10 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
     data_point_limit: 2000,
     "showExtendedDimensionInfo": false,
     rescale: {
-      'data marginal factor': 1,
-      'data density factor': 1, 
+      'data marginal normalization': 0,
+      'data density factor': 0, 
+      'model marginal normalization': 0,
+      'model density factor': 0, 
       'model density fct': "",
     },
     splitCnts: {
@@ -751,7 +755,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       size: {
         min: 8, 
         max: 40,
-        def: 12,
+        def: 9,
         //type: 'absolute' // 'relative' [% of available paper space], 'absolute' [px]
       },
       line: { // the line connecting the marker points
@@ -767,7 +771,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       size: {
         min: 8,
         max: 40,
-        def: 12,
+        def: 9,
       },
       stroke: {
         color: tweaksInitial.data['stroke color'],// #929292
@@ -787,7 +791,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       size: {
         min: 8,
         max: 40,
-        def: 11,
+        def: 8,
       },
       fill: {
         def: colorsInitial.modelSamples.single,// TODO: watched!
@@ -806,7 +810,7 @@ define(['lib/d3-scale-chromatic','lib/d3-format', 'lib/d3-color', './plotly-shap
       size: {
         min: 8,
         max: 40,
-        def: 12,
+        def: 9,
       },
       stroke: {
         color: tweaksInitial.data['stroke color'],

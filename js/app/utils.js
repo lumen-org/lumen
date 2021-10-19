@@ -185,6 +185,15 @@ define([], function() {
     return ("0" + d.getDate()).slice(-2) + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear();
   }
 
+  function rescale(data, colIdx=0, normalization=1.0) {
+    let total = 0;
+    data.map(el => total=total+el[colIdx]);
+
+    total = total / normalization;
+
+    data.map(el => el[colIdx] = el[colIdx] / total);
+    return data;
+  }
 
   function assignWithFilter (target, source, filter) {
 
@@ -250,6 +259,7 @@ define([], function() {
     todayString,
     assignWithFilter,
     download,
-    getFacetsFlags
+    getFacetsFlags,
+    rescale
   };
 });

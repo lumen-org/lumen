@@ -208,7 +208,7 @@ body {
 }
 
 .pl-schema {
-    min-width: 15rem;
+    min-width: 5rem;
     max-width: 20rem;
 }
 
@@ -217,7 +217,7 @@ body {
 }
 
 .pl-spec {
-    min-width: 200px; /* for constant minimal width*/
+    min-width: 10rem; 
     overflow-y: scroll; /* always on scroll back to reduce flickering */
 }
 
@@ -460,8 +460,9 @@ body {
 }
 
 .pl-config {
-    width: 400px;
+    width: 12rem;
     height: 100%;
+    font-size: x-small;
 }
 
 #pl-config-container {
@@ -539,6 +540,7 @@ body {
 .pl-visualization__pane {
     width: 100%;
     height: 100%;
+    /* fill: white; */
 }
 
 /* busy indicator */

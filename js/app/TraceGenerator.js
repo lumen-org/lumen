@@ -583,6 +583,14 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         if (rt !== undefined) {
           vismel = rt.vismel;
           vismel.used = vismel.usages();
+          
+          // rescale to custom normalization factor
+          if (opts.facetName == 'dataMarginals' && c.tweaks.rescale['data marginal normalization'] != 0) {
+            utils.rescale(rt, rt.header.length-1, c.tweaks.rescale['data marginal normalization']);
+          }
+          else if (c.tweaks.rescale['model marginal normalization'] != 0) {
+            utils.rescale(rt, rt.header.length-1, c.tweaks.rescale['model marginal normalization']);
+          }
 
           //let rt = nestByMvd.map(rt); // FAIL HERE
           traceName[xOrY] = PQL.toString(rt.pql);
@@ -645,15 +653,19 @@ define(['lib/logger', 'lib/d3-collection', './PQL', './VisMEL', './ScaleGenerato
         colorIdx = rt.fu2idx.get(colorFu);
 
       
-      let zdata = selectColumn(rt, colorIdx)
+      let zdata = selectColumn(rt, colorIdx);
+
+      // various rescaling tweaks
       if (c.tweaks.rescale['model density fct'] != "")
         zdata = zdata.map(Math[c.tweaks.rescale['model density fct']]); // EUROVIS2020: take square root of density values
-      // hack to manually optimize visualization of data and model by adapting der scales to each other
-      if (opts.facetName === 'data density') {
+
+      // optimize visualization of data and model by adapting scales to each other
+      if (opts.facetName === 'data density' && c.tweaks.rescale['data density factor'] != 0) {
         let factor = c.tweaks.rescale['data density factor'];
-        if (factor != 1) {
-          zdata = zdata.map(d => factor*d);
-        }
+        zdata = zdata.map(d => factor*d);
+      } else if (opts.facetName === 'model density' && c.tweaks.rescale['model density factor'] != 0) {
+        let factor = c.tweaks.rescale['model density factor'];
+        zdata = zdata.map(d => factor*d);
       }
 
       let ztext = zdata.map(c.map.biDensity.labelFormatter);
