@@ -765,6 +765,15 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
             }
           }); // yeah, that was easy. just made it draggable!
         $vis.css( "position", "absolute" ); // we want absolute position, such they do not influence each others positions
+        
+        
+         // zoom into the canvas when click on the plot
+        $vis.zoomTarget({
+          targetsize:0.75, 
+          duration:600,
+          closeclick: true,
+          root: $(document.getElementsByClassName("zoomContainer"))});
+
         return $vis;
       }
 
@@ -1957,7 +1966,7 @@ define(['../run.conf', 'lib/logger', 'lib/emitter', './init', './InitialContexts
       let $draggedElements = undefined,
         initialMousePos = undefined,
         panning = false;
-
+      
       $c.on('mousedown', (ev, foo, bar) => {          
           panning = (ev.target === ev.currentTarget);
           if (!panning)
